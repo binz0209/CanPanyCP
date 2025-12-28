@@ -9,6 +9,9 @@ namespace CanPany.Domain.Entities;
 /// </summary>
 public class CV : AggregateRoot
 {
+    [BsonId, BsonRepresentation(BsonType.ObjectId)]
+    public new string Id { get; set; } = string.Empty;
+
     [BsonElement("userId"), BsonRepresentation(BsonType.ObjectId)]
     public string UserId { get; set; } = null!;
 

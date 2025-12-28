@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson.Serialization;
 using CanPany.Domain.Entities;
+using CanPany.Shared.Common.Base;
 using DomainApplication = CanPany.Domain.Entities.Application;
 
 namespace CanPany.Infrastructure.Data;
@@ -8,6 +10,22 @@ namespace CanPany.Infrastructure.Data;
 public class MongoDbContext
 {
     private readonly IMongoDatabase _database;
+
+    static MongoDbContext()
+    {
+        // Configure base class properties to be ignored for all entities
+        if (!BsonClassMap.IsClassMapRegistered(typeof(EntityBase)))
+        {
+            BsonClassMap.RegisterClassMap<EntityBase>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.UnmapMember(c => c.Id);
+                cm.UnmapMember(c => c.CreatedAt);
+                cm.UnmapMember(c => c.UpdatedAt);
+            });
+        }
+    }
 
     public MongoDbContext(IOptions<MongoOptions> options)
     {
@@ -40,6 +58,10 @@ public class MongoDbContext
     public IMongoCollection<AuditLog> AuditLogs => _database.GetCollection<AuditLog>("audit_logs");
     public IMongoCollection<PremiumPackage> PremiumPackages => _database.GetCollection<PremiumPackage>("premium_packages");
     public IMongoCollection<JobBookmark> JobBookmarks => _database.GetCollection<JobBookmark>("job_bookmarks");
+    public IMongoCollection<Report> Reports => _database.GetCollection<Report>("reports");
+    public IMongoCollection<JobAlert> JobAlerts => _database.GetCollection<JobAlert>("job_alerts");
+    public IMongoCollection<CandidateAlert> CandidateAlerts => _database.GetCollection<CandidateAlert>("candidate_alerts");
+    public IMongoCollection<FilterPreset> FilterPresets => _database.GetCollection<FilterPreset>("filter_presets");
 }
 
 public class MongoOptions

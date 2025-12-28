@@ -9,6 +9,9 @@ namespace CanPany.Domain.Entities;
 /// </summary>
 public class Job : AggregateRoot
 {
+    [BsonId, BsonRepresentation(BsonType.ObjectId)]
+    public new string Id { get; set; } = string.Empty;
+
     [BsonElement("companyId"), BsonRepresentation(BsonType.ObjectId)]
     public string CompanyId { get; set; } = null!;
 
