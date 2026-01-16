@@ -1,0 +1,42 @@
+{
+  "Audit": {
+    "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
+    "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
+    "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
+    "Interceptor.Audit.Format": {
+      "HttpRequestSuccess": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
+      "HttpRequestFailed": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
+      "ServiceCallSuccess": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
+      "ServiceCallFailed": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
+      "JobStart": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Started",
+      "JobComplete": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
+      "JobFailed": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5} | Error: {6}"
+    }
+  },
+  "Security": {
+    "Interceptor.Security.Authentication": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+    "Interceptor.Security.Authorization": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+    "Interceptor.Security.Format": {
+      "AuthenticationSuccess": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+      "AuthenticationFailed": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4} | Reason: {5}",
+      "AuthorizationDenied": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Access Denied",
+      "UnauthorizedAccess": "[SECURITY] UNAUTHORIZED_ACCESS | {0} | User: {1} | Path: {2} | IP: {3} | Unauthorized"
+    }
+  },
+  "Performance": {
+    "Interceptor.Performance.OperationTiming": "[PERFORMANCE] {0} mất {1}ms",
+    "Interceptor.Performance.SlowOperation": "[SLOW_OPERATION] {0} vượt quá ngưỡng ({1}ms > {2}ms)",
+    "Interceptor.Performance.Format": {
+      "OperationCompleted": "[PERFORMANCE] {0} mất {1}ms | Metadata: {2}",
+      "SlowOperationWarning": "[SLOW_OPERATION] {0} vượt quá ngưỡng ({1}ms > {2}ms)"
+    }
+  },
+  "Error": {
+    "Interceptor.Exception.Captured": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4}",
+    "Interceptor.Exception.Critical": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
+    "Interceptor.Exception.Format": {
+      "ExceptionOccurred": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4} | Service: {5} | MethodName: {6}",
+      "CriticalException": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}"
+    }
+  }
+}

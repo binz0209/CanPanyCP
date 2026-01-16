@@ -22,4 +22,10 @@
     <ProjectReference Include="..\CanPany.Shared\CanPany.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\i18n\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -6,6 +6,7 @@ using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Services;
 using CanPany.Application.Validators;
+using CanPany.Infrastructure.Extensions;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
@@ -95,6 +96,9 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 
+// Register Global Interceptors
+builder.Services.AddGlobalInterceptors();
+
 // Register FluentValidation
 // FluentValidation registration
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
@@ -121,6 +125,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+// Use I18N Middleware first (to detect language from headers)
+app.UseI18nMiddleware();
+
+// Use Global Audit Middleware (before authentication to capture all requests)
+app.UseGlobalAuditMiddleware();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

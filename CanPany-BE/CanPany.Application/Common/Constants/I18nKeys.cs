@@ -112,6 +112,72 @@ public static class I18nKeys
             }
         }
     }
+
+    /// <summary>
+    /// I18N Keys for Interceptors - Audit, Security, Performance, Exception
+    /// </summary>
+    public static class Interceptor
+    {
+        public static class Audit
+        {
+            public const string HttpRequest = "Interceptor.Audit.HttpRequest";
+            public const string ServiceCall = "Interceptor.Audit.ServiceCall";
+            public const string JobExecution = "Interceptor.Audit.JobExecution";
+            public const string HostedService = "Interceptor.Audit.HostedService";
+            
+            public static class Format
+            {
+                public const string HttpRequestSuccess = "Interceptor.Audit.Format.HttpRequestSuccess";
+                public const string HttpRequestFailed = "Interceptor.Audit.Format.HttpRequestFailed";
+                public const string ServiceCallSuccess = "Interceptor.Audit.Format.ServiceCallSuccess";
+                public const string ServiceCallFailed = "Interceptor.Audit.Format.ServiceCallFailed";
+                public const string JobStart = "Interceptor.Audit.Format.JobStart";
+                public const string JobComplete = "Interceptor.Audit.Format.JobComplete";
+                public const string JobFailed = "Interceptor.Audit.Format.JobFailed";
+            }
+        }
+
+        public static class Security
+        {
+            public const string Authentication = "Interceptor.Security.Authentication";
+            public const string Authorization = "Interceptor.Security.Authorization";
+            public const string DataAccess = "Interceptor.Security.DataAccess";
+            public const string TokenAccess = "Interceptor.Security.TokenAccess";
+            public const string Exception = "Interceptor.Security.Exception";
+            
+            public static class Format
+            {
+                public const string AuthenticationSuccess = "Interceptor.Security.Format.AuthenticationSuccess";
+                public const string AuthenticationFailed = "Interceptor.Security.Format.AuthenticationFailed";
+                public const string AuthorizationDenied = "Interceptor.Security.Format.AuthorizationDenied";
+                public const string UnauthorizedAccess = "Interceptor.Security.Format.UnauthorizedAccess";
+            }
+        }
+
+        public static class Performance
+        {
+            public const string OperationTiming = "Interceptor.Performance.OperationTiming";
+            public const string SlowOperation = "Interceptor.Performance.SlowOperation";
+            
+            public static class Format
+            {
+                public const string OperationCompleted = "Interceptor.Performance.Format.OperationCompleted";
+                public const string SlowOperationWarning = "Interceptor.Performance.Format.SlowOperationWarning";
+            }
+        }
+
+        public static class Exception
+        {
+            public const string Captured = "Interceptor.Exception.Captured";
+            public const string Critical = "Interceptor.Exception.Critical";
+            
+            public static class Format
+            {
+                public const string ExceptionOccurred = "Interceptor.Exception.Format.ExceptionOccurred";
+                public const string CriticalException = "Interceptor.Exception.Format.CriticalException";
+            }
+        }
+    }
 }
 
 
