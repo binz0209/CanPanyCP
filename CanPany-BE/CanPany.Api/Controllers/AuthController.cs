@@ -1,6 +1,7 @@
 using CanPany.Application.DTOs.Auth;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
+using CanPany.Application.Common.Constants;
 using CanPany.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,16 +17,86 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IUserService _userService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IAuthService authService,
         IUserService userService,
+        II18nService i18nService,
         ILogger<AuthController> logger)
     {
         _authService = authService;
         _userService = userService;
+        _i18nService = i18nService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Register new user
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        try
+        {
+            // Input sanitization - trim whitespace
+            request.FullName = request.FullName?.Trim() ?? string.Empty;
+            request.Email = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+            request.Role = request.Role?.Trim() ?? "Candidate";
+
+            // FluentValidation will automatically validate via ModelState
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return BadRequest(ApiResponse.CreateError(string.Join(", ", errors), "ValidationFailed"));
+            }
+
+            // Log registration start with i18n
+            var startMessage = _i18nService.GetLogMessage(I18nKeys.Logging.User.Register.Start, request.Email);
+            _logger.LogInformation(startMessage);
+
+            // Ensure role is valid (default to Candidate if empty/invalid)
+            var role = string.IsNullOrWhiteSpace(request.Role) || 
+                      (request.Role != "Candidate" && request.Role != "Company") 
+                      ? "Candidate" 
+                      : request.Role;
+            
+            var user = await _userService.RegisterAsync(request.FullName, request.Email, request.Password, role);
+            
+            // Generate token for newly registered user
+            var token = await _authService.GenerateTokenAsync(user);
+            
+            // Log registration complete with i18n
+            var completeMessage = _i18nService.GetLogMessage(I18nKeys.Logging.User.Register.Complete, user.Email, user.Id);
+            _logger.LogInformation(completeMessage);
+            
+            // Return success message with i18n
+            var successMessage = _i18nService.GetDisplayMessage(I18nKeys.Success.User.Register);
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { accessToken = token, user }, 
+                successMessage));
+        }
+        catch (BusinessRuleViolationException ex)
+        {
+            var errorMessage = _i18nService.GetLogMessage(I18nKeys.Logging.User.Register.Start, request.Email);
+            _logger.LogWarning(ex, errorMessage);
+            
+            var userMessage = _i18nService.GetErrorMessage(I18nKeys.Error.User.Register.EmailExists);
+            return BadRequest(ApiResponse.CreateError(userMessage, "RegistrationFailed"));
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = _i18nService.GetLogMessage(I18nKeys.Error.User.Register.Failed, request.Email, ex.Message);
+            _logger.LogError(ex, errorMessage);
+            
+            var userMessage = _i18nService.GetErrorMessage(I18nKeys.Error.User.Register.Failed);
+            return StatusCode(500, ApiResponse.CreateError(userMessage, "RegistrationFailed"));
+        }
     }
 
     /// <summary>

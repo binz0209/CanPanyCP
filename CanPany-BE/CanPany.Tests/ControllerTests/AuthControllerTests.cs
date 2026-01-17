@@ -16,6 +16,7 @@ public class AuthControllerTests
 {
     private readonly Mock<IAuthService> _authServiceMock = new();
     private readonly Mock<IUserService> _userServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<AuthController>> _loggerMock = new();
     private readonly AuthController _controller;
 
@@ -24,6 +25,7 @@ public class AuthControllerTests
         _controller = new AuthController(
             _authServiceMock.Object,
             _userServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup default HttpContext

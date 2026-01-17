@@ -22,24 +22,20 @@ public class GlobalAuditMiddlewareTests
     private readonly Mock<IServiceScope> _serviceScopeMock = new();
     private readonly Mock<IServiceProvider> _serviceProviderMock = new();
 
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
     public GlobalAuditMiddlewareTests()
     {
-        // Setup service scope factory
-        _serviceScopeFactoryMock.Setup(x => x.CreateScope())
-            .Returns(_serviceScopeMock.Object);
+        // Create a real service collection and register mocks
+        var services = new ServiceCollection();
+        services.AddSingleton(_auditLoggerMock.Object);
+        services.AddSingleton(_performanceMonitorMock.Object);
+        services.AddSingleton(_securityTrackerMock.Object);
+        services.AddSingleton(_exceptionCaptureMock.Object);
         
-        _serviceScopeMock.Setup(x => x.ServiceProvider)
-            .Returns(_serviceProviderMock.Object);
-
-        // Setup service provider to return mocks
-        _serviceProviderMock.Setup(x => x.GetRequiredService<IAuditLogger>())
-            .Returns(_auditLoggerMock.Object);
-        _serviceProviderMock.Setup(x => x.GetRequiredService<IPerformanceMonitor>())
-            .Returns(_performanceMonitorMock.Object);
-        _serviceProviderMock.Setup(x => x.GetRequiredService<ISecurityEventTracker>())
-            .Returns(_securityTrackerMock.Object);
-        _serviceProviderMock.Setup(x => x.GetRequiredService<IExceptionCapture>())
-            .Returns(_exceptionCaptureMock.Object);
+        _serviceProvider = services.BuildServiceProvider();
+        _serviceScopeFactory = _serviceProvider.GetRequiredService<IServiceScopeFactory>();
     }
 
     [Fact]
@@ -50,9 +46,12 @@ public class GlobalAuditMiddlewareTests
         var next = new RequestDelegate(_ => Task.CompletedTask);
         var middleware = new GlobalAuditMiddleware(
             next,
-            _serviceScopeFactoryMock.Object,
+            _serviceScopeFactory,
             _dataMaskerMock.Object,
             _loggerMock.Object);
+        
+        _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
+            .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
 
         _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
             .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
@@ -78,9 +77,12 @@ public class GlobalAuditMiddlewareTests
         var next = new RequestDelegate(_ => Task.CompletedTask);
         var middleware = new GlobalAuditMiddleware(
             next,
-            _serviceScopeFactoryMock.Object,
+            _serviceScopeFactory,
             _dataMaskerMock.Object,
             _loggerMock.Object);
+        
+        _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
+            .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
 
         // Act
         await middleware.InvokeAsync(context);
@@ -100,9 +102,12 @@ public class GlobalAuditMiddlewareTests
         var next = new RequestDelegate(_ => throw exception);
         var middleware = new GlobalAuditMiddleware(
             next,
-            _serviceScopeFactoryMock.Object,
+            _serviceScopeFactory,
             _dataMaskerMock.Object,
             _loggerMock.Object);
+        
+        _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
+            .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
 
         _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
             .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
@@ -126,9 +131,12 @@ public class GlobalAuditMiddlewareTests
         var next = new RequestDelegate(_ => Task.CompletedTask);
         var middleware = new GlobalAuditMiddleware(
             next,
-            _serviceScopeFactoryMock.Object,
+            _serviceScopeFactory,
             _dataMaskerMock.Object,
             _loggerMock.Object);
+        
+        _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
+            .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
 
         _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
             .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());
