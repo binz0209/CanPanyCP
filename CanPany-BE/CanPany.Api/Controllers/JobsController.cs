@@ -92,6 +92,7 @@ public class JobsController : ControllerBase
             // TODO: Implement AI recommendation logic
             // This should use vector search and matching algorithms
             // For now, return empty list
+            await Task.CompletedTask;
             return Ok(ApiResponse<IEnumerable<Job>>.CreateSuccess(new List<Job>()));
         }
         catch (Exception ex)

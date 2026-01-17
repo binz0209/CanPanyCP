@@ -30,6 +30,7 @@ public class AIChatService : IAIChatService
             _logger.LogInformation("AI Chat request from user: {UserId}, Message: {Message}", userId, message);
             
             // Placeholder response
+            await Task.CompletedTask;
             return "Tôi là AI Career Advisor của CanPany. Tôi sẽ giúp bạn với câu hỏi về sự nghiệp. Tính năng này đang được phát triển.";
         }
         catch (Exception ex)
@@ -48,6 +49,7 @@ public class AIChatService : IAIChatService
 
             // TODO: Implement conversation history retrieval
             // This should retrieve conversation history from database
+            await Task.CompletedTask;
             return Enumerable.Empty<(string, string, DateTime)>();
         }
         catch (Exception ex)

@@ -92,6 +92,7 @@ public class UserProfileService : IUserProfileService
             // TODO: Parse LinkedIn data and update profile
             // This should parse JSON data from LinkedIn API and update profile fields
             _logger.LogInformation("Syncing LinkedIn data for user: {UserId}", userId);
+            await Task.CompletedTask;
             return true;
         }
         catch (Exception ex)
@@ -108,6 +109,7 @@ public class UserProfileService : IUserProfileService
             // TODO: Parse GitHub data and update profile
             // This should parse JSON data from GitHub API and update profile fields
             _logger.LogInformation("Syncing GitHub data for user: {UserId}", userId);
+            await Task.CompletedTask;
             return true;
         }
         catch (Exception ex)

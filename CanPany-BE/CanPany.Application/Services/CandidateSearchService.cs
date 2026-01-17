@@ -182,6 +182,7 @@ public class CandidateSearchService : ICandidateSearchService
             _unlockedCandidates[companyId].Add(candidateId);
             
             _logger.LogInformation("Unlocking candidate contact: {CompanyId}, {CandidateId}", companyId, candidateId);
+            await Task.CompletedTask;
             return true;
         }
         catch (Exception ex)
@@ -196,6 +197,7 @@ public class CandidateSearchService : ICandidateSearchService
         try
         {
             // Check if company has unlocked this candidate
+            await Task.CompletedTask;
             if (_unlockedCandidates.ContainsKey(companyId))
             {
                 return _unlockedCandidates[companyId].Contains(candidateId);

@@ -231,6 +231,7 @@ public class AdminService : IAdminService
             // TODO: Implement broadcast notification
             // This should send notification to all users or users with specific role
             _logger.LogInformation("Broadcast notification: {Title}, Role: {Role}", title, targetRole ?? "All");
+            await Task.CompletedTask;
             return true;
         }
         catch (Exception ex)

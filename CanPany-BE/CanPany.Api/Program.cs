@@ -11,6 +11,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +24,12 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog(Log.Logger, dispose: true);
 
 // Add services to the container
-builder.Services.AddControllers()
-    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<LoginRequestValidator>());
+builder.Services.AddControllers();
+
+// Register FluentValidation (using new non-deprecated API)
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -39,6 +44,67 @@ builder.Services.AddSwaggerGen(c =>
 // Configure MongoDB
 builder.Services.Configure<MongoOptions>(builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<MongoDbContext>();
+
+// Verify MongoDB connection on startup
+var mongoOptions = builder.Configuration.GetSection("MongoDB").Get<MongoOptions>();
+string? mongoHost = null;
+if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString))
+{
+    try
+    {
+        // Extract MongoDB host from connection string (mask password for security)
+        var connectionString = mongoOptions.ConnectionString;
+        if (connectionString.StartsWith("mongodb+srv://"))
+        {
+            // Format: mongodb+srv://user:password@host/database?options
+            var atIndex = connectionString.IndexOf('@');
+            var slashIndex = connectionString.IndexOf('/', atIndex > 0 ? atIndex : 0);
+            if (atIndex > 0 && slashIndex > atIndex)
+            {
+                mongoHost = connectionString.Substring(0, atIndex + 1) + "***@" + connectionString.Substring(slashIndex);
+            }
+            else
+            {
+                mongoHost = connectionString.Substring(0, Math.Min(30, connectionString.Length)) + "...";
+            }
+        }
+        else if (connectionString.StartsWith("mongodb://"))
+        {
+            // Format: mongodb://user:password@host:port/database?options
+            var atIndex = connectionString.IndexOf('@');
+            var slashIndex = connectionString.IndexOf('/', atIndex > 0 ? atIndex : 0);
+            if (atIndex > 0 && slashIndex > atIndex)
+            {
+                mongoHost = connectionString.Substring(0, atIndex + 1) + "***@" + connectionString.Substring(slashIndex);
+            }
+            else
+            {
+                mongoHost = connectionString.Substring(0, Math.Min(30, connectionString.Length)) + "...";
+            }
+        }
+        else
+        {
+            mongoHost = connectionString.Substring(0, Math.Min(30, connectionString.Length)) + "...";
+        }
+
+        var testClient = new MongoClient(mongoOptions.ConnectionString);
+        var testDatabase = testClient.GetDatabase(mongoOptions.DatabaseName);
+        // Ping the database to verify connection
+        testClient.StartSession();
+        Log.Information("✓ MongoDB connection verified successfully | Host: {MongoHost} | Database: {DatabaseName}", 
+            mongoHost, mongoOptions.DatabaseName);
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "✗ Failed to connect to MongoDB | Host: {MongoHost} | Database: {DatabaseName}", 
+            mongoHost ?? "Unknown", mongoOptions.DatabaseName);
+        throw;
+    }
+}
+else
+{
+    Log.Warning("✗ MongoDB configuration is missing or incomplete");
+}
 
 // Register Repositories
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserRepository, CanPany.Infrastructure.Repositories.UserRepository>();
@@ -99,10 +165,6 @@ builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();
 
-// Register FluentValidation
-// FluentValidation registration
-builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
-
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -135,5 +197,41 @@ app.UseGlobalAuditMiddleware();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Log server information before running
+Log.Information("═══════════════════════════════════════════════════════════");
+Log.Information("🚀 CanPany API Server Starting");
+Log.Information("═══════════════════════════════════════════════════════════");
+
+// Get server URLs from configuration or use defaults
+var configuredUrls = builder.Configuration["Urls"];
+if (!string.IsNullOrEmpty(configuredUrls))
+{
+    var urls = configuredUrls.Split(';');
+    foreach (var url in urls)
+    {
+        Log.Information("📍 Server Host: {ServerUrl}", url.Trim());
+    }
+}
+else
+{
+    // Default URLs from launchSettings.json
+    Log.Information("📍 Server Host: http://localhost:5047");
+    Log.Information("📍 Server Host: https://localhost:7011");
+}
+
+// Log MongoDB connection info
+if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString))
+{
+    Log.Information("🗄️  MongoDB Host: {MongoHost}", mongoHost ?? "Unknown");
+    Log.Information("📦 Database: {DatabaseName}", mongoOptions.DatabaseName);
+}
+else
+{
+    Log.Warning("⚠️  MongoDB configuration not found");
+}
+
+Log.Information("🌍 Environment: {Environment}", app.Environment.EnvironmentName);
+Log.Information("═══════════════════════════════════════════════════════════");
 
 app.Run();

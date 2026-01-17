@@ -77,6 +77,7 @@ public class MessageService : IMessageService
         {
             // TODO: Implement conversation grouping logic
             // This should group messages by conversation key and return latest message per conversation
+            await Task.CompletedTask;
             throw new NotImplementedException("GetConversationsForUserAsync not fully implemented");
         }
         catch (Exception ex)

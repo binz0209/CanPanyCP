@@ -234,6 +234,7 @@ public class ApplicationsController : ControllerBase
         {
             // TODO: Implement private notes feature
             // This might require a separate Notes entity or field in Application
+            await Task.CompletedTask;
             return Ok(ApiResponse.CreateSuccess("Note added successfully"));
         }
         catch (Exception ex)

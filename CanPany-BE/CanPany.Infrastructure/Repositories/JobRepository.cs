@@ -1,6 +1,7 @@
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Infrastructure.Data;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace CanPany.Infrastructure.Repositories;
@@ -49,12 +50,22 @@ public class JobRepository : IJobRepository
 
         if (!string.IsNullOrWhiteSpace(categoryId))
         {
-            filters.Add(filterBuilder.Eq(j => j.CategoryId, categoryId));
+            // Validate that categoryId is a valid ObjectId before using it
+            if (ObjectId.TryParse(categoryId, out _))
+            {
+                filters.Add(filterBuilder.Eq(j => j.CategoryId, categoryId));
+            }
+            // If categoryId is not a valid ObjectId, skip this filter (don't throw error)
         }
 
         if (skillIds != null && skillIds.Any())
         {
-            filters.Add(filterBuilder.AnyIn(j => j.SkillIds, skillIds));
+            // Filter out invalid ObjectIds from skillIds
+            var validSkillIds = skillIds.Where(id => !string.IsNullOrWhiteSpace(id) && ObjectId.TryParse(id, out _)).ToList();
+            if (validSkillIds.Any())
+            {
+                filters.Add(filterBuilder.AnyIn(j => j.SkillIds, validSkillIds));
+            }
         }
 
         if (minBudget.HasValue)

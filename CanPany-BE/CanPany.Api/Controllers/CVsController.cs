@@ -177,6 +177,7 @@ public class CVsController : ControllerBase
         {
             // TODO: Implement AI CV analysis using Gemini API
             // This should extract skills, calculate ATS score, etc.
+            await Task.CompletedTask;
             return Ok(ApiResponse.CreateSuccess("CV analysis started. Results will be available shortly."));
         }
         catch (Exception ex)
