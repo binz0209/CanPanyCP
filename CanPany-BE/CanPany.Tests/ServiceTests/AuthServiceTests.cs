@@ -4,6 +4,7 @@ using CanPany.Application.Interfaces.Services;
 using CanPany.Application.DTOs.Auth;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -14,11 +15,25 @@ public class AuthServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Mock<IHashService> _hashServiceMock = new();
     private readonly Mock<ILogger<AuthService>> _loggerMock = new();
+    private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
-        _authService = new AuthService(_userRepositoryMock.Object, _hashServiceMock.Object, _loggerMock.Object);
+        // Setup JWT configuration
+        var jwtSectionMock = new Mock<IConfigurationSection>();
+        jwtSectionMock.Setup(x => x["SecretKey"]).Returns("YourSuperSecretKeyForJWTTokenGeneration-MustBeAtLeast32Characters");
+        jwtSectionMock.Setup(x => x["Issuer"]).Returns("CanPany");
+        jwtSectionMock.Setup(x => x["Audience"]).Returns("CanPanyUsers");
+        jwtSectionMock.Setup(x => x["ExpirationMinutes"]).Returns("30");
+        
+        _configurationMock.Setup(x => x.GetSection("Jwt")).Returns(jwtSectionMock.Object);
+        
+        _authService = new AuthService(
+            _userRepositoryMock.Object,
+            _hashServiceMock.Object,
+            _loggerMock.Object,
+            _configurationMock.Object);
     }
 
     [Fact]

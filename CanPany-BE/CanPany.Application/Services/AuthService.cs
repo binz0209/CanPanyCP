@@ -2,6 +2,11 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.Security.Claims;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CanPany.Application.Services;
 
@@ -13,16 +18,19 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IHashService _hashService;
     private readonly ILogger<AuthService> _logger;
+    private readonly IConfiguration _configuration;
     private readonly Dictionary<string, (string Code, DateTime Expires)> _resetCodes = new(); // In-memory, should use Redis in production
 
     public AuthService(
         IUserRepository userRepository,
         IHashService hashService,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IConfiguration configuration)
     {
         _userRepository = userRepository;
         _hashService = hashService;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<User?> AuthenticateAsync(string email, string password)
@@ -50,9 +58,42 @@ public class AuthService : IAuthService
 
     public Task<string> GenerateTokenAsync(User user)
     {
-        // TODO: Implement JWT token generation
-        // This should be implemented with JWT service
-        throw new NotImplementedException("JWT token generation not implemented yet");
+        try
+        {
+            var jwtSettings = _configuration.GetSection("Jwt");
+            var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+            var issuer = jwtSettings["Issuer"] ?? "CanPany";
+            var audience = jwtSettings["Audience"] ?? "CanPanyUsers";
+            var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "30");
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new List<Claim>
+            {
+                new Claim("sub", user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.FullName),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+                signingCredentials: credentials
+            );
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            return Task.FromResult(tokenString);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating JWT token for user: {UserId}", user.Id);
+            throw;
+        }
     }
 
     public Task<bool> LogoutAsync(string userId, string token)
