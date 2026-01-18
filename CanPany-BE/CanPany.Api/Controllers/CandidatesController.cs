@@ -19,6 +19,7 @@ public class CandidatesController : ControllerBase
     private readonly ICVService _cvService;
     private readonly IApplicationService _applicationService;
     private readonly ILogger<CandidatesController> _logger;
+    private readonly II18nService _i18nService;
 
     public CandidatesController(
         ICandidateSearchService candidateSearchService,
@@ -26,7 +27,8 @@ public class CandidatesController : ControllerBase
         IUserProfileService userProfileService,
         ICVService cvService,
         IApplicationService applicationService,
-        ILogger<CandidatesController> logger)
+        ILogger<CandidatesController> logger,
+        II18nService i18nService)
     {
         _candidateSearchService = candidateSearchService;
         _userService = userService;
@@ -34,6 +36,7 @@ public class CandidatesController : ControllerBase
         _cvService = cvService;
         _applicationService = applicationService;
         _logger = logger;
+        _i18nService = i18nService;
     }
 
     /// <summary>
@@ -46,12 +49,17 @@ public class CandidatesController : ControllerBase
         try
         {
             var candidates = await _candidateSearchService.SearchCandidatesAsync(jobId, limit);
-            return Ok(ApiResponse.CreateSuccess(candidates, "Candidates retrieved successfully"));
+            var result = candidates.Select(c => new 
+            {
+                c.Profile,
+                c.MatchScore
+            });
+            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage("CandidatesRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching candidates");
-            return StatusCode(500, ApiResponse.CreateError("Failed to search candidates", "SearchCandidatesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SearchCandidatesFailed"));
         }
     }
 
@@ -64,6 +72,7 @@ public class CandidatesController : ControllerBase
         [FromQuery] string? keyword,
         [FromQuery] List<string>? skillIds,
         [FromQuery] string? location,
+        [FromQuery] string? experience,
         [FromQuery] decimal? minHourlyRate,
         [FromQuery] decimal? maxHourlyRate,
         [FromQuery] int page = 1,
@@ -72,13 +81,20 @@ public class CandidatesController : ControllerBase
         try
         {
             var candidates = await _candidateSearchService.SearchCandidatesWithFiltersAsync(
-                keyword, skillIds, location, minHourlyRate, maxHourlyRate, page, pageSize);
-            return Ok(ApiResponse.CreateSuccess(candidates, "Candidates retrieved successfully"));
+                keyword, skillIds, location, experience, minHourlyRate, maxHourlyRate, page, pageSize);
+            
+            var result = candidates.Select(c => new 
+            {
+                c.Profile,
+                c.MatchScore
+            });
+
+            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage("CandidatesRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching candidates with filters");
-            return StatusCode(500, ApiResponse.CreateError("Failed to search candidates", "SearchCandidatesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SearchCandidatesFailed"));
         }
     }
 
@@ -93,7 +109,7 @@ public class CandidatesController : ControllerBase
         {
             var user = await _userService.GetByIdAsync(id);
             if (user == null || user.Role != "Candidate")
-                return NotFound(ApiResponse.CreateError("Candidate not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage("CandidateNotFound"), "NotFound"));
 
             var profile = await _userProfileService.GetByUserIdAsync(id);
             
@@ -108,21 +124,16 @@ public class CandidatesController : ControllerBase
                     Bio = profile.Bio,
                     Location = profile.Location,
                     HourlyRate = profile.HourlyRate,
-                    Skills = profile.SkillIds,
-                    Languages = profile.Languages,
-                    Certifications = profile.Certifications,
-                    Portfolio = profile.Portfolio,
-                    LinkedInUrl = profile.LinkedInUrl,
-                    GitHubUrl = profile.GitHubUrl
+                    Skills = profile.SkillIds
                 } : null
             };
 
-            return Ok(ApiResponse.CreateSuccess(candidateInfo, "Candidate retrieved successfully"));
+            return Ok(ApiResponse.CreateSuccess(candidateInfo, _i18nService.GetDisplayMessage("CandidateRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get candidate", "GetCandidateFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetCandidate"), "GetCandidateFailed"));
         }
     }
 
@@ -135,8 +146,8 @@ public class CandidatesController : ControllerBase
     {
         try
         {
-            var currentUserId = User.FindFirst("sub")?.Value;
-            var currentUserRole = User.FindFirst("role")?.Value;
+            var currentUserId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserRole = User.FindFirst("role")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             
             if (string.IsNullOrEmpty(currentUserId))
                 return Unauthorized();
@@ -147,7 +158,7 @@ public class CandidatesController : ControllerBase
 
             var user = await _userService.GetByIdAsync(id);
             if (user == null || user.Role != "Candidate")
-                return NotFound(ApiResponse.CreateError("Candidate not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage("CandidateNotFound"), "NotFound"));
 
             var profile = await _userProfileService.GetByUserIdAsync(id);
             var cvs = await _cvService.GetByUserIdAsync(id);
@@ -172,12 +183,12 @@ public class CandidatesController : ControllerBase
                 })
             };
 
-            return Ok(ApiResponse.CreateSuccess(fullProfile, "Candidate profile retrieved successfully"));
+            return Ok(ApiResponse.CreateSuccess(fullProfile, _i18nService.GetDisplayMessage("CandidateProfileRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate profile");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get candidate profile", "GetCandidateProfileFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetCandidateProfile"), "GetCandidateProfileFailed"));
         }
     }
 
@@ -190,22 +201,22 @@ public class CandidatesController : ControllerBase
     {
         try
         {
-            var companyId = User.FindFirst("sub")?.Value;
+            var companyId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(companyId))
                 return Unauthorized();
 
             // Check if company has unlocked this candidate
             var hasUnlocked = await _candidateSearchService.HasUnlockedCandidateAsync(companyId, id);
             if (!hasUnlocked)
-                return StatusCode(403, ApiResponse.CreateError("You must unlock candidate contact first", "UnlockRequired"));
+                return StatusCode(403, ApiResponse.CreateError(_i18nService.GetErrorMessage("UnlockRequired"), "UnlockRequired"));
 
             var cvs = await _cvService.GetByUserIdAsync(id);
-            return Ok(ApiResponse.CreateSuccess(cvs, "Candidate CVs retrieved successfully"));
+            return Ok(ApiResponse.CreateSuccess(cvs, _i18nService.GetDisplayMessage("CandidateCVsRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate CVs");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get candidate CVs", "GetCandidateCVsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetCandidateCVs"), "GetCandidateCVsFailed"));
         }
     }
 
@@ -218,7 +229,8 @@ public class CandidatesController : ControllerBase
     {
         try
         {
-            var currentUserId = User.FindFirst("sub")?.Value;
+            var currentUserId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserRole = User.FindFirst("role")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             if (string.IsNullOrEmpty(currentUserId))
                 return Unauthorized();
 
@@ -233,12 +245,12 @@ public class CandidatesController : ControllerBase
                 applications = applications.Where(a => a.Status == status);
             }
 
-            return Ok(ApiResponse.CreateSuccess(applications, "Applications retrieved successfully"));
+            return Ok(ApiResponse.CreateSuccess(applications, _i18nService.GetDisplayMessage("ApplicationsRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate applications");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get applications", "GetApplicationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetApplications"), "GetApplicationsFailed"));
         }
     }
 
@@ -251,8 +263,8 @@ public class CandidatesController : ControllerBase
     {
         try
         {
-            var currentUserId = User.FindFirst("sub")?.Value;
-            var currentUserRole = User.FindFirst("role")?.Value;
+            var currentUserId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserRole = User.FindFirst("role")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             
             if (string.IsNullOrEmpty(currentUserId))
                 return Unauthorized();
@@ -277,12 +289,12 @@ public class CandidatesController : ControllerBase
                 SkillsCount = profile?.SkillIds?.Count ?? 0
             };
 
-            return Ok(ApiResponse.CreateSuccess(statistics, "Statistics retrieved successfully"));
+            return Ok(ApiResponse.CreateSuccess(statistics, _i18nService.GetDisplayMessage("StatisticsRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate statistics");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get statistics", "GetStatisticsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetStatistics"), "GetStatisticsFailed"));
         }
     }
 
@@ -295,20 +307,20 @@ public class CandidatesController : ControllerBase
     {
         try
         {
-            var companyId = User.FindFirst("sub")?.Value;
+            var companyId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(companyId))
                 return Unauthorized();
 
             var succeeded = await _candidateSearchService.UnlockCandidateContactAsync(companyId, candidateId);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError("Failed to unlock candidate contact", "UnlockFailed"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage("UnlockFailed"), "UnlockFailed"));
 
-            return Ok(ApiResponse.CreateSuccess("Candidate contact unlocked successfully"));
+            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage("CandidateContactUnlockedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error unlocking candidate");
-            return StatusCode(500, ApiResponse.CreateError("Failed to unlock candidate", "UnlockCandidateFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToUnlockCandidate"), "UnlockCandidateFailed"));
         }
     }
 
@@ -321,17 +333,22 @@ public class CandidatesController : ControllerBase
     {
         try
         {
-            var companyId = User.FindFirst("sub")?.Value;
+            var companyId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(companyId))
                 return Unauthorized();
 
             var unlockedCandidates = await _candidateSearchService.GetUnlockedCandidatesAsync(companyId, page, pageSize);
-            return Ok(ApiResponse.CreateSuccess(unlockedCandidates, "Unlocked candidates retrieved successfully"));
+            var result = unlockedCandidates.Select(uc => new
+            {
+                uc.User,
+                uc.Profile
+            });
+            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage("UnlockedCandidatesRetrievedSuccessfully")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting unlocked candidates");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get unlocked candidates", "GetUnlockedCandidatesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetUnlockedCandidates"), "GetUnlockedCandidatesFailed"));
         }
     }
 
@@ -356,5 +373,3 @@ public class CandidatesController : ControllerBase
         return (int)((double)filledFields / totalFields * 100);
     }
 }
-
-

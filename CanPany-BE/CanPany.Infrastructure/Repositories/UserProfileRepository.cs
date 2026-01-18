@@ -2,6 +2,8 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Infrastructure.Data;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 
 namespace CanPany.Infrastructure.Repositories;
 
@@ -50,6 +52,45 @@ public class UserProfileRepository : IUserProfileRepository
     public async Task<IEnumerable<UserProfile>> GetAllAsync()
     {
         return await _collection.Find(_ => true).ToListAsync();
+    }
+
+    public async Task<IEnumerable<(UserProfile Profile, double Score)>> SearchByVectorAsync(List<double> vector, int limit = 20, double minScore = 0.5)
+    {
+        var vectorSearch = new BsonDocument
+        {
+            { "$vectorSearch", new BsonDocument
+                {
+                    { "index", "vector_index" },
+                    { "path", "embedding" },
+                    { "queryVector", new BsonArray(vector) },
+                    { "numCandidates", limit * 10 },
+                    { "limit", limit }
+                }
+            }
+        };
+
+        var project = new BsonDocument
+        {
+            { "$project", new BsonDocument
+                {
+                    { "score", new BsonDocument("$meta", "vectorSearchScore") },
+                    { "root", "$$ROOT" }
+                }
+            }
+        };
+
+        var pipeline = new[] { vectorSearch, project };
+        
+        // Use BsonDocument result mapping first
+        var results = await _collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+        return results.Select(doc => 
+        {
+            var score = doc["score"].AsDouble;
+            // Deserialize the root document back to UserProfile
+            var profile = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<UserProfile>(doc["root"].AsBsonDocument);
+            return (profile, score);
+        });
     }
 }
 
