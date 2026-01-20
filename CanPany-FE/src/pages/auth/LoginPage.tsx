@@ -4,9 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, Briefcase, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
-import { authApi } from '@/api';
-import { useAuthStore } from '@/stores/auth.store';
+import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui';
+import { authApi } from '../../api';
+import { useAuthStore } from '../../stores/auth.store';
 import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
