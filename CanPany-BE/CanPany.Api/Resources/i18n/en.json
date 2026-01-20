@@ -1,4 +1,16 @@
 {
+  "Display": {
+    "Email": {
+      "Welcome": {
+        "Subject": "Welcome to CanPany!",
+        "Body": "Hello {0},\n\nThank you for joining CanPany. We are excited to have you on board!\n\nBest regards,\nThe CanPany Team"
+      },
+      "PasswordReset": {
+        "Subject": "CanPany - Password Reset Request",
+        "Body": "Hello {0},\n\nYour password reset code is: {1}\n\nThis code will expire in {2} minutes.\n\nIf you did not request a password reset, please ignore this email."
+      }
+    }
+  },
   "Audit": {
     "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
     "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",

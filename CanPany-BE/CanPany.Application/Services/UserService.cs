@@ -16,6 +16,7 @@ public class UserService : IUserService
     private readonly IWalletService _walletService;
     private readonly IUserProfileService _profileService;
     private readonly ICompanyService _companyService;
+    private readonly IEmailService _emailService;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -24,6 +25,7 @@ public class UserService : IUserService
         IWalletService walletService,
         IUserProfileService profileService,
         ICompanyService companyService,
+        IEmailService emailService,
         ILogger<UserService> logger)
     {
         _repo = repo;
@@ -31,6 +33,7 @@ public class UserService : IUserService
         _walletService = walletService;
         _profileService = profileService;
         _companyService = companyService;
+        _emailService = emailService;
         _logger = logger;
     }
 
@@ -183,6 +186,17 @@ public class UserService : IUserService
                     // Company không bắt buộc ngay lập tức, user có thể tạo sau
                     _logger.LogWarning("Company creation failed but continuing registration: {UserId}", createdUser.Id);
                 }
+            }
+
+            // Send welcome email
+            try 
+            {
+                await _emailService.SendWelcomeEmailAsync(email, fullName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email to {Email}", email);
+                // Don't fail registration if email fails
             }
 
             return createdUser;

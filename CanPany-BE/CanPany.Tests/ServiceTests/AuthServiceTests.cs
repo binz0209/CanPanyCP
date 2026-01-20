@@ -16,6 +16,7 @@ public class AuthServiceTests
     private readonly Mock<IHashService> _hashServiceMock = new();
     private readonly Mock<ILogger<AuthService>> _loggerMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
+    private readonly Mock<IEmailService> _emailServiceMock = new();
     private readonly AuthService _authService;
 
     public AuthServiceTests()
@@ -33,7 +34,8 @@ public class AuthServiceTests
             _userRepositoryMock.Object,
             _hashServiceMock.Object,
             _loggerMock.Object,
-            _configurationMock.Object);
+            _configurationMock.Object,
+            _emailServiceMock.Object);
     }
 
     [Fact]

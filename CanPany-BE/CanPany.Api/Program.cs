@@ -96,18 +96,21 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Configure Email Options
+builder.Services.Configure<CanPany.Domain.Entities.EmailOptions>(builder.Configuration.GetSection("SendGrid"));
+
 // Register Application Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IJobService, JobService>();
-builder.Services.AddScoped<ICVService, CVService>();
-builder.Services.AddScoped<ICompanyService, CompanyService>();
-builder.Services.AddScoped<IApplicationService, ApplicationService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddServiceWithInterceptor<IUserService, UserService>();
+builder.Services.AddServiceWithInterceptor<IJobService, JobService>();
+builder.Services.AddServiceWithInterceptor<ICVService, CVService>();
+builder.Services.AddServiceWithInterceptor<ICompanyService, CompanyService>();
+builder.Services.AddServiceWithInterceptor<IApplicationService, ApplicationService>();
+builder.Services.AddServiceWithInterceptor<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddServiceWithInterceptor<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 builder.Services.AddScoped<IAIChatService, AIChatService>();
 builder.Services.AddScoped<ICandidateSearchService, CandidateSearchService>();
@@ -118,6 +121,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();

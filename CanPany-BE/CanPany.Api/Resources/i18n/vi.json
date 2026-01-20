@@ -1,4 +1,16 @@
 {
+  "Display": {
+    "Email": {
+      "Welcome": {
+        "Subject": "Chào mừng đến với CanPany!",
+        "Body": "Xin chào {0},\n\nCảm ơn bạn đã tham gia CanPany. Chúng tôi rất vui khi có bạn đồng hành!\n\nTrân trọng,\nĐội ngũ CanPany"
+      },
+      "PasswordReset": {
+        "Subject": "CanPany - Yêu cầu đặt lại mật khẩu",
+        "Body": "Xin chào {0},\n\nMã xác nhận đặt lại mật khẩu của bạn là: {1}\n\nMã này sẽ hết hạn trong {2} phút.\n\nNếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này."
+      }
+    }
+  },
   "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
   "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
   "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",

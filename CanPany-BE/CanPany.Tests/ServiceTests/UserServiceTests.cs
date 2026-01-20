@@ -16,6 +16,7 @@ public class UserServiceTests
     private readonly Mock<IWalletService> _walletServiceMock = new();
     private readonly Mock<IUserProfileService> _userProfileServiceMock = new();
     private readonly Mock<ICompanyService> _companyServiceMock = new();
+    private readonly Mock<IEmailService> _emailServiceMock = new();
     private readonly Mock<ILogger<UserService>> _loggerMock = new();
     private readonly UserService _userService;
 
@@ -27,6 +28,7 @@ public class UserServiceTests
             _walletServiceMock.Object,
             _userProfileServiceMock.Object,
             _companyServiceMock.Object,
+            _emailServiceMock.Object,
             _loggerMock.Object);
     }
 

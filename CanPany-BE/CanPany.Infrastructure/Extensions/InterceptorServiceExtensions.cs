@@ -72,7 +72,7 @@ public static class InterceptorServiceExtensions
             sp =>
             {
                 var implementation = sp.GetRequiredService<TImplementation>();
-                return ServiceInterceptorFactory.CreateInterceptor(implementation, sp);
+                return ServiceInterceptorFactory.CreateInterceptor<TInterface>(implementation, sp);
             },
             lifetime));
 
