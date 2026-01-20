@@ -1,0 +1,24 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CanPany.Shared -> C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Shared\bin\Debug\net8.0\CanPany.Shared.dll
+  CanPany.Domain -> C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Domain\bin\Debug\net8.0\CanPany.Domain.dll
+  CanPany.Application -> C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Application\bin\Debug\net8.0\CanPany.Application.dll
+  CanPany.Infrastructure -> C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Infrastructure\bin\Debug\net8.0\CanPany.Infrastructure.dll
+  CanPany.Api -> C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Api\bin\Debug\net8.0\CanPany.Api.dll
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\ControllerTests\AdminControllerTests.cs(32,27): error CS7036: There is no argument given that corresponds to the required parameter 'logger' of 'AdminController.AdminController(IAdminDashboardService, IAdminService, IUserService, ICompanyService, IJobService, IPaymentService, ICategoryService, ISkillService, IBannerService, IPremiumPackageService, IReportService, ILogger<AdminController>)' [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\I18nTests\I18nServiceTests.cs(198,13): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\I18nTests\I18nServiceTests.cs(199,13): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\InterceptorTests\ServiceInterceptorTests.cs(66,17): warning CS8602: Dereference of a possibly null reference. [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+
+Build FAILED.
+
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\I18nTests\I18nServiceTests.cs(198,13): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\I18nTests\I18nServiceTests.cs(199,13): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\InterceptorTests\ServiceInterceptorTests.cs(66,17): warning CS8602: Dereference of a possibly null reference. [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\ControllerTests\AdminControllerTests.cs(32,27): error CS7036: There is no argument given that corresponds to the required parameter 'logger' of 'AdminController.AdminController(IAdminDashboardService, IAdminService, IUserService, ICompanyService, IJobService, IPaymentService, ICategoryService, ISkillService, IBannerService, IPremiumPackageService, IReportService, ILogger<AdminController>)' [C:\Users\This PC\Desktop\CanPanyCP-main\CanPanyCP-main\CanPany-BE\CanPany.Tests\CanPany.Tests.csproj]
+    3 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.57
+
+Workload updates are available. Run `dotnet workload list` for more information.
