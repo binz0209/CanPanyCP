@@ -46,12 +46,52 @@ public class CandidatesController : ControllerBase
         try
         {
             var candidates = await _candidateSearchService.SearchCandidatesAsync(jobId, limit);
-            return Ok(ApiResponse.CreateSuccess(candidates, "Candidates retrieved successfully"));
+            
+            var result = candidates.Select(c => new 
+            {
+                c.Profile,
+                c.MatchScore
+            });
+
+            return Ok(ApiResponse.CreateSuccess(result, "Candidates retrieved successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching candidates");
             return StatusCode(500, ApiResponse.CreateError("Failed to search candidates", "SearchCandidatesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Semantic search candidates by job description (vector embedding + cosine similarity).
+    /// Supports filtering by location and experience level.
+    /// </summary>
+    [HttpGet("search/semantic")]
+    // [Authorize(Roles = "Company,Admin")]
+    public async Task<IActionResult> SearchCandidatesSemantic(
+        [FromQuery] string jobId,
+        [FromQuery] int limit = 20,
+        [FromQuery] string? location = null,
+        [FromQuery] string? experienceLevel = null)
+    {
+        try
+        {
+            var candidates = await _candidateSearchService.SearchCandidatesSemanticAsync(
+                jobId, limit, location, experienceLevel);
+            
+            // Project tuple to anonymous object for proper JSON serialization
+            var result = candidates.Select(c => new 
+            {
+                c.Profile,
+                c.MatchScore
+            });
+
+            return Ok(ApiResponse.CreateSuccess(result, "Candidates retrieved successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching candidates semantically");
+            return StatusCode(500, ex.ToString());
         }
     }
 
@@ -73,7 +113,18 @@ public class CandidatesController : ControllerBase
         {
             var candidates = await _candidateSearchService.SearchCandidatesWithFiltersAsync(
                 keyword, skillIds, location, minHourlyRate, maxHourlyRate, page, pageSize);
-            return Ok(ApiResponse.CreateSuccess(candidates, "Candidates retrieved successfully"));
+            
+            var result = candidates.Select(c => new 
+            {
+                c.Profile,
+                c.MatchScore
+            });
+
+            return Ok(ApiResponse.CreateSuccess(result, "Candidates retrieved successfully"));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ApiResponse.CreateError(ex.Message, "InvalidInput"));
         }
         catch (Exception ex)
         {

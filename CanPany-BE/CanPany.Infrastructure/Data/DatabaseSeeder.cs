@@ -96,6 +96,30 @@ public class DatabaseSeeder
 
         // Seed Reviews
         await SeedReviewsAsync();
+
+        // Seed Audit Logs
+        await SeedAuditLogsAsync();
+
+        // Seed CV Analyses
+        await SeedCVAnalysesAsync();
+
+        // Seed Candidate Alerts
+        await SeedCandidateAlertsAsync();
+
+        // Seed Contracts
+        await SeedContractsAsync();
+
+        // Seed Filter Presets
+        await SeedFilterPresetsAsync();
+
+        // Seed Job Alerts
+        await SeedJobAlertsAsync();
+
+        // Seed Proposals
+        await SeedProposalsAsync();
+
+        // Seed Reports
+        await SeedReportsAsync();
     }
 
     private async Task SeedCategoriesAsync()
@@ -1037,6 +1061,244 @@ public class DatabaseSeeder
         {
             await reviewsCollection.InsertManyAsync(reviews);
         }
+    }
+    private async Task SeedAuditLogsAsync()
+    {
+        var auditLogsCollection = _context.AuditLogs;
+        var existingCount = await auditLogsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var users = await _context.Users.Find(_ => true).Limit(5).ToListAsync();
+        if (!users.Any()) return;
+
+        var auditLogs = new List<AuditLog>();
+        var actions = new[] { "Login", "Logout", "CreateJob", "UpdateProfile", "ViewCandidate" };
+        var random = new Random();
+
+        foreach (var user in users)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                auditLogs.Add(new AuditLog
+                {
+                    UserId = user.Id,
+                    UserEmail = user.Email,
+                    Action = actions[random.Next(actions.Length)],
+                    EntityType = "User",
+                    EntityId = user.Id,
+                    Endpoint = "/api/v1/auth/login",
+                    HttpMethod = "POST",
+                    RequestPath = "/api/v1/auth/login",
+                    IpAddress = "127.0.0.1",
+                    UserAgent = "Mozilla/5.0",
+                    ResponseStatusCode = 200,
+                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(30))
+                });
+            }
+        }
+
+        await auditLogsCollection.InsertManyAsync(auditLogs);
+    }
+
+    private async Task SeedCVAnalysesAsync()
+    {
+        var analysesCollection = _context.CVAnalyses;
+        var existingCount = await analysesCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var cvs = await _context.CVs.Find(_ => true).Limit(10).ToListAsync();
+        if (!cvs.Any()) return;
+
+        var analyses = cvs.Select(cv => new CVAnalysis
+        {
+            CVId = cv.Id,
+            CandidateId = cv.UserId,
+            // CV.AtsScore is decimal? while CVAnalysis.ATSScore is double
+            ATSScore = (double)(cv.AtsScore ?? 0m),
+            MissingKeywords = new List<string> { "Kubernetes", "Microservices" },
+            ImprovementSuggestions = new List<string> { "Add more quantifiable achievements", "Highlight leadership details" },
+            AnalyzedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        await analysesCollection.InsertManyAsync(analyses);
+    }
+
+    private async Task SeedCandidateAlertsAsync()
+    {
+        var alertsCollection = _context.CandidateAlerts;
+        var existingCount = await alertsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var companies = await _context.Companies.Find(_ => true).Limit(5).ToListAsync();
+        if (!companies.Any()) return;
+
+        var alerts = companies.Select(company => new CandidateAlert
+        {
+            CompanyId = company.Id,
+            Name = "Senior Developers Alert",
+            SkillIds = new List<string>(), // Simplified for seeding
+            Location = "Ho Chi Minh City",
+            MinExperience = 3,
+            MaxExperience = 10,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        await alertsCollection.InsertManyAsync(alerts);
+    }
+
+    private async Task SeedContractsAsync()
+    {
+        var contractsCollection = _context.Contracts;
+        var existingCount = await contractsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var projects = await _context.Projects.Find(p => p.Status == "InProgress" || p.Status == "Completed").ToListAsync();
+        var candidates = await _context.Users.Find(u => u.Role == "Candidate").ToListAsync();
+
+        if (!projects.Any() || !candidates.Any()) return;
+
+        var contracts = new List<Contract>();
+        var random = new Random();
+
+        foreach (var project in projects.Take(5))
+        {
+            var candidate = candidates[random.Next(candidates.Count)];
+            contracts.Add(new Contract
+            {
+                ProjectId = project.Id,
+                ClientId = project.OwnerId, // Note: OwnerId in Project is likely UserId of Company, verifying... yes checked User seeding
+                FreelancerId = candidate.Id,
+                // Project.BudgetAmount is decimal? while Contract.AgreedAmount is decimal
+                AgreedAmount = project.BudgetAmount ?? 0m,
+                Status = project.Status == "Completed" ? "Completed" : "Active",
+                CreatedAt = DateTime.UtcNow.AddDays(-30)
+            });
+        }
+
+        await contractsCollection.InsertManyAsync(contracts);
+    }
+
+    private async Task SeedFilterPresetsAsync()
+    {
+        var presetsCollection = _context.FilterPresets;
+        var existingCount = await presetsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var users = await _context.Users.Find(_ => true).Limit(5).ToListAsync();
+        if (!users.Any()) return;
+
+        var presets = users.Select(user => new FilterPreset
+        {
+            UserId = user.Id,
+            Name = "My Default Search",
+            FilterType = user.Role == "Candidate" ? "JobSearch" : "CandidateSearch",
+            Filters = new Dictionary<string, object> { { "location", "Ho Chi Minh City" } },
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        await presetsCollection.InsertManyAsync(presets);
+    }
+
+    private async Task SeedJobAlertsAsync()
+    {
+        var alertsCollection = _context.JobAlerts;
+        var existingCount = await alertsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var candidates = await _context.Users.Find(u => u.Role == "Candidate").Limit(5).ToListAsync();
+        if (!candidates.Any()) return;
+
+        var alerts = candidates.Select(candidate => new JobAlert
+        {
+            UserId = candidate.Id,
+            Name = "Remote React Jobs",
+            SkillIds = new List<string>(), // Simplified
+            Location = "Remote",
+            MinBudget = 1000,
+            IsRemote = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        await alertsCollection.InsertManyAsync(alerts);
+    }
+
+    private async Task SeedProposalsAsync()
+    {
+        var proposalsCollection = _context.Proposals;
+        var existingCount = await proposalsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var projects = await _context.Projects.Find(_ => true).Limit(5).ToListAsync();
+        var candidates = await _context.Users.Find(u => u.Role == "Candidate").ToListAsync();
+
+        if (!projects.Any() || !candidates.Any()) return;
+
+        var proposals = new List<Proposal>();
+        var random = new Random();
+
+        foreach (var project in projects)
+        {
+            var candidateCount = random.Next(1, 4);
+            for (int i = 0; i < candidateCount; i++)
+            {
+                var candidate = candidates[random.Next(candidates.Count)];
+                proposals.Add(new Proposal
+                {
+                    ProjectId = project.Id,
+                    FreelancerId = candidate.Id,
+                    CoverLetter = "I can complete this project on time.",
+                    BidAmount = project.BudgetAmount,
+                    Status = "Pending",
+                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10))
+                });
+            }
+        }
+
+        await proposalsCollection.InsertManyAsync(proposals);
+    }
+
+    private async Task SeedReportsAsync()
+    {
+        var reportsCollection = _context.Reports;
+        var existingCount = await reportsCollection.CountDocumentsAsync(_ => true);
+
+        if (existingCount > 0) return;
+
+        var users = await _context.Users.Find(_ => true).ToListAsync();
+        if (users.Count < 2) return;
+
+        var reports = new List<Report>();
+        var random = new Random();
+
+        for (int i = 0; i < 5; i++)
+        {
+            var reporter = users[random.Next(users.Count)];
+            var reported = users[random.Next(users.Count)];
+            
+            if (reporter.Id == reported.Id) continue;
+
+            reports.Add(new Report
+            {
+                ReporterId = reporter.Id,
+                ReportedUserId = reported.Id,
+                Reason = "Spam",
+                Description = "This user is sending spam messages.",
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10))
+            });
+        }
+
+        await reportsCollection.InsertManyAsync(reports);
     }
 }
 

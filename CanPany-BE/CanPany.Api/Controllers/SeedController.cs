@@ -2,6 +2,7 @@ using CanPany.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
+using Microsoft.Extensions.Options;
 
 namespace CanPany.Api.Controllers;
 
@@ -11,10 +12,12 @@ public class SeedController : ControllerBase
 {
     private readonly MongoDbContext _context;
     private readonly ILogger<SeedController> _logger;
+    private readonly IOptions<MongoOptions> _mongoOptions;
 
-    public SeedController(MongoDbContext context, ILogger<SeedController> logger)
+    public SeedController(MongoDbContext context, IOptions<MongoOptions> mongoOptions, ILogger<SeedController> logger)
     {
         _context = context;
+        _mongoOptions = mongoOptions;
         _logger = logger;
     }
 
@@ -22,11 +25,32 @@ public class SeedController : ControllerBase
     /// Seed database with initial data
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> SeedDatabase()
+    public async Task<IActionResult> SeedDatabase([FromQuery] bool reset = false)
     {
         try
         {
             _logger.LogInformation("Starting database seeding...");
+
+            if (reset)
+            {
+                // Drop the whole database so seeding can run from a clean slate.
+                // This avoids partial data preventing other seed steps (many seeders short-circuit if any data exists).
+                var options = _mongoOptions.Value;
+                if (string.IsNullOrWhiteSpace(options.ConnectionString))
+                {
+                    return StatusCode(500, new
+                    {
+                        Success = false,
+                        Message = "MongoDB configuration is missing (MongoDB:ConnectionString)",
+                        Timestamp = DateTime.UtcNow
+                    });
+                }
+
+                _logger.LogWarning("Reset requested: dropping MongoDB database {DatabaseName}", options.DatabaseName);
+                var client = new MongoClient(options.ConnectionString);
+                await client.DropDatabaseAsync(options.DatabaseName);
+            }
+
             var seeder = new DatabaseSeeder(_context);
             await seeder.SeedAsync();
 

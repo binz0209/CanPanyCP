@@ -7,6 +7,7 @@ using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Services;
 using CanPany.Application.Validators;
 using CanPany.Infrastructure.Extensions;
+using CanPany.Application.Common.SemanticSearch;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
@@ -162,6 +163,9 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+
+// Semantic search helpers
+builder.Services.AddSingleton<ITextEmbeddingService>(sp => new HashingTextEmbeddingService(dims: 256));
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();

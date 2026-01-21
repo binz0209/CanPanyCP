@@ -8,6 +8,11 @@ namespace CanPany.Application.Interfaces.Services;
 public interface ICandidateSearchService
 {
     Task<IEnumerable<(UserProfile Profile, double MatchScore)>> SearchCandidatesAsync(string jobId, int limit = 20);
+    Task<IEnumerable<(UserProfile Profile, double MatchScore)>> SearchCandidatesSemanticAsync(
+        string jobId,
+        int limit = 20,
+        string? location = null,
+        string? experienceLevel = null);
     Task<bool> UnlockCandidateContactAsync(string companyId, string candidateId);
     Task<IEnumerable<(UserProfile Profile, double MatchScore)>> SearchCandidatesWithFiltersAsync(
         string? keyword, 

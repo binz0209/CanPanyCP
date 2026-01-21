@@ -29,6 +29,12 @@ public class UserProfile
     [BsonElement("skillIds")]
     public List<string> SkillIds { get; set; } = new(); // References to Skill collection
 
+    /// <summary>
+    /// Vector embedding for semantic matching (e.g., derived from title/bio/experience + skills).
+    /// </summary>
+    [BsonElement("skillEmbedding")]
+    public List<double>? SkillEmbedding { get; set; }
+
     [BsonElement("experience")]
     public string? Experience { get; set; }
 
