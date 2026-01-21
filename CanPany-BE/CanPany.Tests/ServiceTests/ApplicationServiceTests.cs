@@ -1,5 +1,6 @@
 using CanPany.Application.Services;
 using CanPany.Domain.Interfaces.Repositories;
+using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,12 +12,22 @@ namespace CanPany.Tests.ServiceTests;
 public class ApplicationServiceTests
 {
     private readonly Mock<IApplicationRepository> _repositoryMock = new();
+    private readonly Mock<IJobService> _jobServiceMock = new();
+    private readonly Mock<IUserService> _userServiceMock = new();
+    private readonly Mock<IEmailService> _emailServiceMock = new();
+    private readonly Mock<INotificationService> _notificationServiceMock = new();
     private readonly Mock<ILogger<ApplicationService>> _loggerMock = new();
     private readonly ApplicationService _service;
 
     public ApplicationServiceTests()
     {
-        _service = new ApplicationService(_repositoryMock.Object, _loggerMock.Object);
+        _service = new ApplicationService(
+            _repositoryMock.Object, 
+            _jobServiceMock.Object,
+            _userServiceMock.Object,
+            _emailServiceMock.Object,
+            _notificationServiceMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -157,6 +168,9 @@ public class ApplicationServiceTests
             Status = "Accepted"
         };
         
+        _repositoryMock.Setup(x => x.GetByIdAsync(applicationId))
+            .ReturnsAsync(application); // Return same app or different to simulate no change, here just Valid flow
+
         _repositoryMock.Setup(x => x.UpdateAsync(It.IsAny<DomainApplication>()))
             .Returns(Task.CompletedTask);
 

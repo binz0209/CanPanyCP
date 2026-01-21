@@ -16,6 +16,7 @@ public interface IEmailService
     /// <param name="userName">The recipient's name.</param>
     /// <param name="resetCode">The password reset code.</param>
     Task SendPasswordResetEmailAsync(string toEmail, string userName, string resetCode);
+    Task SendApplicationStatusEmailAsync(string toEmail, string candidateName, string jobTitle, string status);
 
     /// <summary>
     /// Sends a generic plain text email.

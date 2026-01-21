@@ -53,6 +53,46 @@ public class EmailService : IEmailService
         await SendEmailAsync(toEmail, subject, body);
     }
 
+    public async Task SendApplicationStatusEmailAsync(string toEmail, string candidateName, string jobTitle, string status)
+    {
+        string subjectKey;
+        string bodyKey;
+
+        if (status.Equals("Accepted", StringComparison.OrdinalIgnoreCase))
+        {
+            subjectKey = "Email.ApplicationStatus.Accepted.Subject";
+            bodyKey = "Email.ApplicationStatus.Accepted.Body";
+            
+            var subjectTemplate = _i18nService.GetDisplayMessage(subjectKey);
+            var subject = string.Format(subjectTemplate, jobTitle);
+            
+            var bodyTemplate = _i18nService.GetDisplayMessage(bodyKey);
+            var body = EmailTemplates.GetApplicationAcceptedEmail(bodyTemplate, candidateName, jobTitle);
+            
+            await SendEmailAsync(toEmail, subject, body);
+        }
+        else if (status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
+        {
+            subjectKey = "Email.ApplicationStatus.Rejected.Subject";
+            bodyKey = "Email.ApplicationStatus.Rejected.Body";
+            
+            var subjectTemplate = _i18nService.GetDisplayMessage(subjectKey);
+            var subject = string.Format(subjectTemplate, jobTitle);
+
+            var bodyTemplate = _i18nService.GetDisplayMessage(bodyKey);
+            var body = EmailTemplates.GetApplicationRejectedEmail(bodyTemplate, candidateName, jobTitle);
+
+            await SendEmailAsync(toEmail, subject, body);
+        }
+        else
+        {
+            _logger.LogWarning("Email notification skipped for status: {Status}", status);
+            return;
+        }
+
+        _logger.LogInformation("Application status email ({Status}) sent to {Email}", status, toEmail);
+    }
+
     public async Task SendEmailAsync(string toEmail, string subject, string plainTextContent)
     {
         try

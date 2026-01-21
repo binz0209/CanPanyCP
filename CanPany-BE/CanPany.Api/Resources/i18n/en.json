@@ -8,6 +8,16 @@
       "PasswordReset": {
         "Subject": "CanPany - Password Reset Request",
         "Body": "Hello {0},\n\nYour password reset code is: {1}\n\nThis code will expire in {2} minutes.\n\nIf you did not request a password reset, please ignore this email."
+      },
+      "ApplicationStatus": {
+        "Accepted": {
+          "Subject": "Application Update: {0} - CanPany",
+          "Body": "Hello {0},\n\nGood news! Your application for the position of \"{1}\" has been accepted by the employer.\n\nPlease check your notifications in the app for next steps regarding the interview or onboarding process.\n\nBest of luck!"
+        },
+        "Rejected": {
+          "Subject": "Application Update: {0} - CanPany",
+          "Body": "Hello {0},\n\nThank you for your interest in the \"{1}\" position.\n\nAfter careful consideration, the employer has decided not to proceed with your application at this time.\n\nWe encourage you to apply for other openings on CanPany."
+        }
       }
     }
   },

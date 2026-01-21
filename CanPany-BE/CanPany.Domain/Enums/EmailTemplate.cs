@@ -3,5 +3,7 @@ namespace CanPany.Domain.Enums;
 public enum EmailTemplate
 {
     Welcome,
-    PasswordReset
+    PasswordReset,
+    ApplicationAccepted,
+    ApplicationRejected
 }
