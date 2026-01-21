@@ -120,6 +120,12 @@ export function ForgotPasswordPage() {
                             </div>
 
                             <div className="mt-8 space-y-3">
+                                <Link to={`/auth/reset-password?email=${encodeURIComponent(submittedEmail)}`} className="block">
+                                    <Button className="w-full" size="lg">
+                                        <KeyRound className="h-4 w-4" />
+                                        Đặt lại mật khẩu
+                                    </Button>
+                                </Link>
                                 <Button
                                     variant="outline"
                                     className="w-full"
