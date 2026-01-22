@@ -16,7 +16,7 @@ public class UserService : IUserService
     private readonly IWalletService _walletService;
     private readonly IUserProfileService _profileService;
     private readonly ICompanyService _companyService;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -25,7 +25,7 @@ public class UserService : IUserService
         IWalletService walletService,
         IUserProfileService profileService,
         ICompanyService companyService,
-        IEmailService emailService,
+        IBackgroundEmailService backgroundEmailService,
         ILogger<UserService> logger)
     {
         _repo = repo;
@@ -33,7 +33,7 @@ public class UserService : IUserService
         _walletService = walletService;
         _profileService = profileService;
         _companyService = companyService;
-        _emailService = emailService;
+        _backgroundEmailService = backgroundEmailService;
         _logger = logger;
     }
 
@@ -188,16 +188,9 @@ public class UserService : IUserService
                 }
             }
 
-            // Send welcome email
-            try 
-            {
-                await _emailService.SendWelcomeEmailAsync(email, fullName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send welcome email to {Email}", email);
-                // Don't fail registration if email fails
-            }
+            // Queue welcome email asynchronously
+            _backgroundEmailService.QueueWelcomeEmail(email, fullName);
+            _logger.LogInformation("Welcome email queued for {Email}", email);
 
             return createdUser;
         }

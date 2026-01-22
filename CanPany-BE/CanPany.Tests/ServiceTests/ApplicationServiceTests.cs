@@ -14,7 +14,7 @@ public class ApplicationServiceTests
     private readonly Mock<IApplicationRepository> _repositoryMock = new();
     private readonly Mock<IJobService> _jobServiceMock = new();
     private readonly Mock<IUserService> _userServiceMock = new();
-    private readonly Mock<IEmailService> _emailServiceMock = new();
+    private readonly Mock<IBackgroundEmailService> _backgroundEmailServiceMock = new();
     private readonly Mock<INotificationService> _notificationServiceMock = new();
     private readonly Mock<ILogger<ApplicationService>> _loggerMock = new();
     private readonly ApplicationService _service;
@@ -25,7 +25,7 @@ public class ApplicationServiceTests
             _repositoryMock.Object, 
             _jobServiceMock.Object,
             _userServiceMock.Object,
-            _emailServiceMock.Object,
+            _backgroundEmailServiceMock.Object,
             _notificationServiceMock.Object,
             _loggerMock.Object);
     }

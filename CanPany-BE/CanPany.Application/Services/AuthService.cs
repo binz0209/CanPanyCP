@@ -19,7 +19,7 @@ public class AuthService : IAuthService
     private readonly IHashService _hashService;
     private readonly ILogger<AuthService> _logger;
     private readonly IConfiguration _configuration;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly Dictionary<string, (string Code, DateTime Expires)> _resetCodes = new(); // In-memory, should use Redis in production
 
     public AuthService(
@@ -27,13 +27,13 @@ public class AuthService : IAuthService
         IHashService hashService,
         ILogger<AuthService> logger,
         IConfiguration configuration,
-        IEmailService emailService)
+        IBackgroundEmailService backgroundEmailService)
     {
         _userRepository = userRepository;
         _hashService = hashService;
         _logger = logger;
         _configuration = configuration;
-        _emailService = emailService;
+        _backgroundEmailService = backgroundEmailService;
     }
 
     public async Task<User?> AuthenticateAsync(string email, string password)
@@ -120,18 +120,11 @@ public class AuthService : IAuthService
 
             _resetCodes[email] = (code, expires);
 
-            try
-            {
-                await _emailService.SendPasswordResetEmailAsync(email, user.FullName, code);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send password reset email to {Email}", email);
-                // We might want to throw here if email is critical for reset
-            }
+            // Queue email to be sent asynchronously
+            _backgroundEmailService.QueuePasswordResetEmail(email, user.FullName, code);
 
-            _logger.LogInformation("Password reset code generated for {Email}", email);
-            return code; // In production, send via email
+            _logger.LogInformation("Password reset code generated and email queued for {Email}", email);
+            return code; // In production, don't return code - only send via email
         }
         catch (Exception ex)
         {

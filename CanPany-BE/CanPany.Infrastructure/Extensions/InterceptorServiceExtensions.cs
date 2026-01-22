@@ -85,8 +85,7 @@ public static class InterceptorServiceExtensions
     /// </summary>
     public static IServiceCollection AddHangfireJobInterceptor(this IServiceCollection services)
     {
-        // Uncomment when Hangfire is installed:
-        // services.AddScoped<JobExecutionFilter>();
+        services.AddScoped<JobExecutionFilter>();
         return services;
     }
 }

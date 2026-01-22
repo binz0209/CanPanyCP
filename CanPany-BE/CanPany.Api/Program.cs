@@ -3,6 +3,7 @@ using CanPany.Infrastructure.Repositories;
 using CanPany.Infrastructure.Security.Encryption;
 using CanPany.Infrastructure.Security.Hashing;
 using CanPany.Infrastructure.Services;
+using CanPany.Infrastructure.Jobs;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Services;
@@ -12,6 +13,10 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Hangfire;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +45,42 @@ builder.Services.AddSwaggerGen(c =>
 // Configure MongoDB
 builder.Services.Configure<MongoOptions>(builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<MongoDbContext>();
+
+// Configure Hangfire with MongoDB storage
+var mongoOptions = builder.Configuration.GetSection("MongoDB").Get<MongoOptions>();
+var mongoUrlBuilder = new MongoDB.Driver.MongoUrlBuilder(mongoOptions!.ConnectionString)
+{
+    DatabaseName = mongoOptions.DatabaseName
+};
+
+builder.Services.AddHangfire(config =>
+{
+    config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseMongoStorage(mongoUrlBuilder.ToMongoUrl().ToString(), new MongoStorageOptions
+        {
+            MigrationOptions = new MongoMigrationOptions
+            {
+                MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                BackupStrategy = new CollectionMongoBackupStrategy()
+            },
+            Prefix = "hangfire",
+            CheckConnection = true,
+            CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
+        });
+});
+
+// Add Hangfire server
+var hangfireConfig = builder.Configuration.GetSection("Hangfire");
+if (hangfireConfig.GetValue<bool>("ServerEnabled"))
+{
+    builder.Services.AddHangfireServer(options =>
+    {
+        options.WorkerCount = hangfireConfig.GetValue<int>("WorkerCount");
+        options.Queues = hangfireConfig.GetSection("Queues").Get<string[]>() ?? new[] { "default" };
+    });
+}
 
 // Register Repositories
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserRepository, CanPany.Infrastructure.Repositories.UserRepository>();
@@ -123,8 +164,13 @@ builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 
+// Register Background Email Services
+builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
+builder.Services.AddScoped<EmailJobProcessor>();
+
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();
+builder.Services.AddHangfireJobInterceptor();
 
 // Register FluentValidation
 // FluentValidation registration
@@ -152,6 +198,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+// Use Hangfire Dashboard (before authentication for development)
+var hangfireDashboardConfig = app.Configuration.GetSection("Hangfire");
+if (hangfireDashboardConfig.GetValue<bool>("DashboardEnabled"))
+{
+    var dashboardPath = hangfireDashboardConfig.GetValue<string>("DashboardPath") ?? "/hangfire";
+    app.UseHangfireDashboard(dashboardPath, new DashboardOptions
+    {
+        Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+    });
+}
 
 // Use I18N Middleware first (to detect language from headers)
 app.UseI18nMiddleware();

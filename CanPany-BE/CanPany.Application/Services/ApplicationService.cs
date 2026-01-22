@@ -14,7 +14,7 @@ public class ApplicationService : IApplicationService
     private readonly IApplicationRepository _repo;
     private readonly IJobService _jobService;
     private readonly IUserService _userService;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly INotificationService _notificationService;
     private readonly ILogger<ApplicationService> _logger;
 
@@ -22,14 +22,14 @@ public class ApplicationService : IApplicationService
         IApplicationRepository repo,
         IJobService jobService,
         IUserService userService,
-        IEmailService emailService,
+        IBackgroundEmailService backgroundEmailService,
         INotificationService notificationService,
         ILogger<ApplicationService> logger)
     {
         _repo = repo;
         _jobService = jobService;
         _userService = userService;
-        _emailService = emailService;
+        _backgroundEmailService = backgroundEmailService;
         _notificationService = notificationService;
         _logger = logger;
     }
@@ -129,8 +129,8 @@ public class ApplicationService : IApplicationService
 
                     if (job != null && candidate != null)
                     {
-                        // 1. Send Email
-                        await _emailService.SendApplicationStatusEmailAsync(
+                        // 1. Queue Email asynchronously
+                        _backgroundEmailService.QueueApplicationStatusEmail(
                             candidate.Email, 
                             candidate.FullName, 
                             job.Title, 
