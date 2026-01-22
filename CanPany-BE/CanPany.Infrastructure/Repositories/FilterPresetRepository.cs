@@ -1,4 +1,5 @@
 using CanPany.Domain.Entities;
+using CanPany.Domain.Enums;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Infrastructure.Data;
 using MongoDB.Driver;
@@ -24,7 +25,7 @@ public class FilterPresetRepository : IFilterPresetRepository
         return await _collection.Find(fp => fp.UserId == userId).ToListAsync();
     }
 
-    public async Task<IEnumerable<FilterPreset>> GetByUserIdAndTypeAsync(string userId, string filterType)
+    public async Task<IEnumerable<FilterPreset>> GetByUserIdAndTypeAsync(string userId, FilterType filterType)
     {
         return await _collection.Find(fp => fp.UserId == userId && fp.FilterType == filterType).ToListAsync();
     }

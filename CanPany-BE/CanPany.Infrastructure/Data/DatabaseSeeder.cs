@@ -1,4 +1,5 @@
 using CanPany.Domain.Entities;
+using CanPany.Domain.Enums;
 using CanPany.Infrastructure.Security.Hashing;
 using MongoDB.Driver;
 using BCrypt.Net;
@@ -1198,7 +1199,7 @@ public class DatabaseSeeder
         {
             UserId = user.Id,
             Name = "My Default Search",
-            FilterType = user.Role == "Candidate" ? "JobSearch" : "CandidateSearch",
+            FilterType = user.Role == "Candidate" ? FilterType.JobSearch : FilterType.CandidateSearch,
             Filters = new Dictionary<string, object> { { "location", "Ho Chi Minh City" } },
             CreatedAt = DateTime.UtcNow
         }).ToList();

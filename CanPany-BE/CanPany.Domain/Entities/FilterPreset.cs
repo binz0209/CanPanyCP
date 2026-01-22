@@ -1,4 +1,5 @@
 using CanPany.Shared.Common.Base;
+using CanPany.Domain.Enums;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -11,7 +12,7 @@ namespace CanPany.Domain.Entities;
 public class FilterPreset : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
-    public new string Id { get; set; } = string.Empty;
+    public new string? Id { get; set; }
 
     [BsonElement("userId"), BsonRepresentation(BsonType.ObjectId)]
     public string UserId { get; set; } = string.Empty;
@@ -20,7 +21,8 @@ public class FilterPreset : AggregateRoot
     public string Name { get; set; } = string.Empty; // Preset name
 
     [BsonElement("filterType")]
-    public string FilterType { get; set; } = string.Empty; // JobSearch, CandidateSearch
+    [BsonRepresentation(BsonType.String)]
+    public FilterType FilterType { get; set; } // JobSearch, CandidateSearch
 
     [BsonElement("filters")]
     public Dictionary<string, object> Filters { get; set; } = new(); // JSON serialized filters

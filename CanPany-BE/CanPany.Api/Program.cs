@@ -13,6 +13,9 @@ using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using MongoDB.Driver;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +28,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog(Log.Logger, dispose: true);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // Register FluentValidation (using new non-deprecated API)
 builder.Services.AddFluentValidationAutoValidation();
@@ -40,7 +47,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "AI-powered Recruitment Platform API"
     });
-});
+    });
 
 // Configure MongoDB
 builder.Services.Configure<MongoOptions>(builder.Configuration.GetSection("MongoDB"));
@@ -163,6 +170,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IFilterPresetService, FilterPresetService>();
 
 // Semantic search helpers
 builder.Services.AddSingleton<ITextEmbeddingService>(sp => new HashingTextEmbeddingService(dims: 256));

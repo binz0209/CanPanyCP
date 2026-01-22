@@ -1,4 +1,5 @@
 using CanPany.Domain.Entities;
+using CanPany.Domain.Enums;
 
 namespace CanPany.Domain.Interfaces.Repositories;
 
@@ -9,7 +10,7 @@ public interface IFilterPresetRepository
 {
     Task<FilterPreset?> GetByIdAsync(string id);
     Task<IEnumerable<FilterPreset>> GetByUserIdAsync(string userId);
-    Task<IEnumerable<FilterPreset>> GetByUserIdAndTypeAsync(string userId, string filterType);
+    Task<IEnumerable<FilterPreset>> GetByUserIdAndTypeAsync(string userId, FilterType filterType);
     Task<FilterPreset> AddAsync(FilterPreset filterPreset);
     Task UpdateAsync(FilterPreset filterPreset);
     Task DeleteAsync(string id);
