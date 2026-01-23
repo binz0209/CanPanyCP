@@ -18,6 +18,20 @@
           "Subject": "Cập nhật ứng tuyển: {0} - CanPany",
           "Body": "Xin chào {0},\n\nCảm ơn bạn đã quan tâm đến vị trí \"{1}\".\n\nSau khi xem xét kỹ lưỡng, nhà tuyển dụng quyết định chưa phù hợp để đi tiếp với hồ sơ của bạn vào lúc này.\n\nChúng tôi khuyến khích bạn ứng tuyển vào các vị trí khác trên CanPany."
         }
+      },
+      "JobMatch": {
+        "Subject": "Công việc mới phù hợp với bạn!",
+        "Body": "Xin chào {0},\n\nChúng tôi tìm thấy một công việc phù hợp với tiêu chí tìm kiếm của bạn:\n\nVị trí: {1}\nCông ty: {2}\nĐịa điểm: {3}\nMức lương: {4}\n\nHãy đăng nhập vào ứng dụng CanPany để xem chi tiết và ứng tuyển ngay!"
+      },
+      "PaymentConfirmation": {
+        "Success": {
+          "Subject": "Xác nhận thanh toán thành công - CanPany",
+          "Body": "Xin chào {0},\n\nThanh toán của bạn đã được xử lý thành công!\n\nSố tiền: {1}\nMục đích: {2}\nTrạng thái: {3}\n\nCảm ơn bạn đã sử dụng dịch vụ CanPany!"
+        },
+        "Failed": {
+          "Subject": "Thông báo thanh toán thất bại - CanPany",
+          "Body": "Xin chào {0},\n\nRất tiếc, thanh toán của bạn không thành công.\n\nSố tiền: {1}\nMục đích: {2}\nTrạng thái: {3}\n\nVui lòng thử lại hoặc liên hệ bộ phận hỗ trợ nếu vấn đề vẫn tiếp diễn."
+        }
       }
     }
   },

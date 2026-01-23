@@ -19,6 +19,11 @@ public class JobAlertRepository : IJobAlertRepository
         return await _collection.Find(ja => ja.Id == id).FirstOrDefaultAsync();
     }
 
+    public async Task<IEnumerable<JobAlert>> GetAllAsync()
+    {
+        return await _collection.Find(_ => true).ToListAsync();
+    }
+
     public async Task<IEnumerable<JobAlert>> GetByUserIdAsync(string userId)
     {
         return await _collection.Find(ja => ja.UserId == userId).ToListAsync();

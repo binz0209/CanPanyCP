@@ -164,9 +164,14 @@ builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 
+// Register Job Alert and Matching Services
+builder.Services.AddScoped<IJobAlertService, JobAlertService>();
+builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
+
 // Register Background Email Services
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
 builder.Services.AddScoped<EmailJobProcessor>();
+builder.Services.AddScoped<JobMatchProcessor>();
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();

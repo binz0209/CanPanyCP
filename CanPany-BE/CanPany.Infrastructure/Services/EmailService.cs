@@ -93,6 +93,35 @@ public class EmailService : IEmailService
         _logger.LogInformation("Application status email ({Status}) sent to {Email}", status, toEmail);
     }
 
+    public async Task SendJobMatchEmailAsync(string toEmail, string candidateName, string jobTitle, string jobId, string companyName, string location, string budgetInfo)
+    {
+        var subject = _i18nService.GetDisplayMessage("Email.JobMatch.Subject");
+        var bodyTemplate = _i18nService.GetDisplayMessage("Email.JobMatch.Body");
+        
+        var body = EmailTemplates.GetJobMatchEmail(bodyTemplate, candidateName, jobTitle, companyName, location, budgetInfo);
+
+        await SendEmailAsync(toEmail, subject, body);
+        _logger.LogInformation("Job match email sent to {Email} for job {JobTitle}", toEmail, jobTitle);
+    }
+
+    public async Task SendPaymentConfirmationEmailAsync(string toEmail, string userName, string paymentId, long amount, string currency, string status, string purpose, DateTime paidAt)
+    {
+        string subjectKey = status == "Paid" 
+            ? "Email.PaymentConfirmation.Success.Subject" 
+            : "Email.PaymentConfirmation.Failed.Subject";
+        string bodyKey = status == "Paid" 
+            ? "Email.PaymentConfirmation.Success.Body" 
+            : "Email.PaymentConfirmation.Failed.Body";
+
+        var subject = _i18nService.GetDisplayMessage(subjectKey);
+        var bodyTemplate = _i18nService.GetDisplayMessage(bodyKey);
+        
+        var body = EmailTemplates.GetPaymentConfirmationEmail(bodyTemplate, userName, paymentId, amount, currency, status, purpose, paidAt);
+
+        await SendEmailAsync(toEmail, subject, body);
+        _logger.LogInformation("Payment confirmation email ({Status}) sent to {Email}", status, toEmail);
+    }
+
     public async Task SendEmailAsync(string toEmail, string subject, string plainTextContent)
     {
         try

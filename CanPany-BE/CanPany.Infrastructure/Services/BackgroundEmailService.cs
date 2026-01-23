@@ -82,4 +82,56 @@ public class BackgroundEmailService : IBackgroundEmailService
 
         return jobId;
     }
+
+    public string QueueJobMatchEmail(string email, string candidateName, string jobTitle, string jobId, string companyName, string location, string budgetInfo)
+    {
+        var job = new JobMatchEmailJob
+        {
+            Email = email,
+            CandidateName = candidateName,
+            JobTitle = jobTitle,
+            JobId = jobId,
+            CompanyName = companyName,
+            Location = location,
+            BudgetInfo = budgetInfo
+        };
+
+        var hangfireJobId = _backgroundJobClient.Enqueue<EmailJobProcessor>(
+            processor => processor.ProcessJobMatchEmail(job));
+
+        _logger.LogInformation(
+            "Queued job match email job {JobId} for {Email} - Job: {JobTitle}",
+            hangfireJobId,
+            email,
+            jobTitle);
+
+        return hangfireJobId;
+    }
+
+    public string QueuePaymentConfirmationEmail(string email, string userName, string paymentId, long amount, string currency, string status, string purpose, DateTime paidAt)
+    {
+        var job = new PaymentConfirmationEmailJob
+        {
+            Email = email,
+            UserName = userName,
+            PaymentId = paymentId,
+            Amount = amount,
+            Currency = currency,
+            Status = status,
+            Purpose = purpose,
+            PaidAt = paidAt
+        };
+
+        var hangfireJobId = _backgroundJobClient.Enqueue<EmailJobProcessor>(
+            processor => processor.ProcessPaymentConfirmationEmail(job));
+
+        _logger.LogInformation(
+            "Queued payment confirmation email job {JobId} for {Email} - Status: {Status}",
+            hangfireJobId,
+            email,
+            status);
+
+        return hangfireJobId;
+    }
 }
+

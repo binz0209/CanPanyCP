@@ -18,6 +18,20 @@
           "Subject": "Application Update: {0} - CanPany",
           "Body": "Hello {0},\n\nThank you for your interest in the \"{1}\" position.\n\nAfter careful consideration, the employer has decided not to proceed with your application at this time.\n\nWe encourage you to apply for other openings on CanPany."
         }
+      },
+      "JobMatch": {
+        "Subject": "New Job Match Found!",
+        "Body": "Hello {0},\n\nWe found a job that matches your search criteria:\n\nPosition: {1}\nCompany: {2}\nLocation: {3}\nSalary: {4}\n\nLog in to the CanPany app to view details and apply now!"
+      },
+      "PaymentConfirmation": {
+        "Success": {
+          "Subject": "Payment Confirmation - CanPany",
+          "Body": "Hello {0},\n\nYour payment has been processed successfully!\n\nAmount: {1}\nPurpose: {2}\nStatus: {3}\n\nThank you for using CanPany!"
+        },
+        "Failed": {
+          "Subject": "Payment Failed Notification - CanPany",
+          "Body": "Hello {0},\n\nUnfortunately, your payment was not successful.\n\nAmount: {1}\nPurpose: {2}\nStatus: {3}\n\nPlease try again or contact support if the issue persists."
+        }
       }
     }
   },

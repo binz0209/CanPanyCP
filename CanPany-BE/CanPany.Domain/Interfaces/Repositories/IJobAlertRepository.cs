@@ -8,6 +8,7 @@ namespace CanPany.Domain.Interfaces.Repositories;
 public interface IJobAlertRepository
 {
     Task<JobAlert?> GetByIdAsync(string id);
+    Task<IEnumerable<JobAlert>> GetAllAsync();
     Task<IEnumerable<JobAlert>> GetByUserIdAsync(string userId);
     Task<IEnumerable<JobAlert>> GetActiveAlertsAsync(string userId);
     Task<JobAlert> AddAsync(JobAlert jobAlert);
