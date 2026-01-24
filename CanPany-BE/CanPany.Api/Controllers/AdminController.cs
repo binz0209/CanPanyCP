@@ -140,6 +140,7 @@ public class AdminController : ControllerBase
         try
         {
             // TODO: Implement get verification requests
+            await Task.CompletedTask;
             return Ok(ApiResponse.CreateSuccess(new List<object>()));
         }
         catch (Exception ex)
@@ -455,6 +456,7 @@ public class AdminController : ControllerBase
         try
         {
             // TODO: Get all payments or filter by status
+            await Task.CompletedTask;
             return Ok(ApiResponse.CreateSuccess(new List<object>()));
         }
         catch (Exception ex)
