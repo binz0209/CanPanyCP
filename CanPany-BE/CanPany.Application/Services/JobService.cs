@@ -11,13 +11,16 @@ namespace CanPany.Application.Services;
 public class JobService : IJobService
 {
     private readonly IJobRepository _repo;
+    private readonly IJobMatchingService _jobMatchingService;
     private readonly ILogger<JobService> _logger;
 
     public JobService(
         IJobRepository repo,
+        IJobMatchingService jobMatchingService,
         ILogger<JobService> logger)
     {
         _repo = repo;
+        _jobMatchingService = jobMatchingService;
         _logger = logger;
     }
 
@@ -103,7 +106,12 @@ public class JobService : IJobService
                 throw new ArgumentNullException(nameof(job));
 
             job.CreatedAt = DateTime.UtcNow;
-            return await _repo.AddAsync(job);
+            var createdJob = await _repo.AddAsync(job);
+
+            // Trigger job alert matching in background
+            _jobMatchingService.TriggerJobAlertMatching(createdJob.Id);
+
+            return createdJob;
         }
         catch (Exception ex)
         {

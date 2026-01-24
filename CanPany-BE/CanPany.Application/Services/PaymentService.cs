@@ -12,15 +12,24 @@ public class PaymentService : IPaymentService
 {
     private readonly IPaymentRepository _repo;
     private readonly IWalletService _walletService;
+    private readonly INotificationService _notificationService;
+    private readonly IBackgroundEmailService _backgroundEmailService;
+    private readonly IUserService _userService;
     private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         IPaymentRepository repo,
         IWalletService walletService,
+        INotificationService notificationService,
+        IBackgroundEmailService backgroundEmailService,
+        IUserService userService,
         ILogger<PaymentService> logger)
     {
         _repo = repo;
         _walletService = walletService;
+        _notificationService = notificationService;
+        _backgroundEmailService = backgroundEmailService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -151,6 +160,10 @@ public class PaymentService : IPaymentService
 
             payment.MarkAsUpdated();
             await _repo.UpdateAsync(payment);
+
+            // Send payment confirmation notifications
+            await SendPaymentNotificationsAsync(payment);
+
             return payment.Status == "Paid";
         }
         catch (Exception ex)
@@ -183,6 +196,9 @@ public class PaymentService : IPaymentService
                 }
             }
 
+            // Send payment confirmation notifications
+            await SendPaymentNotificationsAsync(payment);
+
             return true;
         }
         catch (Exception ex)
@@ -209,6 +225,56 @@ public class PaymentService : IPaymentService
         {
             _logger.LogError(ex, "Error rejecting payment: {PaymentId}", paymentId);
             throw;
+        }
+    }
+
+    private async Task SendPaymentNotificationsAsync(Payment payment)
+    {
+        try
+        {
+            var user = await _userService.GetByIdAsync(payment.UserId);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found for payment notification: {PaymentId}", payment.Id);
+                return;
+            }
+
+            var statusText = payment.Status == "Paid" ? "successful" : "failed";
+            var paidAt = payment.PaidAt ?? DateTime.UtcNow;
+
+            // Queue email notification
+            _backgroundEmailService.QueuePaymentConfirmationEmail(
+                user.Email,
+                user.FullName,
+                payment.Id,
+                payment.Amount,
+                payment.Currency,
+                payment.Status,
+                payment.Purpose,
+                paidAt);
+
+            // Create in-app notification
+            var notification = new Notification
+            {
+                UserId = payment.UserId,
+                Type = "PaymentConfirmation",
+                Title = payment.Status == "Paid" ? "Payment Successful" : "Payment Failed",
+                Message = $"Your {payment.Purpose} payment of {payment.Amount:N0} {payment.Currency} was {statusText}.",
+                Payload = System.Text.Json.JsonSerializer.Serialize(new { PaymentId = payment.Id, Status = payment.Status }),
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            await _notificationService.CreateAsync(notification);
+
+            _logger.LogInformation(
+                "Sent payment confirmation notifications for payment {PaymentId}, status: {Status}",
+                payment.Id,
+                payment.Status);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send payment notifications for payment {PaymentId}", payment.Id);
+            // Don't throw - notification failure shouldn't fail payment processing
         }
     }
 }

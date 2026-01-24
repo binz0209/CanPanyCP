@@ -67,12 +67,15 @@ public class GlobalAuditMiddleware
 
             stopwatch.Stop();
 
+            // Re-fetch user ID in case authentication happened during the pipeline
+            var authenticatedUserId = GetUserId(context) ?? userId;
+
             // Log audit event
             await auditLogger.LogAuditEventAsync(new AuditEvent
             {
                 EventType = "HTTP_REQUEST",
                 Action = httpMethod,
-                UserId = userId,
+                UserId = authenticatedUserId, // Use the authenticated ID
                 CorrelationId = correlationId,
                 ResourcePath = requestPath,
                 ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
@@ -87,7 +90,7 @@ public class GlobalAuditMiddleware
                 {
                     EventType = "AUTHORIZATION",
                     Severity = "WARNING",
-                    UserId = userId,
+                    UserId = authenticatedUserId, // Use the authenticated ID
                     ResourcePath = requestPath,
                     Action = httpMethod,
                     IpAddress = GetClientIpAddress(context),
@@ -100,11 +103,12 @@ public class GlobalAuditMiddleware
         catch (Exception ex)
         {
             stopwatch.Stop();
+            var authenticatedUserId = GetUserId(context) ?? userId;
 
             // Capture exception
             await exceptionCapture.CaptureExceptionAsync(ex, new ExceptionContext
             {
-                UserId = userId,
+                UserId = authenticatedUserId,
                 CorrelationId = correlationId,
                 RequestPath = requestPath,
                 HttpMethod = httpMethod,
@@ -116,7 +120,7 @@ public class GlobalAuditMiddleware
             {
                 EventType = "EXCEPTION",
                 Severity = "ERROR",
-                UserId = userId,
+                UserId = authenticatedUserId,
                 ResourcePath = requestPath,
                 Action = httpMethod,
                 IpAddress = GetClientIpAddress(context),

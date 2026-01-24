@@ -34,7 +34,7 @@ public class UserProfilesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
@@ -59,7 +59,7 @@ public class UserProfilesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
@@ -108,7 +108,7 @@ public class UserProfilesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
@@ -133,7 +133,7 @@ public class UserProfilesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 

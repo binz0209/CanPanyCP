@@ -64,7 +64,8 @@ public class AuditLogger : IAuditLogger
                 auditEvent.CorrelationId ?? "N/A",
                 auditEvent.ResourcePath ?? auditEvent.MethodName ?? "N/A",
                 auditEvent.ExecutionTimeMs ?? 0,
-                auditEvent.IsSuccess
+                auditEvent.IsSuccess,
+                auditEvent.ErrorMessage ?? string.Empty
             );
 
             _logger.Log(logLevel, logMessage);

@@ -19,18 +19,21 @@ public class AuthService : IAuthService
     private readonly IHashService _hashService;
     private readonly ILogger<AuthService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly Dictionary<string, (string Code, DateTime Expires)> _resetCodes = new(); // In-memory, should use Redis in production
 
     public AuthService(
         IUserRepository userRepository,
         IHashService hashService,
         ILogger<AuthService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IBackgroundEmailService backgroundEmailService)
     {
         _userRepository = userRepository;
         _hashService = hashService;
         _logger = logger;
         _configuration = configuration;
+        _backgroundEmailService = backgroundEmailService;
     }
 
     public async Task<User?> AuthenticateAsync(string email, string password)
@@ -117,8 +120,11 @@ public class AuthService : IAuthService
 
             _resetCodes[email] = (code, expires);
 
-            _logger.LogInformation("Password reset code generated for {Email}", email);
-            return code; // In production, send via email
+            // Queue email to be sent asynchronously
+            _backgroundEmailService.QueuePasswordResetEmail(email, user.FullName, code);
+
+            _logger.LogInformation("Password reset code generated and email queued for {Email}", email);
+            return code; // In production, don't return code - only send via email
         }
         catch (Exception ex)
         {

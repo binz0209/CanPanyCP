@@ -2,6 +2,8 @@ using CanPany.Infrastructure.Data;
 using CanPany.Infrastructure.Repositories;
 using CanPany.Infrastructure.Security.Encryption;
 using CanPany.Infrastructure.Security.Hashing;
+using CanPany.Infrastructure.Services;
+using CanPany.Infrastructure.Jobs;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Services;
@@ -11,6 +13,10 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Hangfire;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -140,18 +146,42 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IFilterPresetR
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IHashService, HashService>();
 
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+    };
+});
+
+// Configure Email Options
+builder.Services.Configure<CanPany.Domain.Entities.EmailOptions>(builder.Configuration.GetSection("SendGrid"));
+
 // Register Application Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IJobService, JobService>();
-builder.Services.AddScoped<ICVService, CVService>();
-builder.Services.AddScoped<ICompanyService, CompanyService>();
-builder.Services.AddScoped<IApplicationService, ApplicationService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddServiceWithInterceptor<IUserService, UserService>();
+builder.Services.AddServiceWithInterceptor<IJobService, JobService>();
+builder.Services.AddServiceWithInterceptor<ICVService, CVService>();
+builder.Services.AddServiceWithInterceptor<ICompanyService, CompanyService>();
+builder.Services.AddServiceWithInterceptor<IApplicationService, ApplicationService>();
+builder.Services.AddServiceWithInterceptor<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddServiceWithInterceptor<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 builder.Services.AddScoped<IAIChatService, AIChatService>();
 builder.Services.AddScoped<ICandidateSearchService, CandidateSearchService>();
@@ -161,9 +191,21 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
+
+// Register Job Alert and Matching Services
+builder.Services.AddScoped<IJobAlertService, JobAlertService>();
+builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
+
+// Register Background Email Services
+builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
+builder.Services.AddScoped<EmailJobProcessor>();
+builder.Services.AddScoped<JobMatchProcessor>();
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();
+builder.Services.AddHangfireJobInterceptor();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -187,6 +229,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+// Use Hangfire Dashboard (before authentication for development)
+var hangfireDashboardConfig = app.Configuration.GetSection("Hangfire");
+if (hangfireDashboardConfig.GetValue<bool>("DashboardEnabled"))
+{
+    var dashboardPath = hangfireDashboardConfig.GetValue<string>("DashboardPath") ?? "/hangfire";
+    app.UseHangfireDashboard(dashboardPath, new DashboardOptions
+    {
+        Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+    });
+}
 
 // Use I18N Middleware first (to detect language from headers)
 app.UseI18nMiddleware();

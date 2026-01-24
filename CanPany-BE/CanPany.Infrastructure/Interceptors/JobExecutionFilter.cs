@@ -1,6 +1,7 @@
 using CanPany.Application.Interfaces.Interceptors;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Hangfire.Server;
 
 namespace CanPany.Infrastructure.Interceptors;
 
@@ -9,10 +10,6 @@ namespace CanPany.Infrastructure.Interceptors;
 /// Note: Requires Hangfire package. If not using Hangfire, use HostedServiceInterceptor instead.
 /// This class is provided as a template - uncomment and add Hangfire package reference when needed.
 /// </summary>
-/*
-// Uncomment when Hangfire is installed:
-// using Hangfire.Server;
-
 public class JobExecutionFilter : IServerFilter
 {
     private readonly IAuditLogger _auditLogger;
@@ -143,7 +140,7 @@ public class JobExecutionFilter : IServerFilter
         }).GetAwaiter().GetResult();
     }
 }
-*/
+
 
 /// <summary>
 /// HostedService execution filter (for IHostedService)
