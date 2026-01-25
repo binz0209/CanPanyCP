@@ -20,7 +20,10 @@
     <ProjectReference Include="..\CanPany.Application\CanPany.Application.csproj" />
     <ProjectReference Include="..\CanPany.Infrastructure\CanPany.Infrastructure.csproj" />
     <ProjectReference Include="..\CanPany.Shared\CanPany.Shared.csproj" />
+    <ProjectReference Include="..\CanPany.Worker\CanPany.Worker.csproj" />
   </ItemGroup>
+
+
 
   <ItemGroup>
     <None Update="Resources\i18n\*.json">

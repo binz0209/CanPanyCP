@@ -51,6 +51,23 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.Configure<MongoOptions>(builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<MongoDbContext>();
 
+// Configure Redis for Background Jobs
+var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+{
+    var config = StackExchange.Redis.ConfigurationOptions.Parse(redisConnection);
+    config.AbortOnConnectFail = false;
+    config.ConnectTimeout = 10000;
+    config.SyncTimeout = 10000;
+    return StackExchange.Redis.ConnectionMultiplexer.Connect(config);
+});
+
+// Register Job Producer (for enqueueing background jobs)
+builder.Services.AddSingleton<CanPany.Worker.Infrastructure.Queue.IJobProducer, CanPany.Worker.Infrastructure.Queue.RedisJobProducer>();
+
+// Register Job Progress Tracker (for querying job status)
+builder.Services.AddSingleton<CanPany.Worker.Infrastructure.Progress.IJobProgressTracker, CanPany.Worker.Infrastructure.Progress.RedisJobProgressTracker>();
+
 // Verify MongoDB connection on startup
 var mongoOptions = builder.Configuration.GetSection("MongoDB").Get<MongoOptions>();
 string? mongoHost = null;
@@ -110,6 +127,44 @@ if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString)
 else
 {
     Log.Warning("✗ MongoDB configuration is missing or incomplete");
+}
+
+// Configure Hangfire with MongoDB storage
+if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString))
+{
+    builder.Services.AddHangfire(configuration => configuration
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseMongoStorage(mongoOptions.ConnectionString, mongoOptions.DatabaseName, new MongoStorageOptions
+        {
+            MigrationOptions = new MongoMigrationOptions
+            {
+                MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                BackupStrategy = new CollectionMongoBackupStrategy()
+            },
+            Prefix = "hangfire",
+            CheckConnection = true,
+            CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
+        }));
+
+    // Add Hangfire server if enabled
+    var hangfireConfig = builder.Configuration.GetSection("Hangfire");
+    if (hangfireConfig.GetValue<bool>("ServerEnabled"))
+    {
+        var workerCount = hangfireConfig.GetValue<int>("WorkerCount", 5);
+        var queues = hangfireConfig.GetSection("Queues").Get<string[]>() ?? new[] { "default" };
+        
+        builder.Services.AddHangfireServer(options =>
+        {
+            options.WorkerCount = workerCount;
+            options.Queues = queues;
+        });
+    }
+}
+else
+{
+    Log.Warning("⚠️  Hangfire not configured (MongoDB required)");
 }
 
 // Register Repositories
@@ -212,9 +267,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -227,7 +283,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in Production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseCors("AllowAll");
 
 // Use Hangfire Dashboard (before authentication for development)
