@@ -16,6 +16,7 @@ public class UserService : IUserService
     private readonly IWalletService _walletService;
     private readonly IUserProfileService _profileService;
     private readonly ICompanyService _companyService;
+    private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -24,6 +25,7 @@ public class UserService : IUserService
         IWalletService walletService,
         IUserProfileService profileService,
         ICompanyService companyService,
+        IBackgroundEmailService backgroundEmailService,
         ILogger<UserService> logger)
     {
         _repo = repo;
@@ -31,6 +33,7 @@ public class UserService : IUserService
         _walletService = walletService;
         _profileService = profileService;
         _companyService = companyService;
+        _backgroundEmailService = backgroundEmailService;
         _logger = logger;
     }
 
@@ -184,6 +187,10 @@ public class UserService : IUserService
                     _logger.LogWarning("Company creation failed but continuing registration: {UserId}", createdUser.Id);
                 }
             }
+
+            // Queue welcome email asynchronously
+            _backgroundEmailService.QueueWelcomeEmail(email, fullName);
+            _logger.LogInformation("Welcome email queued for {Email}", email);
 
             return createdUser;
         }

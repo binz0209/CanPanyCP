@@ -11,13 +11,16 @@ namespace CanPany.Application.Services;
 public class UserProfileService : IUserProfileService
 {
     private readonly IUserProfileRepository _repo;
+    private readonly IGeminiService _geminiService;
     private readonly ILogger<UserProfileService> _logger;
 
     public UserProfileService(
         IUserProfileRepository repo,
+        IGeminiService geminiService,
         ILogger<UserProfileService> logger)
     {
         _repo = repo;
+        _geminiService = geminiService;
         _logger = logger;
     }
 
@@ -45,6 +48,7 @@ public class UserProfileService : IUserProfileService
                 throw new ArgumentNullException(nameof(profile));
 
             profile.CreatedAt = DateTime.UtcNow;
+            await UpdateEmbeddingAsync(profile);
             return await _repo.AddAsync(profile);
         }
         catch (Exception ex)
@@ -67,13 +71,18 @@ public class UserProfileService : IUserProfileService
             if (existing == null)
             {
                 profile.UserId = userId;
+                await UpdateEmbeddingAsync(profile);
                 await _repo.AddAsync(profile);
             }
             else
             {
+                // Preserve ID and CreatedAt
                 profile.Id = existing.Id;
                 profile.UserId = userId;
+                profile.CreatedAt = existing.CreatedAt;
                 profile.UpdatedAt = DateTime.UtcNow;
+                
+                await UpdateEmbeddingAsync(profile);
                 await _repo.UpdateAsync(profile);
             }
             return true;
@@ -82,6 +91,30 @@ public class UserProfileService : IUserProfileService
         {
             _logger.LogError(ex, "Error updating user profile: {UserId}", userId);
             throw;
+        }
+    }
+
+    private async Task UpdateEmbeddingAsync(UserProfile profile)
+    {
+        try
+        {
+            var textParts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(profile.Title)) textParts.Add(profile.Title);
+            if (!string.IsNullOrWhiteSpace(profile.Bio)) textParts.Add(profile.Bio);
+            if (!string.IsNullOrWhiteSpace(profile.Experience)) textParts.Add(profile.Experience);
+            if (!string.IsNullOrWhiteSpace(profile.Education)) textParts.Add(profile.Education);
+            if (profile.SkillIds != null && profile.SkillIds.Any()) textParts.Add(string.Join(" ", profile.SkillIds));
+
+            var text = string.Join(" ", textParts);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                profile.Embedding = await _geminiService.GenerateEmbeddingAsync(text);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate embedding for user profile");
+            // Don't throw, allow profile update even if embedding fails
         }
     }
 

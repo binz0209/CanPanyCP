@@ -14,6 +14,7 @@ public class CandidateSearchService : ICandidateSearchService
     private readonly IUserProfileRepository _profileRepo;
     private readonly IUserRepository _userRepo;
     private readonly IApplicationRepository _applicationRepo;
+    private readonly IGeminiService _geminiService;
     private readonly ILogger<CandidateSearchService> _logger;
     
     // In-memory storage for unlocked candidates (should be moved to database in production)
@@ -24,12 +25,14 @@ public class CandidateSearchService : ICandidateSearchService
         IUserProfileRepository profileRepo,
         IUserRepository userRepo,
         IApplicationRepository applicationRepo,
+        IGeminiService geminiService,
         ILogger<CandidateSearchService> logger)
     {
         _jobRepo = jobRepo;
         _profileRepo = profileRepo;
         _userRepo = userRepo;
         _applicationRepo = applicationRepo;
+        _geminiService = geminiService;
         _logger = logger;
     }
 
@@ -44,33 +47,14 @@ public class CandidateSearchService : ICandidateSearchService
             if (job == null)
                 return Enumerable.Empty<(UserProfile, double)>();
 
-            // Get all user profiles
-            var allProfiles = await _profileRepo.GetAllAsync();
-            var jobSkillIds = new HashSet<string>(job.SkillIds ?? new List<string>());
+            // Generate embedding for job description and skills
+            var jobText = $"{job.Title} {job.Description} {string.Join(" ", job.SkillIds ?? new List<string>())}";
+            var embedding = await _geminiService.GenerateEmbeddingAsync(jobText);
 
-            var candidatesWithScore = new List<(UserProfile Profile, double MatchScore)>();
+            // Search by vector
+            var results = await _profileRepo.SearchByVectorAsync(embedding, limit);
 
-            foreach (var profile in allProfiles)
-            {
-                var profileSkillIds = new HashSet<string>(profile.SkillIds ?? new List<string>());
-                
-                if (profileSkillIds.Count == 0)
-                    continue;
-
-                // Calculate match score based on skill overlap
-                var matchedSkills = jobSkillIds.Intersect(profileSkillIds).Count();
-                var totalJobSkills = jobSkillIds.Count;
-                
-                if (totalJobSkills == 0)
-                    continue;
-
-                var matchScore = (double)matchedSkills / totalJobSkills * 100.0;
-                candidatesWithScore.Add((profile, matchScore));
-            }
-
-            return candidatesWithScore
-                .OrderByDescending(x => x.MatchScore)
-                .Take(limit);
+            return results.Select(r => (r.Profile, MatchScore: r.Score * 100)); // Convert 0-1 score to 0-100
         }
         catch (Exception ex)
         {
@@ -83,6 +67,7 @@ public class CandidateSearchService : ICandidateSearchService
         string? keyword,
         List<string>? skillIds,
         string? location,
+        string? experience,
         decimal? minHourlyRate,
         decimal? maxHourlyRate,
         int page = 1,
@@ -90,71 +75,99 @@ public class CandidateSearchService : ICandidateSearchService
     {
         try
         {
-            var allProfiles = await _profileRepo.GetAllAsync();
-            var allUsers = await _userRepo.GetByRoleAsync("Candidate");
-            var userDict = allUsers.ToDictionary(u => u.Id);
+            var candidatesWithScore = new List<(UserProfile Profile, double MatchScore)>();
 
-            var filteredProfiles = allProfiles
-                .Where(p => userDict.ContainsKey(p.UserId))
-                .AsEnumerable();
-
-            // Apply keyword filter
             if (!string.IsNullOrWhiteSpace(keyword))
             {
-                filteredProfiles = filteredProfiles.Where(p =>
-                    (!string.IsNullOrWhiteSpace(p.Bio) && p.Bio.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(p.Title) && p.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(p.Experience) && p.Experience.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+                // Vector search for keyword
+                var embedding = await _geminiService.GenerateEmbeddingAsync(keyword);
+                var vectorResults = await _profileRepo.SearchByVectorAsync(embedding, limit: 100); // Get top 100 semantic matches
+                
+                foreach (var result in vectorResults)
+                {
+                    candidatesWithScore.Add((result.Profile, result.Score * 100));
+                }
             }
+            else
+            {
+                // No keyword, get all profiles
+                var allProfiles = await _profileRepo.GetAllAsync();
+                foreach (var profile in allProfiles)
+                {
+                    candidatesWithScore.Add((profile, 0)); // Default score, will be updated by skill match
+                }
+            }
+
+            // Apply filters (in-memory)
+            var filteredCandidates = candidatesWithScore.AsEnumerable();
+
+            // Filter specific user role
+            var allUsers = await _userRepo.GetByRoleAsync("Candidate");
+            var userDict = allUsers.ToDictionary(u => u.Id);
+            filteredCandidates = filteredCandidates.Where(c => userDict.ContainsKey(c.Profile.UserId));
 
             // Apply skill filter
             if (skillIds != null && skillIds.Any())
             {
                 var skillSet = new HashSet<string>(skillIds);
-                filteredProfiles = filteredProfiles.Where(p =>
-                    p.SkillIds != null && p.SkillIds.Any(s => skillSet.Contains(s)));
+                filteredCandidates = filteredCandidates.Where(c =>
+                    c.Profile.SkillIds != null && c.Profile.SkillIds.Any(s => skillSet.Contains(s)));
             }
 
             // Apply location filter
             if (!string.IsNullOrWhiteSpace(location))
             {
-                filteredProfiles = filteredProfiles.Where(p =>
-                    (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(location, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(p.Address) && p.Address.Contains(location, StringComparison.OrdinalIgnoreCase)));
+                filteredCandidates = filteredCandidates.Where(c =>
+                    (!string.IsNullOrWhiteSpace(c.Profile.Location) && c.Profile.Location.Contains(location, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrWhiteSpace(c.Profile.Address) && c.Profile.Address.Contains(location, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            // Apply experience filter
+            if (!string.IsNullOrWhiteSpace(experience))
+            {
+                filteredCandidates = filteredCandidates.Where(c =>
+                    !string.IsNullOrWhiteSpace(c.Profile.Experience) && c.Profile.Experience.Contains(experience, StringComparison.OrdinalIgnoreCase));
             }
 
             // Apply hourly rate filter
             if (minHourlyRate.HasValue)
             {
-                filteredProfiles = filteredProfiles.Where(p => p.HourlyRate >= minHourlyRate.Value);
+                filteredCandidates = filteredCandidates.Where(c => c.Profile.HourlyRate >= minHourlyRate.Value);
             }
 
             if (maxHourlyRate.HasValue)
             {
-                filteredProfiles = filteredProfiles.Where(p => p.HourlyRate <= maxHourlyRate.Value);
+                filteredCandidates = filteredCandidates.Where(c => c.Profile.HourlyRate <= maxHourlyRate.Value);
             }
 
-            // Calculate match scores (simplified - based on skill overlap if skillIds provided)
-            var candidatesWithScore = new List<(UserProfile Profile, double MatchScore)>();
-            var skillSetForScoring = skillIds != null ? new HashSet<string>(skillIds) : null;
-
-            foreach (var profile in filteredProfiles)
+            // Recalculate match scores based on skills if filters heavily rely on them?
+            // Or keep vector score if available?
+            // Simple logic: If Vector Score exists (>0), use it. Else calculate skill overlap.
+            
+            var finalResults = new List<(UserProfile Profile, double MatchScore)>();
+            
+            foreach (var (profile, vectorScore) in filteredCandidates)
             {
-                double matchScore = 100.0; // Default score
+                double finalScore = vectorScore;
 
-                if (skillSetForScoring != null && profile.SkillIds != null && profile.SkillIds.Any())
+                if (skillIds != null && skillIds.Any())
                 {
-                    var profileSkillSet = new HashSet<string>(profile.SkillIds);
-                    var matchedSkills = skillSetForScoring.Intersect(profileSkillSet).Count();
-                    var totalSkills = skillSetForScoring.Count;
-                    matchScore = totalSkills > 0 ? (double)matchedSkills / totalSkills * 100.0 : 0;
+                    // Boost score if skills match exact IDs requested
+                    var skillSetForScoring = new HashSet<string>(skillIds);
+                     if (profile.SkillIds != null)
+                     {
+                        var matchedSkills = skillSetForScoring.Intersect(profile.SkillIds).Count();
+                        var skillScore = (double)matchedSkills / skillSetForScoring.Count * 100.0;
+                        if (finalScore == 0) finalScore = skillScore; // If no keyword search, use skill score
+                        else finalScore = (finalScore * 0.7) + (skillScore * 0.3); // Weighted average
+                     }
                 }
-
-                candidatesWithScore.Add((profile, matchScore));
+                
+                finalResults.Add((profile, finalScore));
             }
 
             // Pagination
-            return candidatesWithScore
+            return finalResults
                 .OrderByDescending(x => x.MatchScore)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize);

@@ -13,6 +13,7 @@ public interface ICandidateSearchService
         string? keyword, 
         List<string>? skillIds, 
         string? location, 
+        string? experience,
         decimal? minHourlyRate, 
         decimal? maxHourlyRate, 
         int page = 1, 

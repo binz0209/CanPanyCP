@@ -64,5 +64,8 @@ public class UserProfile
 
     [BsonElement("updatedAt")]
     public DateTime? UpdatedAt { get; set; }
+
+    [BsonElement("embedding")]
+    public List<double>? Embedding { get; set; }
 }
 

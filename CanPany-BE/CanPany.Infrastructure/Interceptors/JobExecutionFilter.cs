@@ -1,6 +1,7 @@
 using CanPany.Application.Interfaces.Interceptors;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Hangfire.Server;
 
 namespace CanPany.Infrastructure.Interceptors;
 
@@ -9,10 +10,6 @@ namespace CanPany.Infrastructure.Interceptors;
 /// Note: Requires Hangfire package. If not using Hangfire, use HostedServiceInterceptor instead.
 /// This class is provided as a template - uncomment and add Hangfire package reference when needed.
 /// </summary>
-/*
-// Uncomment when Hangfire is installed:
-// using Hangfire.Server;
-
 public class JobExecutionFilter : IServerFilter
 {
     private readonly IAuditLogger _auditLogger;
@@ -143,109 +140,5 @@ public class JobExecutionFilter : IServerFilter
         }).GetAwaiter().GetResult();
     }
 }
-*/
 
-/// <summary>
-/// HostedService execution filter (for IHostedService)
-/// Use this for background jobs if not using Hangfire
-/// </summary>
-public class HostedServiceInterceptor
-{
-    private readonly IAuditLogger _auditLogger;
-    private readonly IPerformanceMonitor _performanceMonitor;
-    private readonly IExceptionCapture _exceptionCapture;
-    private readonly ILogger<HostedServiceInterceptor> _logger;
 
-    public HostedServiceInterceptor(
-        IAuditLogger auditLogger,
-        IPerformanceMonitor performanceMonitor,
-        IExceptionCapture exceptionCapture,
-        ILogger<HostedServiceInterceptor> logger)
-    {
-        _auditLogger = auditLogger;
-        _performanceMonitor = performanceMonitor;
-        _exceptionCapture = exceptionCapture;
-        _logger = logger;
-    }
-
-    public async Task<T> ExecuteWithInterceptionAsync<T>(
-        string serviceName,
-        string methodName,
-        Func<Task<T>> operation)
-    {
-        var correlationId = Guid.NewGuid().ToString();
-        var stopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            _logger.LogInformation(
-                "[HOSTED_SERVICE_START] {ServiceName}.{MethodName} | CorrelationId: {CorrelationId}",
-                serviceName,
-                methodName,
-                correlationId
-            );
-
-            var result = await operation();
-
-            stopwatch.Stop();
-
-            _logger.LogInformation(
-                "[HOSTED_SERVICE_COMPLETE] {ServiceName}.{MethodName} | CorrelationId: {CorrelationId} | Duration: {ExecutionTime}ms",
-                serviceName,
-                methodName,
-                correlationId,
-                stopwatch.ElapsedMilliseconds
-            );
-
-            await _auditLogger.LogAuditEventAsync(new AuditEvent
-            {
-                EventType = "HOSTED_SERVICE",
-                Action = $"{serviceName}.{methodName}",
-                CorrelationId = correlationId,
-                MethodName = $"{serviceName}.{methodName}",
-                ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
-                IsSuccess = true
-            });
-
-            _performanceMonitor.RecordExecutionTime($"{serviceName}.{methodName}", stopwatch.ElapsedMilliseconds);
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-
-            await _exceptionCapture.CaptureExceptionAsync(ex, new ExceptionContext
-            {
-                CorrelationId = correlationId,
-                ServiceName = serviceName,
-                MethodName = methodName
-            });
-
-            await _auditLogger.LogAuditEventAsync(new AuditEvent
-            {
-                EventType = "HOSTED_SERVICE",
-                Action = $"{serviceName}.{methodName}",
-                CorrelationId = correlationId,
-                MethodName = $"{serviceName}.{methodName}",
-                IsSuccess = false,
-                ErrorMessage = ex.Message,
-                ErrorCode = ex.GetType().Name
-            });
-
-            throw;
-        }
-    }
-
-    public async Task ExecuteWithInterceptionAsync(
-        string serviceName,
-        string methodName,
-        Func<Task> operation)
-    {
-        await ExecuteWithInterceptionAsync<object?>(serviceName, methodName, async () =>
-        {
-            await operation();
-            return null;
-        });
-    }
-}

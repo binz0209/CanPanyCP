@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanPany.Shared", "CanPany.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanPany.Tests", "CanPany.Tests\CanPany.Tests.csproj", "{97002649-AFF8-4BE2-AA8D-CAC4F72A38AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanPany.Worker", "CanPany.Worker\CanPany.Worker.csproj", "{1171D81B-FA9B-411F-957F-534103D3707E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{97002649-AFF8-4BE2-AA8D-CAC4F72A38AC}.Release|x64.Build.0 = Release|Any CPU
 		{97002649-AFF8-4BE2-AA8D-CAC4F72A38AC}.Release|x86.ActiveCfg = Release|Any CPU
 		{97002649-AFF8-4BE2-AA8D-CAC4F72A38AC}.Release|x86.Build.0 = Release|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Debug|x64.Build.0 = Debug|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Debug|x86.Build.0 = Debug|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Release|x64.ActiveCfg = Release|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Release|x64.Build.0 = Release|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Release|x86.ActiveCfg = Release|Any CPU
+		{1171D81B-FA9B-411F-957F-534103D3707E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

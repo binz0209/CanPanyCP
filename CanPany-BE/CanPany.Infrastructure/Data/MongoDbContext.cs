@@ -61,6 +61,7 @@ public class MongoDbContext
     public IMongoCollection<Report> Reports => _database.GetCollection<Report>("reports");
     public IMongoCollection<JobAlert> JobAlerts => _database.GetCollection<JobAlert>("job_alerts");
     public IMongoCollection<CandidateAlert> CandidateAlerts => _database.GetCollection<CandidateAlert>("candidate_alerts");
+    public IMongoCollection<UnlockRecord> UnlockRecords => _database.GetCollection<UnlockRecord>("unlock_records");
     public IMongoCollection<FilterPreset> FilterPresets => _database.GetCollection<FilterPreset>("filter_presets");
 }
 

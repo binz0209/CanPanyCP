@@ -12,13 +12,25 @@ namespace CanPany.Application.Services;
 public class ApplicationService : IApplicationService
 {
     private readonly IApplicationRepository _repo;
+    private readonly IJobService _jobService;
+    private readonly IUserService _userService;
+    private readonly IBackgroundEmailService _backgroundEmailService;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<ApplicationService> _logger;
 
     public ApplicationService(
         IApplicationRepository repo,
+        IJobService jobService,
+        IUserService userService,
+        IBackgroundEmailService backgroundEmailService,
+        INotificationService notificationService,
         ILogger<ApplicationService> logger)
     {
         _repo = repo;
+        _jobService = jobService;
+        _userService = userService;
+        _backgroundEmailService = backgroundEmailService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -96,9 +108,54 @@ public class ApplicationService : IApplicationService
             if (application == null)
                 throw new ArgumentNullException(nameof(application));
 
+            // Fetch current application to check for status change
+            var currentApp = await _repo.GetByIdAsync(id);
+            if (currentApp == null)
+                 throw new ArgumentException("Application not found", nameof(id));
+
+            bool statusChanged = currentApp.Status != application.Status;
+            
             // Id is already set, just update
             application.MarkAsUpdated();
             await _repo.UpdateAsync(application);
+
+            if (statusChanged && (application.Status == "Accepted" || application.Status == "Rejected"))
+            {
+                try 
+                {
+                    // Fetch Job and Candidate info
+                    var job = await _jobService.GetByIdAsync(application.JobId);
+                    var candidate = await _userService.GetByIdAsync(application.CandidateId);
+
+                    if (job != null && candidate != null)
+                    {
+                        // 1. Queue Email asynchronously
+                        _backgroundEmailService.QueueApplicationStatusEmail(
+                            candidate.Email, 
+                            candidate.FullName, 
+                            job.Title, 
+                            application.Status);
+
+                        // 2. Send In-App Notification
+                        var notification = new Notification
+                        {
+                            UserId = application.CandidateId,
+                            Type = "ApplicationUpdate",
+                            Title = "Application Status Update",
+                            Message = $"Your application for {job.Title} has been {application.Status}.",
+                            CreatedAt = DateTime.UtcNow,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateAsync(notification);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send application status notification for AppId: {AppId}", id);
+                    // Don't fail the update if notification fails
+                }
+            }
+
             return true;
         }
         catch (Exception ex)

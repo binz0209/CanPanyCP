@@ -1,0 +1,160 @@
+{
+  "info": {
+    "name": "CanPany Background Jobs",
+    "description": "Test collection for background job processing system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5047",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Get Queue Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/queue/info",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "queue", "info"]
+        }
+      }
+    },
+    {
+      "name": "2. Send Email Job",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to\": \"test@example.com\",\n  \"subject\": \"Test Email from Postman\",\n  \"body\": \"This email was sent via background worker from Postman!\",\n  \"isHtml\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/test/send-email",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "test", "send-email"]
+        }
+      }
+    },
+    {
+      "name": "3. AI Matching Job",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"user-123\",\n  \"preferences\": {\n    \"skills\": [\"C#\", \"React\", \".NET\"],\n    \"experience\": \"3-5 years\",\n    \"location\": \"Remote\"\n  },\n  \"maxResults\": 10\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/test/ai-matching",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "test", "ai-matching"]
+        }
+      }
+    },
+    {
+      "name": "4. Generate Report Job",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reportType\": \"monthly-summary\",\n  \"startDate\": \"2024-01-01\",\n  \"endDate\": \"2024-01-31\",\n  \"filters\": {\n    \"department\": \"Engineering\",\n    \"status\": \"completed\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/test/generate-report",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "test", "generate-report"]
+        }
+      }
+    },
+    {
+      "name": "5. Schedule Job",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jobType\": \"Jobs.Email.Send\",\n  \"payload\": {\n    \"to\": \"scheduled@example.com\",\n    \"subject\": \"Scheduled Email\",\n    \"body\": \"This email was scheduled!\"\n  },\n  \"priority\": 1,\n  \"delayMinutes\": 2\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/schedule",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "schedule"]
+        }
+      }
+    },
+    {
+      "name": "6. Quick Test All",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/test/all",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "test", "all"]
+        }
+      }
+    },
+    {
+      "name": "7. Bulk Jobs (10)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/test/bulk?count=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "test", "bulk"],
+          "query": [
+            {
+              "key": "count",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Bulk Jobs (50) - Stress Test",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/background-jobs/test/bulk?count=50",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "background-jobs", "test", "bulk"],
+          "query": [
+            {
+              "key": "count",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

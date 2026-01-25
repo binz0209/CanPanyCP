@@ -2,6 +2,8 @@ using CanPany.Infrastructure.Data;
 using CanPany.Infrastructure.Repositories;
 using CanPany.Infrastructure.Security.Encryption;
 using CanPany.Infrastructure.Security.Hashing;
+using CanPany.Infrastructure.Services;
+using CanPany.Infrastructure.Jobs;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Services;
@@ -11,6 +13,10 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Hangfire;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +50,23 @@ builder.Services.AddSwaggerGen(c =>
 // Configure MongoDB
 builder.Services.Configure<MongoOptions>(builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<MongoDbContext>();
+
+// Configure Redis for Background Jobs
+var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+{
+    var config = StackExchange.Redis.ConfigurationOptions.Parse(redisConnection);
+    config.AbortOnConnectFail = false;
+    config.ConnectTimeout = 10000;
+    config.SyncTimeout = 10000;
+    return StackExchange.Redis.ConnectionMultiplexer.Connect(config);
+});
+
+// Register Job Producer (for enqueueing background jobs)
+builder.Services.AddSingleton<CanPany.Worker.Infrastructure.Queue.IJobProducer, CanPany.Worker.Infrastructure.Queue.RedisJobProducer>();
+
+// Register Job Progress Tracker (for querying job status)
+builder.Services.AddSingleton<CanPany.Worker.Infrastructure.Progress.IJobProgressTracker, CanPany.Worker.Infrastructure.Progress.RedisJobProgressTracker>();
 
 // Verify MongoDB connection on startup
 var mongoOptions = builder.Configuration.GetSection("MongoDB").Get<MongoOptions>();
@@ -106,6 +129,44 @@ else
     Log.Warning("✗ MongoDB configuration is missing or incomplete");
 }
 
+// Configure Hangfire with MongoDB storage
+if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString))
+{
+    builder.Services.AddHangfire(configuration => configuration
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseMongoStorage(mongoOptions.ConnectionString, mongoOptions.DatabaseName, new MongoStorageOptions
+        {
+            MigrationOptions = new MongoMigrationOptions
+            {
+                MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                BackupStrategy = new CollectionMongoBackupStrategy()
+            },
+            Prefix = "hangfire",
+            CheckConnection = true,
+            CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
+        }));
+
+    // Add Hangfire server if enabled
+    var hangfireConfig = builder.Configuration.GetSection("Hangfire");
+    if (hangfireConfig.GetValue<bool>("ServerEnabled"))
+    {
+        var workerCount = hangfireConfig.GetValue<int>("WorkerCount", 5);
+        var queues = hangfireConfig.GetSection("Queues").Get<string[]>() ?? new[] { "default" };
+        
+        builder.Services.AddHangfireServer(options =>
+        {
+            options.WorkerCount = workerCount;
+            options.Queues = queues;
+        });
+    }
+}
+else
+{
+    Log.Warning("⚠️  Hangfire not configured (MongoDB required)");
+}
+
 // Register Repositories
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserRepository, CanPany.Infrastructure.Repositories.UserRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserProfileRepository, CanPany.Infrastructure.Repositories.UserProfileRepository>();
@@ -140,18 +201,42 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IFilterPresetR
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IHashService, HashService>();
 
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+    };
+});
+
+// Configure Email Options
+builder.Services.Configure<CanPany.Domain.Entities.EmailOptions>(builder.Configuration.GetSection("SendGrid"));
+
 // Register Application Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IJobService, JobService>();
-builder.Services.AddScoped<ICVService, CVService>();
-builder.Services.AddScoped<ICompanyService, CompanyService>();
-builder.Services.AddScoped<IApplicationService, ApplicationService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddServiceWithInterceptor<IUserService, UserService>();
+builder.Services.AddServiceWithInterceptor<IJobService, JobService>();
+builder.Services.AddServiceWithInterceptor<ICVService, CVService>();
+builder.Services.AddServiceWithInterceptor<ICompanyService, CompanyService>();
+builder.Services.AddServiceWithInterceptor<IApplicationService, ApplicationService>();
+builder.Services.AddServiceWithInterceptor<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddServiceWithInterceptor<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 builder.Services.AddScoped<IAIChatService, AIChatService>();
 builder.Services.AddScoped<ICandidateSearchService, CandidateSearchService>();
@@ -161,18 +246,31 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
+
+// Register Job Alert and Matching Services
+builder.Services.AddScoped<IJobAlertService, JobAlertService>();
+builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
+
+// Register Background Email Services
+builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
+builder.Services.AddScoped<EmailJobProcessor>();
+builder.Services.AddScoped<JobMatchProcessor>();
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();
+builder.Services.AddHangfireJobInterceptor();
 
 // CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -185,8 +283,24 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in Production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseCors("AllowAll");
+
+// Use Hangfire Dashboard (before authentication for development)
+var hangfireDashboardConfig = app.Configuration.GetSection("Hangfire");
+if (hangfireDashboardConfig.GetValue<bool>("DashboardEnabled"))
+{
+    var dashboardPath = hangfireDashboardConfig.GetValue<string>("DashboardPath") ?? "/hangfire";
+    app.UseHangfireDashboard(dashboardPath, new DashboardOptions
+    {
+        Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+    });
+}
 
 // Use I18N Middleware first (to detect language from headers)
 app.UseI18nMiddleware();

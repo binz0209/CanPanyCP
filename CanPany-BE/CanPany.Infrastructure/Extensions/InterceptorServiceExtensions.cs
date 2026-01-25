@@ -72,7 +72,7 @@ public static class InterceptorServiceExtensions
             sp =>
             {
                 var implementation = sp.GetRequiredService<TImplementation>();
-                return ServiceInterceptorFactory.CreateInterceptor(implementation, sp);
+                return ServiceInterceptorFactory.CreateInterceptor<TInterface>(implementation, sp);
             },
             lifetime));
 
@@ -85,8 +85,7 @@ public static class InterceptorServiceExtensions
     /// </summary>
     public static IServiceCollection AddHangfireJobInterceptor(this IServiceCollection services)
     {
-        // Uncomment when Hangfire is installed:
-        // services.AddScoped<JobExecutionFilter>();
+        services.AddScoped<JobExecutionFilter>();
         return services;
     }
 }

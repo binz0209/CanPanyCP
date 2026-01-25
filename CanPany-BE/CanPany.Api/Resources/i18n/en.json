@@ -1,33 +1,78 @@
 {
-  "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
-  "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
-  "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
-  "Interceptor.Audit.Format.HttpRequestSuccess": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
-  "Interceptor.Audit.Format.HttpRequestFailed": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
-  "Interceptor.Audit.Format.ServiceCallSuccess": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
-  "Interceptor.Audit.Format.ServiceCallFailed": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
-  "Interceptor.Audit.Format.JobStart": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Started",
-  "Interceptor.Audit.Format.JobComplete": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
-  "Interceptor.Audit.Format.JobFailed": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5} | Error: {6}",
-  "Interceptor.Security.Authentication": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
-  "Interceptor.Security.Authorization": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
-  "Interceptor.Security.Format.AuthenticationSuccess": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
-  "Interceptor.Security.Format.AuthenticationFailed": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4} | Reason: {5}",
-  "Interceptor.Security.Format.AuthorizationDenied": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Access Denied",
-  "Interceptor.Security.Format.UnauthorizedAccess": "[SECURITY] UNAUTHORIZED_ACCESS | {0} | User: {1} | Path: {2} | IP: {3} | Unauthorized",
-  "Interceptor.Performance.OperationTiming": "[PERFORMANCE] {0} took {1}ms",
-  "Interceptor.Performance.SlowOperation": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)",
-  "Interceptor.Performance.Format.OperationCompleted": "[PERFORMANCE] {0} took {1}ms | Metadata: {2}",
-  "Interceptor.Performance.Format.SlowOperationWarning": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)",
-  "Interceptor.Exception.Captured": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4}",
-  "Interceptor.Exception.Critical": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
-  "Interceptor.Exception.Format.ExceptionOccurred": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4} | Service: {5} | MethodName: {6}",
-  "Interceptor.Exception.Format.CriticalException": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
-  "Error.User.Register.EmailExists": "Email already exists in the system",
-  "Error.User.Register.Failed": "Registration failed: {0}",
-  "Logging.User.Register.Start": "Starting user registration: {0}",
-  "Logging.User.Register.Complete": "Registration successful: {0}, UserId: {1}",
-  "Logging.User.Register.Error.Failed": "User registration error: {0}, Error: {1}",
-  "Display.Success.User.Register": "Registration successful",
-  "Success.User.Register": "Registration successful"
+  "Display": {
+    "Email": {
+      "Welcome": {
+        "Subject": "Welcome to CanPany!",
+        "Body": "Hello {0},\n\nThank you for joining CanPany. We are excited to have you on board!\n\nBest regards,\nThe CanPany Team"
+      },
+      "PasswordReset": {
+        "Subject": "CanPany - Password Reset Request",
+        "Body": "Hello {0},\n\nYour password reset code is: {1}\n\nThis code will expire in {2} minutes.\n\nIf you did not request a password reset, please ignore this email."
+      },
+      "ApplicationStatus": {
+        "Accepted": {
+          "Subject": "Application Update: {0} - CanPany",
+          "Body": "Hello {0},\n\nGood news! Your application for the position of \"{1}\" has been accepted by the employer.\n\nPlease check your notifications in the app for next steps regarding the interview or onboarding process.\n\nBest of luck!"
+        },
+        "Rejected": {
+          "Subject": "Application Update: {0} - CanPany",
+          "Body": "Hello {0},\n\nThank you for your interest in the \"{1}\" position.\n\nAfter careful consideration, the employer has decided not to proceed with your application at this time.\n\nWe encourage you to apply for other openings on CanPany."
+        }
+      },
+      "JobMatch": {
+        "Subject": "New Job Match Found!",
+        "Body": "Hello {0},\n\nWe found a job that matches your search criteria:\n\nPosition: {1}\nCompany: {2}\nLocation: {3}\nSalary: {4}\n\nLog in to the CanPany app to view details and apply now!"
+      },
+      "PaymentConfirmation": {
+        "Success": {
+          "Subject": "Payment Confirmation - CanPany",
+          "Body": "Hello {0},\n\nYour payment has been processed successfully!\n\nAmount: {1}\nPurpose: {2}\nStatus: {3}\n\nThank you for using CanPany!"
+        },
+        "Failed": {
+          "Subject": "Payment Failed Notification - CanPany",
+          "Body": "Hello {0},\n\nUnfortunately, your payment was not successful.\n\nAmount: {1}\nPurpose: {2}\nStatus: {3}\n\nPlease try again or contact support if the issue persists."
+        }
+      }
+    }
+  },
+  "Audit": {
+    "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
+    "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
+    "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
+    "Interceptor.Audit.Format": {
+      "HttpRequestSuccess": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
+      "HttpRequestFailed": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
+      "ServiceCallSuccess": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
+      "ServiceCallFailed": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
+      "JobStart": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Started",
+      "JobComplete": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
+      "JobFailed": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5} | Error: {6}"
+    }
+  },
+  "Security": {
+    "Interceptor.Security.Authentication": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+    "Interceptor.Security.Authorization": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+    "Interceptor.Security.Format": {
+      "AuthenticationSuccess": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+      "AuthenticationFailed": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4} | Reason: {5}",
+      "AuthorizationDenied": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Access Denied",
+      "UnauthorizedAccess": "[SECURITY] UNAUTHORIZED_ACCESS | {0} | User: {1} | Path: {2} | IP: {3} | Unauthorized"
+    }
+  },
+  "Performance": {
+    "Interceptor.Performance.OperationTiming": "[PERFORMANCE] {0} took {1}ms",
+    "Interceptor.Performance.SlowOperation": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)",
+    "Interceptor.Performance.Format": {
+      "OperationCompleted": "[PERFORMANCE] {0} took {1}ms | Metadata: {2}",
+      "SlowOperationWarning": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)"
+    }
+  },
+  "Error": {
+    "Interceptor.Exception.Captured": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4}",
+    "Interceptor.Exception.Critical": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
+    "Interceptor.Exception.Format": {
+      "ExceptionOccurred": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4} | Service: {5} | MethodName: {6}",
+      "CriticalException": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}"
+    }
+  }
 }
