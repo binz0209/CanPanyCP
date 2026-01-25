@@ -5,6 +5,7 @@ import { queryClient } from '@/lib/queryClient';
 import { PublicLayout } from '@/components/layout';
 import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
+import { CandidateProfilePage } from '@/pages/candidate';
 
 function App() {
   return (
@@ -19,6 +20,9 @@ function App() {
             <Route path="/companies" element={<CompaniesPage />} />
             <Route path="/companies/:id" element={<CompanyDetailPage />} />
           </Route>
+
+          {/* Candidate Routes */}
+          <Route path="/profile" element={<CandidateProfilePage />} />
 
           {/* Auth Routes (no layout) */}
           <Route path="/auth/login" element={<LoginPage />} />

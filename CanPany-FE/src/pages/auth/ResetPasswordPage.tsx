@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock, Briefcase, Eye, EyeOff, ArrowLeft, CheckCircle, KeyRound, ShieldCheck } from 'lucide-react';
+import { Lock, Briefcase, Eye, EyeOff, ArrowLeft, CheckCircle, KeyRound, ShieldCheck } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
 import { authApi } from '../../api';
 import toast from 'react-hot-toast';
@@ -47,9 +47,9 @@ export function ResetPasswordPage() {
         setIsLoading(true);
         try {
             await authApi.resetPassword({
-                email,
-                code: data.code,
-                newPassword: data.newPassword,
+                Email: email,
+                Code: data.code,
+                NewPassword: data.newPassword,
             });
             setIsSuccess(true);
             toast.success('Đặt lại mật khẩu thành công!');
