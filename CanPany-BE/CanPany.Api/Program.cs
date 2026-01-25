@@ -249,6 +249,9 @@ builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 
+// Register Reset Code Store as Singleton (to persist codes across requests)
+builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();
+
 // Register Job Alert and Matching Services
 builder.Services.AddScoped<IJobAlertService, JobAlertService>();
 builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
