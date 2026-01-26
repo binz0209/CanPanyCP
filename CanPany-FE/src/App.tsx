@@ -2,10 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { queryClient } from '@/lib/queryClient';
-import { PublicLayout } from '@/components/layout';
+import { PublicLayout, CandidateLayout } from '@/components/layout';
 import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage } from '@/pages/candidate';
+import { CandidateProfilePage, CandidateDashboardPage } from '@/pages/candidate';
 
 function App() {
   return (
@@ -22,7 +22,10 @@ function App() {
           </Route>
 
           {/* Candidate Routes */}
-          <Route path="/profile" element={<CandidateProfilePage />} />
+          <Route element={<CandidateLayout />}>
+            <Route path="/candidate/dashboard" element={<CandidateDashboardPage />} />
+            <Route path="/candidate/profile" element={<CandidateProfilePage />} />
+          </Route>
 
           {/* Auth Routes (no layout) */}
           <Route path="/auth/login" element={<LoginPage />} />
