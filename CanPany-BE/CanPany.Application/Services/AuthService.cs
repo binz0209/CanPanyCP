@@ -20,20 +20,22 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IConfiguration _configuration;
     private readonly IBackgroundEmailService _backgroundEmailService;
-    private readonly Dictionary<string, (string Code, DateTime Expires)> _resetCodes = new(); // In-memory, should use Redis in production
+    private readonly IResetCodeStore _resetCodeStore;
 
     public AuthService(
         IUserRepository userRepository,
         IHashService hashService,
         ILogger<AuthService> logger,
         IConfiguration configuration,
-        IBackgroundEmailService backgroundEmailService)
+        IBackgroundEmailService backgroundEmailService,
+        IResetCodeStore resetCodeStore)
     {
         _userRepository = userRepository;
         _hashService = hashService;
         _logger = logger;
         _configuration = configuration;
         _backgroundEmailService = backgroundEmailService;
+        _resetCodeStore = resetCodeStore;
     }
 
     public async Task<User?> AuthenticateAsync(string email, string password)
@@ -118,7 +120,7 @@ public class AuthService : IAuthService
             var code = new Random().Next(100000, 999999).ToString();
             var expires = DateTime.UtcNow.AddMinutes(15);
 
-            _resetCodes[email] = (code, expires);
+            _resetCodeStore.StoreCode(email, code, expires);
 
             // Queue email to be sent asynchronously
             _backgroundEmailService.QueuePasswordResetEmail(email, user.FullName, code);
@@ -137,16 +139,16 @@ public class AuthService : IAuthService
     {
         try
         {
-            if (!_resetCodes.TryGetValue(email, out var resetData))
+            if (!_resetCodeStore.TryGetCode(email, out var storedCode, out var expires))
                 return false;
 
-            if (resetData.Expires < DateTime.UtcNow)
+            if (expires < DateTime.UtcNow)
             {
-                _resetCodes.Remove(email);
+                _resetCodeStore.RemoveCode(email);
                 return false;
             }
 
-            if (resetData.Code != code)
+            if (storedCode != code)
                 return false;
 
             var user = await _userRepository.GetByEmailAsync(email);
@@ -157,7 +159,8 @@ public class AuthService : IAuthService
             user.MarkAsUpdated();
             await _userRepository.UpdateAsync(user);
 
-            _resetCodes.Remove(email);
+            _resetCodeStore.RemoveCode(email);
+            _logger.LogInformation("Password reset successful for email: {Email}", email);
             return true;
         }
         catch (Exception ex)
