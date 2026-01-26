@@ -196,6 +196,7 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReportReposit
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertRepository, CanPany.Infrastructure.Repositories.JobAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICandidateAlertRepository, CanPany.Infrastructure.Repositories.CandidateAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IFilterPresetRepository, CanPany.Infrastructure.Repositories.FilterPresetRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
 
 // Register Security Services
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
@@ -247,6 +248,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 
 // Register Job Alert and Matching Services

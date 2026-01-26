@@ -23,14 +23,14 @@ public class GeminiService : IGeminiService
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        _apiKey = _configuration["Gemini:ApiKey"] ?? string.Empty;
+        _apiKey = _configuration["GoogleGemini:ApiKey"] ?? string.Empty;
     }
 
     public async Task<List<double>> GenerateEmbeddingAsync(string text)
     {
-        if (string.IsNullOrEmpty(_apiKey))
+        if (string.IsNullOrWhiteSpace(_apiKey))
         {
-            _logger.LogWarning("Gemini API Key is missing. Returning mock embedding.");
+            _logger.LogWarning("Gemini API Key is missing or empty. Returning mock embedding.");
             return GenerateMockEmbedding();
         }
 

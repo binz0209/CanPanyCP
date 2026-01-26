@@ -1,6 +1,7 @@
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace CanPany.Application.Services;
@@ -14,6 +15,7 @@ public class CandidateSearchService : ICandidateSearchService
     private readonly IUserProfileRepository _profileRepo;
     private readonly IUserRepository _userRepo;
     private readonly IApplicationRepository _applicationRepo;
+    private readonly ISkillRepository _skillRepo;
     private readonly IGeminiService _geminiService;
     private readonly ILogger<CandidateSearchService> _logger;
     
@@ -25,6 +27,7 @@ public class CandidateSearchService : ICandidateSearchService
         IUserProfileRepository profileRepo,
         IUserRepository userRepo,
         IApplicationRepository applicationRepo,
+        ISkillRepository skillRepo,
         IGeminiService geminiService,
         ILogger<CandidateSearchService> logger)
     {
@@ -32,6 +35,7 @@ public class CandidateSearchService : ICandidateSearchService
         _profileRepo = profileRepo;
         _userRepo = userRepo;
         _applicationRepo = applicationRepo;
+        _skillRepo = skillRepo;
         _geminiService = geminiService;
         _logger = logger;
     }
@@ -59,6 +63,102 @@ public class CandidateSearchService : ICandidateSearchService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching candidates: {JobId}", jobId);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<SemanticSearchResponse>> SemanticSearchAsync(SemanticSearchRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.JobDescription))
+                throw new ArgumentException("Job description cannot be empty", nameof(request.JobDescription));
+
+            // 1. Generate embedding for job description
+            var embedding = await _geminiService.GenerateEmbeddingAsync(request.JobDescription);
+
+            // 2. Search by vector
+            var vectorResults = await _profileRepo.SearchByVectorAsync(embedding, limit: request.Limit * 2);
+
+            // 3. Apply filters and calculate scores
+            var finalResults = new List<SemanticSearchResponse>();
+            
+            foreach (var (profile, score) in vectorResults)
+            {
+                // Basic location filtering (in-memory)
+                if (!string.IsNullOrEmpty(request.Location) && 
+                    !string.IsNullOrEmpty(profile.Location) && 
+                    !profile.Location.Contains(request.Location, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Basic experience filtering (in-memory)
+                if (!string.IsNullOrEmpty(request.ExperienceLevel) && 
+                    !string.IsNullOrEmpty(profile.Experience) && 
+                    !profile.Experience.Contains(request.ExperienceLevel, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Get User Info
+                var user = await _userRepo.GetByIdAsync(profile.UserId);
+                if (user == null) continue;
+
+                // 4. Calculate multi-factor match score
+                // Base score from semantic vector similarity (70%)
+                double matchScore = score * 100;
+
+                // Skill overlap bonus (20%)
+                if (profile.SkillIds != null && profile.SkillIds.Any())
+                {
+                    int overlapCount = 0;
+                    foreach (var skillId in profile.SkillIds)
+                    {
+                        var skill = await _skillRepo.GetByIdAsync(skillId);
+                        if (skill != null && request.JobDescription.Contains(skill.Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            overlapCount++;
+                        }
+                    }
+                    
+                    double skillBonus = Math.Min(overlapCount * 5, 20); // 5 points per skill, max 20
+                    matchScore += skillBonus;
+                }
+
+                // Experience relevance bonus (10%)
+                if (!string.IsNullOrEmpty(request.ExperienceLevel) && 
+                    !string.IsNullOrEmpty(profile.Experience) && 
+                    profile.Experience.Contains(request.ExperienceLevel, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchScore += 10;
+                }
+
+                finalResults.Add(new SemanticSearchResponse(
+                    Profile: new UserProfileDto 
+                    { 
+                        Id = profile.Id,
+                        UserId = profile.UserId,
+                        Title = profile.Title ?? string.Empty,
+                        Bio = profile.Bio ?? string.Empty,
+                        Location = profile.Location,
+                        HourlyRate = profile.HourlyRate,
+                        Languages = profile.Languages,
+                        Certifications = profile.Certifications,
+                        SkillIds = profile.SkillIds
+                    },
+                    MatchScore: Math.Min(matchScore, 100),
+                    UserInfo: new UserBasicInfo(user.Id, user.FullName, user.Email!, user.AvatarUrl)
+                ));
+            }
+
+            return finalResults
+                .OrderByDescending(x => x.MatchScore)
+                .Take(request.Limit);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error performing semantic search");
             throw;
         }
     }

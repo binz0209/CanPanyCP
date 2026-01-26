@@ -279,8 +279,7 @@ public class ReportService : IReportService
             var reporterName = reporter?.FullName ?? "Unknown User";
 
             // Get all admin users
-            var allUsers = await _userRepo.GetAllAsync();
-            var admins = allUsers.Where(u => u.Role == "Admin");
+            var admins = await _userRepo.GetByRoleAsync("Admin");
 
             foreach (var admin in admins)
             {

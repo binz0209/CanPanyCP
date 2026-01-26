@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace CanPany.Infrastructure.Repositories;
 
@@ -98,41 +99,75 @@ public class UserProfileRepository : IUserProfileRepository
 
     public async Task<IEnumerable<(UserProfile Profile, double Score)>> SearchByVectorAsync(List<double> vector, int limit = 20, double minScore = 0.5)
     {
-        var vectorSearch = new BsonDocument
+        try
         {
-            { "$vectorSearch", new BsonDocument
-                {
-                    { "index", "vector_index" },
-                    { "path", "embedding" },
-                    { "queryVector", new BsonArray(vector) },
-                    { "numCandidates", limit * 10 },
-                    { "limit", limit }
+            var vectorSearch = new BsonDocument
+            {
+                { "$vectorSearch", new BsonDocument
+                    {
+                        { "index", "vector_index" },
+                        { "path", "embedding" },
+                        { "queryVector", new BsonArray(vector) },
+                        { "numCandidates", limit * 10 },
+                        { "limit", limit }
+                    }
                 }
-            }
-        };
+            };
 
-        var project = new BsonDocument
-        {
-            { "$project", new BsonDocument
-                {
-                    { "score", new BsonDocument("$meta", "vectorSearchScore") },
-                    { "root", "$$ROOT" }
+            var project = new BsonDocument
+            {
+                { "$project", new BsonDocument
+                    {
+                        { "score", new BsonDocument("$meta", "vectorSearchScore") },
+                        { "root", "$$ROOT" }
+                    }
                 }
-            }
-        };
+            };
 
-        var pipeline = new[] { vectorSearch, project };
-        
-        // Use BsonDocument result mapping first
-        var results = await _collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
+            var pipeline = new[] { vectorSearch, project };
+            
+            var results = await _collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
 
-        return results.Select(doc => 
+            return results.Select(doc => 
+            {
+                var score = doc["score"].AsDouble;
+                var profile = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<UserProfile>(doc["root"].AsBsonDocument);
+                return (profile, score);
+            });
+        }
+        catch (Exception ex)
         {
-            var score = doc["score"].AsDouble;
-            // Deserialize the root document back to UserProfile
-            var profile = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<UserProfile>(doc["root"].AsBsonDocument);
-            return (profile, score);
-        });
+            _logger?.LogWarning(ex, "Vector search failed (likely local MongoDB). Falling back to manual calculation.");
+            
+            // Fallback: Manual similarity calculation for local testing
+            // This is ONLY for small datasets/local testing as it loads all profiles
+            var allProfiles = await _collection.Find(p => p.Embedding != null).ToListAsync();
+            
+            var results = allProfiles
+                .Select(p => (Profile: p, Score: CalculateCosineSimilarity(vector, p.Embedding!)))
+                .Where(x => x.Score >= minScore)
+                .OrderByDescending(x => x.Score)
+                .Take(limit)
+                .ToList();
+                
+            return results;
+        }
+    }
+
+    private double CalculateCosineSimilarity(List<double> v1, List<double> v2)
+    {
+        if (v1 == null || v2 == null || v1.Count != v2.Count) return 0;
+        double dotProduct = 0;
+        double mag1 = 0;
+        double mag2 = 0;
+        for (int i = 0; i < v1.Count; i++)
+        {
+            dotProduct += v1[i] * v2[i];
+            mag1 += v1[i] * v1[i];
+            mag2 += v2[i] * v2[i];
+        }
+        if (mag1 == 0 || mag2 == 0) return 0;
+        return dotProduct / (Math.Sqrt(mag1) * Math.Sqrt(mag2));
     }
 }
 

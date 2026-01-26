@@ -1,4 +1,5 @@
 using CanPany.Domain.Entities;
+using CanPany.Application.DTOs;
 
 namespace CanPany.Application.Interfaces.Services;
 
@@ -18,6 +19,7 @@ public interface ICandidateSearchService
         decimal? maxHourlyRate, 
         int page = 1, 
         int pageSize = 20);
+    Task<IEnumerable<SemanticSearchResponse>> SemanticSearchAsync(SemanticSearchRequest request);
     Task<bool> HasUnlockedCandidateAsync(string companyId, string candidateId);
     Task<IEnumerable<(User User, UserProfile Profile)>> GetUnlockedCandidatesAsync(string companyId, int page = 1, int pageSize = 20);
 }
