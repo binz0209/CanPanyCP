@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, MapPin, Briefcase, X, SlidersHorizontal } from 'lucide-react';
-import { Button, Input, Badge } from '@/components/ui';
-import { JobCard } from '@/components/features/jobs';
-import { jobsApi } from '@/api';
-import type { Job } from '@/types';
+import { Button, Input, Badge } from '../../components/ui';
+import { JobCard } from '../../components/features/jobs';
+import { jobsApi } from '../../api';
+import type { Job } from '../../types';
 
 export function JobsPage() {
     const [searchParams, setSearchParams] = useSearchParams();

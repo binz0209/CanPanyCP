@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, Briefcase, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
-import { authApi } from '@/api';
-import { useAuthStore } from '@/stores/auth.store';
+import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui';
+import { authApi } from '../../api';
+import { useAuthStore } from '../../stores/auth.store';
 import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
@@ -29,14 +29,39 @@ export function LoginPage() {
         register,
         handleSubmit,
         formState: { errors },
+        watch,
     } = useForm<LoginForm>({
         resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: localStorage.getItem('loginEmail') || '',
+            password: '',
+        },
     });
+
+    // Persist email to localStorage
+    useEffect(() => {
+        const subscription = watch((value) => {
+            if (value.email !== undefined) {
+                localStorage.setItem('loginEmail', value.email);
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [watch]);
+
+    // Show persisted error toast on mount
+    useEffect(() => {
+        const errorMsg = localStorage.getItem('loginError');
+        if (errorMsg) {
+            toast.error(errorMsg, { duration: 8000 });
+            localStorage.removeItem('loginError');
+        }
+    }, []);
 
     const onSubmit = async (data: LoginForm) => {
         setIsLoading(true);
         try {
             const response = await authApi.login(data);
+            localStorage.removeItem('loginError'); // Clear any previous error
             setAuth(response.user, response.accessToken);
             toast.success('Đăng nhập thành công!');
 
@@ -48,11 +73,12 @@ export function LoginPage() {
                         ? '/admin/dashboard'
                         : from;
 
+            setIsLoading(false);
             navigate(redirectPath, { replace: true });
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Đăng nhập thất bại');
-        } finally {
             setIsLoading(false);
+            localStorage.setItem('loginError', error.response?.data?.message || 'Đăng nhập thất bại');
+            // Toast will be shown on next mount due to page refresh
         }
     };
 

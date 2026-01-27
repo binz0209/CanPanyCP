@@ -2,9 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { queryClient } from '@/lib/queryClient';
-import { PublicLayout } from '@/components/layout';
-import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
-import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth';
+import { PublicLayout, CandidateLayout } from '@/components/layout';
+import { HomePage, HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
+import { CandidateProfilePage, CandidateDashboardPage } from '@/pages/candidate';
 
 function App() {
   return (
@@ -13,17 +14,24 @@ function App() {
         <Routes>
           {/* Public Routes with Layout */}
           <Route element={<PublicLayout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePageDemo />} />
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
             <Route path="/companies" element={<CompaniesPage />} />
             <Route path="/companies/:id" element={<CompanyDetailPage />} />
           </Route>
 
+          {/* Candidate Routes */}
+          <Route element={<CandidateLayout />}>
+            <Route path="/candidate/dashboard" element={<CandidateDashboardPage />} />
+            <Route path="/candidate/profile" element={<CandidateProfilePage />} />
+          </Route>
+
           {/* Auth Routes (no layout) */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
           {/* 404 */}
           <Route path="*" element={

@@ -1,10 +1,10 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin, Clock, DollarSign, Bookmark, Share2, Building2, ExternalLink, Users, Eye, ArrowLeft, CheckCircle } from 'lucide-react';
-import { Button, Badge, Card } from '@/components/ui';
-import { jobsApi } from '@/api';
-import { formatRelativeTime, formatCurrency, formatDate } from '@/utils';
-import { cn } from '@/utils';
+import { Button, Badge, Card } from '../../components/ui';
+import { jobsApi } from '../../api';
+import { formatRelativeTime, formatCurrency, formatDate } from '../../utils';
+import { cn } from '../../utils';
 
 export function JobDetailPage() {
     const { id } = useParams<{ id: string }>();
