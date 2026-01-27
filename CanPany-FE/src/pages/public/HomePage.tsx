@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Search, Briefcase, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin, Star, CheckCircle } from 'lucide-react';
-import { Button, Card } from '../../components/ui';
+import { Button, Card, Carousel } from '../../components/ui';
 
 const features = [
     {
@@ -45,17 +45,48 @@ const topCompanies = [
     { name: 'Momo', logo: '💜' },
 ];
 
+const jobBanners = [
+    {
+        id: 1,
+        title: 'Senior Frontend Developer',
+        company: 'FPT Software',
+        location: 'Hà Nội',
+        salary: '20-30 triệu',
+        image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
+    },
+    {
+        id: 2,
+        title: 'UI/UX Designer',
+        company: 'VNG Corporation',
+        location: 'TP. Hồ Chí Minh',
+        salary: '15-25 triệu',
+        image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=400&fit=crop',
+    },
+    {
+        id: 3,
+        title: 'Data Analyst',
+        company: 'Viettel',
+        location: 'Đà Nẵng',
+        salary: '18-28 triệu',
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
+    },
+];
+
 export function HomePage() {
+
     return (
         <div>
             {/* Hero Section - TopCV Style */}
             <section className="relative overflow-hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c]">
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+                    <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0,30 Q15,10 30,30 T60,30 V60 H0 Z\' fill=\'%23ffffff\' fill-opacity=\'0.4\'/%3E%3C/svg%3E")' }} />
                 </div>
 
                 <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+                    {/* Job Banners Carousel */}
+                    <Carousel items={jobBanners} />
+
                     <div className="grid items-center gap-12 lg:grid-cols-2">
                         <div>
                             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
