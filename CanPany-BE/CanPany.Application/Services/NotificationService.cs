@@ -1,6 +1,7 @@
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace CanPany.Application.Services;
@@ -65,6 +66,40 @@ public class NotificationService : INotificationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting unread notifications by user ID: {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<NotificationResponseDto>> GetFilteredNotificationsAsync(
+        string userId, 
+        NotificationFilterDto filter)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+
+            var notifications = await _repo.GetFilteredByUserIdAsync(
+                userId,
+                filter.IsRead,
+                filter.Type,
+                filter.FromDate,
+                filter.ToDate);
+
+            // Map to response DTOs
+            return notifications.Select(n => new NotificationResponseDto
+            {
+                Id = n.Id,
+                Type = n.Type,
+                Title = n.Title ?? string.Empty,
+                Content = n.Message ?? string.Empty,
+                Timestamp = n.CreatedAt,
+                IsRead = n.IsRead
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting filtered notifications for user: {UserId}", userId);
             throw;
         }
     }

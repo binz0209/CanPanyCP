@@ -10,6 +10,7 @@ public interface INotificationRepository
     Task<Notification?> GetByIdAsync(string id);
     Task<IEnumerable<Notification>> GetByUserIdAsync(string userId);
     Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(string userId);
+    Task<IEnumerable<Notification>> GetFilteredByUserIdAsync(string userId, bool? isRead, string? type, DateTime? fromDate, DateTime? toDate);
     Task<Notification> AddAsync(Notification notification);
     Task UpdateAsync(Notification notification);
     Task DeleteAsync(string id);

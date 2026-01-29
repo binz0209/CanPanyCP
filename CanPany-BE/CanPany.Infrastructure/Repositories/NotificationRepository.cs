@@ -33,6 +33,49 @@ public class NotificationRepository : INotificationRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Notification>> GetFilteredByUserIdAsync(
+        string userId, 
+        bool? isRead, 
+        string? type, 
+        DateTime? fromDate, 
+        DateTime? toDate)
+    {
+        var filterBuilder = Builders<Notification>.Filter;
+        var filters = new List<FilterDefinition<Notification>>
+        {
+            filterBuilder.Eq(n => n.UserId, userId)
+        };
+
+        // Apply isRead filter if specified
+        if (isRead.HasValue)
+        {
+            filters.Add(filterBuilder.Eq(n => n.IsRead, isRead.Value));
+        }
+
+        // Apply type filter if specified
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            filters.Add(filterBuilder.Eq(n => n.Type, type));
+        }
+
+        // Apply date range filters if specified
+        if (fromDate.HasValue)
+        {
+            filters.Add(filterBuilder.Gte(n => n.CreatedAt, fromDate.Value));
+        }
+
+        if (toDate.HasValue)
+        {
+            filters.Add(filterBuilder.Lte(n => n.CreatedAt, toDate.Value));
+        }
+
+        var combinedFilter = filterBuilder.And(filters);
+
+        return await _collection.Find(combinedFilter)
+            .SortByDescending(n => n.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<Notification> AddAsync(Notification notification)
     {
         await _collection.InsertOneAsync(notification);
