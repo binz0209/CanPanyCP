@@ -1,5 +1,5 @@
 import apiClient from './axios.config';
-import type { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '@/types';
+import type { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types';
 
 export const authApi = {
     login: async (data: LoginRequest): Promise<AuthResponse> => {

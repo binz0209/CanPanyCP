@@ -4,8 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Briefcase, ArrowLeft, CheckCircle, KeyRound, ShieldCheck } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
-import { authApi } from '@/api';
+import { Button, Input } from '../../components/ui';
+import { authApi } from '../../api';
 import toast from 'react-hot-toast';
 
 const forgotPasswordSchema = z.object({
@@ -30,7 +30,7 @@ export function ForgotPasswordPage() {
     const onSubmit = async (data: ForgotPasswordForm) => {
         setIsLoading(true);
         try {
-            await authApi.forgotPassword(data.email);
+            await authApi.forgotPassword(data);
             setSubmittedEmail(data.email);
             setIsSuccess(true);
             toast.success('Đã gửi hướng dẫn đặt lại mật khẩu!');
@@ -120,6 +120,12 @@ export function ForgotPasswordPage() {
                             </div>
 
                             <div className="mt-8 space-y-3">
+                                <Link to={`/auth/reset-password?email=${encodeURIComponent(submittedEmail)}`} className="block">
+                                    <Button className="w-full" size="lg">
+                                        <KeyRound className="h-4 w-4" />
+                                        Đặt lại mật khẩu
+                                    </Button>
+                                </Link>
                                 <Button
                                     variant="outline"
                                     className="w-full"

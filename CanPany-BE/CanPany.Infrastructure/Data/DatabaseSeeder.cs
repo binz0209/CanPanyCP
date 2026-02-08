@@ -67,16 +67,13 @@ public class DatabaseSeeder
         // Seed Jobs
         await SeedJobsAsync();
 
-        // Seed Projects
-        await SeedProjectsAsync();
-
         // Seed CVs
         await SeedCVsAsync();
 
         // Seed Applications
         await SeedApplicationsAsync();
 
-        // Seed Messages
+        // Seed Conversations & Messages
         await SeedMessagesAsync();
 
         // Seed Notifications
@@ -91,11 +88,8 @@ public class DatabaseSeeder
         // Seed Job Bookmarks
         await SeedJobBookmarksAsync();
 
-        // Seed Project Skills
-        await SeedProjectSkillsAsync();
-
-        // Seed Reviews
-        await SeedReviewsAsync();
+        // Seed Contracts & Reviews
+        await SeedContractsAndReviewsAsync();
     }
 
     private async Task SeedCategoriesAsync()
@@ -674,49 +668,7 @@ public class DatabaseSeeder
         await jobsCollection.InsertManyAsync(jobs);
     }
 
-    private async Task SeedProjectsAsync()
-    {
-        var projectsCollection = _context.Projects;
-        var companiesCollection = _context.Companies;
-        var categoriesCollection = _context.Categories;
-        var skillsCollection = _context.Skills;
-        var existingCount = await projectsCollection.CountDocumentsAsync(_ => true);
-
-        if (existingCount > 0) return;
-
-        var companies = await companiesCollection.Find(_ => true).ToListAsync();
-        var categories = await categoriesCollection.Find(_ => true).ToListAsync();
-        var skills = await skillsCollection.Find(_ => true).Limit(30).ToListAsync();
-
-        if (!companies.Any() || !categories.Any()) return;
-
-        var projectTitles = new[] { "E-commerce Website Development", "Mobile App for Food Delivery", "Data Analytics Dashboard", "AI Chatbot Integration", "Cloud Migration Project" };
-        var projects = new List<Project>();
-        var random = new Random();
-
-        for (int i = 0; i < Math.Min(projectTitles.Length, companies.Count * 2); i++)
-        {
-            var company = companies[i % companies.Count];
-            var category = categories[random.Next(categories.Count)];
-            var selectedSkills = skills.OrderBy(x => random.Next()).Take(3 + random.Next(5)).Select(s => s.Id).ToList();
-
-            projects.Add(new Project
-            {
-                OwnerId = company.UserId,
-                Title = projectTitles[i % projectTitles.Length],
-                Description = $"We need an experienced developer to help us build {projectTitles[i % projectTitles.Length].ToLower()}.",
-                CategoryId = category.Id,
-                SkillIds = selectedSkills,
-                BudgetType = random.Next(2) == 0 ? "Fixed" : "Hourly",
-                BudgetAmount = random.Next(2) == 0 ? (decimal)(5 + random.Next(20)) * 1000000 : (decimal)(300 + random.Next(700)) * 1000,
-                Deadline = DateTime.UtcNow.AddDays(60 + random.Next(90)),
-                Status = new[] { "Open", "InProgress", "Completed" }[random.Next(3)],
-                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(60))
-            });
-        }
-
-        await projectsCollection.InsertManyAsync(projects);
-    }
+    // SeedProjectsAsync removed — Projects merged into Jobs
 
     private async Task SeedCVsAsync()
     {
@@ -737,9 +689,6 @@ public class DatabaseSeeder
             FileSize = 500000 + index * 100000,
             MimeType = "application/pdf",
             IsDefault = index == 0,
-            ExtractedSkills = new List<string> { "React", "Node.js", "TypeScript", "MongoDB" },
-            ExtractedContent = $"CV content for {candidate.FullName}",
-            AtsScore = 75 + index * 5,
             CreatedAt = DateTime.UtcNow.AddDays(-index * 10)
         }).ToList();
 
@@ -780,7 +729,7 @@ public class DatabaseSeeder
                     CandidateId = candidate.Id,
                     CVId = cv?.Id,
                     CoverLetter = $"I am very interested in the {job.Title} position.",
-                    ExpectedSalary = job.BudgetAmount,
+                    ProposedAmount = job.BudgetAmount,
                     Status = statuses[random.Next(statuses.Length)],
                     MatchScore = 60 + random.Next(40),
                     CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10))
@@ -794,42 +743,59 @@ public class DatabaseSeeder
     private async Task SeedMessagesAsync()
     {
         var messagesCollection = _context.Messages;
+        var conversationsCollection = _context.Conversations;
         var usersCollection = _context.Users;
-        var projectsCollection = _context.Projects;
+        var jobsCollection = _context.Jobs;
         var existingCount = await messagesCollection.CountDocumentsAsync(_ => true);
 
         if (existingCount > 0) return;
 
         var companies = await usersCollection.Find(u => u.Role == "Company").ToListAsync();
         var candidates = await usersCollection.Find(u => u.Role == "Candidate").ToListAsync();
-        var projects = await projectsCollection.Find(_ => true).Limit(3).ToListAsync();
+        var jobs = await jobsCollection.Find(_ => true).Limit(3).ToListAsync();
 
         if (!companies.Any() || !candidates.Any()) return;
 
+        var conversations = new List<Conversation>();
         var messages = new List<Message>();
-        var messageTexts = new[] { "Hello, I'm interested in your project.", "Thank you for your interest.", "I have experience with similar projects.", "That sounds great! When can we schedule a call?", "I've reviewed your proposal. It looks good." };
+        var messageTexts = new[] { "Hello, I'm interested in this position.", "Thank you for your interest.", "I have experience with similar work.", "That sounds great! When can we schedule a call?", "I've reviewed your application. It looks good." };
         var random = new Random();
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < Math.Min(3, companies.Count); i++)
         {
-            var company = companies[random.Next(companies.Count)];
-            var candidate = candidates[random.Next(candidates.Count)];
-            var project = projects.Any() ? projects[random.Next(projects.Count)] : null;
-            var conversationKey = $"{company.Id}_{candidate.Id}";
+            var company = companies[i % companies.Count];
+            var candidate = candidates[i % candidates.Count];
+            var job = jobs.Any() ? jobs[i % jobs.Count] : null;
 
-            messages.Add(new Message
+            var convId = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+            var conversation = new Conversation
             {
-                ConversationKey = conversationKey,
-                ProjectId = project?.Id,
-                SenderId = i % 2 == 0 ? company.Id : candidate.Id,
-                ReceiverId = i % 2 == 0 ? candidate.Id : company.Id,
-                Text = messageTexts[random.Next(messageTexts.Length)],
-                IsRead = i < 7,
-                CreatedAt = DateTime.UtcNow.AddHours(-i * 2)
-            });
+                Id = convId,
+                ParticipantIds = new List<string> { company.Id, candidate.Id }.OrderBy(x => x).ToList(),
+                JobId = job?.Id,
+                LastMessageAt = DateTime.UtcNow.AddHours(-i),
+                LastMessagePreview = messageTexts[0],
+                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10))
+            };
+            conversations.Add(conversation);
+
+            for (int j = 0; j < 3; j++)
+            {
+                messages.Add(new Message
+                {
+                    ConversationId = convId,
+                    SenderId = j % 2 == 0 ? company.Id : candidate.Id,
+                    Text = messageTexts[random.Next(messageTexts.Length)],
+                    IsRead = j < 2,
+                    CreatedAt = DateTime.UtcNow.AddHours(-(i * 3 + j))
+                });
+            }
         }
 
-        await messagesCollection.InsertManyAsync(messages);
+        if (conversations.Any())
+            await conversationsCollection.InsertManyAsync(conversations);
+        if (messages.Any())
+            await messagesCollection.InsertManyAsync(messages);
     }
 
     private async Task SeedNotificationsAsync()
@@ -985,58 +951,65 @@ public class DatabaseSeeder
         await bookmarksCollection.InsertManyAsync(bookmarks);
     }
 
-    private async Task SeedProjectSkillsAsync()
+    private async Task SeedContractsAndReviewsAsync()
     {
-        // ProjectSkills are already handled in Project.SkillIds
-        // This method is kept for future use if explicit ProjectSkill entities are needed
-        await Task.CompletedTask;
-    }
-
-    private async Task SeedReviewsAsync()
-    {
+        var contractsCollection = _context.Contracts;
         var reviewsCollection = _context.Reviews;
-        var projectsCollection = _context.Projects;
+        var applicationsCollection = _context.Applications;
+        var jobsCollection = _context.Jobs;
         var usersCollection = _context.Users;
-        var existingCount = await reviewsCollection.CountDocumentsAsync(_ => true);
 
-        if (existingCount > 0) return;
+        var existingContracts = await contractsCollection.CountDocumentsAsync(_ => true);
+        if (existingContracts > 0) return;
 
-        var projects = await projectsCollection.Find(p => p.Status == "Completed").ToListAsync();
+        var acceptedApps = await applicationsCollection.Find(a => a.Status == "Accepted").Limit(3).ToListAsync();
         var companies = await usersCollection.Find(u => u.Role == "Company").ToListAsync();
         var candidates = await usersCollection.Find(u => u.Role == "Candidate").ToListAsync();
 
-        if (!projects.Any() || !companies.Any() || !candidates.Any()) return;
+        if (!acceptedApps.Any() || !companies.Any() || !candidates.Any()) return;
 
+        var contracts = new List<Contract>();
         var reviews = new List<Review>();
         var random = new Random();
         var comments = new[] { "Great work! Very professional and delivered on time.", "Excellent communication and quality of work.", "Good developer, would work with again.", "Met all requirements and exceeded expectations.", "Professional and reliable. Highly recommended." };
 
-        foreach (var project in projects.Take(3))
+        foreach (var app in acceptedApps)
         {
-            var companyUser = await usersCollection.Find(u => u.Id == project.OwnerId).FirstOrDefaultAsync();
-            if (companyUser == null) continue;
+            var job = await jobsCollection.Find(j => j.Id == app.JobId).FirstOrDefaultAsync();
+            if (job == null) continue;
 
-            var company = await _context.Companies.Find(c => c.UserId == companyUser.Id).FirstOrDefaultAsync();
-            var candidate = candidates[random.Next(candidates.Count)];
-
-            if (company != null)
+            var contractId = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+            var contract = new Contract
             {
-                reviews.Add(new Review
-                {
-                    ProjectId = project.Id,
-                    ReviewerId = candidate.Id,
-                    RevieweeId = companyUser.Id,
-                    Rating = 4 + random.Next(2),
-                    Comment = comments[random.Next(comments.Length)],
-                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(30))
-                });
-            }
+                Id = contractId,
+                JobId = job.Id,
+                ApplicationId = app.Id,
+                CompanyId = job.CompanyId,
+                CandidateId = app.CandidateId,
+                AgreedAmount = app.ProposedAmount ?? 0,
+                Status = "Completed",
+                StartDate = DateTime.UtcNow.AddDays(-30),
+                EndDate = DateTime.UtcNow.AddDays(-5),
+                CompletedAt = DateTime.UtcNow.AddDays(-5),
+                CreatedAt = DateTime.UtcNow.AddDays(-30)
+            };
+            contracts.Add(contract);
+
+            reviews.Add(new Review
+            {
+                ContractId = contractId,
+                ReviewerId = app.CandidateId,
+                RevieweeId = job.CompanyId,
+                Rating = 4 + random.Next(2),
+                Comment = comments[random.Next(comments.Length)],
+                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(5))
+            });
         }
 
+        if (contracts.Any())
+            await contractsCollection.InsertManyAsync(contracts);
         if (reviews.Any())
-        {
             await reviewsCollection.InsertManyAsync(reviews);
-        }
     }
 }
 

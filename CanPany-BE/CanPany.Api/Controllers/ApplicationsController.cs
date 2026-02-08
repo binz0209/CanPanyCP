@@ -52,7 +52,7 @@ public class ApplicationsController : ControllerBase
                 CandidateId = userId,
                 CVId = request.CVId,
                 CoverLetter = request.CoverLetter,
-                ExpectedSalary = request.ExpectedSalary,
+                ProposedAmount = request.ExpectedSalary,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow
             };

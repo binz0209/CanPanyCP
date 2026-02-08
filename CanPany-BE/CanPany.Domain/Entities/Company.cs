@@ -42,6 +42,9 @@ public class Company : AggregateRoot
     [BsonElement("verificationDocuments")]
     public List<string> VerificationDocuments { get; set; } = new(); // URLs to documents
 
+    [BsonElement("verificationRejectionReason")]
+    public string? VerificationRejectionReason { get; set; }
+
     [BsonElement("verifiedAt")]
     public DateTime? VerifiedAt { get; set; }
 

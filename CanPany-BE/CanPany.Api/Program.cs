@@ -172,8 +172,6 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserRepositor
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserProfileRepository, CanPany.Infrastructure.Repositories.UserProfileRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICompanyRepository, CanPany.Infrastructure.Repositories.CompanyRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobRepository, CanPany.Infrastructure.Repositories.JobRepository>();
-builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IProjectRepository, CanPany.Infrastructure.Repositories.ProjectRepository>();
-builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IProposalRepository, CanPany.Infrastructure.Repositories.ProposalRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IContractRepository, CanPany.Infrastructure.Repositories.ContractRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICVRepository, CanPany.Infrastructure.Repositories.CVRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IApplicationRepository, CanPany.Infrastructure.Repositories.ApplicationRepository>();
@@ -190,13 +188,15 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IPremiumPackag
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IAuditLogRepository, CanPany.Infrastructure.Repositories.AuditLogRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICVAnalysisRepository, CanPany.Infrastructure.Repositories.CVAnalysisRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReviewRepository, CanPany.Infrastructure.Repositories.ReviewRepository>();
-builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IProjectSkillRepository, CanPany.Infrastructure.Repositories.ProjectSkillRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSettingsRepository, CanPany.Infrastructure.Repositories.UserSettingsRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReportRepository, CanPany.Infrastructure.Repositories.ReportRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertRepository, CanPany.Infrastructure.Repositories.JobAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICandidateAlertRepository, CanPany.Infrastructure.Repositories.CandidateAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IFilterPresetRepository, CanPany.Infrastructure.Repositories.FilterPresetRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSubscriptionRepository, CanPany.Infrastructure.Repositories.UserSubscriptionRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IConversationRepository, CanPany.Infrastructure.Repositories.ConversationRepository>();
 
 // Register Security Services
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
@@ -250,6 +250,9 @@ builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
+
+// Register Reset Code Store as Singleton (to persist codes across requests)
+builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();
 
 // Register Job Alert and Matching Services
 builder.Services.AddScoped<IJobAlertService, JobAlertService>();

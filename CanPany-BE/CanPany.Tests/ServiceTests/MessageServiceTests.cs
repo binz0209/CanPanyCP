@@ -26,8 +26,8 @@ public class MessageServiceTests
         var message = new Message
         {
             Id = messageId,
+            ConversationId = "conv123",
             SenderId = "user123",
-            ReceiverId = "user456",
             Text = "Hello"
         };
         
@@ -50,47 +50,21 @@ public class MessageServiceTests
     }
 
     [Fact]
-    public async Task GetByConversationKeyAsync_ShouldReturnMessages_WhenExist()
+    public async Task GetByConversationIdAsync_ShouldReturnMessages_WhenExist()
     {
         // Arrange
-        var conversationKey = "user123_user456";
+        var conversationId = "conv123";
         var messages = new List<Message>
         {
-            new Message { Id = "msg1", SenderId = "user123", ReceiverId = "user456", Text = "Hello" },
-            new Message { Id = "msg2", SenderId = "user456", ReceiverId = "user123", Text = "Hi" }
+            new Message { Id = "msg1", ConversationId = conversationId, SenderId = "user123", Text = "Hello" },
+            new Message { Id = "msg2", ConversationId = conversationId, SenderId = "user456", Text = "Hi" }
         };
         
-        _repositoryMock.Setup(x => x.GetByConversationKeyAsync(conversationKey))
+        _repositoryMock.Setup(x => x.GetByConversationIdAsync(conversationId, 1, 50))
             .ReturnsAsync(messages);
 
         // Act
-        var result = await _service.GetByConversationKeyAsync(conversationKey);
-
-        // Assert
-        Assert.Equal(2, result.Count());
-    }
-
-    [Fact]
-    public async Task GetByUserIdAsync_ShouldReturnAllMessages_WhenExist()
-    {
-        // Arrange
-        var userId = "user123";
-        var sentMessages = new List<Message>
-        {
-            new Message { Id = "msg1", SenderId = userId, ReceiverId = "user456", Text = "Hello", CreatedAt = DateTime.UtcNow }
-        };
-        var receivedMessages = new List<Message>
-        {
-            new Message { Id = "msg2", SenderId = "user456", ReceiverId = userId, Text = "Hi", CreatedAt = DateTime.UtcNow.AddHours(1) }
-        };
-        
-        _repositoryMock.Setup(x => x.GetBySenderIdAsync(userId))
-            .ReturnsAsync(sentMessages);
-        _repositoryMock.Setup(x => x.GetByReceiverIdAsync(userId))
-            .ReturnsAsync(receivedMessages);
-
-        // Act
-        var result = await _service.GetByUserIdAsync(userId);
+        var result = await _service.GetByConversationIdAsync(conversationId);
 
         // Assert
         Assert.Equal(2, result.Count());
@@ -100,27 +74,23 @@ public class MessageServiceTests
     public async Task SendAsync_ShouldReturnMessage_WhenValid()
     {
         // Arrange
-        var message = new Message
-        {
-            SenderId = "user123",
-            ReceiverId = "user456",
-            Text = "Hello",
-            CreatedAt = DateTime.UtcNow
-        };
+        var conversationId = "conv123";
+        var senderId = "user123";
+        var text = "Hello";
         var savedMessage = new Message
         {
             Id = "msg123",
-            SenderId = message.SenderId,
-            ReceiverId = message.ReceiverId,
-            Text = message.Text,
-            CreatedAt = message.CreatedAt
+            ConversationId = conversationId,
+            SenderId = senderId,
+            Text = text,
+            CreatedAt = DateTime.UtcNow
         };
         
         _repositoryMock.Setup(x => x.AddAsync(It.IsAny<Message>()))
             .ReturnsAsync(savedMessage);
 
         // Act
-        var result = await _service.SendAsync(message);
+        var result = await _service.SendAsync(conversationId, senderId, text);
 
         // Assert
         Assert.NotNull(result);
@@ -132,15 +102,8 @@ public class MessageServiceTests
     {
         // Arrange
         var messageId = "msg123";
-        var message = new Message
-        {
-            Id = messageId,
-            IsRead = false
-        };
         
-        _repositoryMock.Setup(x => x.GetByIdAsync(messageId))
-            .ReturnsAsync(message);
-        _repositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Message>()))
+        _repositoryMock.Setup(x => x.MarkAsReadAsync(messageId))
             .Returns(Task.CompletedTask);
 
         // Act

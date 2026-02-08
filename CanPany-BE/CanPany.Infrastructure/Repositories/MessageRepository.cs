@@ -19,21 +19,13 @@ public class MessageRepository : IMessageRepository
         return await _collection.Find(m => m.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<Message>> GetByConversationKeyAsync(string conversationKey)
+    public async Task<IEnumerable<Message>> GetByConversationIdAsync(string conversationId, int page = 1, int pageSize = 50)
     {
-        return await _collection.Find(m => m.ConversationKey == conversationKey)
-            .SortBy(m => m.CreatedAt)
+        return await _collection.Find(m => m.ConversationId == conversationId)
+            .SortByDescending(m => m.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
             .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Message>> GetBySenderIdAsync(string senderId)
-    {
-        return await _collection.Find(m => m.SenderId == senderId).ToListAsync();
-    }
-
-    public async Task<IEnumerable<Message>> GetByReceiverIdAsync(string receiverId)
-    {
-        return await _collection.Find(m => m.ReceiverId == receiverId).ToListAsync();
     }
 
     public async Task<Message> AddAsync(Message message)
@@ -44,7 +36,6 @@ public class MessageRepository : IMessageRepository
 
     public async Task UpdateAsync(Message message)
     {
-        message.MarkAsUpdated();
         await _collection.ReplaceOneAsync(m => m.Id == message.Id, message);
     }
 
@@ -55,16 +46,27 @@ public class MessageRepository : IMessageRepository
 
     public async Task MarkAsReadAsync(string messageId)
     {
-        var update = Builders<Message>.Update.Set(m => m.IsRead, true);
+        var update = Builders<Message>.Update
+            .Set(m => m.IsRead, true)
+            .Set(m => m.ReadAt, DateTime.UtcNow);
         await _collection.UpdateOneAsync(m => m.Id == messageId, update);
     }
 
-    public async Task MarkConversationAsReadAsync(string conversationKey, string userId)
+    public async Task<long> MarkConversationAsReadAsync(string conversationId, string readByUserId)
     {
-        var update = Builders<Message>.Update.Set(m => m.IsRead, true);
-        await _collection.UpdateManyAsync(
-            m => m.ConversationKey == conversationKey && m.ReceiverId == userId && !m.IsRead,
+        var update = Builders<Message>.Update
+            .Set(m => m.IsRead, true)
+            .Set(m => m.ReadAt, DateTime.UtcNow);
+        var result = await _collection.UpdateManyAsync(
+            m => m.ConversationId == conversationId && m.SenderId != readByUserId && !m.IsRead,
             update);
+        return result.ModifiedCount;
+    }
+
+    public async Task<long> GetUnreadCountAsync(string conversationId, string userId)
+    {
+        return await _collection.CountDocumentsAsync(
+            m => m.ConversationId == conversationId && m.SenderId != userId && !m.IsRead);
     }
 }
 

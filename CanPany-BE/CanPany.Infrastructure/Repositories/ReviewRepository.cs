@@ -19,9 +19,9 @@ public class ReviewRepository : IReviewRepository
         return await _collection.Find(r => r.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<Review>> GetByProjectIdAsync(string projectId)
+    public async Task<IEnumerable<Review>> GetByContractIdAsync(string contractId)
     {
-        return await _collection.Find(r => r.ProjectId == projectId).ToListAsync();
+        return await _collection.Find(r => r.ContractId == contractId).ToListAsync();
     }
 
     public async Task<IEnumerable<Review>> GetByReviewerIdAsync(string reviewerId)

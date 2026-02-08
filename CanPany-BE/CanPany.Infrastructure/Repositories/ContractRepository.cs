@@ -19,19 +19,24 @@ public class ContractRepository : IContractRepository
         return await _collection.Find(c => c.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<Contract>> GetByProjectIdAsync(string projectId)
+    public async Task<IEnumerable<Contract>> GetByJobIdAsync(string jobId)
     {
-        return await _collection.Find(c => c.ProjectId == projectId).ToListAsync();
+        return await _collection.Find(c => c.JobId == jobId).ToListAsync();
     }
 
-    public async Task<IEnumerable<Contract>> GetByClientIdAsync(string clientId)
+    public async Task<IEnumerable<Contract>> GetByCompanyIdAsync(string companyId)
     {
-        return await _collection.Find(c => c.ClientId == clientId).ToListAsync();
+        return await _collection.Find(c => c.CompanyId == companyId).ToListAsync();
     }
 
-    public async Task<IEnumerable<Contract>> GetByFreelancerIdAsync(string freelancerId)
+    public async Task<IEnumerable<Contract>> GetByCandidateIdAsync(string candidateId)
     {
-        return await _collection.Find(c => c.FreelancerId == freelancerId).ToListAsync();
+        return await _collection.Find(c => c.CandidateId == candidateId).ToListAsync();
+    }
+
+    public async Task<Contract?> GetByApplicationIdAsync(string applicationId)
+    {
+        return await _collection.Find(c => c.ApplicationId == applicationId).FirstOrDefaultAsync();
     }
 
     public async Task<Contract> AddAsync(Contract contract)
