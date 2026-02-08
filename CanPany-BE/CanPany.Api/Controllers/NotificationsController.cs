@@ -1,5 +1,6 @@
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
+using CanPany.Application.DTOs;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,10 +27,18 @@ public class NotificationsController : ControllerBase
     }
 
     /// <summary>
-    /// UC-COM-05: View Notification List
+    /// UC-COM-05: Get all notifications for current user with optional filters
     /// </summary>
+    /// <param name="isRead">Filter by read status (null = all, true = read only, false = unread only)</param>
+    /// <param name="type">Filter by notification type (e.g., "ProposalAccepted", "NewMessage", "JobMatch", "PaymentConfirmation")</param>
+    /// <param name="fromDate">Filter notifications created after this date</param>
+    /// <param name="toDate">Filter notifications created before this date</param>
     [HttpGet]
-    public async Task<IActionResult> GetNotifications()
+    public async Task<IActionResult> GetNotifications(
+        [FromQuery] bool? isRead = null,
+        [FromQuery] string? type = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
     {
         try
         {
@@ -37,8 +46,16 @@ public class NotificationsController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var notifications = await _notificationService.GetByUserIdAsync(userId);
-            return Ok(ApiResponse<IEnumerable<Notification>>.CreateSuccess(notifications));
+            var filter = new NotificationFilterDto
+            {
+                IsRead = isRead,
+                Type = type,
+                FromDate = fromDate,
+                ToDate = toDate
+            };
+
+            var notifications = await _notificationService.GetFilteredNotificationsAsync(userId, filter);
+            return Ok(ApiResponse<IEnumerable<NotificationResponseDto>>.CreateSuccess(notifications));
         }
         catch (Exception ex)
         {
