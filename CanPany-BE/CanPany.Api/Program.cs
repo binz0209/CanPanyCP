@@ -192,8 +192,6 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSettingsR
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReportRepository, CanPany.Infrastructure.Repositories.ReportRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertRepository, CanPany.Infrastructure.Repositories.JobAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICandidateAlertRepository, CanPany.Infrastructure.Repositories.CandidateAlertRepository>();
-builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IFilterPresetRepository, CanPany.Infrastructure.Repositories.FilterPresetRepository>();
-builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSubscriptionRepository, CanPany.Infrastructure.Repositories.UserSubscriptionRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IConversationRepository, CanPany.Infrastructure.Repositories.ConversationRepository>();
