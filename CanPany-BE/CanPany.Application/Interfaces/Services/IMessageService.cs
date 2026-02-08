@@ -8,12 +8,10 @@ namespace CanPany.Application.Interfaces.Services;
 public interface IMessageService
 {
     Task<Message?> GetByIdAsync(string id);
-    Task<IEnumerable<Message>> GetByConversationKeyAsync(string conversationKey);
-    Task<IEnumerable<Message>> GetByUserIdAsync(string userId);
-    Task<IEnumerable<(string ConversationKey, string PartnerId, string LastMessage, DateTime LastAt, int UnreadCount)>> GetConversationsForUserAsync(string userId);
-    Task<Message> SendAsync(Message message);
+    Task<IEnumerable<Message>> GetByConversationIdAsync(string conversationId, int page = 1, int pageSize = 50);
+    Task<Message> SendAsync(string conversationId, string senderId, string text);
     Task<bool> MarkAsReadAsync(string messageId);
-    Task<int> MarkConversationAsReadAsync(string conversationKey, string userId);
+    Task<long> MarkConversationAsReadAsync(string conversationId, string readByUserId);
 }
 
 

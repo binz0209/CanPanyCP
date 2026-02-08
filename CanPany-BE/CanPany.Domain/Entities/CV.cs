@@ -5,8 +5,10 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace CanPany.Domain.Entities;
 
 /// <summary>
-/// CV entity - Aggregate Root
+/// CV entity - Candidate CV file storage.
+/// Analysis data is stored in CVAnalysis (single source of truth).
 /// </summary>
+[BsonIgnoreExtraElements]
 public class CV : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
@@ -19,7 +21,7 @@ public class CV : AggregateRoot
     public string FileName { get; set; } = string.Empty;
 
     [BsonElement("fileUrl")]
-    public string FileUrl { get; set; } = string.Empty; // Cloudinary URL
+    public string FileUrl { get; set; } = string.Empty;
 
     [BsonElement("fileSize")]
     public long FileSize { get; set; }
@@ -30,14 +32,8 @@ public class CV : AggregateRoot
     [BsonElement("isDefault")]
     public bool IsDefault { get; set; } = false;
 
-    [BsonElement("extractedSkills")]
-    public List<string> ExtractedSkills { get; set; } = new(); // Skills extracted by AI
-
-    [BsonElement("extractedContent")]
-    public string? ExtractedContent { get; set; } // Full text extracted from CV
-
-    [BsonElement("atsScore")]
-    public decimal? AtsScore { get; set; } // ATS compatibility score
+    [BsonElement("latestAnalysisId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? LatestAnalysisId { get; set; }
 
     [BsonElement("createdAt")]
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -8,14 +8,13 @@ namespace CanPany.Domain.Interfaces.Repositories;
 public interface IMessageRepository
 {
     Task<Message?> GetByIdAsync(string id);
-    Task<IEnumerable<Message>> GetByConversationKeyAsync(string conversationKey);
-    Task<IEnumerable<Message>> GetBySenderIdAsync(string senderId);
-    Task<IEnumerable<Message>> GetByReceiverIdAsync(string receiverId);
+    Task<IEnumerable<Message>> GetByConversationIdAsync(string conversationId, int page = 1, int pageSize = 50);
     Task<Message> AddAsync(Message message);
     Task UpdateAsync(Message message);
     Task DeleteAsync(string id);
     Task MarkAsReadAsync(string messageId);
-    Task MarkConversationAsReadAsync(string conversationKey, string userId);
+    Task<long> MarkConversationAsReadAsync(string conversationId, string readByUserId);
+    Task<long> GetUnreadCountAsync(string conversationId, string userId);
 }
 
 

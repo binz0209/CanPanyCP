@@ -26,10 +26,10 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// UC-COM-08: View Message History
+    /// UC-COM-08: View Message History for a conversation
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetMessages([FromQuery] string? conversationKey)
+    public async Task<IActionResult> GetMessages([FromQuery] string conversationId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         try
         {
@@ -37,44 +37,16 @@ public class MessagesController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            IEnumerable<Message> messages;
-            if (!string.IsNullOrWhiteSpace(conversationKey))
-            {
-                messages = await _messageService.GetByConversationKeyAsync(conversationKey);
-            }
-            else
-            {
-                messages = await _messageService.GetByUserIdAsync(userId);
-            }
+            if (string.IsNullOrWhiteSpace(conversationId))
+                return BadRequest(ApiResponse.CreateError("Conversation ID is required", "MissingConversationId"));
 
+            var messages = await _messageService.GetByConversationIdAsync(conversationId, page, pageSize);
             return Ok(ApiResponse<IEnumerable<Message>>.CreateSuccess(messages));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting messages");
             return StatusCode(500, ApiResponse.CreateError("Failed to get messages", "GetMessagesFailed"));
-        }
-    }
-
-    /// <summary>
-    /// Get conversations list
-    /// </summary>
-    [HttpGet("conversations")]
-    public async Task<IActionResult> GetConversations()
-    {
-        try
-        {
-            var userId = User.FindFirst("sub")?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var conversations = await _messageService.GetConversationsForUserAsync(userId);
-            return Ok(ApiResponse.CreateSuccess(conversations));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting conversations");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get conversations", "GetConversationsFailed"));
         }
     }
 
@@ -90,16 +62,7 @@ public class MessagesController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var message = new Message
-            {
-                SenderId = userId,
-                ReceiverId = request.ReceiverId,
-                ProjectId = request.ProjectId,
-                Text = request.Text,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var sentMessage = await _messageService.SendAsync(message);
+            var sentMessage = await _messageService.SendAsync(request.ConversationId, userId, request.Text);
             return Ok(ApiResponse<Message>.CreateSuccess(sentMessage, "Message sent successfully"));
         }
         catch (Exception ex)
@@ -133,8 +96,8 @@ public class MessagesController : ControllerBase
     /// <summary>
     /// Mark conversation as read
     /// </summary>
-    [HttpPut("conversations/{conversationKey}/read")]
-    public async Task<IActionResult> MarkConversationAsRead(string conversationKey)
+    [HttpPut("conversations/{conversationId}/read")]
+    public async Task<IActionResult> MarkConversationAsRead(string conversationId)
     {
         try
         {
@@ -142,8 +105,8 @@ public class MessagesController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            await _messageService.MarkConversationAsReadAsync(conversationKey, userId);
-            return Ok(ApiResponse.CreateSuccess("Conversation marked as read"));
+            var count = await _messageService.MarkConversationAsReadAsync(conversationId, userId);
+            return Ok(ApiResponse.CreateSuccess($"{count} messages marked as read"));
         }
         catch (Exception ex)
         {
@@ -153,6 +116,6 @@ public class MessagesController : ControllerBase
     }
 }
 
-public record SendMessageRequest(string ReceiverId, string Text, string? ProjectId = null);
+public record SendMessageRequest(string ConversationId, string Text);
 
 

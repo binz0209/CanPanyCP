@@ -22,17 +22,20 @@ public class Payment : AggregateRoot
     [BsonElement("walletId"), BsonRepresentation(BsonType.ObjectId)]
     public string? WalletId { get; set; }
 
+    [BsonElement("packageId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? PackageId { get; set; }
+
     [BsonElement("purpose")]
-    public string Purpose { get; set; } = "TopUp"; // TopUp/Contract
+    public string Purpose { get; set; } = "TopUp"; // TopUp, PremiumPurchase, ContractPayment, UnlockCandidate
 
     [BsonElement("amount")]
-    public long Amount { get; set; } // VND minor units
+    public long Amount { get; set; }
 
     [BsonElement("currency")]
     public string Currency { get; set; } = "VND";
 
     [BsonElement("status")]
-    public string Status { get; set; } = "Pending"; // Pending/Paid/Failed
+    public string Status { get; set; } = "Pending"; // Pending, Paid, Failed, Refunded
 
     [BsonElement("paidAt")]
     public DateTime? PaidAt { get; set; }
@@ -64,6 +67,9 @@ public class Payment : AggregateRoot
 
     [BsonElement("createdAt")]
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("updatedAt")]
+    public new DateTime? UpdatedAt { get; set; }
 }
 
 

@@ -12,8 +12,7 @@ public class CVDto
     public long FileSize { get; set; }
     public string MimeType { get; set; } = string.Empty;
     public bool IsDefault { get; set; }
-    public List<string> ExtractedSkills { get; set; } = new();
-    public decimal? AtsScore { get; set; }
+    public string? LatestAnalysisId { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

@@ -5,8 +5,10 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace CanPany.Domain.Entities;
 
 /// <summary>
-/// Job entity - Aggregate Root
+/// Job entity - Unified work opportunity (absorbs former Project entity).
+/// Aggregate Root.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Job : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
@@ -25,10 +27,10 @@ public class Job : AggregateRoot
     public string? CategoryId { get; set; }
 
     [BsonElement("skillIds")]
-    public List<string> SkillIds { get; set; } = new(); // References to Skill collection
+    public List<string> SkillIds { get; set; } = new();
 
     [BsonElement("skillEmbedding")]
-    public List<double>? SkillEmbedding { get; set; } // Vector embedding for AI matching
+    public List<double>? SkillEmbedding { get; set; }
 
     [BsonElement("budgetType")]
     public string BudgetType { get; set; } = "Fixed"; // Fixed, Hourly
@@ -49,10 +51,13 @@ public class Job : AggregateRoot
     public DateTime? Deadline { get; set; }
 
     [BsonElement("status")]
-    public string Status { get; set; } = "Open"; // Open, Closed, Draft
+    public string Status { get; set; } = "Open"; // Draft, Open, Closed, Cancelled, Hidden
+
+    [BsonElement("engagementType")]
+    public string EngagementType { get; set; } = "DirectHire"; // DirectHire, FreelanceProject
 
     [BsonElement("images")]
-    public List<string> Images { get; set; } = new(); // URLs from Cloudinary
+    public List<string> Images { get; set; } = new();
 
     [BsonElement("viewCount")]
     public int ViewCount { get; set; } = 0;
