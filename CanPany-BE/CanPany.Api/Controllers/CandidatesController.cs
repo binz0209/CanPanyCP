@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.DTOs;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -95,6 +96,25 @@ public class CandidatesController : ControllerBase
         {
             _logger.LogError(ex, "Error searching candidates with filters");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SearchCandidatesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Semantic search for candidates based on job description
+    /// </summary>
+    [HttpPost("semantic-search")]
+    [Authorize(Roles = "Company,Admin")]
+    public async Task<IActionResult> SemanticSearch([FromBody] SemanticSearchRequest request)
+    {
+        try
+        {
+            var results = await _candidateSearchService.SemanticSearchAsync(request);
+            return Ok(ApiResponse.CreateSuccess(results, _i18nService.GetDisplayMessage("CandidatesRetrievedSuccessfully")));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error performing semantic search");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SemanticSearchFailed"));
         }
     }
 

@@ -44,6 +44,44 @@ public class ReportRepository : IReportRepository
         return await _collection.Find(r => r.Status == "Resolved").ToListAsync();
     }
 
+    public async Task<IEnumerable<Report>> GetAllAsync()
+    {
+        return await _collection.Find(_ => true).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Report>> GetByStatusAsync(string status)
+    {
+        return await _collection.Find(r => r.Status == status).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Report>> GetByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        return await _collection.Find(r => r.CreatedAt >= fromDate && r.CreatedAt <= toDate).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Report>> GetWithFiltersAsync(string? status = null, DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var builder = Builders<Report>.Filter;
+        var filter = builder.Empty;
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            filter &= builder.Eq(r => r.Status, status);
+        }
+
+        if (fromDate.HasValue)
+        {
+            filter &= builder.Gte(r => r.CreatedAt, fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            filter &= builder.Lte(r => r.CreatedAt, toDate.Value);
+        }
+
+        return await _collection.Find(filter).ToListAsync();
+    }
+
     public async Task<Report> AddAsync(Report report)
     {
         await _collection.InsertOneAsync(report);
