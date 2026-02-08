@@ -22,6 +22,9 @@ public class UnlockRecord : AggregateRoot
     [BsonElement("feeAmount")]
     public decimal FeeAmount { get; set; }
 
+    [BsonElement("paymentId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? PaymentId { get; set; }
+
     [BsonElement("unlockedAt")]
     public DateTime UnlockedAt { get; set; } = DateTime.UtcNow;
 

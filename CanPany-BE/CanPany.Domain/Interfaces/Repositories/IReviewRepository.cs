@@ -8,7 +8,7 @@ namespace CanPany.Domain.Interfaces.Repositories;
 public interface IReviewRepository
 {
     Task<Review?> GetByIdAsync(string id);
-    Task<IEnumerable<Review>> GetByProjectIdAsync(string projectId);
+    Task<IEnumerable<Review>> GetByContractIdAsync(string contractId);
     Task<IEnumerable<Review>> GetByReviewerIdAsync(string reviewerId);
     Task<IEnumerable<Review>> GetByRevieweeIdAsync(string revieweeId);
     Task<Review> AddAsync(Review review);

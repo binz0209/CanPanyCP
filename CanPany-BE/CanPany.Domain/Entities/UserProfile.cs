@@ -1,15 +1,17 @@
+using CanPany.Shared.Common.Base;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace CanPany.Domain.Entities;
 
 /// <summary>
-/// User Profile entity - Extended profile information for Candidates
+/// User Profile entity - Extended profile information for Candidates. Aggregate Root.
 /// </summary>
-public class UserProfile
+[BsonIgnoreExtraElements]
+public class UserProfile : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
+    public new string Id { get; set; } = null!;
 
     [BsonElement("userId"), BsonRepresentation(BsonType.ObjectId)]
     public string UserId { get; set; } = null!;
@@ -27,7 +29,7 @@ public class UserProfile
     public DateTime? DateOfBirth { get; set; }
 
     [BsonElement("skillIds")]
-    public List<string> SkillIds { get; set; } = new(); // References to Skill collection
+    public List<string> SkillIds { get; set; } = new();
 
     [BsonElement("experience")]
     public string? Experience { get; set; }
@@ -60,10 +62,10 @@ public class UserProfile
     public List<string> Certifications { get; set; } = new();
 
     [BsonElement("createdAt")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [BsonElement("updatedAt")]
-    public DateTime? UpdatedAt { get; set; }
+    public new DateTime? UpdatedAt { get; set; }
 
     [BsonElement("embedding")]
     public List<double>? Embedding { get; set; }

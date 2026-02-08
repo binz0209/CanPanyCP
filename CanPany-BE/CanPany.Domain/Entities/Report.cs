@@ -22,6 +22,9 @@ public class Report : AggregateRoot
     [BsonElement("reportedCompanyId"), BsonRepresentation(BsonType.ObjectId)]
     public string? ReportedCompanyId { get; set; } // CompanyId if reporting a company
 
+    [BsonElement("reportedJobId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? ReportedJobId { get; set; } // JobId if reporting a job
+
     [BsonElement("reason")]
     public string Reason { get; set; } = string.Empty; // Reason for reporting
 
@@ -32,7 +35,7 @@ public class Report : AggregateRoot
     public List<string>? Evidence { get; set; } // URLs of evidence: screenshots, messages, etc.
 
     [BsonElement("status")]
-    public string Status { get; set; } = "Pending"; // Pending, Resolved, Rejected
+    public string Status { get; set; } = "Pending"; // Pending, UnderReview, Resolved, Rejected
 
     [BsonElement("resolvedBy"), BsonRepresentation(BsonType.ObjectId)]
     public string? ResolvedBy { get; set; } // AdminId

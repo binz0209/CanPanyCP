@@ -1,21 +1,23 @@
+using CanPany.Shared.Common.Base;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace CanPany.Domain.Entities;
 
 /// <summary>
-/// Wallet entity - User's digital wallet
+/// Wallet entity - User's digital wallet. Aggregate Root.
 /// </summary>
-public class Wallet
+[BsonIgnoreExtraElements]
+public class Wallet : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
+    public new string Id { get; set; } = null!;
 
     [BsonElement("userId"), BsonRepresentation(BsonType.ObjectId)]
     public string UserId { get; set; } = null!;
 
     [BsonElement("balance")]
-    public long Balance { get; set; } = 0; // VND in minor units (đồng)
+    public long Balance { get; set; } = 0;
 
     [BsonElement("currency")]
     public string Currency { get; set; } = "VND";
@@ -24,14 +26,9 @@ public class Wallet
     public bool IsActive { get; set; } = true;
 
     [BsonElement("createdAt")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [BsonElement("updatedAt")]
-    public DateTime? UpdatedAt { get; set; }
-
-    public void MarkAsUpdated()
-    {
-        UpdatedAt = DateTime.UtcNow;
-    }
+    public new DateTime? UpdatedAt { get; set; }
 }
 

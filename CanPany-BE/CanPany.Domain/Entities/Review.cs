@@ -5,7 +5,8 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace CanPany.Domain.Entities;
 
 /// <summary>
-/// Review entity - Represents a review/rating after project completion
+/// Review entity - Represents a review/rating after contract completion.
+/// Linked to Contract (not Project).
 /// </summary>
 [BsonIgnoreExtraElements]
 public class Review : AggregateRoot
@@ -13,8 +14,8 @@ public class Review : AggregateRoot
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
     public new string Id { get; set; } = string.Empty;
 
-    [BsonElement("projectId"), BsonRepresentation(BsonType.ObjectId)]
-    public string ProjectId { get; set; } = string.Empty;
+    [BsonElement("contractId"), BsonRepresentation(BsonType.ObjectId)]
+    public string ContractId { get; set; } = string.Empty;
 
     [BsonElement("reviewerId"), BsonRepresentation(BsonType.ObjectId)]
     public string ReviewerId { get; set; } = string.Empty;

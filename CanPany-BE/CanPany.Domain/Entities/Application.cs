@@ -5,8 +5,10 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace CanPany.Domain.Entities;
 
 /// <summary>
-/// Application entity - Job application from Candidate
+/// Application entity - Unified candidate response (absorbs former Proposal entity).
+/// Represents a candidate's application for a job.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Application : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
@@ -19,22 +21,28 @@ public class Application : AggregateRoot
     public string CandidateId { get; set; } = null!;
 
     [BsonElement("cvId"), BsonRepresentation(BsonType.ObjectId)]
-    public string? CVId { get; set; } // CV used for this application
+    public string? CVId { get; set; }
 
     [BsonElement("coverLetter")]
     public string? CoverLetter { get; set; }
 
-    [BsonElement("expectedSalary")]
-    public decimal? ExpectedSalary { get; set; }
+    [BsonElement("proposedAmount")]
+    public decimal? ProposedAmount { get; set; }
 
     [BsonElement("status")]
-    public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Withdrawn
+    public string Status { get; set; } = "Pending"; // Pending, Shortlisted, Accepted, Rejected, Withdrawn
 
     [BsonElement("matchScore")]
-    public decimal? MatchScore { get; set; } // AI-calculated match score
+    public decimal? MatchScore { get; set; }
 
     [BsonElement("rejectedReason")]
     public string? RejectedReason { get; set; }
+
+    [BsonElement("privateNotes")]
+    public string? PrivateNotes { get; set; }
+
+    [BsonElement("contractId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? ContractId { get; set; }
 
     [BsonElement("createdAt")]
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -37,74 +37,42 @@ public class MessageService : IMessageService
         }
     }
 
-    public async Task<IEnumerable<Message>> GetByConversationKeyAsync(string conversationKey)
+    public async Task<IEnumerable<Message>> GetByConversationIdAsync(string conversationId, int page = 1, int pageSize = 50)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(conversationKey))
-                throw new ArgumentException("Conversation key cannot be null or empty", nameof(conversationKey));
+            if (string.IsNullOrWhiteSpace(conversationId))
+                throw new ArgumentException("Conversation ID cannot be null or empty", nameof(conversationId));
 
-            return await _repo.GetByConversationKeyAsync(conversationKey);
+            return await _repo.GetByConversationIdAsync(conversationId, page, pageSize);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting messages by conversation key: {ConversationKey}", conversationKey);
+            _logger.LogError(ex, "Error getting messages by conversation ID: {ConversationId}", conversationId);
             throw;
         }
     }
 
-    public async Task<IEnumerable<Message>> GetByUserIdAsync(string userId)
+    public async Task<Message> SendAsync(string conversationId, string senderId, string text)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            if (string.IsNullOrWhiteSpace(conversationId))
+                throw new ArgumentException("Conversation ID cannot be null or empty", nameof(conversationId));
+            if (string.IsNullOrWhiteSpace(senderId))
+                throw new ArgumentException("Sender ID cannot be null or empty", nameof(senderId));
+            if (string.IsNullOrWhiteSpace(text))
+                throw new ArgumentException("Message text cannot be null or empty", nameof(text));
 
-            var sent = await _repo.GetBySenderIdAsync(userId);
-            var received = await _repo.GetByReceiverIdAsync(userId);
-            return sent.Concat(received).OrderBy(m => m.CreatedAt);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting messages by user ID: {UserId}", userId);
-            throw;
-        }
-    }
-
-    public async Task<IEnumerable<(string ConversationKey, string PartnerId, string LastMessage, DateTime LastAt, int UnreadCount)>> GetConversationsForUserAsync(string userId)
-    {
-        try
-        {
-            // TODO: Implement conversation grouping logic
-            // This should group messages by conversation key and return latest message per conversation
-            await Task.CompletedTask;
-            throw new NotImplementedException("GetConversationsForUserAsync not fully implemented");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting conversations for user: {UserId}", userId);
-            throw;
-        }
-    }
-
-    public async Task<Message> SendAsync(Message message)
-    {
-        try
-        {
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
-
-            // Build conversation key if not provided
-            if (string.IsNullOrWhiteSpace(message.ConversationKey))
+            var message = new Message
             {
-                var u1 = string.CompareOrdinal(message.SenderId, message.ReceiverId) <= 0 ? message.SenderId : message.ReceiverId;
-                var u2 = u1 == message.SenderId ? message.ReceiverId : message.SenderId;
-                var projectId = message.ProjectId ?? "null";
-                message.ConversationKey = $"{projectId}:{u1}:{u2}";
-            }
+                ConversationId = conversationId,
+                SenderId = senderId,
+                Text = text,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
 
-            message.CreatedAt = DateTime.UtcNow;
-            message.IsRead = false;
             return await _repo.AddAsync(message);
         }
         catch (Exception ex)
@@ -131,21 +99,20 @@ public class MessageService : IMessageService
         }
     }
 
-    public async Task<int> MarkConversationAsReadAsync(string conversationKey, string userId)
+    public async Task<long> MarkConversationAsReadAsync(string conversationId, string readByUserId)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(conversationKey))
-                throw new ArgumentException("Conversation key cannot be null or empty", nameof(conversationKey));
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            if (string.IsNullOrWhiteSpace(conversationId))
+                throw new ArgumentException("Conversation ID cannot be null or empty", nameof(conversationId));
+            if (string.IsNullOrWhiteSpace(readByUserId))
+                throw new ArgumentException("User ID cannot be null or empty", nameof(readByUserId));
 
-            await _repo.MarkConversationAsReadAsync(conversationKey, userId);
-            return 0; // TODO: Return actual count
+            return await _repo.MarkConversationAsReadAsync(conversationId, readByUserId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error marking conversation as read: {ConversationKey}, {UserId}", conversationKey, userId);
+            _logger.LogError(ex, "Error marking conversation as read: {ConversationId}, {UserId}", conversationId, readByUserId);
             throw;
         }
     }
