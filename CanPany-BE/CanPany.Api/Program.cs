@@ -255,6 +255,7 @@ builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();
 // Register Job Alert and Matching Services
 builder.Services.AddScoped<IJobAlertService, JobAlertService>();
 builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
+builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
 // Register Background Email Services
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
