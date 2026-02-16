@@ -50,10 +50,18 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .NotEmpty().WithMessage("Password is required")
             .MinimumLength(8).WithMessage("Password must be at least 8 characters")
             .MaximumLength(128).WithMessage("Password must not exceed 128 characters")
+            .Must(password => password.Any(char.IsUpper)).WithMessage("Password must contain at least one uppercase letter")
+            .Must(password => password.Any(char.IsLower)).WithMessage("Password must contain at least one lowercase letter")
+            .Must(password => password.Any(char.IsDigit)).WithMessage("Password must contain at least one number")
             .Must(password => !password.Contains(" "))
             .WithMessage("Password must not contain spaces")
             .Must(password => !InjectionPattern.IsMatch(password))
             .WithMessage("Password contains potentially dangerous characters");
+
+        // ConfirmPassword validation
+        RuleFor(x => x.ConfirmPassword)
+            .NotEmpty().WithMessage("Confirm password is required")
+            .Equal(x => x.Password).WithMessage("Passwords do not match");
 
         // Role validation - strict whitelist (prevent privilege escalation)
         RuleFor(x => x.Role)

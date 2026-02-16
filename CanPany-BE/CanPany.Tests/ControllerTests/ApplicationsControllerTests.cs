@@ -1,4 +1,5 @@
 using CanPany.Api.Controllers;
+using CanPany.Application.DTOs.Applications;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
@@ -149,7 +150,7 @@ public class ApplicationsControllerTests
     {
         // Arrange
         var userId = "user123";
-        var request = new CanPany.Api.Controllers.CreateApplicationRequest("job123", "cv123", "Cover letter text", null);
+        var request = new CreateApplicationRequest("job123", "cv123", "Cover letter text", null);
         var application = new DomainApplication
         {
             Id = "app123",
@@ -179,7 +180,7 @@ public class ApplicationsControllerTests
     {
         // Arrange
         var userId = "user123";
-        var request = new CanPany.Api.Controllers.CreateApplicationRequest("job123", "cv123", "Cover letter", null);
+        var request = new CreateApplicationRequest("job123", "cv123", "Cover letter", null);
         
         _applicationServiceMock.Setup(x => x.HasAppliedAsync(request.JobId, userId))
             .ReturnsAsync(true);
@@ -250,7 +251,7 @@ public class ApplicationsControllerTests
             CandidateId = "candidate1",
             Status = "Pending"
         };
-        var request = new CanPany.Api.Controllers.RejectApplicationRequest("Not qualified");
+        var request = new RejectApplicationRequest("Not qualified");
         
         _applicationServiceMock.Setup(x => x.GetByIdAsync(applicationId))
             .ReturnsAsync(application);
@@ -306,7 +307,7 @@ public class ApplicationsControllerTests
             CandidateId = "candidate1",
             Status = "Pending"
         };
-        var request = new CanPany.Api.Controllers.RejectApplicationRequest("Not qualified");
+        var request = new RejectApplicationRequest("Not qualified");
         
         _applicationServiceMock.Setup(x => x.GetByIdAsync(applicationId))
             .ReturnsAsync(application);
