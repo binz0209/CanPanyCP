@@ -54,4 +54,12 @@ public interface IEmailService
     /// <param name="subject">The email subject.</param>
     /// <param name="plainTextContent">The plain text content.</param>
     Task SendEmailAsync(string toEmail, string subject, string plainTextContent);
+
+    /// <summary>
+    /// Sends a generic notification email.
+    /// </summary>
+    /// <param name="toEmail">The recipient's email address.</param>
+    /// <param name="title">The notification title.</param>
+    /// <param name="message">The notification message.</param>
+    Task SendNotificationEmailAsync(string toEmail, string title, string message);
 }

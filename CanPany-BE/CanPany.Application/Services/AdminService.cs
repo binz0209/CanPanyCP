@@ -16,6 +16,7 @@ public class AdminService : IAdminService
     private readonly IPaymentRepository _paymentRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly IAuditLogRepository _auditLogRepo;
+    private readonly IEmailService? _emailService;  // Add this
     private readonly ILogger<AdminService> _logger;
 
     public AdminService(
@@ -25,7 +26,8 @@ public class AdminService : IAdminService
         IPaymentRepository paymentRepo,
         INotificationRepository notificationRepo,
         IAuditLogRepository auditLogRepo,
-        ILogger<AdminService> logger)
+        ILogger<AdminService> logger,
+        IEmailService? emailService = null)  // Add this parameter as optional
     {
         _userRepo = userRepo;
         _companyRepo = companyRepo;
@@ -34,6 +36,7 @@ public class AdminService : IAdminService
         _notificationRepo = notificationRepo;
         _auditLogRepo = auditLogRepo;
         _logger = logger;
+        _emailService = emailService;  // Add this
     }
 
     public async Task<bool> BanUserAsync(string userId)
@@ -228,16 +231,74 @@ public class AdminService : IAdminService
     {
         try
         {
-            // TODO: Implement broadcast notification
-            // This should send notification to all users or users with specific role
-            _logger.LogInformation("Broadcast notification: {Title}, Role: {Role}", title, targetRole ?? "All");
-            await Task.CompletedTask;
+            // Get target users based on role
+            var users = targetRole == null 
+                ? await _userRepo.GetAllAsync() 
+                : await _userRepo.GetByRoleAsync(targetRole);
+
+            var usersList = users.ToList();
+            
+            if (!usersList.Any())
+            {
+                _logger.LogWarning("No users found for broadcast notification. Role: {Role}", targetRole ?? "All");
+                return false;
+            }
+
+            // Create notifications for each user
+            var notificationTasks = new List<Task>();
+            
+            foreach (var user in usersList)
+            {
+                var notification = new Notification
+                {
+                    UserId = user.Id,
+                    Type = "Broadcast",
+                    Title = title,
+                    Message = message,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                notificationTasks.Add(_notificationRepo.AddAsync(notification));
+                
+                // Optionally send email if configured
+                if (_emailService != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    notificationTasks.Add(SendEmailSafelyAsync(user.Email, title, message));
+                }
+            }
+
+            // Execute all tasks in parallel
+            await Task.WhenAll(notificationTasks);
+
+            _logger.LogInformation(
+                "Broadcast notification sent successfully. Title: '{Title}', Recipients: {Count}, Role: {Role}", 
+                title, 
+                usersList.Count, 
+                targetRole ?? "All");
+            
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending broadcast notification");
+            _logger.LogError(ex, "Error sending broadcast notification. Title: '{Title}', Role: {Role}", title, targetRole);
             throw;
+        }
+    }
+
+    private async Task SendEmailSafelyAsync(string email, string title, string message)
+    {
+        try
+        {
+            if (_emailService != null)
+            {
+                await _emailService.SendNotificationEmailAsync(email, title, message);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log but don't throw - email failure shouldn't fail the entire broadcast
+            _logger.LogWarning(ex, "Failed to send email notification to {Email}", email);
         }
     }
 }

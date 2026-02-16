@@ -150,4 +150,13 @@ public class EmailService : IEmailService
             throw; 
         }
     }
+
+    public async Task SendNotificationEmailAsync(string toEmail, string title, string message)
+    {
+        var subject = $"CanPany - {title}";
+        var body = EmailTemplates.GetNotificationEmail(title, message);
+
+        await SendEmailAsync(toEmail, subject, body);
+        _logger.LogInformation("Notification email sent successfully to {Email} with title '{Title}'", toEmail, title);
+    }
 }

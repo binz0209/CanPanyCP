@@ -144,6 +144,25 @@ public static class EmailTemplates
         return sb.ToString();
     }
 
+    public static string GetNotificationEmail(string title, string message)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("============================================");
+        sb.AppendLine("         SYSTEM NOTIFICATION");
+        sb.AppendLine("============================================");
+        sb.AppendLine();
+        sb.AppendLine($"Title: {title}");
+        sb.AppendLine();
+        sb.AppendLine(message);
+        sb.AppendLine();
+        sb.AppendLine("--------------------------------------------");
+        sb.AppendLine("CanPany Notification System");
+        sb.AppendLine("Email: support@canpany.com");
+        sb.AppendLine("Website: https://canpany.com");
+        sb.AppendLine("============================================");
+        return sb.ToString();
+    }
+
     private static string FormatAmount(long amount, string currency)
     {
         // Amount is in minor units (e.g., cents for USD, đồng for VND)
