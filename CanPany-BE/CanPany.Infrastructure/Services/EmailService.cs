@@ -159,4 +159,20 @@ public class EmailService : IEmailService
         await SendEmailAsync(toEmail, subject, body);
         _logger.LogInformation("Notification email sent successfully to {Email} with title '{Title}'", toEmail, title);
     }
+
+    public async Task SendJobAlertDigestEmailAsync(
+        string toEmail, 
+        string candidateName, 
+        List<Application.DTOs.JobAlerts.JobMatchInfo> matches, 
+        string frequency)
+    {
+        var subject = $"CanPany - Your {frequency} Job Matches ({matches.Count} new jobs)";
+        var body = EmailTemplates.GetJobAlertDigestEmail(candidateName, matches, frequency);
+
+        await SendEmailAsync(toEmail, subject, body);
+        _logger.LogInformation(
+            "Job alert digest email sent successfully to {Email} with {Count} matches", 
+            toEmail, 
+            matches.Count);
+    }
 }

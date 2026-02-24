@@ -104,5 +104,12 @@ public class JobRepository : IJobRepository
         var count = await _collection.CountDocumentsAsync(j => j.Id == id);
         return count > 0;
     }
+
+    public async Task<IEnumerable<Job>> GetJobsCreatedAfterAsync(DateTime date)
+    {
+        return await _collection.Find(j => j.CreatedAt >= date)
+            .SortByDescending(j => j.CreatedAt)
+            .ToListAsync();
+    }
 }
 

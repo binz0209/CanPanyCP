@@ -62,4 +62,13 @@ public interface IEmailService
     /// <param name="title">The notification title.</param>
     /// <param name="message">The notification message.</param>
     Task SendNotificationEmailAsync(string toEmail, string title, string message);
+
+    /// <summary>
+    /// Sends a job alert digest email.
+    /// </summary>
+    Task SendJobAlertDigestEmailAsync(
+        string toEmail, 
+        string candidateName, 
+        List<Application.DTOs.JobAlerts.JobMatchInfo> matches, 
+        string frequency);
 }

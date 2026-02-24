@@ -12,6 +12,7 @@ public interface IJobRepository
     Task<IEnumerable<Job>> GetByCompanyIdAsync(string companyId);
     Task<IEnumerable<Job>> GetByStatusAsync(string status);
     Task<IEnumerable<Job>> SearchAsync(string? keyword, string? categoryId, List<string>? skillIds, decimal? minBudget, decimal? maxBudget);
+    Task<IEnumerable<Job>> GetJobsCreatedAfterAsync(DateTime date);
     Task<Job> AddAsync(Job job);
     Task UpdateAsync(Job job);
     Task DeleteAsync(string id);

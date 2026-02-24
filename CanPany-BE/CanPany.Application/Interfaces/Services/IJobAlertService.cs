@@ -1,3 +1,4 @@
+using CanPany.Application.DTOs.JobAlerts;
 using CanPany.Domain.Entities;
 
 namespace CanPany.Application.Interfaces.Services;
@@ -7,29 +8,24 @@ namespace CanPany.Application.Interfaces.Services;
 /// </summary>
 public interface IJobAlertService
 {
-    /// <summary>
-    /// Get all active job alerts
-    /// </summary>
-    Task<IEnumerable<JobAlert>> GetActiveAlertsAsync();
-
-    /// <summary>
-    /// Get active job alerts for a specific user
-    /// </summary>
-    Task<IEnumerable<JobAlert>> GetActiveAlertsByUserIdAsync(string userId);
-
-    /// <summary>
-    /// Check if a job matches the criteria of a job alert
-    /// </summary>
-    /// <param name="job">The job to check</param>
-    /// <param name="alert">The job alert criteria</param>
-    /// <returns>True if the job matches the alert criteria</returns>
-    bool CheckJobMatchesAlert(Job job, JobAlert alert);
-
-    /// <summary>
-    /// Find all job alerts that match a given job
-    /// </summary>
-    /// <param name="job">The job to match against alerts</param>
-    /// <returns>List of matching job alerts</returns>
+    // CRUD operations
+    Task<JobAlertResponseDto> CreateAlertAsync(string userId, JobAlertCreateDto dto);
+    Task<JobAlertResponseDto?> UpdateAlertAsync(string userId, string alertId, JobAlertUpdateDto dto);
+    Task<bool> DeleteAlertAsync(string userId, string alertId);
+    Task<bool> PauseAlertAsync(string userId, string alertId);
+    Task<bool> ResumeAlertAsync(string userId, string alertId);
+    Task<IEnumerable<JobAlertResponseDto>> GetUserAlertsAsync(string userId);
+    Task<JobAlertResponseDto?> GetAlertByIdAsync(string userId, string alertId);
+    
+    // Matching logic
+    Task<IEnumerable<Job>> FindMatchingJobsAsync(JobAlert alert, IEnumerable<Job> jobs);
+    Task<int> GetMatchScoreAsync(JobAlert alert, Job job);
     Task<IEnumerable<JobAlert>> FindMatchingAlertsAsync(Job job);
+    
+    // Preview
+    Task<IEnumerable<JobMatchInfo>> PreviewMatchesAsync(string userId, string alertId);
+    
+    // Stats
+    Task<object> GetStatsAsync(string userId);
 }
 
