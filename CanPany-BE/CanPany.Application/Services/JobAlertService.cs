@@ -118,11 +118,11 @@ public class JobAlertService : IJobAlertService
 
     public async Task<IEnumerable<JobAlert>> FindMatchingAlertsAsync(Job job)
     {
+        if (job == null)
+            throw new ArgumentNullException(nameof(job));
+
         try
         {
-            if (job == null)
-                throw new ArgumentNullException(nameof(job));
-
             var activeAlerts = await GetActiveAlertsAsync();
             var matchingAlerts = activeAlerts.Where(alert => CheckJobMatchesAlert(job, alert)).ToList();
 
