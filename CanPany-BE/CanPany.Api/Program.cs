@@ -195,6 +195,7 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICandidateAler
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSubscriptionRepository, CanPany.Infrastructure.Repositories.UserSubscriptionRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IConversationRepository, CanPany.Infrastructure.Repositories.ConversationRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IGitHubAnalysisRepository, CanPany.Infrastructure.Repositories.GitHubAnalysisRepository>();
 
 // Register Security Services
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
