@@ -1,5 +1,6 @@
 import apiClient from './axios.config';
 import type { ApiResponse, User, UserProfile } from '../types';
+import type { CV } from '../types/cv.types';
 
 export interface GitHubRepo {
     name: string;
@@ -65,15 +66,15 @@ interface CandidateFullProfile {
     }[];
 }
 
-interface CandidateStatistics {
-    TotalApplications: number;
-    PendingApplications: number;
-    AcceptedApplications: number;
-    RejectedApplications: number;
-    TotalCVs: number;
-    DefaultCV?: any;
-    ProfileCompleteness: number;
-    SkillsCount: number;
+export interface CandidateStatistics {
+    totalApplications: number;
+    pendingApplications: number;
+    acceptedApplications: number;
+    rejectedApplications: number;
+    totalCVs: number;
+    defaultCV?: CV | null;
+    profileCompleteness: number;
+    skillsCount: number;
 }
 
 interface CandidateSearchResult {
