@@ -2,23 +2,30 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace CanPany.Application.Services;
 
 /// <summary>
-/// Message service implementation
+/// Message service implementation with AES-256 encryption for message text
 /// </summary>
 public class MessageService : IMessageService
 {
     private readonly IMessageRepository _repo;
+    private readonly IEncryptionService _encryptionService;
     private readonly ILogger<MessageService> _logger;
+    private readonly string _encryptionKey;
 
     public MessageService(
         IMessageRepository repo,
+        IEncryptionService encryptionService,
+        IConfiguration configuration,
         ILogger<MessageService> logger)
     {
         _repo = repo;
+        _encryptionService = encryptionService;
         _logger = logger;
+        _encryptionKey = configuration["Encryption:Key"] ?? throw new InvalidOperationException("Encryption key not configured");
     }
 
     public async Task<Message?> GetByIdAsync(string id)
@@ -28,7 +35,10 @@ public class MessageService : IMessageService
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Message ID cannot be null or empty", nameof(id));
 
-            return await _repo.GetByIdAsync(id);
+            var message = await _repo.GetByIdAsync(id);
+            if (message != null)
+                DecryptMessage(message);
+            return message;
         }
         catch (Exception ex)
         {
@@ -44,7 +54,10 @@ public class MessageService : IMessageService
             if (string.IsNullOrWhiteSpace(conversationId))
                 throw new ArgumentException("Conversation ID cannot be null or empty", nameof(conversationId));
 
-            return await _repo.GetByConversationIdAsync(conversationId, page, pageSize);
+            var messages = await _repo.GetByConversationIdAsync(conversationId, page, pageSize);
+            foreach (var message in messages)
+                DecryptMessage(message);
+            return messages;
         }
         catch (Exception ex)
         {
@@ -64,16 +77,22 @@ public class MessageService : IMessageService
             if (string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("Message text cannot be null or empty", nameof(text));
 
+            // Encrypt message text before saving
+            var encryptedText = EncryptText(text);
+
             var message = new Message
             {
                 ConversationId = conversationId,
                 SenderId = senderId,
-                Text = text,
+                Text = encryptedText,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
             };
 
-            return await _repo.AddAsync(message);
+            var saved = await _repo.AddAsync(message);
+            // Return with decrypted text for the caller
+            saved.Text = text;
+            return saved;
         }
         catch (Exception ex)
         {
@@ -116,5 +135,33 @@ public class MessageService : IMessageService
             throw;
         }
     }
-}
 
+    // ==================== Message Encryption Helpers ====================
+
+    private string EncryptText(string text)
+    {
+        try
+        {
+            return _encryptionService.Encrypt(text, _encryptionKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to encrypt message text");
+            return text; // Fallback to plaintext if encryption fails
+        }
+    }
+
+    private void DecryptMessage(Message message)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(message.Text))
+                message.Text = _encryptionService.Decrypt(message.Text, _encryptionKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to decrypt message text (may be unencrypted legacy data)");
+            // Don't throw - return raw text if decryption fails (legacy data)
+        }
+    }
+}

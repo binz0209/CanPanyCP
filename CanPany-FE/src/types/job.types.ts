@@ -33,8 +33,26 @@ export interface JobSearchParams {
     maxBudget?: number;
     level?: JobLevel;
     isRemote?: boolean;
+    location?: string;
+    status?: JobStatus;
+    budgetType?: BudgetType;
     page?: number;
     pageSize?: number;
+    sortBy?: 'createdAt' | 'budgetAmount' | 'title';
+    sortOrder?: 'asc' | 'desc';
+}
+
+export interface JobDetailsResponse {
+    job: Job;
+    isBookmarked: boolean;
+}
+
+export interface JobListResponse {
+    jobs: Job[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
 }
 
 export interface CreateJobRequest {

@@ -192,6 +192,11 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSettingsR
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReportRepository, CanPany.Infrastructure.Repositories.ReportRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertRepository, CanPany.Infrastructure.Repositories.JobAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertMatchRepository, CanPany.Infrastructure.Repositories.JobAlertMatchRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICandidateAlertRepository, CanPany.Infrastructure.Repositories.CandidateAlertRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSubscriptionRepository, CanPany.Infrastructure.Repositories.UserSubscriptionRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IConversationRepository, CanPany.Infrastructure.Repositories.ConversationRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IGitHubAnalysisRepository, CanPany.Infrastructure.Repositories.GitHubAnalysisRepository>();
 
 // Register Security Services
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
@@ -252,6 +257,7 @@ builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();
 // Register Job Alert and Matching Services
 builder.Services.AddScoped<IJobAlertService, JobAlertService>();
 builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
+builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
 // Register Background Email Services
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();

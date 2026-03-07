@@ -1,7 +1,129 @@
 import { Link } from 'react-router-dom';
-import React from 'react';
-import { Search, MapPin, ArrowRight, Briefcase, Building2, Star, Heart, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, ArrowRight, Briefcase, Building2, Star, Heart, Clock, TrendingUp, Users, Award } from 'lucide-react';
 import { Button, Badge, Carousel } from '../../components/ui';
+
+// Add floating animation keyframes
+const floatKeyframes = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+// Section header with scroll animation
+const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => {
+    const [ref, isInView] = useInView(0.1);
+
+    return (
+        <div 
+            ref={ref}
+            className="flex items-end justify-between border-b border-border pb-6 mb-8"
+            style={{
+                opacity: isInView ? 1 : 0,
+                transform: isInView ? 'translateY(0)' : 'translateY(1rem)',
+                transition: 'all 0.5s ease-out',
+            }}
+        >
+            <div>
+                <h2 className="text-3xl font-bold text-foreground">{title}</h2>
+                {subtitle && <p className="mt-1 text-muted-foreground text-sm">{subtitle}</p>}
+            </div>
+            {action}
+        </div>
+    );
+};
+function useScrollPosition() {
+    const [scrollY, setScrollY] = useState(0);
+    const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
+    const lastScrollY = useRef(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            setScrollDirection(currentScrollY > lastScrollY.current ? 'down' : 'up');
+            setScrollY(currentScrollY);
+            lastScrollY.current = currentScrollY;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    return { scrollY, scrollDirection };
+}
+
+// Custom hook for intersection observer (fade-in on scroll)
+function useInView(threshold = 0.1) {
+    const [isInView, setIsInView] = useState(false);
+    const [hasAnimated, setHasAnimated] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated) {
+                    setIsInView(true);
+                    setHasAnimated(true);
+                }
+            },
+            { threshold }
+        );
+
+        const currentRef = ref.current;
+        if (currentRef) {
+            observer.observe(currentRef);
+        }
+
+        return () => {
+            if (currentRef) {
+                observer.unobserve(currentRef);
+            }
+        };
+    }, [hasAnimated, threshold]);
+
+    return [ref, isInView] as [React.RefObject<HTMLDivElement>, boolean];
+}
+
+// Hook for button elements
+function useInViewButton(threshold = 0.1) {
+    const [isInView, setIsInView] = useState(false);
+    const [hasAnimated, setHasAnimated] = useState(false);
+    const ref = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated) {
+                    setIsInView(true);
+                    setHasAnimated(true);
+                }
+            },
+            { threshold }
+        );
+
+        const currentRef = ref.current;
+        if (currentRef) {
+            observer.observe(currentRef);
+        }
+
+        return () => {
+            if (currentRef) {
+                observer.unobserve(currentRef);
+            }
+        };
+    }, [hasAnimated, threshold]);
+
+    return [ref, isInView] as [React.RefObject<HTMLButtonElement>, boolean];
+}
 
 // Job listing data structure inspired by TopCV density
 const jobListings = [
@@ -84,6 +206,251 @@ const categories = [
 
 const filterLocations = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ', 'Huế', 'Đông Nam Bộ', 'Miền Bắc', 'Miền Nam'];
 
+// Job card component with scroll animation
+const JobCard = ({ job, index }: { job: typeof jobListings[0]; index: number }) => {
+    const [ref, isInView] = useInView(0.1);
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+        <div
+            ref={ref}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`group relative overflow-hidden rounded-xl border transition-all duration-500 hover:shadow-lg ${
+                isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            } ${
+                job.featured
+                    ? 'border-[#00b14f]/30 bg-background'
+                    : 'border-border bg-background hover:border-border/80'
+            }`}
+            style={{
+                transitionDelay: `${index * 100}ms`,
+                transform: isInView ? 'translateY(0)' : 'translateY(2rem)',
+            }}
+        >
+            <div className="flex items-start gap-4 p-4 sm:p-5">
+                {/* Company logo */}
+                <div className="flex-shrink-0">
+                    <div 
+                        className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl font-semibold group-hover:bg-[#00b14f] group-hover:text-white transition-all duration-300"
+                        style={{
+                            transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+                        }}
+                    >
+                        {job.logo}
+                    </div>
+                </div>
+
+                {/* Job info */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                        <div>
+                            <h3 className="font-semibold text-foreground text-sm sm:text-base group-hover:text-[#00b14f] transition-colors">
+                                {job.title}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{job.company}</p>
+                        </div>
+                        {job.featured && (
+                            <Badge className="flex-shrink-0 bg-[#00b14f] text-white text-xs">
+                                Nổi bật
+                            </Badge>
+                        )}
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                        {job.tags.map((tag) => (
+                            <span
+                                key={tag}
+                                className="inline-block px-2.5 py-0.5 rounded-md bg-muted text-xs text-muted-foreground"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Job meta */}
+                    <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4 flex-shrink-0" />
+                            {job.location}
+                        </div>
+                        <div className="font-semibold text-[#00b14f]">{job.salary}</div>
+                        <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4 flex-shrink-0" />
+                            {job.applicants}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex-shrink-0 flex gap-2">
+                    <button className="p-2 hover:bg-muted rounded-lg transition">
+                        <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500 transition" />
+                    </button>
+                    <Link to={`/jobs/${job.id}`}>
+                        <Button className="hidden sm:block px-3 py-2 bg-[#00b14f] text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-[#009844] transition">
+                            Ứng tuyển
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Animated border gradient on hover */}
+            <div 
+                className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-[#00b14f] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
+            />
+        </div>
+    );
+};
+
+// Category card component with scroll animation
+const CategoryCard = ({ cat, index }: { cat: typeof categories[0]; index: number }) => {
+    const [ref, isInView] = useInViewButton(0.1);
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+        <button
+            ref={ref}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="group text-left rounded-lg border border-border bg-background p-5 transition-all hover:border-[#00b14f] hover:shadow-md"
+            style={{
+                opacity: isInView ? 1 : 0,
+                transform: isInView ? 'translateY(0)' : 'translateY(2rem)',
+                transition: `all 0.5s ease-out ${index * 100}ms`,
+            }}
+        >
+            <div className="flex items-start justify-between">
+                <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                        <span 
+                            className="text-2xl transition-transform duration-300"
+                            style={{ transform: isHovered ? 'scale(1.2)' : 'scale(1)' }}
+                        >
+                            {cat.icon}
+                        </span>
+                        <h3 className="font-semibold text-foreground group-hover:text-[#00b14f] transition-colors">
+                            {cat.name}
+                        </h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium">
+                        {cat.count.toLocaleString()} việc làm
+                    </p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-[#00b14f] group-hover:translate-x-1 transition-all duration-300" />
+            </div>
+        </button>
+    );
+};
+
+// Stat card component with scroll animation
+const StatCard = ({ stat, index }: { stat: typeof stats[0]; index: number }) => {
+    const [ref, isInView] = useInView(0.1);
+
+    return (
+        <div
+            ref={ref}
+            className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 p-6 hover:bg-white/15 transition"
+            style={{
+                opacity: isInView ? 1 : 0,
+                transform: isInView ? 'translateY(0)' : 'translateY(2rem)',
+                transition: `all 0.5s ease-out ${index * 150}ms`,
+            }}
+        >
+            <div 
+                className="text-3xl font-bold text-white"
+                style={{
+                    transform: isInView ? 'scale(1)' : 'scale(0.8)',
+                    transition: `transform 0.5s ease-out ${index * 150 + 200}ms`,
+                }}
+            >
+                {stat.value}
+            </div>
+            <div className="mt-2 text-sm text-white/80 font-medium">{stat.label}</div>
+        </div>
+    );
+};
+
+// Promotional banner content with scroll animation
+const PromotionalBannerContent = () => {
+    const [ref, isInView] = useInView(0.1);
+
+    return (
+        <div ref={ref} className="grid gap-8 lg:grid-cols-3 lg:items-center">
+            <div 
+                className="lg:col-span-2"
+                style={{
+                    opacity: isInView ? 1 : 0,
+                    transform: isInView ? 'translateX(0)' : 'translateX(-2rem)',
+                    transition: 'all 0.6s ease-out',
+                }}
+            >
+                <h2 className="text-2xl font-bold text-foreground">Trở thành nhà tuyển dụng?</h2>
+                <p className="mt-2 text-muted-foreground leading-relaxed">
+                    Đăng tin tuyển dụng và tiếp cận ngay 100,000+ ứng viên chất lượng trên nền tảng của chúng tôi.
+                </p>
+            </div>
+            <div 
+                className="flex flex-col gap-3 sm:flex-row lg:justify-end"
+                style={{
+                    opacity: isInView ? 1 : 0,
+                    transform: isInView ? 'translateX(0)' : 'translateX(2rem)',
+                    transition: 'all 0.6s ease-out 0.2s',
+                }}
+            >
+                <Button variant="outline" className="border-border text-foreground hover:bg-muted bg-transparent">
+                    Tìm hiểu thêm
+                </Button>
+                <Button className="bg-[#00b14f] text-white hover:bg-[#009844]">
+                    Đăng tin tuyển
+                </Button>
+            </div>
+        </div>
+    );
+};
+
+// CTA Section with scroll animation
+const CTASection = () => {
+    const [ref, isInView] = useInView(0.1);
+
+    return (
+        <div ref={ref} className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+            <div
+                style={{
+                    opacity: isInView ? 1 : 0,
+                    transform: isInView ? 'translateY(0)' : 'translateY(2rem)',
+                    transition: 'all 0.6s ease-out',
+                }}
+            >
+                <h2 className="text-4xl font-bold text-white leading-tight">
+                    Bắt đầu tìm việc ngay hôm nay
+                </h2>
+                <p className="mt-4 text-lg text-white/90">
+                    Hàng nghìn doanh nghiệp đang chờ tìm người tài như bạn. Tạo profile trong vài phút và nhận ngay những gợi ý việc làm phù hợp.
+                </p>
+            </div>
+            <div 
+                className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center"
+                style={{
+                    opacity: isInView ? 1 : 0,
+                    transform: isInView ? 'translateY(0)' : 'translateY(2rem)',
+                    transition: 'all 0.6s ease-out 0.2s',
+                }}
+            >
+                <Button className="bg-white text-[#00b14f] font-semibold hover:bg-gray-100 shadow-lg">
+                    <Briefcase className="h-5 w-5" />
+                    Đăng ký tìm việc
+                </Button>
+                <Button variant="outline" className="border-white text-white hover:bg-white/10 font-semibold bg-transparent">
+                    <Building2 className="h-5 w-5" />
+                    Đây là nhà tuyển dụng
+                </Button>
+            </div>
+        </div>
+    );
+};
+
 const stats = [
     { value: '50,000+', label: 'Việc làm đang tuyển' },
     { value: '10,000+', label: 'Doanh nghiệp' },
@@ -120,9 +487,19 @@ const jobBanners = [
 
 export function HomePageDemo() {
     const [activeLocation, setActiveLocation] = React.useState('Hà Nội');
+    const { scrollY, scrollDirection } = useScrollPosition();
+    
+    // Parallax offset calculation
+    const heroParallax = scrollY * 0.3;
+    const shape1Parallax = scrollY * 0.15;
+    const shape2Parallax = scrollY * 0.1;
+    
+    // Hide/show header on scroll
+    const isHeaderVisible = scrollDirection === 'down' ? scrollY < 100 : true;
 
     return (
         <div className="bg-background">
+            <style>{floatKeyframes}</style>
             {/* ===== HERO SECTION WITH DEPTH ===== */}
             <section className="relative overflow-hidden">
                 {/* Multi-layer background */}
@@ -133,9 +510,25 @@ export function HomePageDemo() {
                     <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0,30 Q15,10 30,30 T60,30 V60 H0 Z\' fill=\'%23ffffff\' fill-opacity=\'0.4\'/%3E%3C/svg%3E")' }} />
                 </div>
 
-                {/* Gradient shapes for depth */}
-                <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
-                <div className="absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-white/10 blur-2xl" />
+                {/* Gradient shapes for depth with parallax */}
+                <div 
+                    className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-white/5 blur-3xl transition-transform duration-75"
+                    style={{ transform: `translateY(${shape1Parallax}px)` }}
+                />
+                <div 
+                    className="absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-white/10 blur-2xl transition-transform duration-75"
+                    style={{ transform: `translateY(${-shape2Parallax}px)` }}
+                />
+                
+                {/* Additional floating shapes */}
+                <div 
+                    className="absolute right-1/4 top-1/3 h-32 w-32 rounded-full bg-white/5 blur-2xl animate-pulse"
+                    style={{ animationDuration: '4s' }}
+                />
+                <div 
+                    className="absolute left-1/3 bottom-1/4 h-24 w-24 rounded-full bg-white/10 blur-xl animate-pulse"
+                    style={{ animationDuration: '6s', animationDelay: '1s' }}
+                />
 
                 {/* Content */}
                 <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
@@ -210,17 +603,11 @@ export function HomePageDemo() {
                         </div>
                     </div>
 
-                    {/* Stats below */}
+                    {/* Stats below with scroll animation */}
                     <div className="mt-12">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            {stats.map((stat) => (
-                                <div
-                                    key={stat.label}
-                                    className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 p-6 hover:bg-white/15 transition"
-                                >
-                                    <div className="text-3xl font-bold text-white">{stat.value}</div>
-                                    <div className="mt-2 text-sm text-white/80 font-medium">{stat.label}</div>
-                                </div>
+                            {stats.map((stat, index) => (
+                                <StatCard key={stat.label} stat={stat} index={index} />
                             ))}
                         </div>
                     </div>
@@ -228,7 +615,8 @@ export function HomePageDemo() {
             </section>
 
             {/* ===== PROMOTIONAL BANNER ===== */}
-            <section className="relative bg-muted border-b border-border">
+            <section className="relative bg-muted border-b border-border overflow-hidden">
+                {/* Animated background pattern */}
                 <div className="absolute inset-0 opacity-40">
                     <div
                         className="h-full w-full opacity-5"
@@ -238,23 +626,14 @@ export function HomePageDemo() {
                     />
                 </div>
 
+                {/* Floating shapes for visual interest */}
+                <div 
+                    className="absolute -right-16 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[#00b14f]/5 blur-2xl"
+                    style={{ animation: 'float 6s ease-in-out infinite' }}
+                />
+
                 <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                    <div className="grid gap-8 lg:grid-cols-3 lg:items-center">
-                        <div className="lg:col-span-2">
-                            <h2 className="text-2xl font-bold text-foreground">Trở thành nhà tuyển dụng?</h2>
-                            <p className="mt-2 text-muted-foreground leading-relaxed">
-                                Đăng tin tuyển dụng và tiếp cận ngay 100,000+ ứng viên chất lượng trên nền tảng của chúng tôi.
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                            <Button variant="outline" className="border-border text-foreground hover:bg-muted bg-transparent">
-                                Tìm hiểu thêm
-                            </Button>
-                            <Button className="bg-[#00b14f] text-white hover:bg-[#009844]">
-                                Đăng tin tuyển
-                            </Button>
-                        </div>
-                    </div>
+                    <PromotionalBannerContent />
                 </div>
             </section>
 
@@ -262,15 +641,15 @@ export function HomePageDemo() {
             <section className="relative bg-background py-16">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* Section header */}
-                    <div className="flex items-end justify-between border-b border-border pb-6 mb-8">
-                        <div>
-                            <h2 className="text-3xl font-bold text-foreground">Việc làm nổi bật hôm nay</h2>
-                            <p className="mt-1 text-muted-foreground text-sm">27/01/2026</p>
-                        </div>
-                        <button className="hidden sm:flex items-center gap-2 text-[#00b14f] font-semibold hover:underline">
-                            Xem tất cả <ArrowRight className="h-4 w-4" />
-                        </button>
-                    </div>
+                    <SectionHeader 
+                        title="Việc làm nổi bật hôm nay" 
+                        subtitle="27/01/2026"
+                        action={
+                            <button className="hidden sm:flex items-center gap-2 text-[#00b14f] font-semibold hover:underline">
+                                Xem tất cả <ArrowRight className="h-4 w-4" />
+                            </button>
+                        }
+                    />
 
                     {/* Location filter pills */}
                     <div className="mb-8 overflow-x-auto pb-2">
@@ -293,78 +672,8 @@ export function HomePageDemo() {
 
                     {/* Job cards grid */}
                     <div className="space-y-3">
-                        {jobListings.map((job) => (
-                            <div
-                                key={job.id}
-                                className={`group relative overflow-hidden rounded-xl border transition-all hover:shadow-lg ${
-                                    job.featured
-                                        ? 'border-[#00b14f]/30 bg-background'
-                                        : 'border-border bg-background hover:border-border/80'
-                                }`}
-                            >
-                                <div className="flex items-start gap-4 p-4 sm:p-5">
-                                    {/* Company logo */}
-                                    <div className="flex-shrink-0">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl font-semibold group-hover:bg-[#00b14f] group-hover:text-white transition">
-                                            {job.logo}
-                                        </div>
-                                    </div>
-
-                                    {/* Job info */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-4 mb-2">
-                                            <div>
-                                                <h3 className="font-semibold text-foreground text-sm sm:text-base group-hover:text-[#00b14f] transition">
-                                                    {job.title}
-                                                </h3>
-                                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{job.company}</p>
-                                            </div>
-                                            {job.featured && (
-                                                <Badge className="flex-shrink-0 bg-[#00b14f] text-white text-xs">
-                                                    Nổi bật
-                                                </Badge>
-                                            )}
-                                        </div>
-
-                                        {/* Tags */}
-                                        <div className="flex flex-wrap gap-2 mb-3">
-                                            {job.tags.map((tag) => (
-                                                <span
-                                                    key={tag}
-                                                    className="inline-block px-2.5 py-0.5 rounded-md bg-muted text-xs text-muted-foreground"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        {/* Job meta */}
-                                        <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-muted-foreground">
-                                            <div className="flex items-center gap-1">
-                                                <MapPin className="h-4 w-4 flex-shrink-0" />
-                                                {job.location}
-                                            </div>
-                                            <div className="font-semibold text-[#00b14f]">{job.salary}</div>
-                                            <div className="flex items-center gap-1">
-                                                <Clock className="h-4 w-4 flex-shrink-0" />
-                                                {job.applicants}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action buttons */}
-                                    <div className="flex-shrink-0 flex gap-2">
-                                        <button className="p-2 hover:bg-muted rounded-lg transition">
-                                            <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500 transition" />
-                                        </button>
-                                        <Link to={`/jobs/${job.id}`}>
-                                            <Button className="hidden sm:block px-3 py-2 bg-[#00b14f] text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-[#009844] transition">
-                                                Ứng tuyển
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
+                        {jobListings.map((job, index) => (
+                            <JobCard key={job.id} job={job} index={index} />
                         ))}
                     </div>
 
@@ -379,32 +688,14 @@ export function HomePageDemo() {
             {/* ===== JOB CATEGORIES SECTION ===== */}
             <section className="bg-muted border-t border-border py-16">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="mb-8">
-                        <h2 className="text-3xl font-bold text-foreground">Ngành nghề nổi bật</h2>
-                        <p className="mt-2 text-muted-foreground">Khám phá hàng nghìn cơ hội việc làm trong các ngành khác nhau</p>
-                    </div>
+                    <SectionHeader 
+                        title="Ngành nghề nổi bật"
+                        subtitle="Khám phá hàng nghìn cơ hội việc làm trong các ngành khác nhau"
+                    />
 
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat.name}
-                                className="group text-left rounded-lg border border-border bg-background p-5 transition-all hover:border-[#00b14f] hover:shadow-md"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <span className="text-2xl">{cat.icon}</span>
-                                            <h3 className="font-semibold text-foreground group-hover:text-[#00b14f] transition">
-                                                {cat.name}
-                                            </h3>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground font-medium">
-                                            {cat.count.toLocaleString()} việc làm
-                                        </p>
-                                    </div>
-                                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-[#00b14f] group-hover:translate-x-1 transition" />
-                                </div>
-                            </button>
+                        {categories.map((cat, index) => (
+                            <CategoryCard key={cat.name} cat={cat} index={index} />
                         ))}
                     </div>
                 </div>
@@ -412,6 +703,7 @@ export function HomePageDemo() {
 
             {/* ===== CTA SECTION ===== */}
             <section className="relative overflow-hidden bg-gradient-to-br from-[#00b14f] to-[#007a35] py-16">
+                {/* Animated background pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <div
                         className="h-full w-full"
@@ -421,24 +713,17 @@ export function HomePageDemo() {
                     />
                 </div>
 
-                <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-                    <h2 className="text-4xl font-bold text-white leading-tight">
-                        Bắt đầu tìm việc ngay hôm nay
-                    </h2>
-                    <p className="mt-4 text-lg text-white/90">
-                        Hàng nghìn doanh nghiệp đang chờ tìm người tài như bạn. Tạo profile trong vài phút và nhận ngay những gợi ý việc làm phù hợp.
-                    </p>
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                        <Button className="bg-white text-[#00b14f] font-semibold hover:bg-gray-100 shadow-lg">
-                            <Briefcase className="h-5 w-5" />
-                            Đăng ký tìm việc
-                        </Button>
-                        <Button variant="outline" className="border-white text-white hover:bg-white/10 font-semibold bg-transparent">
-                            <Building2 className="h-5 w-5" />
-                            Đây là nhà tuyển dụng
-                        </Button>
-                    </div>
-                </div>
+                {/* Floating shapes with parallax */}
+                <div 
+                    className="absolute left-10 top-20 w-40 h-40 rounded-full bg-white/10 blur-3xl"
+                    style={{ transform: `translateY(${scrollY * -0.1}px)` }}
+                />
+                <div 
+                    className="absolute right-20 bottom-20 w-32 h-32 rounded-full bg-white/5 blur-2xl"
+                    style={{ transform: `translateY(${scrollY * -0.15}px)` }}
+                />
+
+                <CTASection />
             </section>
         </div>
     );
