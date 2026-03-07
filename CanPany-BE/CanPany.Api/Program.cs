@@ -274,6 +274,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+builder.Services.AddHttpClient<IGitHubService, GitHubService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 

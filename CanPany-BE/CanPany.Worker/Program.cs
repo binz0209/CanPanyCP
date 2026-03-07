@@ -53,6 +53,7 @@ public class Program
 
         // Repositories
         builder.Services.AddScoped<IGitHubAnalysisRepository, GitHubAnalysisRepository>();
+        builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 
         // Redis Connection
         var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";

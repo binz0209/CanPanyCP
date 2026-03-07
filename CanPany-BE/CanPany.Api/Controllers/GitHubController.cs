@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Models;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Worker.Infrastructure.Progress;
 using CanPany.Worker.Infrastructure.Queue;
@@ -21,17 +22,23 @@ public class GitHubController : ControllerBase
     private readonly IJobProducer _jobProducer;
     private readonly IJobProgressTracker _progressTracker;
     private readonly IGitHubAnalysisRepository _analysisRepository;
+    private readonly IUserProfileService _profileService;
+    private readonly IGitHubService _gitHubService;
     private readonly ILogger<GitHubController> _logger;
 
     public GitHubController(
         IJobProducer jobProducer,
         IJobProgressTracker progressTracker,
         IGitHubAnalysisRepository analysisRepository,
+        IUserProfileService profileService,
+        IGitHubService gitHubService,
         ILogger<GitHubController> logger)
     {
         _jobProducer = jobProducer;
         _progressTracker = progressTracker;
         _analysisRepository = analysisRepository;
+        _profileService = profileService;
+        _gitHubService = gitHubService;
         _logger = logger;
     }
 
@@ -258,6 +265,144 @@ public class GitHubController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// List GitHub repos for current user's linked account.
+    /// FE shows this list for user to pick repos to sync.
+    /// </summary>
+    [HttpGet("repos")]
+    [Authorize]
+    public async Task<IActionResult> GetLinkedRepos([FromQuery] bool includeForked = false)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(ApiResponse.CreateError("User not authenticated", "Unauthorized"));
+
+            var username = await GetLinkedGitHubUsernameAsync(userId);
+            if (username == null)
+                return BadRequest(ApiResponse.CreateError(
+                    "Chưa liên kết GitHub. Vui lòng link GitHub trước.", "GitHubNotLinked"));
+
+            var repos = await _gitHubService.GetUserRepositoriesAsync(username, includeForked);
+
+            var result = repos
+                .OrderByDescending(r => r.StarsCount)
+                .Select(r => new
+                {
+                    name = r.Name,
+                    fullName = r.FullName,
+                    description = r.Description,
+                    language = r.Language,
+                    stars = r.StarsCount,
+                    forks = r.ForksCount,
+                    htmlUrl = r.HtmlUrl,
+                    isFork = r.IsFork,
+                    updatedAt = r.UpdatedAt
+                });
+
+            _logger.LogInformation(
+                "[GITHUB_REPOS] Found {Count} repos for user {UserId} ({Username})",
+                repos.Count, userId, username);
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { gitHubUsername = username, totalCount = repos.Count, repositories = result },
+                "GitHub repositories loaded"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GITHUB_REPOS_ERROR]");
+            return StatusCode(500, ApiResponse.CreateError("Failed to fetch repos", "FetchReposFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Sync skills from selected GitHub repos.
+    /// Queues a background job to analyze the selected repos with Gemini AI,
+    /// then auto-sync extracted skills to UserProfile.
+    /// </summary>
+    [HttpPost("sync-skills")]
+    [Authorize]
+    public async Task<IActionResult> SyncSkillsFromSelectedRepos([FromBody] SyncSkillsRequest request)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(ApiResponse.CreateError("User not authenticated", "Unauthorized"));
+
+            var username = await GetLinkedGitHubUsernameAsync(userId);
+            if (username == null)
+                return BadRequest(ApiResponse.CreateError(
+                    "Chưa liên kết GitHub. Vui lòng link GitHub trước.", "GitHubNotLinked"));
+
+            if (request.RepositoryNames == null || request.RepositoryNames.Count == 0)
+                return BadRequest(ApiResponse.CreateError(
+                    "Vui lòng chọn ít nhất một repository.", "NoReposSelected"));
+
+            var payload = new GitHubAnalysisPayload
+            {
+                GitHubUsername = username,
+                UserId = userId,
+                IncludeForkedRepos = true, // user already picked, don't filter
+                AnalyzeSkills = true,
+                UpdateProfile = true,
+                SelectedRepositories = request.RepositoryNames
+            };
+
+            var job = new JobMessage
+            {
+                I18nKey = "Job.GitHub.Analyze.Profile",
+                Payload = JsonSerializer.Serialize(payload),
+                UserId = userId,
+                Priority = JobPriority.Normal
+            };
+
+            var jobId = await _jobProducer.EnqueueJobAsync(job);
+            if (string.IsNullOrEmpty(jobId))
+                return StatusCode(500, ApiResponse.CreateError("Failed to enqueue job", "EnqueueFailed"));
+
+            _logger.LogInformation(
+                "[SYNC_SKILLS] Queued for user {UserId} ({Username}) | Repos: [{Repos}] | JobId: {JobId}",
+                userId, username, string.Join(", ", request.RepositoryNames), jobId);
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new
+                {
+                    jobId,
+                    gitHubUsername = username,
+                    selectedRepos = request.RepositoryNames,
+                    message = "Đang phân tích repos và trích xuất skills..."
+                },
+                "Skill sync job started"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SYNC_SKILLS_ERROR]");
+            return StatusCode(500, ApiResponse.CreateError("Failed to start sync", "SyncFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Extract GitHub username from user's linked profile
+    /// </summary>
+    private async Task<string?> GetLinkedGitHubUsernameAsync(string userId)
+    {
+        var profile = await _profileService.GetByUserIdAsync(userId);
+        if (profile == null || string.IsNullOrEmpty(profile.GitHubUrl))
+            return null;
+
+        try
+        {
+            var uri = new Uri(profile.GitHubUrl);
+            return uri.AbsolutePath.Trim('/');
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 /// <summary>
@@ -265,23 +410,19 @@ public class GitHubController : ControllerBase
 /// </summary>
 public record GitHubAnalysisRequest
 {
-    /// <summary>
-    /// GitHub username to analyze
-    /// </summary>
     public string GitHubUsername { get; init; } = null!;
-
-    /// <summary>
-    /// Include forked repositories in analysis (default: false)
-    /// </summary>
     public bool IncludeForkedRepos { get; init; } = false;
-
-    /// <summary>
-    /// Analyze and extract skills using AI (default: true)
-    /// </summary>
     public bool AnalyzeSkills { get; init; } = true;
-
-    /// <summary>
-    /// Update user profile with analyzed data (default: true)
-    /// </summary>
     public bool UpdateProfile { get; init; } = true;
+}
+
+/// <summary>
+/// Request model for selective sync skills
+/// </summary>
+public record SyncSkillsRequest
+{
+    /// <summary>
+    /// List of repository names (not full_name) to analyze
+    /// </summary>
+    public List<string> RepositoryNames { get; init; } = new();
 }

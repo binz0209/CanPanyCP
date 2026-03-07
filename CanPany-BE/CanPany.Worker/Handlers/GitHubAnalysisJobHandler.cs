@@ -4,6 +4,7 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Worker.Models;
 using CanPany.Worker.Models.Payloads;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -18,16 +19,19 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
     private readonly IGitHubService _gitHubService;
     private readonly IGeminiService _geminiService;
     private readonly IGitHubAnalysisRepository _analysisRepository;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public GitHubAnalysisJobHandler(
         ILogger<GitHubAnalysisJobHandler> logger,
         IGitHubService gitHubService,
         IGeminiService geminiService,
-        IGitHubAnalysisRepository analysisRepository) : base(logger)
+        IGitHubAnalysisRepository analysisRepository,
+        IServiceScopeFactory scopeFactory) : base(logger)
     {
         _gitHubService = gitHubService;
         _geminiService = geminiService;
         _analysisRepository = analysisRepository;
+        _scopeFactory = scopeFactory;
     }
 
     public override string[] SupportedI18nKeys => new[]
@@ -74,6 +78,37 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                 return JobResult.FailureResult(
                     "No repositories found for this GitHub user",
                     "NO_REPOSITORIES");
+            }
+
+            // Step 1b: Filter to selected repos if specified
+            if (payload.SelectedRepositories is { Count: > 0 })
+            {
+                var selectedSet = new HashSet<string>(payload.SelectedRepositories, StringComparer.OrdinalIgnoreCase);
+                contributionSummary.Repositories = contributionSummary.Repositories
+                    .Where(r => selectedSet.Contains(r.Name))
+                    .ToList();
+
+                // Recalculate language bytes from selected repos only
+                contributionSummary.LanguageBytes.Clear();
+                foreach (var repo in contributionSummary.Repositories)
+                {
+                    var langStats = await _gitHubService.GetRepositoryLanguagesAsync(
+                        payload.GitHubUsername, repo.Name, cancellationToken);
+                    foreach (var kvp in langStats.Languages)
+                    {
+                        contributionSummary.LanguageBytes[kvp.Key] =
+                            contributionSummary.LanguageBytes.GetValueOrDefault(kvp.Key) + kvp.Value;
+                    }
+                }
+
+                contributionSummary.TotalRepositories = contributionSummary.Repositories.Count;
+                contributionSummary.TotalStars = contributionSummary.Repositories.Sum(r => r.StarsCount);
+                contributionSummary.TotalForks = contributionSummary.Repositories.Sum(r => r.ForksCount);
+
+                Logger.LogInformation(
+                    "[GITHUB_FILTER] Filtered to {Count} selected repos: [{Repos}]",
+                    contributionSummary.TotalRepositories,
+                    string.Join(", ", payload.SelectedRepositories));
             }
 
             await ReportProgressAsync(job.JobId, 40, 
@@ -165,6 +200,12 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                 savedAnalysis.Id,
                 payload.UserId);
 
+            // Step 5: Sync to UserProfile (if requested)
+            if (payload.UpdateProfile)
+            {
+                await SyncToUserProfileAsync(payload.UserId, savedAnalysis);
+            }
+
             await ReportProgressAsync(job.JobId, 90, "Finalizing analysis results...");
 
             // Step 5: Build result
@@ -221,6 +262,78 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
             Logger.LogError(ex, "[GITHUB_ANALYSIS_FAILED] JobId: {JobId}", job.JobId);
             await ReportProgressAsync(job.JobId, -1, $"Error: {ex.Message}");
             return JobResult.FailureResult(ex.Message, ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// Sync analyzed data (skills, languages, bio, title) to UserProfile
+    /// Uses IServiceScopeFactory to safely resolve scoped repos from singleton handler
+    /// </summary>
+    private async Task SyncToUserProfileAsync(string userId, GitHubAnalysisResult analysis)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var profileRepo = scope.ServiceProvider.GetRequiredService<IUserProfileRepository>();
+
+            var profile = await profileRepo.GetByUserIdAsync(userId);
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+            }
+
+            // Always update GitHub URL
+            profile.GitHubUrl = $"https://github.com/{analysis.GitHubUsername}";
+
+            // Sync skills from AI analysis
+            if (analysis.PrimarySkills.Count > 0)
+                profile.SkillIds = analysis.PrimarySkills;
+
+            // Sync top languages
+            var topLanguages = analysis.LanguagePercentages
+                .OrderByDescending(kvp => kvp.Value)
+                .Take(5)
+                .Select(kvp => kvp.Key)
+                .ToList();
+            if (topLanguages.Count > 0)
+                profile.Languages = topLanguages;
+
+            // Set bio from AI summary (only if empty)
+            if (!string.IsNullOrEmpty(analysis.AiSummary) && string.IsNullOrEmpty(profile.Bio))
+                profile.Bio = analysis.AiSummary;
+
+            // Set title from expertise level (only if empty)
+            if (!string.IsNullOrEmpty(analysis.ExpertiseLevel) && string.IsNullOrEmpty(profile.Title))
+            {
+                var specialization = analysis.Specializations.FirstOrDefault() ?? "Developer";
+                profile.Title = $"{analysis.ExpertiseLevel} {specialization}";
+            }
+
+            // Set portfolio link (only if empty)
+            if (analysis.TopRepositories.Count > 0 && string.IsNullOrEmpty(profile.Portfolio))
+                profile.Portfolio = analysis.TopRepositories[0].HtmlUrl;
+
+            profile.UpdatedAt = DateTime.UtcNow;
+
+            if (string.IsNullOrEmpty(profile.Id))
+                await profileRepo.AddAsync(profile);
+            else
+                await profileRepo.UpdateAsync(profile);
+
+            Logger.LogInformation(
+                "[PROFILE_SYNC] Synced skills to profile for user {UserId} | Skills: [{Skills}] | Languages: [{Langs}]",
+                userId,
+                string.Join(", ", analysis.PrimarySkills),
+                string.Join(", ", topLanguages));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[PROFILE_SYNC] Failed to sync profile for user {UserId}", userId);
+            // Don't throw — analysis result is already saved
         }
     }
 
