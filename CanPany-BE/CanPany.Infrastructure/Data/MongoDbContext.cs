@@ -33,6 +33,8 @@ public class MongoDbContext
         _database = client.GetDatabase(options.Value.DatabaseName);
     }
 
+    public IMongoDatabase Database => _database;
+
     // Collections — Core
     public IMongoCollection<User> Users => _database.GetCollection<User>("users");
     public IMongoCollection<UserProfile> UserProfiles => _database.GetCollection<UserProfile>("user_profiles");
