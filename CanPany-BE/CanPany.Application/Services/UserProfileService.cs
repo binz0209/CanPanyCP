@@ -2,6 +2,7 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
 namespace CanPany.Application.Services;
@@ -14,18 +15,24 @@ public class UserProfileService : IUserProfileService
     private readonly IUserProfileRepository _repo;
     private readonly IGitHubAnalysisRepository _githubAnalysisRepo;
     private readonly IGeminiService _geminiService;
+    private readonly IEncryptionService _encryptionService;
     private readonly ILogger<UserProfileService> _logger;
+    private readonly string _encryptionKey;
 
     public UserProfileService(
         IUserProfileRepository repo,
         IGitHubAnalysisRepository githubAnalysisRepo,
         IGeminiService geminiService,
+        IEncryptionService encryptionService,
+        IConfiguration configuration,
         ILogger<UserProfileService> logger)
     {
         _repo = repo;
         _githubAnalysisRepo = githubAnalysisRepo;
         _geminiService = geminiService;
+        _encryptionService = encryptionService;
         _logger = logger;
+        _encryptionKey = configuration["Encryption:Key"] ?? throw new InvalidOperationException("Encryption key not configured");
     }
 
     public async Task<UserProfile?> GetByUserIdAsync(string userId)
@@ -35,7 +42,10 @@ public class UserProfileService : IUserProfileService
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
 
-            return await _repo.GetByUserIdAsync(userId);
+            var profile = await _repo.GetByUserIdAsync(userId);
+            if (profile != null)
+                DecryptPII(profile);
+            return profile;
         }
         catch (Exception ex)
         {
@@ -53,7 +63,10 @@ public class UserProfileService : IUserProfileService
 
             profile.CreatedAt = DateTime.UtcNow;
             await UpdateEmbeddingAsync(profile);
-            return await _repo.AddAsync(profile);
+            EncryptPII(profile);
+            var saved = await _repo.AddAsync(profile);
+            DecryptPII(saved);
+            return saved;
         }
         catch (Exception ex)
         {
@@ -76,6 +89,7 @@ public class UserProfileService : IUserProfileService
             {
                 profile.UserId = userId;
                 await UpdateEmbeddingAsync(profile);
+                EncryptPII(profile);
                 await _repo.AddAsync(profile);
             }
             else
@@ -87,6 +101,7 @@ public class UserProfileService : IUserProfileService
                 profile.UpdatedAt = DateTime.UtcNow;
                 
                 await UpdateEmbeddingAsync(profile);
+                EncryptPII(profile);
                 await _repo.UpdateAsync(profile);
             }
             return true;
@@ -241,6 +256,40 @@ public class UserProfileService : IUserProfileService
         {
             _logger.LogError(ex, "[GITHUB_SYNC] Error syncing GitHub data: {UserId}", userId);
             return false;
+        }
+    }
+
+    // ==================== PII Encryption Helpers ====================
+
+    private void EncryptPII(UserProfile profile)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(profile.Phone))
+                profile.Phone = _encryptionService.Encrypt(profile.Phone, _encryptionKey);
+            if (!string.IsNullOrWhiteSpace(profile.Address))
+                profile.Address = _encryptionService.Encrypt(profile.Address, _encryptionKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to encrypt PII for user profile");
+            // Don't throw - allow save even if encryption fails
+        }
+    }
+
+    private void DecryptPII(UserProfile profile)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(profile.Phone))
+                profile.Phone = _encryptionService.Decrypt(profile.Phone, _encryptionKey);
+            if (!string.IsNullOrWhiteSpace(profile.Address))
+                profile.Address = _encryptionService.Decrypt(profile.Address, _encryptionKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to decrypt PII for user profile (may be unencrypted legacy data)");
+            // Don't throw - return raw data if decryption fails (legacy data)
         }
     }
 }
