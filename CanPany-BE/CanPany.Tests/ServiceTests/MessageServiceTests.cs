@@ -1,7 +1,9 @@
 using CanPany.Application.Services;
+using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -10,12 +12,27 @@ namespace CanPany.Tests.ServiceTests;
 public class MessageServiceTests
 {
     private readonly Mock<IMessageRepository> _repositoryMock = new();
+    private readonly Mock<IEncryptionService> _encryptionServiceMock = new();
     private readonly Mock<ILogger<MessageService>> _loggerMock = new();
+    private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly MessageService _service;
 
     public MessageServiceTests()
     {
-        _service = new MessageService(_repositoryMock.Object, _loggerMock.Object);
+        _configurationMock.Setup(x => x["Encryption:Key"])
+            .Returns("TestEncryptionKey-MustBeAtLeast32Characters!");
+
+        // Setup encryption mock to encrypt/decrypt transparently for existing tests
+        _encryptionServiceMock.Setup(x => x.Encrypt(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns<string, string>((text, key) => $"ENC:{text}");
+        _encryptionServiceMock.Setup(x => x.Decrypt(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns<string, string>((text, key) => text.StartsWith("ENC:") ? text.Substring(4) : text);
+
+        _service = new MessageService(
+            _repositoryMock.Object,
+            _encryptionServiceMock.Object,
+            _configurationMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -28,7 +45,7 @@ public class MessageServiceTests
             Id = messageId,
             ConversationId = "conv123",
             SenderId = "user123",
-            Text = "Hello"
+            Text = "ENC:Hello"
         };
         
         _repositoryMock.Setup(x => x.GetByIdAsync(messageId))
@@ -40,6 +57,7 @@ public class MessageServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(messageId, result.Id);
+        Assert.Equal("Hello", result.Text); // Should be decrypted
     }
 
     [Fact]
@@ -50,14 +68,14 @@ public class MessageServiceTests
     }
 
     [Fact]
-    public async Task GetByConversationIdAsync_ShouldReturnMessages_WhenExist()
+    public async Task GetByConversationIdAsync_ShouldReturnDecryptedMessages()
     {
         // Arrange
         var conversationId = "conv123";
         var messages = new List<Message>
         {
-            new Message { Id = "msg1", ConversationId = conversationId, SenderId = "user123", Text = "Hello" },
-            new Message { Id = "msg2", ConversationId = conversationId, SenderId = "user456", Text = "Hi" }
+            new Message { Id = "msg1", ConversationId = conversationId, SenderId = "user123", Text = "ENC:Hello" },
+            new Message { Id = "msg2", ConversationId = conversationId, SenderId = "user456", Text = "ENC:Hi" }
         };
         
         _repositoryMock.Setup(x => x.GetByConversationIdAsync(conversationId, 1, 50))
@@ -67,34 +85,39 @@ public class MessageServiceTests
         var result = await _service.GetByConversationIdAsync(conversationId);
 
         // Assert
-        Assert.Equal(2, result.Count());
+        var resultList = result.ToList();
+        Assert.Equal(2, resultList.Count);
+        Assert.Equal("Hello", resultList[0].Text);
+        Assert.Equal("Hi", resultList[1].Text);
     }
 
     [Fact]
-    public async Task SendAsync_ShouldReturnMessage_WhenValid()
+    public async Task SendAsync_ShouldEncryptMessage_BeforeSaving()
     {
         // Arrange
         var conversationId = "conv123";
         var senderId = "user123";
         var text = "Hello";
-        var savedMessage = new Message
-        {
-            Id = "msg123",
-            ConversationId = conversationId,
-            SenderId = senderId,
-            Text = text,
-            CreatedAt = DateTime.UtcNow
-        };
-        
+        string? capturedText = null;
+
         _repositoryMock.Setup(x => x.AddAsync(It.IsAny<Message>()))
-            .ReturnsAsync(savedMessage);
+            .Callback<Message>(m => capturedText = m.Text) // Capture text at call time
+            .ReturnsAsync((Message m) => m);
 
         // Act
         var result = await _service.SendAsync(conversationId, senderId, text);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("msg123", result.Id);
+        Assert.Equal("Hello", result.Text); // Returned text should be decrypted
+
+        // Verify that Encrypt was called
+        _encryptionServiceMock.Verify(
+            x => x.Encrypt(text, It.IsAny<string>()), 
+            Times.Once);
+
+        // Verify that the repository received encrypted text (captured at call time)
+        Assert.Equal("ENC:Hello", capturedText);
     }
 
     [Fact]

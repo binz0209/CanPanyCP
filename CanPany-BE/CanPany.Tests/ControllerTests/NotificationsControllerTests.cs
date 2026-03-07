@@ -1,6 +1,7 @@
 using CanPany.Api.Controllers;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
+using CanPany.Application.DTOs;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -38,29 +39,27 @@ public class NotificationsControllerTests
     {
         // Arrange
         var userId = "user123";
-        var notifications = new List<Notification>
+        var notifications = new List<NotificationResponseDto>
         {
-            new Notification 
+            new NotificationResponseDto
             { 
                 Id = "notif1", 
-                UserId = userId, 
                 Title = "New Job Match", 
-                Message = "A new job matches your profile",
+                Content = "A new job matches your profile",
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow
             },
-            new Notification 
+            new NotificationResponseDto
             { 
                 Id = "notif2", 
-                UserId = userId, 
                 Title = "Application Update", 
-                Message = "Your application has been reviewed",
+                Content = "Your application has been reviewed",
                 IsRead = true,
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
+                Timestamp = DateTime.UtcNow.AddHours(-1)
             }
         };
         
-        _notificationServiceMock.Setup(x => x.GetByUserIdAsync(userId))
+        _notificationServiceMock.Setup(x => x.GetFilteredNotificationsAsync(userId, It.IsAny<NotificationFilterDto>()))
             .ReturnsAsync(notifications);
 
         // Act
@@ -68,7 +67,7 @@ public class NotificationsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse<IEnumerable<Notification>>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<IEnumerable<NotificationResponseDto>>>(okResult.Value);
         Assert.True(response.Success);
         Assert.Equal(2, response.Data?.Count());
     }
