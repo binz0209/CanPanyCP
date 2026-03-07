@@ -29,4 +29,9 @@ public record GitHubAnalysisPayload
     /// Update user profile with analyzed data
     /// </summary>
     public bool UpdateProfile { get; init; } = true;
+
+    /// <summary>
+    /// Specific repository names to analyze (null/empty = analyze all)
+    /// </summary>
+    public List<string>? SelectedRepositories { get; init; }
 }
