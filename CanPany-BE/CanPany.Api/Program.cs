@@ -294,6 +294,9 @@ builder.Services.AddScoped<JobAlertProcessor>();
 builder.Services.AddGlobalInterceptors();
 builder.Services.AddHangfireJobInterceptor();
 
+// Register Memory Cache (used for OAuth state tokens)
+builder.Services.AddMemoryCache();
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -362,7 +365,7 @@ if (!string.IsNullOrEmpty(configuredUrls))
 else
 {
     // Default URLs from launchSettings.json
-    Log.Information("📍 Server Host: http://localhost:5047");
+    Log.Information("📍 Server Host: http://localhost:5001");
     Log.Information("📍 Server Host: https://localhost:7011");
 }
 

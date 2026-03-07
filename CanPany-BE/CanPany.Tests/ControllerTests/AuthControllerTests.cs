@@ -5,6 +5,8 @@ using CanPany.Application.DTOs.Auth;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
@@ -17,6 +19,10 @@ public class AuthControllerTests
     private readonly Mock<IAuthService> _authServiceMock = new();
     private readonly Mock<IUserService> _userServiceMock = new();
     private readonly Mock<II18nService> _i18nServiceMock = new();
+    private readonly Mock<IMemoryCache> _cacheMock = new();
+    private readonly Mock<IUserProfileService> _profileServiceMock = new();
+    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock = new();
+    private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<ILogger<AuthController>> _loggerMock = new();
     private readonly AuthController _controller;
 
@@ -26,6 +32,10 @@ public class AuthControllerTests
             _authServiceMock.Object,
             _userServiceMock.Object,
             _i18nServiceMock.Object,
+            _cacheMock.Object,
+            _profileServiceMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object,
             _loggerMock.Object);
         
         // Setup default HttpContext
