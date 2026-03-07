@@ -5,6 +5,8 @@ using CanPany.Application.Common.Constants;
 using CanPany.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using System.Net.Http.Headers;
 
 namespace CanPany.Api.Controllers;
 
@@ -18,17 +20,29 @@ public class AuthController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IUserService _userService;
     private readonly II18nService _i18nService;
+    private readonly IMemoryCache _cache;
+    private readonly IUserProfileService _profileService;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IAuthService authService,
         IUserService userService,
         II18nService i18nService,
+        IMemoryCache cache,
+        IUserProfileService profileService,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration,
         ILogger<AuthController> logger)
     {
         _authService = authService;
         _userService = userService;
         _i18nService = i18nService;
+        _cache = cache;
+        _profileService = profileService;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -218,4 +232,147 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResponse.CreateError("Reset password failed", "ResetPasswordFailed"));
         }
     }
+
+    /// <summary>
+    /// Step 1: Generate GitHub OAuth URL — FE dùng URL này để redirect user sang GitHub
+    /// </summary>
+    [Authorize]
+    [HttpGet("github/link")]
+    public IActionResult GetGitHubLinkUrl()
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var clientId = _configuration["GitHub:ClientId"];
+            if (string.IsNullOrEmpty(clientId))
+                return StatusCode(500, ApiResponse.CreateError("GitHub OAuth chưa được cấu hình", "NotConfigured"));
+
+            // Tạo state token ngẫu nhiên để chống CSRF
+            var state = Guid.NewGuid().ToString("N");
+            _cache.Set($"gh_oauth_{state}", userId, TimeSpan.FromMinutes(10));
+
+            var callbackUrl = Uri.EscapeDataString(_configuration["GitHub:CallbackUrl"] ?? "");
+            var scope = Uri.EscapeDataString("read:user user:email");
+            var oauthUrl = $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={callbackUrl}&state={state}&scope={scope}";
+
+            _logger.LogInformation("[GITHUB_LINK] Generated OAuth URL for user {UserId}", userId);
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { oauthUrl }, "GitHub OAuth URL generated"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GITHUB_LINK] Error generating OAuth URL");
+            return StatusCode(500, ApiResponse.CreateError("Không thể tạo OAuth URL", "OAuthFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Step 2: GitHub callback — GitHub redirect browser về đây sau khi user authorize
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("github/callback")]
+    public async Task<IActionResult> GitHubCallback(
+        [FromQuery] string? code,
+        [FromQuery] string? state,
+        [FromQuery] string? error)
+    {
+        var frontendUrl = _configuration["GitHub:FrontendCallbackUrl"] ?? "http://localhost:5173/profile";
+
+        // User từ chối cấp quyền
+        if (!string.IsNullOrEmpty(error))
+        {
+            _logger.LogWarning("[GITHUB_CALLBACK] User denied access: {Error}", error);
+            return Redirect($"{frontendUrl}?github_linked=false&error={Uri.EscapeDataString(error)}");
+        }
+
+        if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
+            return Redirect($"{frontendUrl}?github_linked=false&error=missing_params");
+
+        // Xác minh CSRF state
+        if (!_cache.TryGetValue($"gh_oauth_{state}", out string? userId) || string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("[GITHUB_CALLBACK] Invalid or expired state token");
+            return Redirect($"{frontendUrl}?github_linked=false&error=invalid_state");
+        }
+        _cache.Remove($"gh_oauth_{state}");
+
+        try
+        {
+            var clientId = _configuration["GitHub:ClientId"];
+            var clientSecret = _configuration["GitHub:ClientSecret"];
+
+            // Đổi code lấy access token
+            var tokenHttp = _httpClientFactory.CreateClient();
+            tokenHttp.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            tokenHttp.DefaultRequestHeaders.UserAgent.ParseAdd("CanPany/1.0");
+
+            var tokenResp = await tokenHttp.PostAsJsonAsync(
+                "https://github.com/login/oauth/access_token",
+                new { client_id = clientId, client_secret = clientSecret, code });
+
+            if (!tokenResp.IsSuccessStatusCode)
+            {
+                _logger.LogError("[GITHUB_CALLBACK] Token exchange failed: {Status}", tokenResp.StatusCode);
+                return Redirect($"{frontendUrl}?github_linked=false&error=token_exchange_failed");
+            }
+
+            var tokenData = await tokenResp.Content.ReadFromJsonAsync<GitHubTokenResponse>();
+            if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken))
+            {
+                _logger.LogError("[GITHUB_CALLBACK] Empty access token for user {UserId}", userId);
+                return Redirect($"{frontendUrl}?github_linked=false&error=empty_token");
+            }
+
+            // Lấy thông tin GitHub user
+            var userHttp = _httpClientFactory.CreateClient();
+            userHttp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenData.AccessToken);
+            userHttp.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            userHttp.DefaultRequestHeaders.UserAgent.ParseAdd("CanPany/1.0");
+
+            var userResp = await userHttp.GetAsync("https://api.github.com/user");
+            if (!userResp.IsSuccessStatusCode)
+            {
+                _logger.LogError("[GITHUB_CALLBACK] Failed to fetch GitHub user: {Status}", userResp.StatusCode);
+                return Redirect($"{frontendUrl}?github_linked=false&error=user_fetch_failed");
+            }
+
+            var gitHubUser = await userResp.Content.ReadFromJsonAsync<GitHubUserResponse>();
+            if (gitHubUser == null || string.IsNullOrEmpty(gitHubUser.Login))
+                return Redirect($"{frontendUrl}?github_linked=false&error=user_parse_failed");
+
+            // Lưu vào UserProfile
+            var gitHubUrl = gitHubUser.HtmlUrl ?? $"https://github.com/{gitHubUser.Login}";
+            var linked = await _profileService.LinkGitHubAsync(userId, gitHubUser.Login, gitHubUrl);
+
+            if (!linked)
+                return Redirect($"{frontendUrl}?github_linked=false&error=profile_update_failed");
+
+            _logger.LogInformation(
+                "[GITHUB_CALLBACK] Successfully linked GitHub '{Username}' to user {UserId}",
+                gitHubUser.Login, userId);
+
+            return Redirect($"{frontendUrl}?github_linked=true&github_username={Uri.EscapeDataString(gitHubUser.Login)}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GITHUB_CALLBACK] Unexpected error for user {UserId}", userId);
+            return Redirect($"{frontendUrl}?github_linked=false&error=server_error");
+        }
+    }
 }
+
+// DTO nội bộ cho GitHub OAuth token response
+file record GitHubTokenResponse(
+    [property: System.Text.Json.Serialization.JsonPropertyName("access_token")] string? AccessToken,
+    [property: System.Text.Json.Serialization.JsonPropertyName("token_type")] string? TokenType,
+    [property: System.Text.Json.Serialization.JsonPropertyName("scope")] string? Scope);
+
+// DTO nội bộ cho GitHub user info
+file record GitHubUserResponse(
+    [property: System.Text.Json.Serialization.JsonPropertyName("login")] string? Login,
+    [property: System.Text.Json.Serialization.JsonPropertyName("html_url")] string? HtmlUrl,
+    [property: System.Text.Json.Serialization.JsonPropertyName("name")] string? Name,
+    [property: System.Text.Json.Serialization.JsonPropertyName("avatar_url")] string? AvatarUrl);

@@ -259,6 +259,44 @@ public class UserProfileService : IUserProfileService
         }
     }
 
+    // ==================== GitHub OAuth Linking ====================
+
+    public async Task<bool> LinkGitHubAsync(string userId, string gitHubUsername, string gitHubUrl)
+    {
+        try
+        {
+            var profile = await _repo.GetByUserIdAsync(userId);
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId,
+                    GitHubUrl = gitHubUrl,
+                    CreatedAt = DateTime.UtcNow
+                };
+                EncryptPII(profile);
+                await _repo.AddAsync(profile);
+            }
+            else
+            {
+                profile.GitHubUrl = gitHubUrl;
+                profile.UpdatedAt = DateTime.UtcNow;
+                EncryptPII(profile);
+                await _repo.UpdateAsync(profile);
+            }
+
+            _logger.LogInformation(
+                "[GITHUB_LINK] Linked GitHub account '{Username}' for user {UserId}",
+                gitHubUsername, userId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GITHUB_LINK] Failed to link GitHub account for user {UserId}", userId);
+            return false;
+        }
+    }
+
     // ==================== PII Encryption Helpers ====================
 
     private void EncryptPII(UserProfile profile)
