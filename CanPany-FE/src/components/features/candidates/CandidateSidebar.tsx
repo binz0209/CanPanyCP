@@ -40,11 +40,8 @@ const navItems: NavItem[] = [
     label: 'CV Management',
     icon: <FileText className="h-5 w-5" />,
     items: [
-      { label: 'Upload CV', path: '/candidate/cv/upload', icon: <FileText className="h-4 w-4" /> },
-      { label: 'CV List', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
-      { label: 'CV Details', path: '/candidate/cv/details', icon: <FileText className="h-4 w-4" /> },
-      { label: 'AI CV Analysis', path: '/candidate/cv/analysis', icon: <Wand2 className="h-4 w-4" /> },
-      { label: 'AI-Generated CVs', path: '/candidate/cv/generated', icon: <Wand2 className="h-4 w-4" /> },
+      { label: 'My CVs', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
+      { label: 'AI CV Assistant', path: '/candidate/cv/ai', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
