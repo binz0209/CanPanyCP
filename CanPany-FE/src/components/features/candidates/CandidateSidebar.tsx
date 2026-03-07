@@ -30,11 +30,7 @@ const navItems: NavItem[] = [
   {
     label: 'Profile',
     icon: <UserIcon className="h-5 w-5" />,
-    items: [
-      { label: 'Personal Profile', path: '/candidate/profile', icon: <UserIcon className="h-4 w-4" /> },
-      { label: 'Skills Management', path: '/candidate/skills', icon: <Briefcase className="h-4 w-4" /> },
-      { label: 'LinkedIn & GitHub Sync', path: '/candidate/sync', icon: <FileText className="h-4 w-4" /> },
-    ],
+    path: '/candidate/profile',
   },
   {
     label: 'CV Management',

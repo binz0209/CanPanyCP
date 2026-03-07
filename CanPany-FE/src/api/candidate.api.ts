@@ -1,6 +1,40 @@
 import apiClient from './axios.config';
 import type { ApiResponse, User, UserProfile } from '../types';
 
+export interface GitHubRepo {
+    name: string;
+    fullName: string;
+    description?: string;
+    language?: string;
+    stars: number;
+    forks: number;
+    htmlUrl: string;
+    isFork: boolean;
+    updatedAt: string;
+}
+
+export interface GitHubReposData {
+    gitHubUsername: string;
+    totalCount: number;
+    repositories: GitHubRepo[];
+}
+
+export interface GitHubJobStatus {
+    jobId: string;
+    status: 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Retrying';
+    percentComplete: number;
+    currentStep?: string;
+    startedAt?: string;
+    completedAt?: string;
+}
+
+export interface GitHubSyncResult {
+    jobId: string;
+    gitHubUsername: string;
+    selectedRepos: string[];
+    message: string;
+}
+
 interface CandidatePublicInfo {
     Id: string;
     FullName: string;
@@ -126,5 +160,38 @@ export const candidateApi = {
     // Update candidate profile
     updateProfile: async (data: Partial<UserProfile>): Promise<void> => {
         await apiClient.put('/userprofiles/me', data);
+    },
+
+    // Sync profile from LinkedIn (paste-data approach)
+    syncLinkedInProfile: async (linkedInData: string): Promise<void> => {
+        await apiClient.post('/userprofiles/sync/linkedin', { linkedInData });
+    },
+
+    // Get list of repos from the GitHub account linked in the user profile
+    getGitHubRepos: async (includeForked = false): Promise<GitHubReposData> => {
+        const response = await apiClient.get<ApiResponse<GitHubReposData>>('/github/repos', {
+            params: { includeForked },
+        });
+        return response.data.data!;
+    },
+
+    // Start Gemini skill-extraction job on selected repos
+    syncSkillsFromRepos: async (repositoryNames: string[]): Promise<GitHubSyncResult> => {
+        const response = await apiClient.post<ApiResponse<GitHubSyncResult>>('/github/sync-skills', {
+            repositoryNames,
+        });
+        return response.data.data!;
+    },
+
+    // Poll background job status
+    getGitHubJobStatus: async (jobId: string): Promise<GitHubJobStatus> => {
+        const response = await apiClient.get<GitHubJobStatus>(`/github/status/${jobId}`);
+        return response.data;
+    },
+
+    // Fetch latest analysis result
+    getLatestGitHubAnalysis: async (): Promise<any> => {
+        const response = await apiClient.get('/github/analysis/latest');
+        return response.data;
     },
 };

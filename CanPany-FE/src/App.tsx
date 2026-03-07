@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { queryClient } from '@/lib/queryClient';
@@ -6,6 +6,12 @@ import { PublicLayout, CandidateLayout } from '@/components/layout';
 import { HomePage, HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
 import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage } from '@/pages/candidate';
+
+// Redirect /profile → /candidate/profile (preserving query params from GitHub OAuth callback)
+function ProfileRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/candidate/profile${search}`} replace />;
+}
 
 function App() {
   return (
@@ -28,6 +34,9 @@ function App() {
             <Route path="/candidate/cv/list" element={<CVListPage />} />
             <Route path="/candidate/cv/ai" element={<AICVPage />} />
           </Route>
+
+          {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}
+          <Route path="/profile" element={<ProfileRedirect />} />
 
           {/* Auth Routes (no layout) */}
           <Route path="/auth/login" element={<LoginPage />} />
