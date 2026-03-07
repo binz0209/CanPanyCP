@@ -360,9 +360,6 @@ public class JobAlertService : IJobAlertService
 
     public async Task<object> GetStatsAsync(string userId)
     {
-        if (job == null)
-            throw new ArgumentNullException(nameof(job));
-
         try
         {
             var alerts = await _alertRepo.GetByUserIdAsync(userId);
@@ -417,6 +414,9 @@ public class JobAlertService : IJobAlertService
 
     public async Task<IEnumerable<JobAlert>> FindMatchingAlertsAsync(Job job)
     {
+        if (job == null)
+            throw new ArgumentNullException(nameof(job));
+
         try
         {
             // Get all active alerts
