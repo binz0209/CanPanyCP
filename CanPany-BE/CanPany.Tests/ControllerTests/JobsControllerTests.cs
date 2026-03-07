@@ -15,6 +15,7 @@ public class JobsControllerTests
 {
     private readonly Mock<IJobService> _jobServiceMock = new();
     private readonly Mock<IBookmarkService> _bookmarkServiceMock = new();
+    private readonly Mock<IJobMatchingService> _jobMatchingServiceMock = new();
     private readonly Mock<ILogger<JobsController>> _loggerMock = new();
     private readonly JobsController _controller;
 
@@ -23,6 +24,7 @@ public class JobsControllerTests
         _controller = new JobsController(
             _jobServiceMock.Object,
             _bookmarkServiceMock.Object,
+            _jobMatchingServiceMock.Object,
             _loggerMock.Object);
         
         // Setup default HttpContext
