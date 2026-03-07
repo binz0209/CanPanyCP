@@ -191,6 +191,7 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReviewReposit
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSettingsRepository, CanPany.Infrastructure.Repositories.UserSettingsRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IReportRepository, CanPany.Infrastructure.Repositories.ReportRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertRepository, CanPany.Infrastructure.Repositories.JobAlertRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobAlertMatchRepository, CanPany.Infrastructure.Repositories.JobAlertMatchRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICandidateAlertRepository, CanPany.Infrastructure.Repositories.CandidateAlertRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordRepository, CanPany.Infrastructure.Repositories.UnlockRecordRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSubscriptionRepository, CanPany.Infrastructure.Repositories.UserSubscriptionRepository>();
@@ -261,7 +262,7 @@ builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>(
 // Register Background Email Services
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
 builder.Services.AddScoped<EmailJobProcessor>();
-builder.Services.AddScoped<JobMatchProcessor>();
+builder.Services.AddScoped<JobAlertProcessor>();
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();
@@ -354,3 +355,29 @@ Log.Information("🌍 Environment: {Environment}", app.Environment.EnvironmentNa
 Log.Information("═══════════════════════════════════════════════════════════");
 
 app.Run();
+
+// Configure recurring jobs for job alerts
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    
+    // Daily job alert processing - runs at 9 AM every day
+    recurringJobManager.AddOrUpdate<JobAlertProcessor>(
+        "process-daily-job-alerts",
+        processor => processor.ProcessDailyAlertsAsync(),
+        Cron.Daily(9), // 9 AM daily
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Local
+        });
+    
+    // Weekly digest - runs every Monday at 9 AM
+    recurringJobManager.AddOrUpdate<JobAlertProcessor>(
+        "send-weekly-job-digest",
+        processor => processor.SendWeeklyDigestAsync(),
+        Cron.Weekly(DayOfWeek.Monday, 9), // Monday 9 AM
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Local
+        });
+}

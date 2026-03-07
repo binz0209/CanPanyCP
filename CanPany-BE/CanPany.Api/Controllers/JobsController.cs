@@ -17,15 +17,18 @@ public class JobsController : ControllerBase
 {
     private readonly IJobService _jobService;
     private readonly IBookmarkService _bookmarkService;
+    private readonly IJobMatchingService _jobMatchingService; // ? ADD THIS
     private readonly ILogger<JobsController> _logger;
 
     public JobsController(
         IJobService jobService,
         IBookmarkService bookmarkService,
+        IJobMatchingService jobMatchingService, // ? ADD THIS
         ILogger<JobsController> logger)
     {
         _jobService = jobService;
         _bookmarkService = bookmarkService;
+        _jobMatchingService = jobMatchingService; // ? ADD THIS
         _logger = logger;
     }
 
@@ -204,6 +207,12 @@ public class JobsController : ControllerBase
             };
 
             var created = await _jobService.CreateAsync(job);
+            
+            // ? ADD THIS: Trigger immediate job alert matching
+            _jobMatchingService.TriggerJobAlertMatching(created.Id);
+            
+            _logger.LogInformation("Job created successfully: {JobId}. Job alert matching triggered.", created.Id);
+            
             return Ok(ApiResponse<Job>.CreateSuccess(created, "Job created successfully"));
         }
         catch (Exception ex)

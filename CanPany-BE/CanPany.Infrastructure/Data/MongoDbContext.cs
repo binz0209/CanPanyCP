@@ -68,7 +68,12 @@ public class MongoDbContext
     // Collections — System & Moderation
     public IMongoCollection<AuditLog> AuditLogs => _database.GetCollection<AuditLog>("audit_logs");
     public IMongoCollection<Report> Reports => _database.GetCollection<Report>("reports");
-    public IMongoCollection<JobAlert> JobAlerts => _database.GetCollection<JobAlert>("job_alerts");
+    public IMongoCollection<JobAlert> JobAlerts => 
+        _database.GetCollection<JobAlert>("JobAlerts");
+    
+    public IMongoCollection<JobAlertMatch> JobAlertMatches => 
+        _database.GetCollection<JobAlertMatch>("JobAlertMatches");
+
     public IMongoCollection<CandidateAlert> CandidateAlerts => _database.GetCollection<CandidateAlert>("candidate_alerts");
     public IMongoCollection<JobBookmark> JobBookmarks => _database.GetCollection<JobBookmark>("job_bookmarks");
 }

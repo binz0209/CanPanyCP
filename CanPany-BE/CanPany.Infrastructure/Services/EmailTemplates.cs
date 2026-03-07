@@ -1,6 +1,7 @@
 namespace CanPany.Infrastructure.Services;
 
 using System.Text;
+using CanPany.Application.DTOs.JobAlerts;
 
 public static class EmailTemplates
 {
@@ -139,6 +140,76 @@ public static class EmailTemplates
         sb.AppendLine();
         sb.AppendLine("CanPany Payment Team");
         sb.AppendLine("Email: payment@canpany.com");
+        sb.AppendLine("https://canpany.com");
+        sb.AppendLine("============================================");
+        return sb.ToString();
+    }
+
+    public static string GetNotificationEmail(string title, string message)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("============================================");
+        sb.AppendLine("         SYSTEM NOTIFICATION");
+        sb.AppendLine("============================================");
+        sb.AppendLine();
+        sb.AppendLine($"Title: {title}");
+        sb.AppendLine();
+        sb.AppendLine(message);
+        sb.AppendLine();
+        sb.AppendLine("--------------------------------------------");
+        sb.AppendLine("CanPany Notification System");
+        sb.AppendLine("Email: support@canpany.com");
+        sb.AppendLine("Website: https://canpany.com");
+        sb.AppendLine("============================================");
+        return sb.ToString();
+    }
+
+    public static string GetJobAlertDigestEmail(
+        string candidateName, 
+        List<JobMatchInfo> matches, 
+        string frequency)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("********************************************");
+        sb.AppendLine("*                                          *");
+        sb.AppendLine($"*   YOUR {frequency.ToUpper()} JOB DIGEST          *");
+        sb.AppendLine("*                                          *");
+        sb.AppendLine("********************************************");
+        sb.AppendLine();
+        sb.AppendLine($"Hello {candidateName},");
+        sb.AppendLine();
+        sb.AppendLine($"We found {matches.Count} new job(s) matching your preferences:");
+        sb.AppendLine();
+        
+        foreach (var match in matches.Take(10))
+        {
+            sb.AppendLine($"📌 {match.JobTitle}");
+            sb.AppendLine($"   Company: {match.CompanyName}");
+            sb.AppendLine($"   Location: {match.Location}");
+            sb.AppendLine($"   Budget: {match.Budget}");
+            sb.AppendLine($"   Match Score: {match.MatchScore}%");
+            sb.AppendLine($"   Job ID: {match.JobId}");
+            sb.AppendLine();
+        }
+        
+        if (matches.Count > 10)
+        {
+            sb.AppendLine($"... and {matches.Count - 10} more jobs!");
+            sb.AppendLine();
+        }
+        
+        sb.AppendLine("--------------------------------------------");
+        sb.AppendLine("QUICK ACTIONS:");
+        sb.AppendLine("• View all matches in the CanPany app");
+        sb.AppendLine("• Manage your job alerts preferences");
+        sb.AppendLine("• Apply to jobs directly from the app");
+        sb.AppendLine("--------------------------------------------");
+        sb.AppendLine();
+        sb.AppendLine("Don't want these emails?");
+        sb.AppendLine("You can adjust your alert settings in the app.");
+        sb.AppendLine();
+        sb.AppendLine("CanPany Job Alerts");
+        sb.AppendLine("Email: support@canpany.com");
         sb.AppendLine("https://canpany.com");
         sb.AppendLine("============================================");
         return sb.ToString();

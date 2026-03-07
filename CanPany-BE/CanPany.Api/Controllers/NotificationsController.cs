@@ -95,11 +95,20 @@ public class NotificationsController : ControllerBase
     {
         try
         {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
             var succeeded = await _notificationService.MarkAsReadAsync(id);
             if (!succeeded)
                 return NotFound(ApiResponse.CreateError("Notification not found", "NotFound"));
 
-            return Ok(ApiResponse.CreateSuccess("Notification marked as read"));
+            // Get updated unread count after marking as read
+            var unreadCount = await _notificationService.GetUnreadCountAsync(userId);
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { unreadCount }, 
+                "Notification marked as read"));
         }
         catch (Exception ex)
         {

@@ -3,6 +3,7 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using Hangfire;
 using Microsoft.Extensions.Logging;
+using CanPany.Infrastructure.Jobs;
 
 namespace CanPany.Infrastructure.Services;
 
@@ -29,8 +30,8 @@ public class JobMatchingService : IJobMatchingService
     {
         try
         {
-            // Queue the job matching as a background job
-            var hangfireJobId = _backgroundJobClient.Enqueue<Jobs.JobMatchProcessor>(
+            // Queue the job alert matching as a background job
+            var hangfireJobId = _backgroundJobClient.Enqueue<JobAlertProcessor>(
                 processor => processor.ProcessJobAlertsForJobAsync(jobId));
 
             _logger.LogInformation(
