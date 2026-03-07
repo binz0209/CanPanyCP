@@ -2,6 +2,7 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace CanPany.Application.Services;
 
@@ -11,15 +12,18 @@ namespace CanPany.Application.Services;
 public class UserProfileService : IUserProfileService
 {
     private readonly IUserProfileRepository _repo;
+    private readonly IGitHubAnalysisRepository _githubAnalysisRepo;
     private readonly IGeminiService _geminiService;
     private readonly ILogger<UserProfileService> _logger;
 
     public UserProfileService(
         IUserProfileRepository repo,
+        IGitHubAnalysisRepository githubAnalysisRepo,
         IGeminiService geminiService,
         ILogger<UserProfileService> logger)
     {
         _repo = repo;
+        _githubAnalysisRepo = githubAnalysisRepo;
         _geminiService = geminiService;
         _logger = logger;
     }
@@ -139,18 +143,115 @@ public class UserProfileService : IUserProfileService
     {
         try
         {
-            // TODO: Parse GitHub data and update profile
-            // This should parse JSON data from GitHub API and update profile fields
-            _logger.LogInformation("Syncing GitHub data for user: {UserId}", userId);
-            await Task.CompletedTask;
+            _logger.LogInformation("[GITHUB_SYNC] Starting sync for user: {UserId}", userId);
+
+            // Parse GitHub data from job result
+            var data = JsonSerializer.Deserialize<GitHubSyncData>(gitHubData);
+            if (data == null || string.IsNullOrEmpty(data.AnalysisId))
+            {
+                _logger.LogWarning("[GITHUB_SYNC] Invalid GitHub data for user: {UserId}", userId);
+                return false;
+            }
+
+            // Retrieve analysis result from RAG storage
+            var analysisResult = await _githubAnalysisRepo.GetByIdAsync(data.AnalysisId);
+            if (analysisResult == null)
+            {
+                _logger.LogWarning("[GITHUB_SYNC] Analysis not found: {AnalysisId}", data.AnalysisId);
+                return false;
+            }
+
+            // Get or create user profile
+            var profile = await _repo.GetByUserIdAsync(userId);
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+            }
+
+            // Update profile with GitHub data
+            profile.GitHubUrl = $"https://github.com/{analysisResult.GitHubUsername}";
+
+            // Update skills from AI analysis
+            if (analysisResult.SkillAnalysis != null && analysisResult.PrimarySkills.Any())
+            {
+                // Note: This assumes skill names can be used as IDs
+                // In production, you'd need to map skill names to skill IDs from SkillRepository
+                profile.SkillIds = analysisResult.PrimarySkills.ToList();
+            }
+
+            // Update languages
+            var topLanguages = analysisResult.LanguagePercentages
+                .OrderByDescending(kvp => kvp.Value)
+                .Take(5)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            if (topLanguages.Any())
+            {
+                profile.Languages = topLanguages;
+            }
+
+            // Update bio/summary if available
+            if (!string.IsNullOrEmpty(analysisResult.AiSummary) && string.IsNullOrEmpty(profile.Bio))
+            {
+                profile.Bio = analysisResult.AiSummary;
+            }
+
+            // Update title based on expertise level
+            if (!string.IsNullOrEmpty(analysisResult.ExpertiseLevel) && string.IsNullOrEmpty(profile.Title))
+            {
+                var specialization = analysisResult.Specializations.FirstOrDefault() ?? "Developer";
+                profile.Title = $"{analysisResult.ExpertiseLevel} {specialization}";
+            }
+
+            // Update portfolio with top repos
+            if (analysisResult.TopRepositories.Any() && string.IsNullOrEmpty(profile.Portfolio))
+            {
+                var topRepo = analysisResult.TopRepositories.First();
+                profile.Portfolio = topRepo.HtmlUrl;
+            }
+
+            profile.UpdatedAt = DateTime.UtcNow;
+
+            // Regenerate embedding with new data
+            await UpdateEmbeddingAsync(profile);
+
+            // Save profile
+            if (string.IsNullOrEmpty(profile.Id))
+            {
+                await _repo.AddAsync(profile);
+            }
+            else
+            {
+                await _repo.UpdateAsync(profile);
+            }
+
+            _logger.LogInformation(
+                "[GITHUB_SYNC] Successfully synced GitHub data for user: {UserId}. Skills: {Skills}",
+                userId,
+                string.Join(", ", analysisResult.PrimarySkills));
+
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error syncing GitHub data: {UserId}", userId);
+            _logger.LogError(ex, "[GITHUB_SYNC] Error syncing GitHub data: {UserId}", userId);
             return false;
         }
     }
 }
+
+/// <summary>
+/// GitHub sync data from job completion
+/// </summary>
+internal record GitHubSyncData(
+    string AnalysisId,
+    string GitHubUsername,
+    string UserId
+);
 
 

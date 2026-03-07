@@ -1,5 +1,10 @@
 using CanPany.Application.Interfaces.Interceptors;
+using CanPany.Application.Interfaces.Services;
+using CanPany.Domain.Interfaces.Repositories;
+using CanPany.Infrastructure.Data;
 using CanPany.Infrastructure.Interceptors;
+using CanPany.Infrastructure.Repositories;
+using CanPany.Infrastructure.Services;
 using CanPany.Worker.Handlers;
 using CanPany.Worker.Handlers.Samples;
 using CanPany.Worker.Infrastructure.Interceptors;
@@ -8,6 +13,8 @@ using CanPany.Worker.Infrastructure.Registry;
 using CanPany.Worker.Infrastructure.Progress;
 using CanPany.Worker.Workers;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using StackExchange.Redis;
 
 namespace CanPany.Worker;
@@ -28,6 +35,24 @@ public class Program
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
         builder.Logging.AddDebug();
+
+        // MongoDB Connection
+        var mongoConnectionString = builder.Configuration["MongoDB:ConnectionString"] ?? "mongodb://localhost:27017";
+        var mongoDatabaseName = builder.Configuration["MongoDB:DatabaseName"] ?? "CanPanyDB";
+
+        builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectionString));
+        builder.Services.AddSingleton<MongoDbContext>(sp =>
+        {
+            var options = Options.Create(new MongoOptions
+            {
+                ConnectionString = mongoConnectionString,
+                DatabaseName = mongoDatabaseName
+            });
+            return new MongoDbContext(options);
+        });
+
+        // Repositories
+        builder.Services.AddScoped<IGitHubAnalysisRepository, GitHubAnalysisRepository>();
 
         // Redis Connection
         var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
@@ -56,10 +81,15 @@ public class Program
         builder.Services.AddSingleton<IExceptionCapture, WorkerExceptionCapture>();
         builder.Services.AddSingleton<IHostedServiceInterceptor, HostedServiceInterceptor>();
 
+        // External Services (GitHub, Gemini)
+        builder.Services.AddHttpClient<IGitHubService, GitHubService>();
+        builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+
         // Register Job Handlers
         builder.Services.AddSingleton<IJobHandler, SendEmailJobHandler>();
         builder.Services.AddSingleton<IJobHandler, AIMatchingJobHandler>();
         builder.Services.AddSingleton<IJobHandler, GenerateReportJobHandler>();
+        builder.Services.AddSingleton<IJobHandler, GitHubAnalysisJobHandler>();
 
         // Job Handler Registry (register and populate)
         builder.Services.AddSingleton<JobHandlerRegistry>(sp =>
