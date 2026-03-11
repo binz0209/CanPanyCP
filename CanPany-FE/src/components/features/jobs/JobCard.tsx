@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Bookmark, Building2, Users } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Bookmark, Building2, Users, Eye } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
 import type { Job } from '@/types';
 import { formatRelativeTime, formatCurrency } from '@/utils';
@@ -12,11 +12,15 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
-    const levelColors = {
+    const levelColors: Record<string, string> = {
         Junior: 'bg-green-50 text-green-700 border-green-200',
         Mid: 'bg-blue-50 text-blue-700 border-blue-200',
         Senior: 'bg-purple-50 text-purple-700 border-purple-200',
         Expert: 'bg-orange-50 text-orange-700 border-orange-200',
+    };
+
+    const getLevelColor = (level?: string): string => {
+        return level ? levelColors[level] || '' : '';
     };
 
     return (
@@ -25,7 +29,15 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                 <div className="flex items-start gap-4">
                     {/* Company Logo */}
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 transition group-hover:border-[#00b14f]/20 group-hover:bg-[#00b14f]/5">
-                        <Building2 className="h-8 w-8 text-gray-400 group-hover:text-[#00b14f]" />
+                        {job.company?.logoUrl ? (
+                            <img 
+                                src={job.company.logoUrl} 
+                                alt={`${job.company.name} logo`}
+                                className="h-10 w-10 object-contain"
+                            />
+                        ) : (
+                            <Building2 className="h-8 w-8 text-gray-400 group-hover:text-[#00b14f]" />
+                        )}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -34,24 +46,24 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                                 {job.title}
                             </h3>
                         </Link>
-                        <p className="mt-1 text-sm font-medium text-gray-600">Tên công ty</p>
+                        <p className="mt-1 text-sm font-medium text-gray-600">{job.company?.name || 'Tên công ty'}</p>
 
                         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
                             {job.budgetAmount && (
                                 <span className="flex items-center gap-1.5 font-semibold text-[#00b14f]">
-                                    <DollarSign className="h-4 w-4" />
+                                    <DollarSign className="h-4 w-4" aria-hidden="true" />
                                     {formatCurrency(job.budgetAmount)}
                                     {job.budgetType === 'Hourly' && '/giờ'}
                                 </span>
                             )}
                             {job.location && (
                                 <span className="flex items-center gap-1.5">
-                                    <MapPin className="h-4 w-4" />
+                                    <MapPin className="h-4 w-4" aria-hidden="true" />
                                     {job.location}
                                 </span>
                             )}
                             <span className="flex items-center gap-1.5">
-                                <Clock className="h-4 w-4" />
+                                <Clock className="h-4 w-4" aria-hidden="true" />
                                 {formatRelativeTime(job.createdAt)}
                             </span>
                         </div>
@@ -69,8 +81,9 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                                     ? 'bg-[#00b14f]/10 text-[#00b14f]'
                                     : 'text-gray-400 hover:bg-gray-100 hover:text-[#00b14f]'
                             )}
+                            aria-label={isBookmarked ? 'Bỏ lưu việc làm' : 'Lưu việc làm'}
                         >
-                            <Bookmark className={cn('h-5 w-5', isBookmarked && 'fill-current')} />
+                            <Bookmark className={cn('h-5 w-5', isBookmarked && 'fill-current')} aria-hidden="true" />
                         </button>
                     )}
                 </div>
@@ -78,7 +91,7 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                 {/* Tags */}
                 <div className="mt-4 flex flex-wrap gap-2">
                     {job.level && (
-                        <Badge className={levelColors[job.level]}>{job.level}</Badge>
+                        <Badge className={getLevelColor(job.level)}>{job.level}</Badge>
                     )}
                     {job.isRemote && (
                         <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
@@ -86,15 +99,24 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                         </Badge>
                     )}
                     {job.status === 'Closed' && <Badge variant="destructive">Đã đóng</Badge>}
+                    {job.deadline && (
+                        <Badge variant="outline" className="text-gray-500 border-gray-200">
+                            Hạn: {new Date(job.deadline).toLocaleDateString('vi-VN')}
+                        </Badge>
+                    )}
                 </div>
             </div>
 
             {/* Footer */}
             <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-5 py-3">
                 <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
+                    <span className="flex items-center gap-1" aria-label={`${job.applicationCount} ứng viên`}>
+                        <Users className="h-4 w-4" aria-hidden="true" />
                         {job.applicationCount} ứng viên
+                    </span>
+                    <span className="flex items-center gap-1" aria-label={`${job.viewCount} lượt xem`}>
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                        {job.viewCount} lượt xem
                     </span>
                 </div>
                 <Link to={`/jobs/${job.id}`}>
