@@ -5,7 +5,7 @@ import { queryClient } from '@/lib/queryClient';
 import { PublicLayout, CandidateLayout } from '@/components/layout';
 import { HomePage, HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage } from '@/pages/candidate';
+import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage } from '@/pages/candidate';
 
 // Redirect /profile → /candidate/profile (preserving query params from GitHub OAuth callback)
 function ProfileRedirect() {
@@ -33,6 +33,7 @@ function App() {
             <Route path="/candidate/profile" element={<CandidateProfilePage />} />
             <Route path="/candidate/cv/list" element={<CVListPage />} />
             <Route path="/candidate/cv/ai" element={<AICVPage />} />
+            <Route path="/candidate/applications/history" element={<ApplicationHistoryPage />} />
           </Route>
 
           {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}

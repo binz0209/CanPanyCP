@@ -53,12 +53,7 @@ const navItems: NavItem[] = [
   {
     label: 'Applications',
     icon: <Send className="h-5 w-5" />,
-    items: [
-      { label: 'Submit Applications', path: '/candidate/applications/submit', icon: <Send className="h-4 w-4" /> },
-      { label: 'Application History', path: '/candidate/applications/history', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Application Status', path: '/candidate/applications/status', icon: <Send className="h-4 w-4" /> },
-      { label: 'Withdraw Application', path: '/candidate/applications/withdraw', icon: <Send className="h-4 w-4" /> },
-    ],
+    path: '/candidate/applications/history',
   },
   {
     label: 'AI Career',

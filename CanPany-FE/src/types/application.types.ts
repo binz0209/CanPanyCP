@@ -6,12 +6,14 @@ export interface Application {
     candidateId: string;
     cvId?: string;
     coverLetter?: string;
-    expectedSalary?: number;
+    proposedAmount?: number;
     status: ApplicationStatus;
     matchScore?: number;
     rejectedReason?: string;
-    createdAt: Date;
-    updatedAt?: Date;
+    privateNotes?: string;
+    contractId?: string;
+    createdAt: string | Date;
+    updatedAt?: string | Date;
     // Populated fields
     job?: import('./job.types').Job;
 }

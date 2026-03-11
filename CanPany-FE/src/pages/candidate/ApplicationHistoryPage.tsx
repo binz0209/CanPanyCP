@@ -1,0 +1,355 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Briefcase, 
+  MapPin, 
+  Clock, 
+  DollarSign, 
+  Building2, 
+  X,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Hourglass,
+  FileText
+} from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { applicationsApi } from '../../api/applications.api';
+import type { Application, ApplicationStatus } from '../../types/application.types';
+import { cn } from '../../utils';
+
+const statusConfig: Record<ApplicationStatus, { 
+  label: string; 
+  color: string; 
+  bgColor: string;
+  icon: React.ReactNode 
+}> = {
+  Pending: {
+    label: 'Pending',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    icon: <Hourglass className="h-4 w-4" />
+  },
+  Accepted: {
+    label: 'Accepted',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    icon: <CheckCircle className="h-4 w-4" />
+  },
+  Rejected: {
+    label: 'Rejected',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    icon: <XCircle className="h-4 w-4" />
+  },
+  Withdrawn: {
+    label: 'Withdrawn',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50',
+    icon: <X className="h-4 w-4" />
+  }
+};
+
+export function ApplicationHistoryPage() {
+  const navigate = useNavigate();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<ApplicationStatus | 'All'>('All');
+
+  useEffect(() => {
+    loadApplications();
+  }, []);
+
+  const loadApplications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await applicationsApi.getMyApplications();
+      setApplications(data);
+    } catch (err) {
+      setError('Failed to load applications. Please try again.');
+      console.error('Error loading applications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async (applicationId: string) => {
+    if (!window.confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setWithdrawingId(applicationId);
+      await applicationsApi.withdraw(applicationId);
+      await loadApplications();
+    } catch (err) {
+      alert('Failed to withdraw application. Please try again.');
+      console.error('Error withdrawing application:', err);
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
+
+  // Filter applications based on selected status
+  const filteredApplications = filterStatus === 'All' 
+    ? applications 
+    : applications.filter(app => app.status === filterStatus);
+
+  // Check if withdraw is allowed (before status becomes Pending)
+  const canWithdraw = (status: ApplicationStatus): boolean => {
+    return status !== 'Pending' && status !== 'Withdrawn' && status !== 'Accepted' && status !== 'Rejected';
+  };
+
+  // Calculate statistics
+  const stats = {
+    total: applications.length,
+    pending: applications.filter(a => a.status === 'Pending').length,
+    accepted: applications.filter(a => a.status === 'Accepted').length,
+    rejected: applications.filter(a => a.status === 'Rejected').length,
+    withdrawn: applications.filter(a => a.status === 'Withdrawn').length,
+  };
+
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatSalary = (amount?: number) => {
+    if (!amount) return 'Not specified';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00b14f]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <AlertCircle className="h-12 w-12 text-red-500" />
+        <p className="text-gray-600">{error}</p>
+        <Button onClick={loadApplications}>Try Again</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Application History</h1>
+          <p className="text-gray-600 mt-1">Track and manage your job applications</p>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+          <div className="text-sm text-gray-500">Total</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
+          <div className="text-sm text-gray-500">Pending</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-green-600">{stats.accepted}</div>
+          <div className="text-sm text-gray-500">Accepted</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+          <div className="text-sm text-gray-500">Rejected</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-gray-600">{stats.withdrawn}</div>
+          <div className="text-sm text-gray-500">Withdrawn</div>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-gray-600">Filter by status:</span>
+        {(['All', 'Pending', 'Accepted', 'Rejected', 'Withdrawn'] as const).map((status) => (
+          <Button
+            key={status}
+            variant={filterStatus === status ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilterStatus(status)}
+            className={cn(
+              filterStatus === status && 'bg-[#00b14f] hover:bg-[#00a048] border-[#00b14f]'
+            )}
+          >
+            {status}
+          </Button>
+        ))}
+      </div>
+
+      {/* Applications List */}
+      {filteredApplications.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-4 bg-white rounded-lg border border-gray-200">
+          <FileText className="h-12 w-12 text-gray-400" />
+          <p className="text-gray-600">
+            {filterStatus === 'All' 
+              ? 'You haven\'t applied to any jobs yet.' 
+              : `No applications with status "${filterStatus}".`
+            }
+          </p>
+          <Button 
+            onClick={() => navigate('/candidate/jobs/search')}
+            className="bg-[#00b14f] hover:bg-[#00a048]"
+          >
+            Browse Jobs
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredApplications.map((application) => {
+            const status = statusConfig[application.status];
+            const withdrawAllowed = canWithdraw(application.status);
+            
+            return (
+              <div 
+                key={application.id}
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  {/* Job Info */}
+                  <div className="flex-1">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {application.job?.company?.logoUrl ? (
+                          <img 
+                            src={application.job.company.logoUrl} 
+                            alt={application.job.company.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Building2 className="h-6 w-6 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {application.job?.title || 'Job Position'}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-600">
+                          {application.job?.company && (
+                            <span className="flex items-center gap-1">
+                              <Building2 className="h-4 w-4" />
+                              {application.job.company.name}
+                            </span>
+                          )}
+                          {application.job?.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {application.job.location}
+                            </span>
+                          )}
+                          {application.job?.isRemote && (
+                            <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs">
+                              Remote
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Application Details */}
+                    <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                      {application.proposedAmount && (
+                        <span className="flex items-center gap-1 text-gray-600">
+                          <DollarSign className="h-4 w-4" />
+                          Expected: {formatSalary(application.proposedAmount)}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-gray-600">
+                        <Clock className="h-4 w-4" />
+                        Applied: {formatDate(application.createdAt)}
+                      </span>
+                      {application.matchScore !== undefined && (
+                        <span className="flex items-center gap-1 text-gray-600">
+                          <Briefcase className="h-4 w-4" />
+                          Match: {Math.round(application.matchScore)}%
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Cover Letter Preview */}
+                    {application.coverLetter && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {application.coverLetter}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status & Actions */}
+                  <div className="flex flex-col items-end gap-3">
+                    <div className={cn(
+                      'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium',
+                      status.bgColor,
+                      status.color
+                    )}>
+                      {status.icon}
+                      {status.label}
+                    </div>
+
+                    {/* Withdraw Button - Only show before pending status */}
+                    {withdrawAllowed && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleWithdraw(application.id)}
+                        disabled={withdrawingId === application.id}
+                        className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                      >
+                        {withdrawingId === application.id ? (
+                          <span className="flex items-center gap-1">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                            Withdrawing...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <X className="h-4 w-4" />
+                            Withdraw
+                          </span>
+                        )}
+                      </Button>
+                    )}
+
+                    {/* Status Message */}
+                    {!withdrawAllowed && (
+                      <p className="text-xs text-gray-500 text-right">
+                        {application.status === 'Pending' && 'Application is under review'}
+                        {application.status === 'Accepted' && 'Congratulations!'}
+                        {application.status === 'Rejected' && 'Application was not selected'}
+                        {application.status === 'Withdrawn' && 'You withdrew this application'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ApplicationHistoryPage;
