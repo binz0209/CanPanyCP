@@ -227,13 +227,21 @@ public class CVsControllerTests
     {
         // Arrange
         var cvId = "cv123";
+        var userId = "user123";
+        var cv = new CV { Id = cvId, UserId = userId, FileName = "cv.pdf" };
+        _cvServiceMock.Setup(x => x.GetByIdAsync(cvId)).ReturnsAsync(cv);
+
+        var progressTrackerMock = new Mock<CanPany.Worker.Infrastructure.Progress.IJobProgressTracker>();
+        var jobProducerMock = new Mock<CanPany.Worker.Infrastructure.Queue.IJobProducer>();
 
         // Act
-        var result = await _controller.AnalyzeCV(cvId);
+        var result = await _controller.AnalyzeCV(cvId, progressTrackerMock.Object, jobProducerMock.Object);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<object>>(okResult.Value);
         Assert.True(response.Success);
+        
+        jobProducerMock.Verify(x => x.EnqueueJobAsync(It.IsAny<CanPany.Worker.Models.JobMessage>(), default), Times.Once);
     }
 }

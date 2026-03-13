@@ -1,7 +1,9 @@
 using CanPany.Worker.Infrastructure.Queue;
 using CanPany.Worker.Infrastructure.Progress;
 using CanPany.Worker.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace CanPany.Api.Controllers;
@@ -396,6 +398,48 @@ public class BackgroundJobsController : ControllerBase
             notFound = results.Count(x => x.Value == null),
             results
         });
+    }
+    /// <summary>
+    /// 📋 Get list of background jobs for the current authenticated user
+    /// </summary>
+    [HttpGet("my-jobs")]
+    [Authorize]
+    public async Task<IActionResult> GetMyJobs([FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User not authenticated" });
+
+        var jobs = await _progressTracker.GetUserJobsAsync(userId, skip, take);
+        return Ok(new
+        {
+            total = jobs.Count,
+            skip,
+            take,
+            jobs
+        });
+    }
+
+    /// <summary>
+    /// 🔍 Get detail of a specific background job (must belong to current user)
+    /// </summary>
+    [HttpGet("my-jobs/{jobId}")]
+    [Authorize]
+    public async Task<IActionResult> GetMyJobDetail(string jobId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User not authenticated" });
+
+        var progress = await _progressTracker.GetProgressAsync(jobId);
+        if (progress == null)
+            return NotFound(new { message = "Job not found", jobId });
+
+        // Security: only allow owner to view
+        if (progress.UserId != null && progress.UserId != userId)
+            return Forbid();
+
+        return Ok(progress);
     }
 }
 

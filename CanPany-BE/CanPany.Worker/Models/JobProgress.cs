@@ -11,6 +11,21 @@ public class JobProgress
     public string JobId { get; set; } = null!;
 
     /// <summary>
+    /// User ID who owns this job
+    /// </summary>
+    public string? UserId { get; set; }
+
+    /// <summary>
+    /// Job type key (e.g. "SyncSkills", "GitHubAnalysis")
+    /// </summary>
+    public string? JobType { get; set; }
+
+    /// <summary>
+    /// Human-readable job title for display
+    /// </summary>
+    public string? JobTitle { get; set; }
+
+    /// <summary>
     /// Job status
     /// </summary>
     public JobStatus Status { get; set; } = JobStatus.Pending;

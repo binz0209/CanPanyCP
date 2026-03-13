@@ -8,7 +8,7 @@ import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout } from '@/components/layout';
 import { HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, JobAlertsPage, NotificationCenterPage } from '@/pages/candidate';
+import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage } from '@/pages/candidate';
 
 const CompanyDashboardPage = lazy(() =>
   import('@/pages/company/CompanyDashboardPage').then((module) => ({
@@ -101,6 +101,7 @@ function App() {
             <Route path="/candidate/jobs/bookmarks" element={<SavedJobsPage />} />
             <Route path="/candidate/job-alerts" element={<JobAlertsPage />} />
             <Route path="/candidate/notifications" element={<NotificationCenterPage />} />
+            <Route path="/candidate/background-jobs" element={<BackgroundJobsPage />} />
           </Route>
 
           {/* Company Routes */}

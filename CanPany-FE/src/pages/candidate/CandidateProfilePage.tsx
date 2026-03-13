@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw } from 'lucide-react';
+import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import { candidateApi, authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
@@ -432,6 +432,13 @@ export function CandidateProfilePage() {
                                                     <Github className="h-4 w-4 mr-2" />
                                                     Chọn repos &amp; Trích xuất skills
                                                 </Button>
+                                                <Link 
+                                                    to="/candidate/background-jobs" 
+                                                    className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors mt-2"
+                                                >
+                                                    <Activity className="h-4 w-4" />
+                                                    Xem tiến trình
+                                                </Link>
                                                 {syncJobId && jobStatus && (
                                                     <div className="mt-2 space-y-1">
                                                         <div className="flex items-center justify-between text-xs text-gray-600">

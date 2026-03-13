@@ -80,12 +80,30 @@ public class CVsController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            // TODO: Upload file to Cloudinary and get URL
+            // Save file locally to wwwroot/cvs
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "cvs");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{request.File.FileName}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await request.File.CopyToAsync(fileStream);
+            }
+
+            // Generate relative URL for access
+            var requestUrl = $"{Request.Scheme}://{Request.Host}";
+            var fileUrl = $"{requestUrl}/cvs/{uniqueFileName}";
+
             var cv = new CV
             {
                 UserId = userId,
                 FileName = request.File.FileName,
-                FileUrl = "", // TODO: Set from Cloudinary upload result
+                FileUrl = fileUrl,
                 FileSize = request.File.Length,
                 MimeType = request.File.ContentType,
                 IsDefault = request.IsDefault ?? false,
@@ -171,19 +189,65 @@ public class CVsController : ControllerBase
     /// UC-CAN-12: Analyze CV via AI
     /// </summary>
     [HttpPost("{id}/analyze")]
-    public async Task<IActionResult> AnalyzeCV(string id)
+    public async Task<IActionResult> AnalyzeCV(
+        string id,
+        [FromServices] CanPany.Worker.Infrastructure.Progress.IJobProgressTracker progressTracker,
+        [FromServices] CanPany.Worker.Infrastructure.Queue.IJobProducer jobProducer)
     {
         try
         {
-            // TODO: Implement AI CV analysis using Gemini API
-            // This should extract skills, calculate ATS score, etc.
-            await Task.CompletedTask;
-            return Ok(ApiResponse.CreateSuccess("CV analysis started. Results will be available shortly."));
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var cv = await _cvService.GetByIdAsync(id);
+            if (cv == null)
+            {
+                return NotFound(ApiResponse.CreateError("CV not found", "NOT_FOUND"));
+            }
+
+            if (cv.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            // Create a unique Job ID
+            var jobId = Guid.NewGuid().ToString();
+
+            // 1. Initialize progress tracking
+            await progressTracker.InitializeAsync(
+                jobId: jobId,
+                userId: userId,
+                jobType: "AnalyzeCV",
+                jobTitle: $"Phân tích CV: {cv.FileName}",
+                totalSteps: 100);
+
+            // 2. Prepare payload
+            var payload = new CanPany.Worker.Models.Payloads.CVAnalysisPayload
+            {
+                UserId = userId,
+                CVId = cv.Id
+            };
+
+            // 3. Enqueue job
+            var jobMessage = new CanPany.Worker.Models.JobMessage
+            {
+                JobId = jobId,
+                I18nKey = "Job.CV.Analyze.Gemini",
+                Payload = System.Text.Json.JsonSerializer.Serialize(payload)
+            };
+            await jobProducer.EnqueueJobAsync(jobMessage);
+
+            _logger.LogInformation(
+                "[CV_ANALYSIS_QUEUED] JobId: {JobId} | UserId: {UserId} | CV: {CVId}",
+                jobId, userId, id);
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { JobId = jobId }, "CV analysis started. Results will be available shortly."));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing CV");
-            return StatusCode(500, ApiResponse.CreateError("Failed to analyze CV", "AnalyzeCVFailed"));
+            _logger.LogError(ex, "Error analyzing CV: {Id}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to start CV analysis", "AnalyzeCVFailed"));
         }
     }
 }

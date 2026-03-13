@@ -11,7 +11,8 @@ import {
     Eye,
     FileCheck,
     Calendar,
-    CheckCircle2
+    CheckCircle2,
+    Sparkles
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Input } from '../../components/ui';
@@ -90,6 +91,58 @@ export function CVListPage() {
             toast.error('Thao tác thất bại. Vui lòng thử lại.');
         },
     });
+
+    // Analyze CV mutation
+    const [activeJobId, setActiveJobId] = useState<string | null>(null);
+
+    // Poll for job progress
+    const { data: jobStatus } = useQuery({
+        queryKey: ['job-status', activeJobId],
+        queryFn: () => getJobStatusSafe(activeJobId!),
+        enabled: !!activeJobId,
+        refetchInterval: (query) => {
+            const data = query.state?.data;
+            if (data?.status === 'Completed' || data?.status === 'Failed' || data?.status === 'Cancelled') {
+                return false;
+            }
+            return 2000; // Poll every 2 seconds
+        },
+    });
+
+    const getJobStatusSafe = async (jobId: string) => {
+        try {
+            // Need to import jobApi or fetch it directly. Let's fetch directly for simplicity if jobApi is not imported in this file.
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/backgroundjobs/my-jobs/${jobId}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.data;
+        } catch {
+            return null;
+        }
+    };
+
+    // Analyze CV mutation
+    const analyzeMutation = useMutation({
+        mutationFn: (id: string) => cvApi.analyzeCV(id),
+        onSuccess: (data: any) => {
+            toast.success('Đã xếp hàng yêu cầu phân tích CV! Bắt đầu tiến trình...');
+            const jobId = data?.jobId || data?.JobId;
+            if (jobId) {
+                setActiveJobId(jobId);
+            }
+        },
+        onError: () => {
+            toast.error('Thao tác thất bại. Vui lòng thử lại.');
+        },
+    });
+
+    const handleAnalyze = (cvId: string) => {
+        analyzeMutation.mutate(cvId);
+    };
 
     const handleFileUpload = (file: File) => {
         // Validate file type
@@ -376,7 +429,7 @@ export function CVListPage() {
                                         <div className="flex justify-between">
                                             <span>Định dạng:</span>
                                             <span className="font-medium text-gray-700">
-                                                {cv.mimeType.includes('pdf') ? 'PDF' : 'Word'}
+                                                {cv.mimeType?.includes('pdf') ? 'PDF' : 'Word'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
@@ -388,22 +441,38 @@ export function CVListPage() {
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-gray-100">
                                         <div className="flex items-center justify-between">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-[#00b14f] hover:text-[#00a045]"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openDetailModal(cv);
-                                                }}
-                                            >
-                                                <Eye className="h-4 w-4 mr-1" />
-                                                Xem chi tiết
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-[#00b14f] hover:text-[#00a045] px-2"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openDetailModal(cv);
+                                                    }}
+                                                >
+                                                    <Eye className="h-4 w-4 mr-1" />
+                                                    Chi tiết
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleAnalyze(cv.id);
+                                                    }}
+                                                    disabled={analyzeMutation.isPending}
+                                                >
+                                                    <Sparkles className="h-4 w-4 mr-1" />
+                                                    Phân tích
+                                                </Button>
+                                            </div>
                                             {!cv.isDefault && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
+                                                    className="px-2"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleSetDefault(cv.id);
@@ -411,7 +480,7 @@ export function CVListPage() {
                                                     disabled={setDefaultMutation.isPending}
                                                 >
                                                     <Star className="h-4 w-4 mr-1" />
-                                                    Đặt mặc định
+                                                    Mặc định
                                                 </Button>
                                             )}
                                         </div>
@@ -499,7 +568,7 @@ export function CVListPage() {
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <p className="text-sm text-gray-500 mb-1">Định dạng</p>
                                     <p className="font-medium text-gray-900">
-                                        {selectedCV.mimeType.includes('pdf') ? 'PDF' : 'Microsoft Word'}
+                                        {selectedCV.mimeType?.includes('pdf') ? 'PDF' : 'Microsoft Word'}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 rounded-lg p-4">
@@ -517,6 +586,37 @@ export function CVListPage() {
                                     </p>
                                 </div>
                             </div>
+
+                            {/* Job Progress Indicator */}
+                            {activeJobId && jobStatus && selectedCV.id === analyzeMutation.variables && (
+                                <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                                    <h3 className="text-sm font-medium text-indigo-900 mb-2 flex flex-row items-center">
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        Tiến trình phân tích AI (Mã CV: {selectedCV.fileName})
+                                    </h3>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                                        <div 
+                                            className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+                                            style={{ width: `${jobStatus.progressPercentage}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-indigo-700">
+                                        <span>{jobStatus.currentStepDetails || 'Đang chờ...'}</span>
+                                        <span>{jobStatus.progressPercentage}%</span>
+                                    </div>
+                                    {jobStatus.status === 'Completed' && (
+                                        <p className="text-xs text-green-600 mt-2 flex items-center">
+                                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                                            Hoàn tất! Hãy cập nhật lại trang để xem kết quả.
+                                        </p>
+                                    )}
+                                    {jobStatus.status === 'Failed' && (
+                                        <p className="text-xs text-red-600 mt-2">
+                                            Lỗi phân tích: {jobStatus.errorMessage || 'Unknown error'}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Extracted Skills */}
                             {selectedCV.extractedSkills && selectedCV.extractedSkills.length > 0 && (
@@ -536,6 +636,15 @@ export function CVListPage() {
 
                             {/* Actions */}
                             <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleAnalyze(selectedCV.id)}
+                                    disabled={analyzeMutation.isPending}
+                                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200"
+                                >
+                                    <Sparkles className="h-4 w-4 mr-2" />
+                                    Phân tích CV bằng AI
+                                </Button>
                                 <Button
                                     variant="outline"
                                     onClick={() => setIsEditingName(true)}

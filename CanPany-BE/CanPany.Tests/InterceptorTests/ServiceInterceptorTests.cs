@@ -63,7 +63,7 @@ public class ServiceInterceptorTests
         _auditLoggerMock.Verify(
             x => x.LogAuditEventAsync(It.Is<AuditEvent>(e =>
                 e.EventType == "SERVICE_CALL" &&
-                e.MethodName.Contains("GetValue"))),
+                e.MethodName != null && e.MethodName.Contains("GetValue"))),
             Times.Once);
     }
 

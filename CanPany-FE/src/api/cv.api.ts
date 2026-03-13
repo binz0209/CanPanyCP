@@ -67,8 +67,9 @@ export const cvApi = {
      * UC-CAN-12: Analyze CV via AI
      * POST /api/cvs/{id}/analyze
      */
-    analyzeCV: async (id: string): Promise<string> => {
-        const response = await apiClient.post<ApiResponse<string>>(`/cvs/${id}/analyze`);
-        return response.data.data || 'CV analysis started';
+    analyzeCV: async (id: string): Promise<{ jobId: string }> => {
+        // The backend returns { JobId: "..." } inside data.data
+        const response = await apiClient.post<ApiResponse<{ jobId: string }>>(`/cvs/${id}/analyze`);
+        return response.data.data!;
     },
 };
