@@ -60,6 +60,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
             using var scope = _scopeFactory.CreateScope();
             var _cvRepository = scope.ServiceProvider.GetRequiredService<ICVRepository>();
             var _analysisRepository = scope.ServiceProvider.GetRequiredService<ICVAnalysisRepository>();
+            var _userProfileRepository = scope.ServiceProvider.GetRequiredService<IUserProfileRepository>();
 
             await ReportProgressAsync(job.JobId, 10, "Fetching CV file...");
 
@@ -183,8 +184,26 @@ Provide an objective analysis and return a JSON structured exactly like this:
 
             // Update CV record as well
             cv.LatestAnalysisId = savedAnalysis.Id;
-            cv.ExtractedSkills = analysisDto.ExtractedSkills.Technical.Concat(analysisDto.ExtractedSkills.Soft).ToList();
+            var combinedSkills = analysisDto.ExtractedSkills.Technical.Concat(analysisDto.ExtractedSkills.Soft).ToList();
+            cv.ExtractedSkills = combinedSkills;
             await _cvRepository.UpdateAsync(cv);
+
+            // Sync with UserProfile
+            var userProfile = await _userProfileRepository.GetByUserIdAsync(payload.UserId);
+            if (userProfile != null)
+            {
+                var existingSkills = userProfile.SkillIds.Select(s => s.ToLower()).ToHashSet();
+                foreach (var skill in combinedSkills)
+                {
+                    if (!existingSkills.Contains(skill.ToLower()))
+                    {
+                        userProfile.SkillIds.Add(skill);
+                        existingSkills.Add(skill.ToLower());
+                    }
+                }
+                userProfile.MarkAsUpdated();
+                await _userProfileRepository.UpdateAsync(userProfile);
+            }
 
             await ReportProgressAsync(job.JobId, 100, "CV analysis completed successfully!");
 
