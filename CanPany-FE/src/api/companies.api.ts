@@ -1,5 +1,15 @@
 import apiClient from './axios.config';
-import type { ApiResponse, Company, CompanySearchParams, PaginatedResponse } from '@/types';
+import type {
+    ApiResponse,
+    Company,
+    CompanySearchParams,
+    CompanyStatistics,
+    CompanyVerificationInfo,
+    CreateCompanyRequest,
+    Job,
+    UpdateCompanyRequest,
+    VerificationRequest,
+} from '../types';
 
 interface CompaniesListResponse {
     companies: Company[];
@@ -25,8 +35,36 @@ export const companiesApi = {
         return response.data.data!;
     },
 
-    getJobs: async (id: string, status?: string): Promise<import('@/types').Job[]> => {
-        const response = await apiClient.get<ApiResponse<import('@/types').Job[]>>(`/companies/${id}/jobs`, {
+    getMe: async (): Promise<Company> => {
+        const response = await apiClient.get<ApiResponse<Company>>('/companies/me');
+        return response.data.data!;
+    },
+
+    create: async (payload: CreateCompanyRequest): Promise<Company> => {
+        const response = await apiClient.post<ApiResponse<Company>>('/companies', payload);
+        return response.data.data!;
+    },
+
+    updateMe: async (payload: UpdateCompanyRequest): Promise<void> => {
+        await apiClient.put('/companies/me', payload);
+    },
+
+    requestVerification: async (payload: VerificationRequest): Promise<void> => {
+        await apiClient.post('/companies/verification', payload);
+    },
+
+    getVerificationStatus: async (companyId: string): Promise<CompanyVerificationInfo> => {
+        const response = await apiClient.get<ApiResponse<CompanyVerificationInfo>>(`/companies/${companyId}/verification`);
+        return response.data.data!;
+    },
+
+    getStatistics: async (companyId: string): Promise<CompanyStatistics> => {
+        const response = await apiClient.get<ApiResponse<CompanyStatistics>>(`/companies/${companyId}/statistics`);
+        return response.data.data!;
+    },
+
+    getJobs: async (id: string, status?: string): Promise<Job[]> => {
+        const response = await apiClient.get<ApiResponse<Job[]>>(`/companies/${id}/jobs`, {
             params: status ? { status } : undefined,
         });
         return response.data.data || [];

@@ -13,7 +13,6 @@ export function JobsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [location, setLocation] = useState(searchParams.get('location') || '');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Filter states
   const [selectedLevel, setSelectedLevel] = useState<JobLevel | ''>(() => {
@@ -23,6 +22,9 @@ export function JobsPage() {
     return (searchParams.get('budgetType') as BudgetType) || '';
   });
   const [isRemote, setIsRemote] = useState(() => searchParams.get('isRemote') === 'true');
+
+  // Mobile filter drawer
+  const [showFilters, setShowFilters] = useState(false);
 
   // Debounced keyword and location
   const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);

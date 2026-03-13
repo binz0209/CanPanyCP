@@ -303,7 +303,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        // Allow Vite dev servers on localhost even when the port changes (5173, 5174, ...)
+        policy.SetIsOriginAllowed(origin =>
+              {
+                  if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                  {
+                      return false;
+                  }
+
+                  return (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                      && uri.Scheme is "http" or "https";
+              })
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

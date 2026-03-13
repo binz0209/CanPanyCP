@@ -12,6 +12,10 @@ export function Navbar() {
     const { theme, toggleTheme } = useThemeStore();
     const navigate = useNavigate();
 
+    const displayName = user?.fullName?.trim() || 'Người dùng';
+    const displayInitial = displayName.charAt(0).toUpperCase();
+    const displayFirstName = displayName.split(' ')[0];
+
     const handleLogout = () => {
         logout();
         navigate('/');
@@ -85,15 +89,15 @@ export function Navbar() {
                                         className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 transition-colors hover:border-[#00b14f]/30 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                                     >
                                         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00b14f] text-xs font-semibold text-white">
-                                            {user.fullName.charAt(0).toUpperCase()}
+                                            {displayInitial}
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{user.fullName.split(' ')[0]}</span>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayFirstName}</span>
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
                                     </button>
                                     {isProfileOpen && (
                                         <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-100 bg-white py-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
                                             <div className="border-b border-gray-100 px-4 pb-3 pt-1 dark:border-gray-700">
-                                                <p className="font-semibold text-gray-900 dark:text-white">{user.fullName}</p>
+                                                <p className="font-semibold text-gray-900 dark:text-white">{displayName}</p>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                                             </div>
                                             <Link

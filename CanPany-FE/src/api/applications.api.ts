@@ -1,6 +1,14 @@
 import apiClient from './axios.config';
 import type { ApiResponse, Application, CreateApplicationRequest } from '../types';
 
+export interface RejectApplicationRequest {
+    reason: string;
+}
+
+export interface AddApplicationNoteRequest {
+    note: string;
+}
+
 /**
  * Application API for Candidates
  * Based on ApplicationsController endpoints:
@@ -84,6 +92,16 @@ export const applicationsApi = {
         return response.data.data!;
     },
 
+    getJobApplications: async (jobId: string): Promise<Application[]> => {
+        const response = await apiClient.get<ApiResponse<Application[]>>(`/applications/job/${jobId}`);
+        return response.data.data || [];
+    },
+
+    getDetails: async (id: string): Promise<Application> => {
+        const response = await apiClient.get<ApiResponse<Application>>(`/applications/${id}/details`);
+        return response.data.data!;
+    },
+
     /**
      * UC-CAN-22: Withdraw Application
      * PUT /api/applications/{id}/withdraw
@@ -92,6 +110,20 @@ export const applicationsApi = {
      */
     withdraw: async (id: string): Promise<void> => {
         await apiClient.put(`/applications/${id}/withdraw`);
+    },
+
+    accept: async (id: string): Promise<void> => {
+        await apiClient.put(`/applications/${id}/accept`);
+    },
+
+    reject: async (id: string, reason: string): Promise<void> => {
+        const payload: RejectApplicationRequest = { reason };
+        await apiClient.put(`/applications/${id}/reject`, payload);
+    },
+
+    addNote: async (id: string, note: string): Promise<void> => {
+        const payload: AddApplicationNoteRequest = { note };
+        await apiClient.put(`/applications/${id}/note`, payload);
     },
 
     /**

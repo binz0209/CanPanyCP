@@ -36,20 +36,20 @@ export interface GitHubSyncResult {
     message: string;
 }
 
-interface CandidatePublicInfo {
-    Id: string;
-    FullName: string;
-    AvatarUrl?: string;
-    Profile?: {
-        Title?: string;
-        Bio?: string;
-        Location?: string;
-        HourlyRate?: number;
-        Skills: string[];
+export interface CandidatePublicInfo {
+    id: string;
+    fullName: string;
+    avatarUrl?: string;
+    profile?: {
+        title?: string;
+        bio?: string;
+        location?: string;
+        hourlyRate?: number;
+        skills: string[];
     };
 }
 
-interface CandidateFullProfile {
+export interface CandidateFullProfile {
     user: {
         id: string;
         fullName: string;
@@ -77,14 +77,36 @@ export interface CandidateStatistics {
     skillsCount: number;
 }
 
-interface CandidateSearchResult {
-    Profile: UserProfile;
-    MatchScore: number;
+export interface CandidateSearchResult {
+    profile: UserProfile;
+    matchScore: number;
+    userInfo?: {
+        id: string;
+        fullName: string;
+        email?: string;
+        avatarUrl?: string;
+        role?: string;
+    };
 }
 
-interface UnlockedCandidate {
-    User: User;
-    Profile: UserProfile;
+export interface CandidateCVSummary {
+    id: string;
+    fileName: string;
+    isDefault: boolean;
+    latestAnalysisId?: string;
+    extractedSkills?: string[];
+}
+
+export interface SemanticCandidateSearchRequest {
+    jobDescription: string;
+    location?: string;
+    experienceLevel?: string;
+    limit?: number;
+}
+
+export interface UnlockedCandidate {
+    user: User;
+    profile: UserProfile;
 }
 
 export const candidateApi = {
@@ -152,9 +174,14 @@ export const candidateApi = {
         return response.data.data || [];
     },
 
+    semanticSearchCandidates: async (payload: SemanticCandidateSearchRequest): Promise<CandidateSearchResult[]> => {
+        const response = await apiClient.post<ApiResponse<CandidateSearchResult[]>>('/candidates/semantic-search', payload);
+        return response.data.data || [];
+    },
+
     // Get candidate CVs
-    getCandidateCVs: async (id: string): Promise<any[]> => {
-        const response = await apiClient.get<ApiResponse<any[]>>(`/candidates/${id}/cvs`);
+    getCandidateCVs: async (id: string): Promise<CandidateCVSummary[]> => {
+        const response = await apiClient.get<ApiResponse<CandidateCVSummary[]>>(`/candidates/${id}/cvs`);
         return response.data.data || [];
     },
 

@@ -10,7 +10,6 @@ export function CandidateDashboardPage() {
   const { user } = useAuthStore();
   const [statistics, setStatistics] = useState<CandidateStatistics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Mock data for stats not available in API
   const savedJobs = 28;
@@ -27,10 +26,8 @@ export function CandidateDashboardPage() {
         setLoading(true);
         const stats = await candidateApi.getCandidateStatistics(user.id);
         setStatistics(stats);
-        setError(null);
       } catch (err) {
         console.error('Failed to fetch candidate statistics:', err);
-        setError('Không thể tải dữ liệu thống kê');
         // Set default values on error
         setStatistics({
           totalApplications: 0,
