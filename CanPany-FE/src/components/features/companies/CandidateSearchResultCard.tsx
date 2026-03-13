@@ -1,5 +1,6 @@
 import type { UserProfile } from '../../../types';
 import { formatCurrency } from '../../../utils';
+import { Button } from '../../ui';
 
 export interface CandidateSearchResultCardData {
     userId: string;
@@ -12,9 +13,17 @@ export interface CandidateSearchResultCardData {
 
 interface CandidateSearchResultCardProps {
     candidate: CandidateSearchResultCardData;
+    isUnlocked?: boolean;
+    isUnlocking?: boolean;
+    onUnlock?: () => void;
 }
 
-export function CandidateSearchResultCard({ candidate }: CandidateSearchResultCardProps) {
+export function CandidateSearchResultCard({
+    candidate,
+    isUnlocked,
+    isUnlocking,
+    onUnlock,
+}: CandidateSearchResultCardProps) {
     return (
         <div className="rounded-xl border border-gray-100 p-5 transition hover:border-[#00b14f]/30 hover:shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -63,9 +72,32 @@ export function CandidateSearchResultCard({ candidate }: CandidateSearchResultCa
                             {Math.round(candidate.matchScore)}%
                         </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                        Email: {candidate.email || 'Đang tải / backend chưa trả user info'}
-                    </p>
+
+                    <div className="text-xs text-gray-500">
+                        <p className="mb-1">
+                            Email:{' '}
+                            {isUnlocked
+                                ? candidate.email || 'Chưa cập nhật email'
+                                : 'Đã ẩn – cần mở khóa để xem'}
+                        </p>
+
+                        {onUnlock && !isUnlocked && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={onUnlock}
+                                isLoading={isUnlocking}
+                            >
+                                Mở khóa liên hệ
+                            </Button>
+                        )}
+
+                        {isUnlocked && (
+                            <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                                Đã mở khóa
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

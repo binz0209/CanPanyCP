@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BriefcaseBusiness, Search, Sparkles, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button, Card, Input } from '../../components/ui';
@@ -58,7 +58,9 @@ export function CompanyCandidateSearchPage() {
     const [maxHourlyRate, setMaxHourlyRate] = useState('');
     const [jobDescription, setJobDescription] = useState('');
     const [submittedSearch, setSubmittedSearch] = useState<SubmittedCandidateSearch | null>(null);
+    const [unlockingCandidateId, setUnlockingCandidateId] = useState<string | null>(null);
 
+    const queryClient = useQueryClient();
     const { companyId, isLoading: isWorkspaceLoading, isMissingProfile, hasFatalError } = useCompanyWorkspace();
 
     const jobsQuery = useQuery({
@@ -66,6 +68,17 @@ export function CompanyCandidateSearchPage() {
         queryFn: () => jobsApi.getByCompany(companyId!),
         enabled: !!companyId,
     });
+
+    const unlockedCandidatesQuery = useQuery({
+        queryKey: candidateKeys.unlocked(),
+        queryFn: () => candidateApi.getUnlockedCandidates(1, 200),
+        enabled: !!companyId,
+    });
+
+    const unlockedIds = useMemo(
+        () => new Set((unlockedCandidatesQuery.data || []).map((item) => item.user.id)),
+        [unlockedCandidatesQuery.data]
+    );
 
     useEffect(() => {
         if (!selectedJobId && jobsQuery.data?.length) {
@@ -134,6 +147,25 @@ export function CompanyCandidateSearchPage() {
             }),
         [candidateProfilesMap, rawResults]
     );
+
+    const unlockMutation = useMutation({
+        mutationFn: async (candidateId: string) => {
+            await candidateApi.unlockCandidate(candidateId);
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: candidateKeys.unlocked(), exact: true });
+            toast.success('Đã mở khóa liên hệ ứng viên');
+        },
+        onError: (error) => {
+            const message = isAxiosError(error)
+                ? error.response?.data?.message || 'Không thể mở khóa liên hệ ứng viên'
+                : 'Không thể mở khóa liên hệ ứng viên';
+            toast.error(message);
+        },
+        onSettled: () => {
+            setUnlockingCandidateId(null);
+        },
+    });
 
     const selectedJobTitle = useMemo(
         () => jobsQuery.data?.find((job) => job.id === selectedJobId)?.title,
@@ -409,9 +441,22 @@ export function CompanyCandidateSearchPage() {
                             />
                         </div>
                     ) : (
-                        <div className="mt-6 space-y-4">
+                                <div className="mt-6 space-y-4">
                             {results.map((candidate) => (
-                                <CandidateSearchResultCard key={candidate.userId} candidate={candidate} />
+                                <CandidateSearchResultCard
+                                    key={candidate.userId}
+                                    candidate={candidate}
+                                    isUnlocked={unlockedIds.has(candidate.userId)}
+                                    isUnlocking={unlockingCandidateId === candidate.userId && unlockMutation.isPending}
+                                    onUnlock={
+                                        unlockedIds.has(candidate.userId)
+                                            ? undefined
+                                            : () => {
+                                                  setUnlockingCandidateId(candidate.userId);
+                                                  unlockMutation.mutate(candidate.userId);
+                                              }
+                                    }
+                                />
                             ))}
                         </div>
                     )}

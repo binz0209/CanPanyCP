@@ -27,4 +27,5 @@ export const candidateKeys = {
     profile: (candidateId: string) => [...candidateKeys.all, 'profile', candidateId] as const,
     cvs: (candidateId: string) => [...candidateKeys.all, 'cvs', candidateId] as const,
     search: (mode: string, params: unknown) => [...candidateKeys.all, 'search', mode, params] as const,
+    unlocked: () => [...candidateKeys.all, 'unlocked'] as const,
 };
