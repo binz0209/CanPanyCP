@@ -112,7 +112,7 @@ export function CVListPage() {
     const getJobStatusSafe = async (jobId: string) => {
         try {
             // Need to import jobApi or fetch it directly. Let's fetch directly for simplicity if jobApi is not imported in this file.
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/backgroundjobs/my-jobs/${jobId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/background-jobs/my-jobs/${jobId}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
