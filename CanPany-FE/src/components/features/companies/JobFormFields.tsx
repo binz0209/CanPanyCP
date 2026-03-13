@@ -57,7 +57,7 @@ export function JobFormFields({
             {!isEditMode && (
                 <Input
                     label="Category ID"
-                    placeholder="Nhập categoryId nếu hệ thống đang quản lý danh mục bằng ID"
+                    placeholder="Nhập mã danh mục (Category ID)"
                     error={errors.categoryId?.message}
                     {...register('categoryId')}
                 />
@@ -72,7 +72,7 @@ export function JobFormFields({
 
             <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Budget type</label>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Loại ngân sách</label>
                     <select
                         className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20 disabled:bg-gray-50"
                         disabled={isEditMode}
@@ -85,7 +85,7 @@ export function JobFormFields({
                 </div>
 
                 <Input
-                    label="Budget amount"
+                    label="Mức lương / Ngân sách"
                     placeholder="30000000"
                     icon={<Wallet className="h-4 w-4" />}
                     error={errors.budgetAmount?.message}
@@ -95,12 +95,12 @@ export function JobFormFields({
 
             <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Level</label>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Cấp độ kinh nghiệm</label>
                     <select
                         className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                         {...register('level')}
                     >
-                        <option value="">Chọn level</option>
+                        <option value="">Chọn cấp độ</option>
                         {levelOptions.map((option) => (
                             <option key={option} value={option}>{option}</option>
                         ))}
@@ -108,8 +108,8 @@ export function JobFormFields({
                 </div>
 
                 <Input
-                    label="Location"
-                    placeholder="Ho Chi Minh City"
+                    label="Địa điểm làm việc"
+                    placeholder="Hồ Chí Minh"
                     icon={<MapPin className="h-4 w-4" />}
                     error={errors.location?.message}
                     {...register('location')}
@@ -131,7 +131,7 @@ export function JobFormFields({
                         disabled={isEditMode}
                         {...register('isRemote')}
                     />
-                    Đây là job remote
+                    Làm việc từ xa (Remote)
                 </label>
             </div>
 

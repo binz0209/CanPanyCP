@@ -178,7 +178,7 @@ export function CompanyApplicationsPage() {
                                         variant={statusFilter === filter ? 'default' : 'outline'}
                                         onClick={() => setStatusFilter(filter)}
                                     >
-                                        {filter === 'All' ? 'Tất cả' : filter}
+                                        {({'All':'Tất cả','Pending':'Chờ duyệt','Accepted':'Đã chấp nhận','Rejected':'Bị từ chối','Withdrawn':'Đã rút đơn'} as Record<string,string>)[filter] ?? filter}
                                     </Button>
                                 ))}
                             </div>

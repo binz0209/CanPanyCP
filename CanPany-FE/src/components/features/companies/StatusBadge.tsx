@@ -13,20 +13,20 @@ interface StatusBadgeProps {
 
 const statusConfig = {
     verification: {
-        Approved: { label: 'Approved', variant: 'success' as const },
-        Pending: { label: 'Pending', variant: 'warning' as const },
-        Rejected: { label: 'Rejected', variant: 'destructive' as const },
+        Approved: { label: 'Đã duyệt', variant: 'success' as const },
+        Pending: { label: 'Chờ duyệt', variant: 'warning' as const },
+        Rejected: { label: 'Bị từ chối', variant: 'destructive' as const },
     },
     job: {
-        Open: { label: 'Open', variant: 'success' as const },
-        Closed: { label: 'Closed', variant: 'destructive' as const },
-        Draft: { label: 'Draft', variant: 'warning' as const },
+        Open: { label: 'Đang tuyển', variant: 'success' as const },
+        Closed: { label: 'Đã đóng', variant: 'destructive' as const },
+        Draft: { label: 'Bản nháp', variant: 'warning' as const },
     },
     application: {
-        Pending: { label: 'Pending', variant: 'warning' as const },
-        Accepted: { label: 'Accepted', variant: 'success' as const },
-        Rejected: { label: 'Rejected', variant: 'destructive' as const },
-        Withdrawn: { label: 'Withdrawn', variant: 'secondary' as const },
+        Pending: { label: 'Chờ xét duyệt', variant: 'warning' as const },
+        Accepted: { label: 'Đã chấp nhận', variant: 'success' as const },
+        Rejected: { label: 'Bị từ chối', variant: 'destructive' as const },
+        Withdrawn: { label: 'Đã rút đơn', variant: 'secondary' as const },
     },
 };
 

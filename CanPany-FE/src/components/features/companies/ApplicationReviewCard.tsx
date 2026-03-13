@@ -46,8 +46,8 @@ export function ApplicationReviewCard({
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
-                        <span>Apply lúc: {formatDateTime(application.createdAt)}</span>
-                        <span>Match score: {Math.round(Number(application.matchScore || 0))}%</span>
+                        <span>Ứng tuyển lúc: {formatDateTime(application.createdAt)}</span>
+                        <span>Mức phù hợp: {Math.round(Number(application.matchScore || 0))}%</span>
                     </div>
 
                     <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">
@@ -58,7 +58,7 @@ export function ApplicationReviewCard({
                 <div className="flex flex-wrap gap-2">
                     {application.status === 'Pending' && onAccept && (
                         <Button size="sm" onClick={onAccept} isLoading={isAccepting}>
-                            Accept
+                            Chấp nhận
                         </Button>
                     )}
                     <Link

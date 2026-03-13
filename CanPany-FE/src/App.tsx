@@ -8,7 +8,7 @@ import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout } from '@/components/layout';
 import { HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage } from '@/pages/candidate';
+import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage } from '@/pages/candidate';
 
 const CompanyDashboardPage = lazy(() =>
   import('@/pages/company/CompanyDashboardPage').then((module) => ({
@@ -48,6 +48,11 @@ const CompanyApplicationsPage = lazy(() =>
 const CompanyApplicationDetailPage = lazy(() =>
   import('@/pages/company/CompanyApplicationDetailPage').then((module) => ({
     default: module.CompanyApplicationDetailPage,
+  }))
+);
+const CompanyMessagesPage = lazy(() =>
+  import('@/pages/company/CompanyMessagesPage').then((module) => ({
+    default: module.CompanyMessagesPage,
   }))
 );
 
@@ -93,6 +98,7 @@ function App() {
             <Route path="/candidate/cv/list" element={<CVListPage />} />
             <Route path="/candidate/cv/ai" element={<AICVPage />} />
             <Route path="/candidate/applications/history" element={<ApplicationHistoryPage />} />
+            <Route path="/candidate/jobs/bookmarks" element={<SavedJobsPage />} />
           </Route>
 
           {/* Company Routes */}
@@ -107,6 +113,9 @@ function App() {
             <Route path={companyPaths.candidateSearch} element={<LazyRoute><CompanyCandidateSearchPage /></LazyRoute>} />
             <Route path={companyPaths.applications} element={<LazyRoute><CompanyApplicationsPage /></LazyRoute>} />
             <Route path="/company/applications/:applicationId" element={<LazyRoute><CompanyApplicationDetailPage /></LazyRoute>} />
+            {/* No conversationId → landing page; with conversationId → chat thread */}
+            <Route path={companyPaths.messages} element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
+            <Route path="/company/messages/:conversationId" element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
           </Route>
 
           {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}

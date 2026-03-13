@@ -133,15 +133,15 @@ export function CompanyJobsPage() {
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.total)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Open</p>
+                    <p className="text-sm text-gray-500">Đang tuyển</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.open)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Closed</p>
+                    <p className="text-sm text-gray-500">Đã đóng</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.closed)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Draft</p>
+                    <p className="text-sm text-gray-500">Bản nháp</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.draft)}</p>
                 </Card>
             </section>
@@ -156,7 +156,7 @@ export function CompanyJobsPage() {
                                 size="sm"
                                 onClick={() => setActiveFilter(filter)}
                             >
-                                {filter === 'All' ? 'Tất cả' : filter}
+                                {({'All':'Tất cả','Open':'Đang tuyển','Closed':'Đã đóng','Draft':'Bản nháp'} as Record<string,string>)[filter]}
                             </Button>
                         ))}
                     </div>
@@ -201,7 +201,7 @@ export function CompanyJobsPage() {
                                         <Link to={`/jobs/${job.id}`}>
                                             <Button variant="outline" size="sm">
                                                 <Eye className="h-4 w-4" />
-                                                Xem public page
+                                                Xem trang công khai
                                             </Button>
                                         </Link>
                                         <Link to={`/company/jobs/${job.id}/edit`}>
@@ -232,7 +232,7 @@ export function CompanyJobsPage() {
                                                 }}
                                                 isLoading={statusMutation.isPending && processingJobId === job.id}
                                             >
-                                                Đóng job
+                                                Đóng tin
                                             </Button>
                                         )}
                                     </div>

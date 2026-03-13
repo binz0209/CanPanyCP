@@ -293,7 +293,7 @@ export function CompanyCandidateSearchPage() {
 
             <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
                 <Card className="p-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Bộ điều khiển tìm kiếm</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Bộ lọc tìm kiếm</h2>
                     <div className="mt-4 flex flex-wrap gap-2">
                         {([
                             { key: 'job', label: 'Theo job', icon: <BriefcaseBusiness className="h-4 w-4" /> },
@@ -334,13 +334,13 @@ export function CompanyCandidateSearchPage() {
                         {searchMode === 'filters' && (
                             <>
                                 <Input
-                                    label="Keyword"
+                                    label="Từ khóa"
                                     placeholder="React, .NET, Designer..."
                                     value={keyword}
                                     onChange={(event) => setKeyword(event.target.value)}
                                 />
                                 <Input
-                                    label="Skills"
+                                    label="Kỹ năng"
                                     placeholder="React, TypeScript, Tailwind"
                                     value={skillIdsText}
                                     onChange={(event) => setSkillIdsText(event.target.value)}
@@ -362,14 +362,14 @@ export function CompanyCandidateSearchPage() {
                         )}
 
                         <Input
-                            label="Location"
-                            placeholder="Ho Chi Minh City"
+                            label="Địa điểm"
+                            placeholder="Hồ Chí Minh, Hà Nội..."
                             value={location}
                             onChange={(event) => setLocation(event.target.value)}
                         />
 
                         <Input
-                            label="Experience / Level"
+                            label="Kinh nghiệm / Cấp độ"
                             placeholder="Junior, Mid, Senior..."
                             value={experience}
                             onChange={(event) => setExperience(event.target.value)}
@@ -378,14 +378,14 @@ export function CompanyCandidateSearchPage() {
                         {searchMode === 'filters' && (
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Input
-                                    label="Min hourly rate"
+                                    label="Lương thấp nhất (giờ)"
                                     type="number"
                                     placeholder="100000"
                                     value={minHourlyRate}
                                     onChange={(event) => setMinHourlyRate(event.target.value)}
                                 />
                                 <Input
-                                    label="Max hourly rate"
+                                    label="Lương cao nhất (giờ)"
                                     type="number"
                                     placeholder="500000"
                                     value={maxHourlyRate}

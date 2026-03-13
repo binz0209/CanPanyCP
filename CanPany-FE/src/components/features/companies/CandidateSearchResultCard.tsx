@@ -35,17 +35,17 @@ export function CandidateSearchResultCard({
                         <div className="min-w-0">
                             <p className="truncate font-semibold text-gray-900">{candidate.fullName}</p>
                             <p className="text-sm text-gray-500">
-                                {candidate.profile.title || 'Chưa cập nhật title'}
+                                {candidate.profile.title || 'Chưa cập nhật vị trí'}
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
-                        <span>{candidate.profile.location || 'Chưa cập nhật location'}</span>
+                        <span>{candidate.profile.location || 'Chưa cập nhật địa điểm'}</span>
                         <span>
                             {candidate.profile.hourlyRate
                                 ? formatCurrency(candidate.profile.hourlyRate)
-                                : 'Chưa cập nhật rate'}
+                                : 'Chưa cập nhật mức lương'}
                         </span>
                     </div>
 
@@ -67,7 +67,7 @@ export function CandidateSearchResultCard({
 
                 <div className="flex flex-col items-start gap-3 sm:items-end">
                     <div className="rounded-xl bg-green-50 px-4 py-2 text-right">
-                        <p className="text-xs font-medium text-green-700">Match score</p>
+                        <p className="text-xs font-medium text-green-700">Mức phù hợp</p>
                         <p className="text-2xl font-bold text-green-700">
                             {Math.round(candidate.matchScore)}%
                         </p>

@@ -22,15 +22,15 @@ export function CompanyJobPreviewCard({ control }: CompanyJobPreviewCardProps) {
                     <p className="mt-1 font-semibold text-gray-900">{previewTitle || 'Chưa có tiêu đề'}</p>
                 </div>
                 <div>
-                    <p className="text-sm text-gray-500">Location</p>
+                    <p className="text-sm text-gray-500">Địa điểm</p>
                     <p className="mt-1 text-sm text-gray-700">
                         {previewLocation || (previewIsRemote ? 'Remote' : 'Chưa cập nhật')}
                     </p>
                 </div>
                 <div>
-                    <p className="text-sm text-gray-500">Skills</p>
+                    <p className="text-sm text-gray-500">Kỹ năng yêu cầu</p>
                     <p className="mt-1 text-sm text-gray-700">
-                        {previewSkills || 'Chưa có skills'}
+                        {previewSkills || 'Chưa có kỹ năng'}
                     </p>
                 </div>
                 <div>
