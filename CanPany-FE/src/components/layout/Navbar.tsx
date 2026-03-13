@@ -1,16 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Menu, X, User, LogOut, Briefcase, Settings, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
-import { Button, Card, Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
-import { useNotifications } from '@/hooks/useNotifications';
-import { formatRelativeTime } from '@/utils';
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const { user, isAuthenticated, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const navigate = useNavigate();
@@ -18,15 +15,6 @@ export function Navbar() {
     const displayName = user?.fullName?.trim() || 'Người dùng';
     const displayInitial = displayName.charAt(0).toUpperCase();
     const displayFirstName = displayName.split(' ')[0];
-
-    const {
-        notifications,
-        unreadCount,
-        isFetching: isFetchingNotifications,
-        markAsRead,
-        markAllAsRead,
-        isMarkingAllAsRead,
-    } = useNotifications({ enabled: isAuthenticated });
 
     const handleLogout = () => {
         logout();
@@ -91,83 +79,10 @@ export function Navbar() {
                     <div className="hidden items-center gap-3 lg:flex">
                         {isAuthenticated && user ? (
                             <>
-                                <div className="relative">
-                                    <button
-                                        className="relative rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800"
-                                        onClick={() => setIsNotificationOpen((open) => !open)}
-                                        aria-label="Xem thông báo"
-                                    >
-                                        <Bell className="h-5 w-5" />
-                                        {unreadCount > 0 && (
-                                            <span className="absolute -right-1 -top-1 inline-flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white dark:ring-gray-900">
-                                                {unreadCount > 9 ? '9+' : unreadCount}
-                                            </span>
-                                        )}
-                                    </button>
-
-                                    {isNotificationOpen && (
-                                        <div className="absolute right-0 mt-2 w-80">
-                                            <Card className="max-h-[420px] overflow-hidden border border-gray-100 p-0 shadow-xl dark:border-gray-700">
-                                                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                        Thông báo
-                                                    </p>
-                                                    <div className="flex items-center gap-2">
-                                                        {unreadCount > 0 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => markAllAsRead()}
-                                                                disabled={isMarkingAllAsRead}
-                                                                className="text-xs font-medium text-[#00b14f] hover:underline disabled:cursor-not-allowed disabled:text-gray-400"
-                                                            >
-                                                                Đánh dấu đã đọc hết
-                                                            </button>
-                                                        )}
-                                                        <Badge variant="secondary">
-                                                            {isFetchingNotifications ? 'Đang cập nhật…' : 'Mới nhất'}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-
-                                                {notifications.length === 0 ? (
-                                                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-300">
-                                                        Hiện chưa có thông báo mới.
-                                                    </div>
-                                                ) : (
-                                                    <div className="max-h-[340px] overflow-y-auto">
-                                                        <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                                                            {notifications.map((notification) => (
-                                                                <li
-                                                                    key={notification.id}
-                                                                    className={`cursor-pointer px-4 py-3 text-sm ${
-                                                                        notification.isRead
-                                                                            ? 'bg-white dark:bg-gray-900'
-                                                                            : 'bg-gray-50 dark:bg-gray-800/80'
-                                                                    } hover:bg-gray-100 dark:hover:bg-gray-800`}
-                                                                    onClick={() => {
-                                                                        if (!notification.isRead) {
-                                                                            markAsRead(notification.id);
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
-                                                                        {notification.title}
-                                                                    </p>
-                                                                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                                                                        {notification.content}
-                                                                    </p>
-                                                                    <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
-                                                                        {formatRelativeTime(notification.timestamp)}
-                                                                    </p>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </Card>
-                                        </div>
-                                    )}
-                                </div>
+                                <button className="relative rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800">
+                                    <Bell className="h-5 w-5" />
+                                    <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900" />
+                                </button>
                                 <div className="relative">
                                     <button
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}

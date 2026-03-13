@@ -30,8 +30,13 @@ export const candidateKeys = {
     unlocked: () => [...candidateKeys.all, 'unlocked'] as const,
 };
 
-export const notificationKeys = {
-    all: ['notifications'] as const,
-    list: (params?: unknown) => [...notificationKeys.all, 'list', params ?? {}] as const,
-    unread: () => [...notificationKeys.all, 'unread'] as const,
+export const messageKeys = {
+    all: ['messages'] as const,
+    byConversation: (conversationId: string) =>
+        [...messageKeys.all, 'conversation', conversationId] as const,
+};
+
+export const bookmarkKeys = {
+    all: ['bookmarks'] as const,
+    list: () => [...bookmarkKeys.all, 'list'] as const,
 };

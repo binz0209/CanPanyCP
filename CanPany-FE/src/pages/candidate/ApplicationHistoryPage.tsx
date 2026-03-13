@@ -26,31 +26,31 @@ const statusConfig: Record<ApplicationStatus, {
   icon: React.ReactNode 
 }> = {
   Pending: {
-    label: 'Pending',
+    label: 'Chờ xét duyệt',
     color: 'text-amber-600',
     bgColor: 'bg-amber-50',
     icon: <Hourglass className="h-4 w-4" />
   },
   Shortlisted: {
-    label: 'Shortlisted',
+    label: 'Vào vòng tiếp theo',
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
     icon: <CheckCircle className="h-4 w-4" />
   },
   Accepted: {
-    label: 'Accepted',
+    label: 'Đã chấp nhận',
     color: 'text-green-600',
     bgColor: 'bg-green-50',
     icon: <CheckCircle className="h-4 w-4" />
   },
   Rejected: {
-    label: 'Rejected',
+    label: 'Bị từ chối',
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     icon: <XCircle className="h-4 w-4" />
   },
   Withdrawn: {
-    label: 'Withdrawn',
+    label: 'Đã rút đơn',
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
     icon: <X className="h-4 w-4" />
@@ -166,7 +166,7 @@ export function ApplicationHistoryPage() {
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <p className="text-gray-600">{error}</p>
-        <Button onClick={loadApplications}>Try Again</Button>
+        <Button onClick={loadApplications}>Thử lại</Button>
       </div>
     );
   }
@@ -176,8 +176,8 @@ export function ApplicationHistoryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Application History</h1>
-          <p className="text-gray-600 mt-1">Track and manage your job applications</p>
+          <h1 className="text-2xl font-bold text-gray-900">Lịch sử ứng tuyển</h1>
+          <p className="text-gray-600 mt-1">Theo dõi và quản lý các đơn ứng tuyển của bạn</p>
         </div>
       </div>
 
@@ -185,46 +185,56 @@ export function ApplicationHistoryPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-500">Total</div>
+          <div className="text-sm text-gray-500">Tổng số</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
-          <div className="text-sm text-gray-500">Pending</div>
+          <div className="text-sm text-gray-500">Chờ duyệt</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-blue-600">{stats.shortlisted}</div>
-          <div className="text-sm text-gray-500">Shortlisted</div>
+          <div className="text-sm text-gray-500">Vào vòng tiếp</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-green-600">{stats.accepted}</div>
-          <div className="text-sm text-gray-500">Accepted</div>
+          <div className="text-sm text-gray-500">Đã chấp nhận</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-          <div className="text-sm text-gray-500">Rejected</div>
+          <div className="text-sm text-gray-500">Bị từ chối</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-gray-600">{stats.withdrawn}</div>
-          <div className="text-sm text-gray-500">Withdrawn</div>
+          <div className="text-sm text-gray-500">Đã rút đơn</div>
         </div>
       </div>
 
       {/* Filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-600">Filter by status:</span>
-        {(['All', 'Pending', 'Shortlisted', 'Accepted', 'Rejected', 'Withdrawn'] as const).map((status) => (
-          <Button
-            key={status}
-            variant={filterStatus === status ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterStatus(status)}
-            className={cn(
-              filterStatus === status && 'bg-[#00b14f] hover:bg-[#00a048] border-[#00b14f]'
-            )}
-          >
-            {status}
-          </Button>
-        ))}
+        <span className="text-sm text-gray-600">Lọc theo trạng thái:</span>
+        {(['All', 'Pending', 'Shortlisted', 'Accepted', 'Rejected', 'Withdrawn'] as const).map((status) => {
+          const labelMap: Record<string, string> = {
+            All: 'Tất cả',
+            Pending: 'Chờ duyệt',
+            Shortlisted: 'Vào vòng tiếp',
+            Accepted: 'Đã chấp nhận',
+            Rejected: 'Bị từ chối',
+            Withdrawn: 'Đã rút đơn',
+          };
+          return (
+            <Button
+              key={status}
+              variant={filterStatus === status ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterStatus(status)}
+              className={cn(
+                filterStatus === status && 'bg-[#00b14f] hover:bg-[#00a048] border-[#00b14f]'
+              )}
+            >
+              {labelMap[status]}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Applications List */}
@@ -233,15 +243,15 @@ export function ApplicationHistoryPage() {
           <FileText className="h-12 w-12 text-gray-400" />
           <p className="text-gray-600">
             {filterStatus === 'All' 
-              ? 'You haven\'t applied to any jobs yet.' 
-              : `No applications with status "${filterStatus}".`
+              ? 'Bạn chưa ứng tuyển vào công việc nào.' 
+              : `Không có đơn ứng tuyển ở trạng thái này.`
             }
           </p>
           <Button 
-            onClick={() => navigate('/candidate/jobs/search')}
+            onClick={() => navigate('/jobs')}
             className="bg-[#00b14f] hover:bg-[#00a048]"
           >
-            Browse Jobs
+            Khám phá việc làm
           </Button>
         </div>
       ) : (
@@ -272,7 +282,7 @@ export function ApplicationHistoryPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {application.job?.title || 'Job Position'}
+                          {application.job?.title || 'Vị trí tuyển dụng'}
                         </h3>
                         <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-600">
                           {application.job?.company && (
@@ -301,17 +311,17 @@ export function ApplicationHistoryPage() {
                       {application.proposedAmount && (
                         <span className="flex items-center gap-1 text-gray-600">
                           <DollarSign className="h-4 w-4" />
-                          Expected: {formatSalary(application.proposedAmount)}
+                          Mức đề xuất: {formatSalary(application.proposedAmount)}
                         </span>
                       )}
                       <span className="flex items-center gap-1 text-gray-600">
                         <Clock className="h-4 w-4" />
-                        Applied: {formatDate(application.createdAt)}
+                        Nộp đơn: {formatDate(application.createdAt)}
                       </span>
                       {application.matchScore !== undefined && (
                         <span className="flex items-center gap-1 text-gray-600">
                           <Briefcase className="h-4 w-4" />
-                          Match: {Math.round(application.matchScore)}%
+                          Phù hợp: {Math.round(application.matchScore)}%
                         </span>
                       )}
                     </div>
@@ -349,12 +359,12 @@ export function ApplicationHistoryPage() {
                         {withdrawingId === application.id ? (
                           <span className="flex items-center gap-1">
                             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
-                            Withdrawing...
+                            Đang rút...
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
                             <X className="h-4 w-4" />
-                            Withdraw
+                            Rút đơn
                           </span>
                         )}
                       </Button>
@@ -363,10 +373,10 @@ export function ApplicationHistoryPage() {
                     {/* Status Message */}
                     {!withdrawAllowed && (
                       <p className="text-xs text-gray-500 text-right">
-                        {application.status === 'Shortlisted' && 'You have been shortlisted!'}
-                        {application.status === 'Accepted' && 'Congratulations!'}
-                        {application.status === 'Rejected' && 'Application was not selected'}
-                        {application.status === 'Withdrawn' && 'You withdrew this application'}
+                        {application.status === 'Shortlisted' && 'Chúc mừng, bạn đã vào vòng tiếp theo!'}
+                        {application.status === 'Accepted' && 'Chúc mừng, đơn ứng tuyển đã được chấp nhận!'}
+                        {application.status === 'Rejected' && 'Hồ sơ chưa phù hợp với vị trí này'}
+                        {application.status === 'Withdrawn' && 'Bạn đã rút đơn ứng tuyển này'}
                       </p>
                     )}
                   </div>

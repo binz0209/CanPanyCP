@@ -110,7 +110,7 @@ export function CandidateDashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
               <Eye className="h-4 w-4 text-[#00b14f]" />
-              Việc làm đã lưu
+              Bookmarked Jobs
             </CardTitle>
           </CardHeader>
           <CardContent>
