@@ -17,6 +17,8 @@ public class CandidateSearchServiceTests
     private readonly Mock<IApplicationRepository> _applicationRepoMock = new();
     private readonly Mock<ISkillRepository> _skillRepoMock = new();
     private readonly Mock<IGeminiService> _geminiServiceMock = new();
+    private readonly Mock<IUnlockRecordRepository> _unlockRecordRepoMock = new();
+    private readonly Mock<IWalletService> _walletServiceMock = new();
     private readonly Mock<ILogger<CandidateSearchService>> _loggerMock = new();
     private readonly CandidateSearchService _service;
 
@@ -29,6 +31,8 @@ public class CandidateSearchServiceTests
             _applicationRepoMock.Object,
             _skillRepoMock.Object,
             _geminiServiceMock.Object,
+            _unlockRecordRepoMock.Object,
+            _walletServiceMock.Object,
             _loggerMock.Object);
     }
 
@@ -99,6 +103,13 @@ public class CandidateSearchServiceTests
     [Fact]
     public async Task UnlockCandidateContactAsync_ShouldReturnTrue()
     {
+        // Arrange
+        _unlockRecordRepoMock.Setup(x => x.HasUnlockedAsync("company1", "candidate1"))
+            .ReturnsAsync(false);
+        var emptyStrings = Array.Empty<string>();
+        _walletServiceMock.Setup(x => x.ChangeBalanceAsync("company1", It.IsAny<long>(), It.IsAny<string>()))
+            .ReturnsAsync((true, emptyStrings, new Wallet()));
+            
         // Act
         var result = await _service.UnlockCandidateContactAsync("company1", "candidate1");
 
@@ -111,6 +122,10 @@ public class CandidateSearchServiceTests
     [Fact]
     public async Task HasUnlockedCandidateAsync_ShouldReturnFalse_WhenNotUnlocked()
     {
+        // Arrange
+        _unlockRecordRepoMock.Setup(x => x.HasUnlockedAsync("company_new", "candidate1"))
+            .ReturnsAsync(false);
+
         // Act
         var result = await _service.HasUnlockedCandidateAsync("company_new", "candidate1");
 
@@ -122,7 +137,8 @@ public class CandidateSearchServiceTests
     public async Task HasUnlockedCandidateAsync_ShouldReturnTrue_AfterUnlock()
     {
         // Arrange
-        await _service.UnlockCandidateContactAsync("company2", "candidate2");
+        _unlockRecordRepoMock.Setup(x => x.HasUnlockedAsync("company2", "candidate2"))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.HasUnlockedCandidateAsync("company2", "candidate2");
@@ -136,6 +152,10 @@ public class CandidateSearchServiceTests
     [Fact]
     public async Task GetUnlockedCandidatesAsync_ShouldReturnEmpty_WhenNoUnlocks()
     {
+        // Arrange
+        _unlockRecordRepoMock.Setup(x => x.GetByCompanyIdAsync("company_none", 1, 20))
+            .ReturnsAsync(new List<UnlockRecord>());
+
         // Act
         var result = await _service.GetUnlockedCandidatesAsync("company_none");
 

@@ -132,7 +132,7 @@ public class NotificationsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<object>>(okResult.Value);
         Assert.True(response.Success);
     }
 

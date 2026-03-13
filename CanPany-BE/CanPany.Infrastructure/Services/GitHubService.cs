@@ -1,9 +1,11 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.DTOs.GitHub;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
 
 namespace CanPany.Infrastructure.Services;
 
@@ -62,6 +64,13 @@ public class GitHubService : IGitHubService
                 var url = $"/users/{username}/repos?per_page={perPage}&page={page}&sort=updated";
                 var response = await _httpClient.GetAsync(url, cancellationToken);
 
+                // Handle 429 rate limiting
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    await HandleGitHubRateLimitAsync(response, cancellationToken);
+                    continue; // Retry same page
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError(
@@ -116,6 +125,13 @@ public class GitHubService : IGitHubService
         {
             var url = $"/repos/{owner}/{repo}/languages";
             var response = await _httpClient.GetAsync(url, cancellationToken);
+
+            // Handle 429 rate limiting
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                await HandleGitHubRateLimitAsync(response, cancellationToken);
+                response = await _httpClient.GetAsync(url, cancellationToken); // Retry once
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -184,6 +200,13 @@ public class GitHubService : IGitHubService
             var url = $"/repos/{owner}/{repo}/contributors?per_page=100";
             var response = await _httpClient.GetAsync(url, cancellationToken);
 
+            // Handle 429 rate limiting
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                await HandleGitHubRateLimitAsync(response, cancellationToken);
+                response = await _httpClient.GetAsync(url, cancellationToken); // Retry once
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
@@ -229,6 +252,7 @@ public class GitHubService : IGitHubService
     public async Task<GitHubUserContributionSummary> GetUserContributionSummaryAsync(
         string username,
         bool includeForked = false,
+        List<string>? selectedRepositories = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -244,6 +268,14 @@ public class GitHubService : IGitHubService
 
             // 1. Fetch all repositories
             var repositories = await GetUserRepositoriesAsync(username, includeForked, cancellationToken);
+
+            // 1b. Filter optionally selected repositories
+            if (selectedRepositories != null && selectedRepositories.Count > 0)
+            {
+                var selectedSet = new HashSet<string>(selectedRepositories, StringComparer.OrdinalIgnoreCase);
+                repositories = repositories.Where(r => selectedSet.Contains(r.Name)).ToList();
+            }
+
             summary.Repositories = repositories;
             summary.TotalRepositories = repositories.Count;
 
@@ -285,8 +317,8 @@ public class GitHubService : IGitHubService
                     contributionCount += userContribution.Contributions;
                 }
 
-                // Small delay to avoid rate limiting
-                await Task.Delay(100, cancellationToken);
+                // Delay between API calls to avoid rate limiting (GitHub: 60/min unauthenticated, 5000/min authenticated)
+                await Task.Delay(200, cancellationToken);
             }
 
             summary.LanguageBytes = languageAggregation;
@@ -312,5 +344,38 @@ public class GitHubService : IGitHubService
                 Username = username
             };
         }
+    }
+
+    /// <summary>
+    /// Handle GitHub 429 rate limiting by parsing Retry-After or x-ratelimit-reset headers and waiting.
+    /// </summary>
+    private async Task HandleGitHubRateLimitAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        int waitSeconds = 60; // Default wait
+
+        // Try Retry-After header
+        if (response.Headers.RetryAfter?.Delta != null)
+        {
+            waitSeconds = (int)response.Headers.RetryAfter.Delta.Value.TotalSeconds;
+        }
+        // Try x-ratelimit-reset header (Unix timestamp)
+        else if (response.Headers.TryGetValues("x-ratelimit-reset", out var resetValues))
+        {
+            var resetValue = resetValues.FirstOrDefault();
+            if (long.TryParse(resetValue, out var resetUnix))
+            {
+                var resetTime = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
+                waitSeconds = Math.Max(1, (int)(resetTime - DateTimeOffset.UtcNow).TotalSeconds);
+            }
+        }
+
+        // Cap at 5 minutes
+        waitSeconds = Math.Min(waitSeconds, 300);
+
+        _logger.LogWarning(
+            "[GITHUB_429] Rate limited by GitHub API. Waiting {Seconds}s before retry",
+            waitSeconds);
+
+        await Task.Delay(TimeSpan.FromSeconds(waitSeconds), cancellationToken);
     }
 }

@@ -2,6 +2,7 @@ using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.DTOs.Analysis;
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
+using CanPany.Infrastructure.Services;
 using CanPany.Worker.Models;
 using CanPany.Worker.Models.Payloads;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,6 +68,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
             var contributionSummary = await _gitHubService.GetUserContributionSummaryAsync(
                 payload.GitHubUsername,
                 payload.IncludeForkedRepos,
+                payload.SelectedRepositories,
                 cancellationToken);
 
             if (contributionSummary.TotalRepositories == 0)
@@ -80,38 +82,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                     "NO_REPOSITORIES");
             }
 
-            // Step 1b: Filter to selected repos if specified
-            if (payload.SelectedRepositories is { Count: > 0 })
-            {
-                var selectedSet = new HashSet<string>(payload.SelectedRepositories, StringComparer.OrdinalIgnoreCase);
-                contributionSummary.Repositories = contributionSummary.Repositories
-                    .Where(r => selectedSet.Contains(r.Name))
-                    .ToList();
-
-                // Recalculate language bytes from selected repos only
-                contributionSummary.LanguageBytes.Clear();
-                foreach (var repo in contributionSummary.Repositories)
-                {
-                    var langStats = await _gitHubService.GetRepositoryLanguagesAsync(
-                        payload.GitHubUsername, repo.Name, cancellationToken);
-                    foreach (var kvp in langStats.Languages)
-                    {
-                        contributionSummary.LanguageBytes[kvp.Key] =
-                            contributionSummary.LanguageBytes.GetValueOrDefault(kvp.Key) + kvp.Value;
-                    }
-                }
-
-                contributionSummary.TotalRepositories = contributionSummary.Repositories.Count;
-                contributionSummary.TotalStars = contributionSummary.Repositories.Sum(r => r.StarsCount);
-                contributionSummary.TotalForks = contributionSummary.Repositories.Sum(r => r.ForksCount);
-
-                Logger.LogInformation(
-                    "[GITHUB_FILTER] Filtered to {Count} selected repos: [{Repos}]",
-                    contributionSummary.TotalRepositories,
-                    string.Join(", ", payload.SelectedRepositories));
-            }
-
-            await ReportProgressAsync(job.JobId, 40, 
+            await ReportProgressAsync(job.JobId, 40,
                 $"Found {contributionSummary.TotalRepositories} repositories. Analyzing languages...");
 
             // Step 2: Prepare data summary
@@ -208,7 +179,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
 
             await ReportProgressAsync(job.JobId, 90, "Finalizing analysis results...");
 
-            // Step 5: Build result
+            // Step 6: Build result
             var result = new
             {
                 AnalysisId = savedAnalysis.Id,
@@ -256,6 +227,15 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                 ["SkillAnalysis"] = skillAnalysisDto,
                 ["FullAnalysis"] = result
             });
+        }
+        catch (GeminiRateLimitException rateLimitEx)
+        {
+            Logger.LogWarning(
+                "[GITHUB_ANALYSIS_RATE_LIMITED] JobId: {JobId} | RetryAfter: {RetryAfter}s",
+                job.JobId, rateLimitEx.RetryAfterSeconds);
+            await ReportProgressAsync(job.JobId, -1,
+                $"Gemini AI rate limited. Will retry after {rateLimitEx.RetryAfterSeconds}s...");
+            throw; // Re-throw for Worker Polly retry
         }
         catch (Exception ex)
         {
@@ -344,7 +324,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
         Domain.DTOs.GitHub.GitHubUserContributionSummary summary,
         Dictionary<string, double> languagePercentages)
     {
-        var languageBreakdown = string.Join("\n", 
+        var languageBreakdown = string.Join("\n",
             languagePercentages
                 .OrderByDescending(kvp => kvp.Value)
                 .Take(10)

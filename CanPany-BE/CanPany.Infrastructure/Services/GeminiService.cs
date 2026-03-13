@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using CanPany.Application.Interfaces.Services;
@@ -6,6 +7,26 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CanPany.Infrastructure.Services;
+
+/// <summary>
+/// Custom exception for Gemini 429 rate limiting
+/// </summary>
+public class GeminiRateLimitException : Exception
+{
+    public int RetryAfterSeconds { get; }
+
+    public GeminiRateLimitException(int retryAfterSeconds)
+        : base($"Gemini API rate limited. Retry after {retryAfterSeconds}s")
+    {
+        RetryAfterSeconds = retryAfterSeconds;
+    }
+
+    public GeminiRateLimitException(int retryAfterSeconds, Exception innerException)
+        : base($"Gemini API rate limited. Retry after {retryAfterSeconds}s", innerException)
+    {
+        RetryAfterSeconds = retryAfterSeconds;
+    }
+}
 
 /// <summary>
 /// Gemini AI Service - Using Gemini 2.0 Flash Experimental
@@ -20,6 +41,10 @@ public class GeminiService : IGeminiService
     private readonly string _apiKey;
     private readonly string _embeddingModelUrl = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
     private readonly string _chatModelUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+
+    // Rate limit config
+    private const int MaxRetries = 3;
+    private const int BaseRetryDelaySeconds = 10;
 
     public GeminiService(
         HttpClient httpClient,
@@ -38,11 +63,56 @@ public class GeminiService : IGeminiService
         }
     }
 
+    /// <summary>
+    /// Send HTTP POST with 429 retry + exponential backoff.
+    /// Reads Retry-After header when available.
+    /// </summary>
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        string url,
+        StringContent content,
+        CancellationToken cancellationToken = default)
+    {
+        for (int attempt = 0; attempt <= MaxRetries; attempt++)
+        {
+            // Clone content for retry (StringContent can only be read once)
+            var clonedContent = new StringContent(
+                await content.ReadAsStringAsync(cancellationToken),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync(url, clonedContent, cancellationToken);
+
+            if (response.StatusCode != HttpStatusCode.TooManyRequests)
+                return response;
+
+            // Parse Retry-After header (seconds) or use exponential backoff
+            double retryAfterSeconds = Math.Pow(2, attempt) * BaseRetryDelaySeconds;
+            if (response.Headers.RetryAfter?.Delta != null)
+            {
+                retryAfterSeconds = response.Headers.RetryAfter.Delta.Value.TotalSeconds;
+            }
+
+            _logger.LogWarning(
+                "[GEMINI_429] Rate limited. Attempt {Attempt}/{MaxRetries}. Waiting {Seconds}s before retry",
+                attempt + 1, MaxRetries, retryAfterSeconds);
+
+            if (attempt == MaxRetries)
+            {
+                throw new GeminiRateLimitException((int)retryAfterSeconds);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(retryAfterSeconds), cancellationToken);
+        }
+
+        // Unreachable, but compiler needs it
+        throw new GeminiRateLimitException(60);
+    }
+
     public async Task<List<double>> GenerateEmbeddingAsync(string text)
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
         {
-            _logger.LogWarning("Gemini API Key is missing or empty. Returning mock embedding.");
+            _logger.LogWarning("[GEMINI_EMBED] API Key missing. Returning mock embedding.");
             return GenerateMockEmbedding();
         }
 
@@ -56,13 +126,14 @@ public class GeminiService : IGeminiService
 
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_embeddingModelUrl}?key={_apiKey}", content);
 
+            // Use retry-aware send
+            var response = await SendWithRetryAsync($"{_embeddingModelUrl}?key={_apiKey}", content);
             response.EnsureSuccessStatusCode();
 
             var responseString = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(responseString);
-            
+
             var values = doc.RootElement
                 .GetProperty("embedding")
                 .GetProperty("values");
@@ -75,10 +146,16 @@ public class GeminiService : IGeminiService
 
             return result;
         }
+        catch (GeminiRateLimitException)
+        {
+            // Re-throw so Worker Polly can retry the job
+            throw;
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating embedding with Gemini API");
-            return GenerateMockEmbedding();
+            _logger.LogError(ex, "[GEMINI_EMBED_ERROR] Error generating embedding");
+            // Throw instead of silent mock fallback — let caller decide
+            throw;
         }
     }
 
@@ -86,18 +163,20 @@ public class GeminiService : IGeminiService
     {
         if (string.IsNullOrEmpty(_apiKey))
         {
-            return "Gemini API Key is missing. Please configure it in appsettings.json.";
+            throw new InvalidOperationException("Gemini API Key is missing. Please configure it in appsettings.json.");
         }
 
         try
         {
             var requestBody = new
             {
+                system_instruction = new { parts = new[] { new { text = systemPrompt } } },
                 contents = new[]
                 {
                     new
                     {
-                        parts = new[] { new { text = systemPrompt + "\nUser: " + userMessage } }
+                        role = "user",
+                        parts = new[] { new { text = userMessage } }
                     }
                 }
             };
@@ -106,17 +185,20 @@ public class GeminiService : IGeminiService
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             _logger.LogDebug("[GEMINI_REQUEST] URL: {Url}", _chatModelUrl);
-            _logger.LogDebug("[GEMINI_REQUEST] Body: {Body}", json);
 
-            var response = await _httpClient.PostAsync($"{_chatModelUrl}?key={_apiKey}", content);
+            // Use retry-aware send
+            var response = await SendWithRetryAsync($"{_chatModelUrl}?key={_apiKey}", content);
 
             var responseString = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("[GEMINI_ERROR] Status: {Status} | Response: {Response}", 
+                _logger.LogError("[GEMINI_ERROR] Status: {Status} | Response: {Response}",
                     response.StatusCode, responseString);
-                return $"Gemini API Error: {response.StatusCode}";
+                throw new HttpRequestException(
+                    $"Gemini API Error: {response.StatusCode} - {responseString}",
+                    null,
+                    response.StatusCode);
             }
 
             using var doc = JsonDocument.Parse(responseString);
@@ -131,10 +213,18 @@ public class GeminiService : IGeminiService
             _logger.LogDebug("[GEMINI_RESPONSE] Success | Length: {Length}", text?.Length ?? 0);
             return text ?? "No response from AI.";
         }
+        catch (GeminiRateLimitException)
+        {
+            throw; // Propagate for Worker retry
+        }
+        catch (HttpRequestException)
+        {
+            throw; // Propagate HTTP errors
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[GEMINI_EXCEPTION] Error generating chat response");
-            return "Sorry, I encountered an error while processing your request.";
+            throw; // Propagate instead of swallowing
         }
     }
 
@@ -198,13 +288,6 @@ Please provide a JSON response with this exact structure (no additional text):
             _logger.LogInformation("[GEMINI_ANALYSIS_START] Analyzing skills for {Username}", gitHubUsername);
             var response = await GenerateChatResponseAsync(systemPrompt, prompt);
 
-            // Check if response is an error message
-            if (response.StartsWith("Gemini API Error") || response.StartsWith("Sorry"))
-            {
-                _logger.LogWarning("[GEMINI_ANALYSIS_FAILED] Using fallback mock analysis");
-                return GenerateMockAnalysis(gitHubUsername, languagePercentages, totalRepos, totalStars);
-            }
-
             // Try to extract JSON from response (Gemini might add extra text)
             var jsonStart = response.IndexOf('{');
             var jsonEnd = response.LastIndexOf('}');
@@ -222,22 +305,37 @@ Please provide a JSON response with this exact structure (no additional text):
 
                 if (skillAnalysis != null && skillAnalysis.PrimarySkills.Count > 0)
                 {
-                    _logger.LogInformation("[GEMINI_ANALYSIS_SUCCESS] Skills: {Skills}", 
+                    _logger.LogInformation("[GEMINI_ANALYSIS_SUCCESS] Skills: {Skills}",
                         string.Join(", ", skillAnalysis.PrimarySkills));
                     return skillAnalysis;
                 }
             }
 
-            _logger.LogWarning("[GEMINI_PARSE_FAILED] Could not extract valid JSON. Response: {Response}", 
+            _logger.LogWarning("[GEMINI_PARSE_FAILED] Could not extract valid JSON. Response: {Response}",
                 response.Length > 200 ? response.Substring(0, 200) + "..." : response);
 
-            // Fallback to mock analysis
+            // Fallback to mock analysis (only for JSON parse failures, not API errors)
+            return GenerateMockAnalysis(gitHubUsername, languagePercentages, totalRepos, totalStars);
+        }
+        catch (GeminiRateLimitException)
+        {
+            _logger.LogWarning("[GEMINI_ANALYSIS_429] Rate limited during skill analysis for {Username}", gitHubUsername);
+            throw; // Propagate for Worker retry
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "[GEMINI_ANALYSIS_HTTP_ERROR] HTTP error during skill analysis");
+            throw; // Propagate for Worker retry
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("API Key"))
+        {
+            _logger.LogWarning("[GEMINI_NO_KEY] API key missing, using mock analysis");
             return GenerateMockAnalysis(gitHubUsername, languagePercentages, totalRepos, totalStars);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[GEMINI_SKILL_ANALYSIS_FAILED] Error analyzing GitHub skills");
-            return GenerateMockAnalysis(gitHubUsername, languagePercentages, totalRepos, totalStars);
+            throw; // Propagate for Worker retry
         }
     }
 
@@ -267,10 +365,10 @@ Please provide a JSON response with this exact structure (no additional text):
 
         // Basic specializations based on languages
         var specializations = new List<string>();
-        if (topLanguages.Any(l => l.Equals("C#", StringComparison.OrdinalIgnoreCase) || 
+        if (topLanguages.Any(l => l.Equals("C#", StringComparison.OrdinalIgnoreCase) ||
                                    l.Equals("Java", StringComparison.OrdinalIgnoreCase)))
             specializations.Add("Backend Development");
-        if (topLanguages.Any(l => l.Equals("JavaScript", StringComparison.OrdinalIgnoreCase) || 
+        if (topLanguages.Any(l => l.Equals("JavaScript", StringComparison.OrdinalIgnoreCase) ||
                                    l.Equals("TypeScript", StringComparison.OrdinalIgnoreCase)))
             specializations.Add("Web Development");
         if (!specializations.Any())

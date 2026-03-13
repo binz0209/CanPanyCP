@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CanPany.Application.Services;
 
@@ -21,6 +22,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly IResetCodeStore _resetCodeStore;
+    private readonly IMemoryCache _cache;
 
     public AuthService(
         IUserRepository userRepository,
@@ -28,7 +30,8 @@ public class AuthService : IAuthService
         ILogger<AuthService> logger,
         IConfiguration configuration,
         IBackgroundEmailService backgroundEmailService,
-        IResetCodeStore resetCodeStore)
+        IResetCodeStore resetCodeStore,
+        IMemoryCache cache)
     {
         _userRepository = userRepository;
         _hashService = hashService;
@@ -36,6 +39,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _backgroundEmailService = backgroundEmailService;
         _resetCodeStore = resetCodeStore;
+        _cache = cache;
     }
 
     public async Task<User?> AuthenticateAsync(string email, string password)
@@ -103,8 +107,12 @@ public class AuthService : IAuthService
 
     public Task<bool> LogoutAsync(string userId, string token)
     {
-        // TODO: Implement token blacklist or revocation
-        // This should invalidate the token
+        var jwtSettings = _configuration.GetSection("Jwt");
+        var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "30");
+
+        // Add token to blacklist cache with absolute expiration matching token lifespan
+        _cache.Set($"blacklist_{token}", true, TimeSpan.FromMinutes(expirationMinutes));
+
         return Task.FromResult(true);
     }
 

@@ -14,6 +14,8 @@ public interface ICompanyRepository
     Task<Company> AddAsync(Company company);
     Task UpdateAsync(Company company);
     Task DeleteAsync(string id);
+    Task<IEnumerable<Company>> GetPendingVerificationsAsync();
+    Task<IEnumerable<Company>> GetRecommendedAsync(int limit);
     Task<bool> ExistsAsync(string id);
 }
 

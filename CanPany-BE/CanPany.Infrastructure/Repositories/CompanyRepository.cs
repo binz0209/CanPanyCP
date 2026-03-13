@@ -51,6 +51,20 @@ public class CompanyRepository : ICompanyRepository
         await _collection.DeleteOneAsync(c => c.Id == id);
     }
 
+    public async Task<IEnumerable<Company>> GetPendingVerificationsAsync()
+    {
+        return await _collection.Find(c => c.VerificationStatus == "Pending").ToListAsync();
+    }
+
+    public async Task<IEnumerable<Company>> GetRecommendedAsync(int limit)
+    {
+        // Simple mock recommendation until ML is fully integrated.
+        // Returns verified companies with highest theoretical "score".
+        return await _collection.Find(c => c.IsVerified)
+                                .Limit(limit)
+                                .ToListAsync();
+    }
+
     public async Task<bool> ExistsAsync(string id)
     {
         var count = await _collection.CountDocumentsAsync(c => c.Id == id);

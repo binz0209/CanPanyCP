@@ -13,6 +13,8 @@ public interface ICompanyService
     Task<Company> CreateAsync(Company company);
     Task<bool> UpdateAsync(string id, Company company);
     Task<bool> DeleteAsync(string id);
+    Task<IEnumerable<Company>> GetPendingVerificationsAsync();
+    Task<IEnumerable<Company>> GetRecommendedAsync(int limit);
 }
 
 
