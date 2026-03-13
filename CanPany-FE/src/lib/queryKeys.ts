@@ -40,3 +40,11 @@ export const bookmarkKeys = {
     all: ['bookmarks'] as const,
     list: () => [...bookmarkKeys.all, 'list'] as const,
 };
+
+export const jobAlertKeys = {
+    all: ['jobAlerts'] as const,
+    list: () => [...jobAlertKeys.all, 'list'] as const,
+    detail: (id: string) => [...jobAlertKeys.all, 'detail', id] as const,
+    preview: (id: string) => [...jobAlertKeys.all, 'preview', id] as const,
+    stats: () => [...jobAlertKeys.all, 'stats'] as const,
+};

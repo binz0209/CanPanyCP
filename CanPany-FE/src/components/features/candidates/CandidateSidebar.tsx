@@ -11,8 +11,11 @@ import {
   Settings,
   ChevronDown,
   Bookmark,
+  Bell,
+  BellRing,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
+import { useNotifications } from '../../../hooks/useNotifications';
 import { cn } from '../../../utils';
 
 interface NavItem {
@@ -56,6 +59,11 @@ const navItems: NavItem[] = [
     path: '/candidate/applications/history',
   },
   {
+    label: 'Job Alerts',
+    icon: <BellRing className="h-5 w-5" />,
+    path: '/candidate/job-alerts',
+  },
+  {
     label: 'AI Career',
     icon: <Wand2 className="h-5 w-5" />,
     items: [
@@ -90,6 +98,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
     new Set(['Hồ sơ cá nhân'])
   );
   const location = useLocation();
+  const { unreadCount } = useNotifications({ enabled: true });
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) => {
@@ -116,6 +125,11 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
     return false;
   };
 
+  const getBadge = (label: string) => {
+    if (label === 'Notifications' && unreadCount > 0) return unreadCount;
+    return null;
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -134,11 +148,57 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
-        <div className="space-y-2 p-4">
-          {navItems.map((item) => (
-            <div key={item.label}>
-              {item.path ? (
-                <Link to={item.path} onClick={onClose}>
+        {/* Notification shortcut at top */}
+        <div className="px-4 pt-4 pb-2">
+          <Link to="/candidate/notifications" onClick={onClose}>
+            <Button
+              variant="ghost"
+              className={cn(
+                'w-full justify-start gap-3 text-gray-700 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
+                'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                isActive('/candidate/notifications') && 'bg-[#00b14f]/10 text-[#00b14f]'
+              )}
+            >
+              <div className={cn('text-gray-500', isActive('/candidate/notifications') && 'text-[#00b14f]')}>
+                <Bell className="h-5 w-5" />
+              </div>
+              <span className="flex-1 text-left">Thông báo</span>
+              {unreadCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </Button>
+          </Link>
+        </div>
+
+        <div className="space-y-2 px-4 pb-4">
+          {navItems.map((item) => {
+            const badge = getBadge(item.label);
+            return (
+              <div key={item.label}>
+                {item.path ? (
+                  <Link to={item.path} onClick={onClose}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        'w-full justify-start gap-3 text-gray-700 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
+                        'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                        isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
+                      )}
+                    >
+                      <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
+                        {item.icon}
+                      </div>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {badge && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
+                          {badge > 99 ? '99+' : badge}
+                        </span>
+                      )}
+                    </Button>
+                  </Link>
+                ) : (
                   <Button
                     variant="ghost"
                     className={cn(
@@ -146,71 +206,48 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                       'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                       isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
                     )}
+                    onClick={() => toggleExpand(item.label)}
                   >
-                    <div className={cn(
-                      "text-gray-500",
-                      isItemActive(item) && "text-[#00b14f]"
-                    )}>
+                    <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                       {item.icon}
                     </div>
                     <span className="flex-1 text-left">{item.label}</span>
-                  </Button>
-                </Link>
-              ) : (
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    'w-full justify-start gap-3 text-gray-700 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
-                    'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                    isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
-                  )}
-                  onClick={() => toggleExpand(item.label)}
-                >
-                  <div className={cn(
-                    "text-gray-500",
-                    isItemActive(item) && "text-[#00b14f]"
-                  )}>
-                    {item.icon}
-                  </div>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {item.items && (
-                    <ChevronDown
-                      className={cn(
-                        'h-4 w-4 transition-transform duration-200',
-                        expandedItems.has(item.label) ? 'rotate-180' : ''
-                      )}
-                    />
-                  )}
-                </Button>
-              )}
-
-              {/* Sub-items */}
-              {item.items && expandedItems.has(item.label) && (
-                <div className="ml-4 space-y-1 border-l border-gray-200 pl-3 py-2">
-                  {item.items.map((subItem) => (
-                    <Link key={subItem.label} to={subItem.path} onClick={onClose}>
-                      <Button
-                        variant="ghost"
+                    {item.items && (
+                      <ChevronDown
                         className={cn(
-                          'w-full justify-start gap-2 text-gray-600 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
-                          'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                          isActive(subItem.path) && 'bg-[#00b14f]/10 text-[#00b14f]'
+                          'h-4 w-4 transition-transform duration-200',
+                          expandedItems.has(item.label) ? 'rotate-180' : ''
                         )}
-                      >
-                        <div className={cn(
-                          "text-gray-400",
-                          isActive(subItem.path) && "text-[#00b14f]"
-                        )}>
-                          {subItem.icon}
-                        </div>
-                        <span>{subItem.label}</span>
-                      </Button>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                      />
+                    )}
+                  </Button>
+                )}
+
+                {/* Sub-items */}
+                {item.items && expandedItems.has(item.label) && (
+                  <div className="ml-4 space-y-1 border-l border-gray-200 pl-3 py-2">
+                    {item.items.map((subItem) => (
+                      <Link key={subItem.label} to={subItem.path} onClick={onClose}>
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            'w-full justify-start gap-2 text-gray-600 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
+                            'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                            isActive(subItem.path) && 'bg-[#00b14f]/10 text-[#00b14f]'
+                          )}
+                        >
+                          <div className={cn('text-gray-400', isActive(subItem.path) && 'text-[#00b14f]')}>
+                            {subItem.icon}
+                          </div>
+                          <span>{subItem.label}</span>
+                        </Button>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </aside>
     </>
