@@ -48,3 +48,9 @@ export const jobAlertKeys = {
     preview: (id: string) => [...jobAlertKeys.all, 'preview', id] as const,
     stats: () => [...jobAlertKeys.all, 'stats'] as const,
 };
+
+export const notificationKeys = {
+    all: ['notifications'] as const,
+    list: (params?: unknown) => [...notificationKeys.all, 'list', params ?? {}] as const,
+    detail: (id: string) => [...notificationKeys.all, 'detail', id] as const,
+};
