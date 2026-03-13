@@ -9,6 +9,7 @@ import { jobsApi } from '../../api';
 import { formatRelativeTime, formatCurrency, formatDate } from '../../utils';
 import { cn } from '../../utils';
 import { useAuthStore } from '@/stores/auth.store';
+import { useBookmarks } from '@/hooks/candidate/useBookmarks';
 
 export function JobDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -22,6 +23,10 @@ export function JobDetailPage() {
         queryFn: () => jobsApi.getById(id!),
         enabled: !!id,
     });
+
+    // useBookmarks is the single source of truth for bookmark state.
+    // It is safe to call unconditionally – it no-ops when not authenticated.
+    const { isBookmarked, toggle, isToggling } = useBookmarks();
 
     if (isLoading) {
         return (
@@ -47,7 +52,12 @@ export function JobDetailPage() {
         );
     }
 
-    const { job, isBookmarked } = data;
+    const { job } = data;
+
+    // Prefer the hook's live state (updated immediately on toggle via optimistic update).
+    // Fall back to the value returned by the job-detail API for the very first render
+    // before the bookmarks list has been fetched.
+    const bookmarked = isBookmarked(job.id) || data.isBookmarked;
 
     const levelColors = {
         Junior: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
@@ -91,11 +101,29 @@ export function JobDetailPage() {
                         </div>
 
                         <div className="flex gap-3">
-                            <Button variant="outline" size="lg">
-                                <Bookmark className={cn('h-4 w-4', isBookmarked && 'fill-current text-blue-600')} />
-                                Lưu
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                onClick={() => toggle(job)}
+                                isLoading={isToggling(job.id)}
+                                aria-label={bookmarked ? 'Bỏ lưu việc làm' : 'Lưu việc làm'}
+                            >
+                                <Bookmark
+                                    className={cn(
+                                        'h-4 w-4',
+                                        bookmarked && 'fill-current text-[#00b14f]'
+                                    )}
+                                />
+                                {bookmarked ? 'Đã lưu' : 'Lưu'}
                             </Button>
-                            <Button size="lg" onClick={() => isAuthenticated ? setShowApplyModal(true) : navigate('/auth/login')}>
+                            <Button
+                                size="lg"
+                                onClick={() =>
+                                    isAuthenticated
+                                        ? setShowApplyModal(true)
+                                        : navigate('/auth/login')
+                                }
+                            >
                                 Ứng tuyển ngay
                             </Button>
                         </div>

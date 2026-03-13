@@ -6,6 +6,7 @@ import { Button, Badge } from '../../components/ui';
 import { JobCard } from '../../components/features/jobs';
 import { jobsApi, companiesApi } from '../../api';
 import type { Job, JobLevel, BudgetType, Company } from '../../types';
+import { useBookmarks } from '../../hooks/candidate/useBookmarks';
 
 const LEVELS: JobLevel[] = ['Junior', 'Mid', 'Senior', 'Expert'];
 
@@ -25,6 +26,9 @@ export function JobsPage() {
 
   // Mobile filter drawer
   const [showFilters, setShowFilters] = useState(false);
+
+  // Bookmark state shared with the hook – no-ops for unauthenticated users.
+  const { isBookmarked, toggle } = useBookmarks();
 
   // Debounced keyword and location
   const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
@@ -534,7 +538,12 @@ export function JobsPage() {
             ) : (
               <div className="space-y-4">
                 {jobs.map((job: Job) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    isBookmarked={isBookmarked(job.id)}
+                    onBookmark={(_id) => toggle(job)}
+                  />
                 ))}
               </div>
             )}

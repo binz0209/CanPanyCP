@@ -10,6 +10,7 @@ import {
   Crown,
   Settings,
   ChevronDown,
+  Bookmark,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { cn } from '../../../utils';
@@ -23,35 +24,34 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: 'Dashboard',
+    label: 'Tổng quan',
     icon: <LayoutDashboard className="h-5 w-5" />,
     path: '/candidate/dashboard',
   },
   {
-    label: 'Profile',
+    label: 'Hồ sơ cá nhân',
     icon: <UserIcon className="h-5 w-5" />,
     path: '/candidate/profile',
   },
   {
-    label: 'CV Management',
+    label: 'Quản lý CV',
     icon: <FileText className="h-5 w-5" />,
     items: [
-      { label: 'My CVs', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
-      { label: 'AI CV Assistant', path: '/candidate/cv/ai', icon: <Wand2 className="h-4 w-4" /> },
+      { label: 'CV của tôi', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
+      { label: 'Trợ lý tạo CV AI', path: '/candidate/cv/ai', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: 'Jobs',
+    label: 'Việc làm',
     icon: <Briefcase className="h-5 w-5" />,
     items: [
-      { label: 'Job Search', path: '/candidate/jobs/search', icon: <Briefcase className="h-4 w-4" /> },
-      { label: 'Job Details', path: '/candidate/jobs/details', icon: <Briefcase className="h-4 w-4" /> },
-      { label: 'Bookmarked Jobs', path: '/candidate/jobs/bookmarks', icon: <FileText className="h-4 w-4" /> },
-      { label: 'AI-Recommended Jobs', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
+      { label: 'Tìm kiếm việc làm', path: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
+      { label: 'Việc làm đã lưu', path: '/candidate/jobs/bookmarks', icon: <Bookmark className="h-4 w-4" /> },
+      { label: 'Gợi ý từ AI', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: 'Applications',
+    label: 'Đơn ứng tuyển',
     icon: <Send className="h-5 w-5" />,
     path: '/candidate/applications/history',
   },
@@ -59,23 +59,23 @@ const navItems: NavItem[] = [
     label: 'AI Career',
     icon: <Wand2 className="h-5 w-5" />,
     items: [
-      { label: 'Chat with AI Advisor', path: '/candidate/ai/chat', icon: <Wand2 className="h-4 w-4" /> },
-      { label: 'Skill Gap Analysis', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Career Guidance', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
+      { label: 'Tư vấn nghề nghiệp AI', path: '/candidate/ai/chat', icon: <Wand2 className="h-4 w-4" /> },
+      { label: 'Phân tích kỹ năng', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
+      { label: 'Định hướng nghề nghiệp', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: 'Premium',
+    label: 'Gói Premium',
     icon: <Crown className="h-5 w-5" />,
     path: '/candidate/premium',
   },
   {
-    label: 'Settings',
+    label: 'Cài đặt',
     icon: <Settings className="h-5 w-5" />,
     items: [
-      { label: 'Account', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
-      { label: 'Notifications', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Privacy', path: '/candidate/settings/privacy', icon: <Settings className="h-4 w-4" /> },
+      { label: 'Tài khoản', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
+      { label: 'Thông báo', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
+      { label: 'Quyền riêng tư', path: '/candidate/settings/privacy', icon: <Settings className="h-4 w-4" /> },
     ],
   },
 ];
@@ -87,7 +87,7 @@ interface CandidateSidebarProps {
 
 export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(['Profile'])
+    new Set(['Hồ sơ cá nhân'])
   );
   const location = useLocation();
 
