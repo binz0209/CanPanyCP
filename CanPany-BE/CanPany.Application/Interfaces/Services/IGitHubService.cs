@@ -49,10 +49,12 @@ public interface IGitHubService
     /// </summary>
     /// <param name="username">GitHub username</param>
     /// <param name="includeForked">Include forked repositories</param>
+    /// <param name="selectedRepositories">If provided, only these repositories will be analyzed</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>User contribution summary</returns>
     Task<GitHubUserContributionSummary> GetUserContributionSummaryAsync(
         string username, 
         bool includeForked = false, 
+        List<string>? selectedRepositories = null,
         CancellationToken cancellationToken = default);
 }

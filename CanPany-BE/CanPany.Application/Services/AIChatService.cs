@@ -1,4 +1,6 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Domain.Entities;
+using CanPany.Domain.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace CanPany.Application.Services;
@@ -8,11 +10,20 @@ namespace CanPany.Application.Services;
 /// </summary>
 public class AIChatService : IAIChatService
 {
+    private readonly IGeminiService _geminiService;
+    private readonly IConversationRepository _conversationRepository;
+    private readonly IMessageRepository _messageRepository;
     private readonly ILogger<AIChatService> _logger;
-    // TODO: Add GeminiService dependency when available
 
-    public AIChatService(ILogger<AIChatService> logger)
+    public AIChatService(
+        IGeminiService geminiService,
+        IConversationRepository conversationRepository,
+        IMessageRepository messageRepository,
+        ILogger<AIChatService> logger)
     {
+        _geminiService = geminiService;
+        _conversationRepository = conversationRepository;
+        _messageRepository = messageRepository;
         _logger = logger;
     }
 
@@ -25,13 +36,66 @@ public class AIChatService : IAIChatService
             if (string.IsNullOrWhiteSpace(message))
                 throw new ArgumentException("Message cannot be null or empty", nameof(message));
 
-            // TODO: Implement AI chat with Gemini API
-            // This should use GeminiService to generate career advice responses
+            Conversation conversation;
+            if (string.IsNullOrEmpty(conversationId))
+            {
+                // Create a new conversation for AI chat (using 'System_AI' as the second participant)
+                conversation = new Conversation
+                {
+                    ParticipantIds = new List<string> { userId, "System_AI" }.OrderBy(id => id).ToList(),
+                    LastMessageAt = DateTime.UtcNow,
+                    LastMessagePreview = message.Length > 50 ? message.Substring(0, 50) + "..." : message
+                };
+                conversation = await _conversationRepository.AddAsync(conversation);
+                conversationId = conversation.Id;
+            }
+            else
+            {
+                conversation = await _conversationRepository.GetByIdAsync(conversationId)
+                    ?? throw new InvalidOperationException("Conversation not found");
+                
+                conversation.LastMessageAt = DateTime.UtcNow;
+                conversation.LastMessagePreview = message.Length > 50 ? message.Substring(0, 50) + "..." : message;
+                conversation.MarkAsUpdated();
+                await _conversationRepository.UpdateAsync(conversation);
+            }
+
+            // Save user message
+            var userMsg = new Message
+            {
+                ConversationId = conversationId,
+                SenderId = userId,
+                Text = message,
+                IsRead = true
+            };
+            await _messageRepository.AddAsync(userMsg);
+
+            // Generate AI response
             _logger.LogInformation("AI Chat request from user: {UserId}, Message: {Message}", userId, message);
+            var systemPrompt = "You are CanPany's AI Career Advisor. Help the candidate with their career questions, CV advice, and job recommendations.";
             
-            // Placeholder response
-            await Task.CompletedTask;
-            return "Tôi là AI Career Advisor của CanPany. Tôi sẽ giúp bạn với câu hỏi về sự nghiệp. Tính năng này đang được phát triển.";
+            // In a real implementation, we could fetch previous messages to provide context
+            // var history = await _messageRepository.GetByConversationIdAsync(conversationId, 1, 10);
+            
+            var aiResponseText = await _geminiService.GenerateChatResponseAsync(systemPrompt, message);
+
+            // Save AI message
+            var aiMsg = new Message
+            {
+                ConversationId = conversationId,
+                SenderId = "System_AI",
+                Text = aiResponseText,
+                IsRead = false
+            };
+            await _messageRepository.AddAsync(aiMsg);
+
+            // Update conversation again with AI reply preview
+            conversation.LastMessageAt = DateTime.UtcNow;
+            conversation.LastMessagePreview = aiResponseText.Length > 50 ? aiResponseText.Substring(0, 50) + "..." : aiResponseText;
+            conversation.MarkAsUpdated();
+            await _conversationRepository.UpdateAsync(conversation);
+
+            return aiResponseText;
         }
         catch (Exception ex)
         {
@@ -47,10 +111,16 @@ public class AIChatService : IAIChatService
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
 
-            // TODO: Implement conversation history retrieval
-            // This should retrieve conversation history from database
-            await Task.CompletedTask;
-            return Enumerable.Empty<(string, string, DateTime)>();
+            var conversations = await _conversationRepository.GetByUserIdAsync(userId);
+            
+            // Filter out non-AI conversations if needed, or assume we return AI ones here
+            var aiConversations = conversations.Where(c => c.ParticipantIds.Contains("System_AI"));
+            
+            return aiConversations.Select(c => (
+                ConversationId: c.Id,
+                LastMessage: c.LastMessagePreview ?? "",
+                LastAt: c.LastMessageAt ?? c.CreatedAt
+            )).OrderByDescending(c => c.LastAt);
         }
         catch (Exception ex)
         {

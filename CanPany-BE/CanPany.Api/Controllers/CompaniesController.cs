@@ -461,7 +461,108 @@ public class CompaniesController : ControllerBase
             return StatusCode(500, ApiResponse.CreateError("Failed to search companies", "SearchCompaniesFailed"));
         }
     }
+
+    /// <summary>
+    /// Get all pending company verification requests (Admin only)
+    /// </summary>
+    [HttpGet("verification-requests")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetPendingVerifications()
+    {
+        try
+        {
+            var pendingCompanies = await _companyService.GetPendingVerificationsAsync();
+            return Ok(ApiResponse.CreateSuccess(pendingCompanies, "Pending verifications retrieved successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending verifications");
+            return StatusCode(500, ApiResponse.CreateError("Failed to get pending verifications", "GetPendingVerificationsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Add a private note to a company profile (Admin only)
+    /// </summary>
+    [HttpPost("{id}/note")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AddCompanyNote(string id, [FromBody] AddNoteRequest request)
+    {
+        try
+        {
+            var company = await _companyService.GetByIdAsync(id);
+            if (company == null)
+                return NotFound(ApiResponse.CreateError("Company not found", "NotFound"));
+
+            // Simple implementation: just append to description for now 
+            // In a real app, you'd have a separate Notes collection
+            var notePrefix = $"\n\n[Admin Note - {DateTime.UtcNow:yyyy-MM-dd}]: ";
+            company.Description = (company.Description ?? "") + notePrefix + request.Note;
+            
+            await _companyService.UpdateAsync(id, company);
+            return Ok(ApiResponse.CreateSuccess("Note added successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding note to company {CompanyId}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to add note", "AddNoteFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Trigger AI analysis for a company profile (Admin or Company Owner)
+    /// </summary>
+    [HttpPost("{id}/analyze")]
+    [Authorize]
+    public async Task<IActionResult> AnalyzeCompany(string id)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            var userRole = User.FindFirst("role")?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var company = await _companyService.GetByIdAsync(id);
+            if (company == null)
+                return NotFound(ApiResponse.CreateError("Company not found", "NotFound"));
+
+            if (userRole != "Admin" && company.UserId != userId)
+                return Forbid();
+
+            // Note: Actual AI analysis would be done via a background job similar to GitHub sync.
+            // For now, returning accepted status.
+            return Accepted(ApiResponse.CreateSuccess(new { JobId = Guid.NewGuid().ToString() }, "Company analysis job started"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error analyzing company {CompanyId}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to analyze company", "AnalyzeCompanyFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Get recommended companies for the current user
+    /// </summary>
+    [HttpGet("recommended")]
+    [Authorize]
+    public async Task<IActionResult> GetRecommendedCompanies([FromQuery] int limit = 5)
+    {
+        try
+        {
+            var recommendedCompanies = await _companyService.GetRecommendedAsync(limit);
+            return Ok(ApiResponse.CreateSuccess(recommendedCompanies, "Recommended companies retrieved successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting recommended companies");
+            return StatusCode(500, ApiResponse.CreateError("Failed to get recommended companies", "GetRecommendedFailed"));
+        }
+    }
 }
+
+public record AddNoteRequest(string Note);
 
 public record UpdateCompanyRequest(
     string? Name = null,

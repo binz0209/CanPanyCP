@@ -17,10 +17,12 @@ public class CandidateSearchService : ICandidateSearchService
     private readonly IApplicationRepository _applicationRepo;
     private readonly ISkillRepository _skillRepo;
     private readonly IGeminiService _geminiService;
+    private readonly IUnlockRecordRepository _unlockRecordRepo;
+    private readonly IWalletService _walletService;
     private readonly ILogger<CandidateSearchService> _logger;
     
-    // In-memory storage for unlocked candidates (should be moved to database in production)
-    private static readonly Dictionary<string, HashSet<string>> _unlockedCandidates = new();
+    // Default unlock fee (could be moved to settings/config)
+    private const long UnlockFee = 50000; // e.g. 50,000 VND
 
     public CandidateSearchService(
         IJobRepository jobRepo,
@@ -29,6 +31,8 @@ public class CandidateSearchService : ICandidateSearchService
         IApplicationRepository applicationRepo,
         ISkillRepository skillRepo,
         IGeminiService geminiService,
+        IUnlockRecordRepository unlockRecordRepo,
+        IWalletService walletService,
         ILogger<CandidateSearchService> logger)
     {
         _jobRepo = jobRepo;
@@ -37,6 +41,8 @@ public class CandidateSearchService : ICandidateSearchService
         _applicationRepo = applicationRepo;
         _skillRepo = skillRepo;
         _geminiService = geminiService;
+        _unlockRecordRepo = unlockRecordRepo;
+        _walletService = walletService;
         _logger = logger;
     }
 
@@ -283,19 +289,31 @@ public class CandidateSearchService : ICandidateSearchService
     {
         try
         {
-            // TODO: Implement unlock logic with premium package check and credit deduction
-            // This should check if company has premium package and deduct credits
-            
-            // Store unlock relationship (in-memory for now, should be in database)
-            if (!_unlockedCandidates.ContainsKey(companyId))
+            // Check if already unlocked
+            var alreadyUnlocked = await _unlockRecordRepo.HasUnlockedAsync(companyId, candidateId);
+            if (alreadyUnlocked) return true;
+
+            // Check wallet balance and deduct
+            var (success, errors, wallet) = await _walletService.ChangeBalanceAsync(companyId, -UnlockFee, $"Unlock candidate contact: {candidateId}");
+
+            if (!success)
             {
-                _unlockedCandidates[companyId] = new HashSet<string>();
+                _logger.LogWarning("Failed to unlock candidate {CandidateId} for company {CompanyId}. Reason: {Reason}", candidateId, companyId, string.Join(", ", errors));
+                return false;
             }
+
+            // Create unlock record
+            var unlockRecord = new UnlockRecord
+            {
+                CompanyId = companyId,
+                CandidateId = candidateId,
+                FeeAmount = UnlockFee,
+                UnlockedAt = DateTime.UtcNow
+            };
             
-            _unlockedCandidates[companyId].Add(candidateId);
+            await _unlockRecordRepo.AddAsync(unlockRecord);
             
-            _logger.LogInformation("Unlocking candidate contact: {CompanyId}, {CandidateId}", companyId, candidateId);
-            await Task.CompletedTask;
+            _logger.LogInformation("Company {CompanyId} unlocked candidate {CandidateId} for {Fee}", companyId, candidateId, UnlockFee);
             return true;
         }
         catch (Exception ex)
@@ -309,13 +327,7 @@ public class CandidateSearchService : ICandidateSearchService
     {
         try
         {
-            // Check if company has unlocked this candidate
-            await Task.CompletedTask;
-            if (_unlockedCandidates.ContainsKey(companyId))
-            {
-                return _unlockedCandidates[companyId].Contains(candidateId);
-            }
-            return false;
+            return await _unlockRecordRepo.HasUnlockedAsync(companyId, candidateId);
         }
         catch (Exception ex)
         {
@@ -328,24 +340,15 @@ public class CandidateSearchService : ICandidateSearchService
     {
         try
         {
-            if (!_unlockedCandidates.ContainsKey(companyId))
-            {
-                return Enumerable.Empty<(User, UserProfile)>();
-            }
-
-            var unlockedCandidateIds = _unlockedCandidates[companyId]
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
+            var unlockRecords = await _unlockRecordRepo.GetByCompanyIdAsync(companyId, page, pageSize);
             var result = new List<(User User, UserProfile Profile)>();
 
-            foreach (var candidateId in unlockedCandidateIds)
+            foreach (var record in unlockRecords)
             {
-                var user = await _userRepo.GetByIdAsync(candidateId);
+                var user = await _userRepo.GetByIdAsync(record.CandidateId);
                 if (user != null && user.Role == "Candidate")
                 {
-                    var profile = await _profileRepo.GetByUserIdAsync(candidateId);
+                    var profile = await _profileRepo.GetByUserIdAsync(record.CandidateId);
                     result.Add((user, profile!));
                 }
             }

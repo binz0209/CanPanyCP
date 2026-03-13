@@ -16,13 +16,16 @@ namespace CanPany.Api.Controllers;
 public class UserProfilesController : ControllerBase
 {
     private readonly IUserProfileService _profileService;
+    private readonly IUserService _userService;
     private readonly ILogger<UserProfilesController> _logger;
 
     public UserProfilesController(
         IUserProfileService profileService,
+        IUserService userService,
         ILogger<UserProfilesController> logger)
     {
         _profileService = profileService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -97,6 +100,28 @@ public class UserProfilesController : ControllerBase
         {
             _logger.LogError(ex, "Error updating profile");
             return StatusCode(500, ApiResponse.CreateError("Failed to update profile", "UpdateProfileFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Delete user profile/account
+    /// </summary>
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteProfile()
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            await _userService.DeleteAsync(userId);
+            return Ok(ApiResponse.CreateSuccess("Profile deleted successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting profile");
+            return StatusCode(500, ApiResponse.CreateError("Failed to delete profile", "DeleteProfileFailed"));
         }
     }
 

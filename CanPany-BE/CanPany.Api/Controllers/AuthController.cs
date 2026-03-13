@@ -354,7 +354,16 @@ public class AuthController : ControllerBase
                 "[GITHUB_CALLBACK] Successfully linked GitHub '{Username}' to user {UserId}",
                 gitHubUser.Login, userId);
 
-            return Redirect($"{frontendUrl}?github_linked=true&github_username={Uri.EscapeDataString(gitHubUser.Login)}");
+            // Generate a fresh token so the frontend gets the updated claims (if any)
+            var user = await _userService.GetByIdAsync(userId);
+            string? newTokenParam = "";
+            if (user != null)
+            {
+                var newToken = await _authService.GenerateTokenAsync(user);
+                newTokenParam = $"&token={newToken}";
+            }
+
+            return Redirect($"{frontendUrl}?github_linked=true&github_username={Uri.EscapeDataString(gitHubUser.Login)}{newTokenParam}");
         }
         catch (Exception ex)
         {

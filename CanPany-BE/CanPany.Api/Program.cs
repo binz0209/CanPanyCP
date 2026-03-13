@@ -247,6 +247,22 @@ builder.Services.AddAuthentication(options =>
         NameClaimType = "sub",
         RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+            if (context.SecurityToken is System.IdentityModel.Tokens.Jwt.JwtSecurityToken jwtToken)
+            {
+                var token = jwtToken.RawData;
+                if (cache.TryGetValue($"blacklist_{token}", out _))
+                {
+                    context.Fail("Token has been revoked.");
+                }
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 // Configure Email Options

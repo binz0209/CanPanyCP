@@ -5,6 +5,7 @@ using CanPany.Application.DTOs.Auth;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using Xunit;
 
@@ -18,6 +19,7 @@ public class AuthServiceTests
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IBackgroundEmailService> _backgroundEmailServiceMock = new();
     private readonly Mock<IResetCodeStore> _resetCodeStoreMock = new();
+    private readonly Mock<IMemoryCache> _memoryCacheMock = new();
     private readonly AuthService _authService;
 
     public AuthServiceTests()
@@ -37,7 +39,8 @@ public class AuthServiceTests
             _loggerMock.Object,
             _configurationMock.Object,
             _backgroundEmailServiceMock.Object,
-            _resetCodeStoreMock.Object);
+            _resetCodeStoreMock.Object,
+            _memoryCacheMock.Object);
     }
 
     [Fact]

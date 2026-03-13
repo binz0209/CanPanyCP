@@ -120,6 +120,32 @@ public class CompanyService : ICompanyService
             throw;
         }
     }
+
+    public async Task<IEnumerable<Company>> GetPendingVerificationsAsync()
+    {
+        try
+        {
+            return await _repo.GetPendingVerificationsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending verifications");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<Company>> GetRecommendedAsync(int limit)
+    {
+        try
+        {
+            return await _repo.GetRecommendedAsync(limit);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting recommended companies");
+            throw;
+        }
+    }
 }
 
 

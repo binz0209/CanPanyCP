@@ -257,6 +257,9 @@ public class AdminServiceTests
         var message = "The system will be under maintenance";
         var targetRole = "Candidate";
 
+        _userRepositoryMock.Setup(x => x.GetByRoleAsync(targetRole))
+            .ReturnsAsync(new List<User> { new User { Id = "u1", Email = "u1@example.com" } });
+
         // Act
         var result = await _service.SendBroadcastNotificationAsync(title, message, targetRole);
 
