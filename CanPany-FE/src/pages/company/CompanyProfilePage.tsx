@@ -135,7 +135,7 @@ export function CompanyProfilePage() {
         return (
             <CompanyWorkspaceErrorState
                 title="Không thể tải hồ sơ công ty"
-                description="Vui lòng thử lại sau. Nếu lỗi này lặp lại, hãy kiểm tra lại token và API backend."
+                description="Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu vấn đề lặp lại."
                 icon={<Building2 className="h-6 w-6" />}
             />
         );

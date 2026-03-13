@@ -258,7 +258,7 @@ export function CompanyCandidateSearchPage() {
         return (
             <CompanyWorkspaceErrorState
                 title="Không thể tải dữ liệu tìm kiếm ứng viên"
-                description="Vui lòng kiểm tra lại API backend hoặc tài khoản company của bạn."
+                description="Đã xảy ra lỗi khi tải dữ liệu tìm kiếm. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu vấn đề tiếp diễn."
                 icon={<Users className="h-6 w-6" />}
             />
         );

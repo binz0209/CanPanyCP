@@ -24,8 +24,7 @@ export function ApplicationNotesCard({
             </div>
 
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                Backend `PUT /applications/{'{id}'}/note` hiện mới là placeholder và chưa persist note thật.
-                FE chỉ lưu note trong session hiện tại để giữ đúng kỳ vọng UX và tránh hiểu nhầm là đã lưu DB.
+                Private note chỉ được lưu tạm thời trong phiên làm việc hiện tại để phục vụ việc review. Nếu cần lưu trữ dài hạn, hãy ghi chú thêm ở hệ thống quản lý nội bộ của công ty.
             </div>
 
             <div className="mt-4">

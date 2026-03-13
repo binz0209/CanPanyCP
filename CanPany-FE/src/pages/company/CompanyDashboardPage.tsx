@@ -38,7 +38,7 @@ export function CompanyDashboardPage() {
         return (
             <CompanyWorkspaceErrorState
                 title="Không thể tải dashboard công ty"
-                description="Vui lòng kiểm tra lại API backend hoặc quyền truy cập của tài khoản company."
+                description="Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử tải lại trang hoặc liên hệ quản trị viên nếu vấn đề tiếp diễn."
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
             />
         );

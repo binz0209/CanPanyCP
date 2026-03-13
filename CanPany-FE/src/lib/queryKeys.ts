@@ -29,3 +29,9 @@ export const candidateKeys = {
     search: (mode: string, params: unknown) => [...candidateKeys.all, 'search', mode, params] as const,
     unlocked: () => [...candidateKeys.all, 'unlocked'] as const,
 };
+
+export const notificationKeys = {
+    all: ['notifications'] as const,
+    list: (params?: unknown) => [...notificationKeys.all, 'list', params ?? {}] as const,
+    unread: () => [...notificationKeys.all, 'unread'] as const,
+};

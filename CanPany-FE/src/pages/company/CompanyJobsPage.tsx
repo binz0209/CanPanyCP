@@ -106,7 +106,7 @@ export function CompanyJobsPage() {
         return (
             <CompanyWorkspaceErrorState
                 title="Không thể tải danh sách job"
-                description="Vui lòng kiểm tra API backend hoặc quyền truy cập của tài khoản company."
+                description="Đã xảy ra lỗi khi tải danh sách tin tuyển dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ."
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
             />
         );

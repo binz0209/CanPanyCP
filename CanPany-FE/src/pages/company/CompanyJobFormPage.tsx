@@ -130,8 +130,6 @@ export function CompanyJobFormPage() {
                 return;
             }
 
-            // Backend hiện chỉ hỗ trợ update một tập field giới hạn.
-            // FE giữ form edit đồng bộ với khả năng này để tránh "edit giả" dẫn tới bug khó truy vết.
             await jobsApi.update(jobId!, {
                 title: values.title.trim(),
                 description: values.description.trim(),
@@ -187,7 +185,7 @@ export function CompanyJobFormPage() {
         return (
             <CompanyWorkspaceErrorState
                 title="Không thể tải dữ liệu job"
-                description="Vui lòng kiểm tra lại API backend hoặc quyền truy cập."
+                description="Đã xảy ra lỗi khi tải dữ liệu tin tuyển dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ."
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
             />
         );

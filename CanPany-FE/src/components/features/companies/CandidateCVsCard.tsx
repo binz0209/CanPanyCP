@@ -52,7 +52,7 @@ export function CandidateCVsCard({
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-700" />
                         <p className="text-sm leading-6 text-amber-800">
-                            Luồng review application đã hoạt động, nhưng quyền xem CV hiện còn phụ thuộc backend unlock candidate.
+                            Quyền xem CV của ứng viên hiện chưa sẵn sàng. Vui lòng thử lại sau hoặc kiểm tra lại quyền truy cập/mức độ mở khóa hồ sơ.
                         </p>
                     </div>
                 </Card>

@@ -55,7 +55,6 @@ export function CompanyVerificationPage() {
 
     const requestMutation = useMutation({
         mutationFn: async (values: VerificationFormValues) => {
-            // Backend nhận danh sách URL, nhưng UI multiline sẽ dễ nhập và review hơn cho company user.
             const documentUrls = values.documentUrlsText
                 .split('\n')
                 .map((item) => item.trim())
@@ -97,7 +96,7 @@ export function CompanyVerificationPage() {
         return (
             <CompanyWorkspaceErrorState
                 title="Không thể tải thông tin xác minh"
-                description="Vui lòng kiểm tra lại backend hoặc quyền truy cập của tài khoản company."
+                description="Đã xảy ra lỗi khi tải thông tin xác minh. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ."
                 icon={<ShieldCheck className="h-6 w-6" />}
             />
         );

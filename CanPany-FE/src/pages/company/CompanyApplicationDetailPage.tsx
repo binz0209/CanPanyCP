@@ -139,9 +139,9 @@ export function CompanyApplicationDetailPage() {
     const cvAccessMessage = useMemo(() => {
         if (!candidateCVsQuery.error) return null;
         if (isAxiosError(candidateCVsQuery.error) && candidateCVsQuery.error.response?.status === 403) {
-            return 'Backend yêu cầu candidate phải được unlock trước khi xem CV.';
+            return 'Vui lòng mở khóa liên hệ ứng viên trước khi xem danh sách CV.';
         }
-        return 'Không thể tải danh sách CV của ứng viên.';
+        return 'Không thể tải danh sách CV của ứng viên. Vui lòng thử lại sau.';
     }, [candidateCVsQuery.error]);
 
     const syncApplicationCaches = (updater: (application: Application) => Application) => {

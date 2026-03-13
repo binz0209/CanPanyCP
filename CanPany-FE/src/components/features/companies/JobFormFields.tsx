@@ -57,7 +57,7 @@ export function JobFormFields({
             {!isEditMode && (
                 <Input
                     label="Category ID"
-                    placeholder="Nhập categoryId nếu backend đang quản lý taxonomy bằng ID"
+                    placeholder="Nhập categoryId nếu hệ thống đang quản lý danh mục bằng ID"
                     error={errors.categoryId?.message}
                     {...register('categoryId')}
                 />
@@ -137,9 +137,7 @@ export function JobFormFields({
 
             {isEditMode && (
                 <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                    <code>categoryId</code>, <code>budgetType</code> và <code>isRemote</code> đang được
-                    khóa trong màn edit vì backend hiện chưa hỗ trợ update các field này qua
-                    <code> PUT /jobs/{'{id}'}</code>.
+                    Một số trường cơ bản như <code>categoryId</code>, <code>budgetType</code> và <code>isRemote</code> không thể thay đổi sau khi job đã được tạo. Nếu cần chỉnh sửa, hãy tạo tin tuyển dụng mới với thông tin chính xác.
                 </div>
             )}
         </>

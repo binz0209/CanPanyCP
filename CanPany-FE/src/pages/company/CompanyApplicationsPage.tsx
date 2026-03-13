@@ -134,8 +134,8 @@ export function CompanyApplicationsPage() {
     if (hasFatalError || jobsQuery.error || applicationsQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải applications"
-                description="Vui lòng kiểm tra lại backend hoặc dữ liệu job của company."
+                title="Không thể tải danh sách ứng tuyển"
+                description="Đã xảy ra lỗi khi tải dữ liệu ứng tuyển. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ."
                 icon={<FileSearch className="h-6 w-6" />}
             />
         );
