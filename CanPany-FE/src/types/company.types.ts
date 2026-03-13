@@ -42,3 +42,28 @@ export interface UpdateCompanyRequest {
     phone?: string;
     address?: string;
 }
+
+export interface VerificationRequest {
+    documentUrls: string[];
+}
+
+export interface CompanyVerificationInfo {
+    isVerified: boolean;
+    verificationStatus: VerificationStatus;
+    verifiedAt?: Date;
+    verificationDocuments: string[];
+}
+
+export interface CompanyStatistics {
+    totalJobs: number;
+    activeJobs: number;
+    closedJobs: number;
+    draftJobs: number;
+    totalApplications: number;
+    pendingApplications: number;
+    acceptedApplications: number;
+    rejectedApplications: number;
+    totalViews: number;
+    isVerified: boolean;
+    verificationStatus: VerificationStatus;
+}

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     FileText,
     Upload,
-    MoreVertical,
     Download,
     Trash2,
     Edit2,
@@ -12,7 +11,6 @@ import {
     Eye,
     FileCheck,
     Calendar,
-    AlertCircle,
     CheckCircle2
 } from 'lucide-react';
 import toast from 'react-hot-toast';

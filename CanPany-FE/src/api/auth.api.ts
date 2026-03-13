@@ -28,4 +28,10 @@ export const authApi = {
     resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
         await apiClient.post('/auth/reset-password', data);
     },
+
+    // Step 1 of GitHub OAuth — returns the URL to redirect the browser to
+    getGitHubLinkUrl: async (): Promise<{ oauthUrl: string }> => {
+        const response = await apiClient.get<ApiResponse<{ oauthUrl: string }>>('/auth/github/link');
+        return response.data.data!;
+    },
 };

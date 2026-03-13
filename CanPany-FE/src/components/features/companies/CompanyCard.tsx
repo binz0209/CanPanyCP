@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { MapPin, CheckCircle, ExternalLink, Building2 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
 import type { Company } from '@/types';
-import { cn } from '@/utils';
 
 interface CompanyCardProps {
     company: Company;

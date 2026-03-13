@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, ArrowRight, Briefcase, Building2, Star, Heart, Clock, TrendingUp, Users, Award } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Briefcase, Building2, Heart, Clock } from 'lucide-react';
 import { Button, Badge, Carousel } from '../../components/ui';
 
 // Add floating animation keyframes
@@ -487,15 +487,11 @@ const jobBanners = [
 
 export function HomePageDemo() {
     const [activeLocation, setActiveLocation] = React.useState('Hà Nội');
-    const { scrollY, scrollDirection } = useScrollPosition();
-    
+    const { scrollY } = useScrollPosition();
+
     // Parallax offset calculation
-    const heroParallax = scrollY * 0.3;
     const shape1Parallax = scrollY * 0.15;
     const shape2Parallax = scrollY * 0.1;
-    
-    // Hide/show header on scroll
-    const isHeaderVisible = scrollDirection === 'down' ? scrollY < 100 : true;
 
     return (
         <div className="bg-background">

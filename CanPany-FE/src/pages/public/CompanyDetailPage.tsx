@@ -4,18 +4,19 @@ import { MapPin, Phone, Globe, Building2, CheckCircle, ArrowLeft, Briefcase } fr
 import { Button, Badge, Card } from '@/components/ui';
 import { JobCard } from '@/components/features/jobs';
 import { companiesApi } from '@/api';
+import { companiesKeys } from '@/lib/queryKeys';
 
 export function CompanyDetailPage() {
     const { id } = useParams<{ id: string }>();
 
     const { data: company, isLoading } = useQuery({
-        queryKey: ['company', id],
+        queryKey: companiesKeys.detail(id!),
         queryFn: () => companiesApi.getById(id!),
         enabled: !!id,
     });
 
     const { data: jobs = [] } = useQuery({
-        queryKey: ['company-jobs', id],
+        queryKey: companiesKeys.publicJobs(id!, 'Open'),
         queryFn: () => companiesApi.getJobs(id!, 'Open'),
         enabled: !!id,
     });

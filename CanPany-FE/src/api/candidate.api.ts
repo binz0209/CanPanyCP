@@ -1,20 +1,55 @@
 import apiClient from './axios.config';
 import type { ApiResponse, User, UserProfile } from '../types';
+import type { CV } from '../types/cv.types';
 
-interface CandidatePublicInfo {
-    Id: string;
-    FullName: string;
-    AvatarUrl?: string;
-    Profile?: {
-        Title?: string;
-        Bio?: string;
-        Location?: string;
-        HourlyRate?: number;
-        Skills: string[];
+export interface GitHubRepo {
+    name: string;
+    fullName: string;
+    description?: string;
+    language?: string;
+    stars: number;
+    forks: number;
+    htmlUrl: string;
+    isFork: boolean;
+    updatedAt: string;
+}
+
+export interface GitHubReposData {
+    gitHubUsername: string;
+    totalCount: number;
+    repositories: GitHubRepo[];
+}
+
+export interface GitHubJobStatus {
+    jobId: string;
+    status: 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Retrying';
+    percentComplete: number;
+    currentStep?: string;
+    startedAt?: string;
+    completedAt?: string;
+}
+
+export interface GitHubSyncResult {
+    jobId: string;
+    gitHubUsername: string;
+    selectedRepos: string[];
+    message: string;
+}
+
+export interface CandidatePublicInfo {
+    id: string;
+    fullName: string;
+    avatarUrl?: string;
+    profile?: {
+        title?: string;
+        bio?: string;
+        location?: string;
+        hourlyRate?: number;
+        skills: string[];
     };
 }
 
-interface CandidateFullProfile {
+export interface CandidateFullProfile {
     user: {
         id: string;
         fullName: string;
@@ -31,25 +66,47 @@ interface CandidateFullProfile {
     }[];
 }
 
-interface CandidateStatistics {
-    TotalApplications: number;
-    PendingApplications: number;
-    AcceptedApplications: number;
-    RejectedApplications: number;
-    TotalCVs: number;
-    DefaultCV?: any;
-    ProfileCompleteness: number;
-    SkillsCount: number;
+export interface CandidateStatistics {
+    totalApplications: number;
+    pendingApplications: number;
+    acceptedApplications: number;
+    rejectedApplications: number;
+    totalCVs: number;
+    defaultCV?: CV | null;
+    profileCompleteness: number;
+    skillsCount: number;
 }
 
-interface CandidateSearchResult {
-    Profile: UserProfile;
-    MatchScore: number;
+export interface CandidateSearchResult {
+    profile: UserProfile;
+    matchScore: number;
+    userInfo?: {
+        id: string;
+        fullName: string;
+        email?: string;
+        avatarUrl?: string;
+        role?: string;
+    };
 }
 
-interface UnlockedCandidate {
-    User: User;
-    Profile: UserProfile;
+export interface CandidateCVSummary {
+    id: string;
+    fileName: string;
+    isDefault: boolean;
+    latestAnalysisId?: string;
+    extractedSkills?: string[];
+}
+
+export interface SemanticCandidateSearchRequest {
+    jobDescription: string;
+    location?: string;
+    experienceLevel?: string;
+    limit?: number;
+}
+
+export interface UnlockedCandidate {
+    user: User;
+    profile: UserProfile;
 }
 
 export const candidateApi = {
@@ -117,14 +174,52 @@ export const candidateApi = {
         return response.data.data || [];
     },
 
+    semanticSearchCandidates: async (payload: SemanticCandidateSearchRequest): Promise<CandidateSearchResult[]> => {
+        const response = await apiClient.post<ApiResponse<CandidateSearchResult[]>>('/candidates/semantic-search', payload);
+        return response.data.data || [];
+    },
+
     // Get candidate CVs
-    getCandidateCVs: async (id: string): Promise<any[]> => {
-        const response = await apiClient.get<ApiResponse<any[]>>(`/candidates/${id}/cvs`);
+    getCandidateCVs: async (id: string): Promise<CandidateCVSummary[]> => {
+        const response = await apiClient.get<ApiResponse<CandidateCVSummary[]>>(`/candidates/${id}/cvs`);
         return response.data.data || [];
     },
 
     // Update candidate profile
     updateProfile: async (data: Partial<UserProfile>): Promise<void> => {
         await apiClient.put('/userprofiles/me', data);
+    },
+
+    // Sync profile from LinkedIn (paste-data approach)
+    syncLinkedInProfile: async (linkedInData: string): Promise<void> => {
+        await apiClient.post('/userprofiles/sync/linkedin', { linkedInData });
+    },
+
+    // Get list of repos from the GitHub account linked in the user profile
+    getGitHubRepos: async (includeForked = false): Promise<GitHubReposData> => {
+        const response = await apiClient.get<ApiResponse<GitHubReposData>>('/github/repos', {
+            params: { includeForked },
+        });
+        return response.data.data!;
+    },
+
+    // Start Gemini skill-extraction job on selected repos
+    syncSkillsFromRepos: async (repositoryNames: string[]): Promise<GitHubSyncResult> => {
+        const response = await apiClient.post<ApiResponse<GitHubSyncResult>>('/github/sync-skills', {
+            repositoryNames,
+        });
+        return response.data.data!;
+    },
+
+    // Poll background job status
+    getGitHubJobStatus: async (jobId: string): Promise<GitHubJobStatus> => {
+        const response = await apiClient.get<GitHubJobStatus>(`/github/status/${jobId}`);
+        return response.data;
+    },
+
+    // Fetch latest analysis result
+    getLatestGitHubAnalysis: async (): Promise<any> => {
+        const response = await apiClient.get('/github/analysis/latest');
+        return response.data;
     },
 };

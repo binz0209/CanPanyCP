@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Search, Briefcase, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin, Star, CheckCircle } from 'lucide-react';
-import { Button, Card, Carousel } from '../../components/ui';
+import { Search, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin } from 'lucide-react';
+import { Button, Carousel } from '../../components/ui';
 
 const features = [
     {

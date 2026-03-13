@@ -1,5 +1,13 @@
 import apiClient from './axios.config';
-import type { ApiResponse, Job, JobSearchParams, JobDetailsResponse, JobListResponse } from '../types';
+import type {
+    ApiResponse,
+    CreateJobRequest,
+    Job,
+    JobDetailsResponse,
+    JobListResponse,
+    JobSearchParams,
+    UpdateJobRequest,
+} from '../types';
 
 /**
  * Job Search API for Candidates
@@ -102,6 +110,23 @@ export const jobsApi = {
     getByCompany: async (companyId: string): Promise<Job[]> => {
         const response = await apiClient.get<ApiResponse<Job[]>>(`/jobs/company/${companyId}`);
         return response.data.data || [];
+    },
+
+    create: async (payload: CreateJobRequest): Promise<Job> => {
+        const response = await apiClient.post<ApiResponse<Job>>('/jobs', payload);
+        return response.data.data!;
+    },
+
+    update: async (jobId: string, payload: UpdateJobRequest): Promise<void> => {
+        await apiClient.put(`/jobs/${jobId}`, payload);
+    },
+
+    close: async (jobId: string): Promise<void> => {
+        await apiClient.put(`/jobs/${jobId}/close`);
+    },
+
+    reopen: async (jobId: string): Promise<void> => {
+        await apiClient.put(`/jobs/${jobId}/reopen`);
     },
 
     /**

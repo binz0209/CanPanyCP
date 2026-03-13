@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, User, Briefcase, Eye, EyeOff, Building2, UserCircle, ArrowRight, CheckCircle } from 'lucide-react';
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui';
+import { Button, Input } from '../../components/ui';
 import { authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
 import { cn } from '../../utils';
@@ -13,7 +13,11 @@ import toast from 'react-hot-toast';
 const registerSchema = z.object({
     fullName: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),
     email: z.string().email('Email không hợp lệ'),
-    password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
+    password: z.string()
+        .min(8, 'Mật khẩu tối thiểu 8 ký tự')
+        .regex(/[A-Z]/, 'Mật khẩu phải chứa ít nhất 1 chữ hoa')
+        .regex(/[a-z]/, 'Mật khẩu phải chứa ít nhất 1 chữ thường')
+        .regex(/[0-9]/, 'Mật khẩu phải chứa ít nhất 1 số'),
     confirmPassword: z.string(),
     role: z.enum(['Candidate', 'Company']),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -58,6 +62,7 @@ export function RegisterPage() {
                 fullName: data.fullName,
                 email: data.email,
                 password: data.password,
+                confirmPassword: data.confirmPassword,
                 role: data.role,
             });
             setAuth(response.user, response.accessToken);
