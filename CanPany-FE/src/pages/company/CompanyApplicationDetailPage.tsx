@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, UserRound } from 'lucide-react';
+import { FileText, MessageSquare, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { applicationsApi, candidateApi, jobsApi } from '../../api';
-import { Card } from '../../components/ui';
+import { Button, Card } from '../../components/ui';
+import { companyPaths } from '../../lib/companyNavigation';
 import {
     ApplicationNotesCard,
     ApplicationStatusActionsCard,
@@ -200,12 +201,26 @@ export function CompanyApplicationDetailPage() {
     const job = jobQuery.data?.job;
     const canReviewStatus = application.status === 'Pending';
 
+    // Build the messaging URL using the application's candidateId as a conversation
+    // routing key.  The full conversationId comes from the server; for now we
+    // navigate to the messages page with an identifier the company can use.
+    // Replace with a real conversationId once the BE exposes a conversations endpoint.
+    const messagingPath = companyPaths.messageThread(application.candidateId);
+
     return (
         <div className="space-y-6">
             <SectionHeader
                 title="Chi tiết hồ sơ ứng tuyển"
                 description="Xem đầy đủ thông tin ứng viên, job liên quan, cover letter và lịch sử xử lý; cập nhật trạng thái hồ sơ và ghi lại private note cho phiên review hiện tại."
                 backLink="/company/applications"
+                actions={
+                    <Link to={messagingPath}>
+                        <Button variant="outline">
+                            <MessageSquare className="h-4 w-4" />
+                            Nhắn tin với ứng viên
+                        </Button>
+                    </Link>
+                }
             />
 
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -213,41 +228,41 @@ export function CompanyApplicationDetailPage() {
                     <div className="flex flex-wrap items-center gap-3">
                         <StatusBadge status={application.status} kind="application" />
                         <span className="text-sm text-gray-500">
-                            Apply lúc {formatDateTime(application.createdAt)}
+                            Ứng tuyển lúc {formatDateTime(application.createdAt)}
                         </span>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Candidate</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ứng viên</p>
                             <p className="mt-2 text-lg font-semibold text-gray-900">
                                 {candidate?.user.fullName || application.candidateId}
                             </p>
                             <p className="mt-1 text-sm text-gray-500">
-                                {candidate?.profile?.title || 'Chưa cập nhật title'}
+                                {candidate?.profile?.title || 'Chưa cập nhật vị trí'}
                             </p>
                             <p className="mt-3 text-sm text-gray-600">
-                                {candidate?.profile?.location || 'Chưa cập nhật location'}
+                                {candidate?.profile?.location || 'Chưa cập nhật địa điểm'}
                             </p>
                         </div>
 
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Job</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Tin tuyển dụng</p>
                             <p className="mt-2 text-lg font-semibold text-gray-900">
                                 {job?.title || application.jobId}
                             </p>
                             <p className="mt-1 text-sm text-gray-500">
-                                {job?.location || 'Chưa cập nhật location'}
+                                {job?.location || 'Chưa cập nhật địa điểm'}
                             </p>
                             <p className="mt-3 text-sm text-gray-600">
-                                Match score: {Math.round(Number(application.matchScore || 0))}%
+                                Mức phù hợp: {Math.round(Number(application.matchScore || 0))}%
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl border border-gray-100 p-4">
-                            <p className="text-sm font-semibold text-gray-900">Proposed amount</p>
+                            <p className="text-sm font-semibold text-gray-900">Mức lương đề xuất</p>
                             <p className="mt-2 text-sm text-gray-600">
                                 {application.proposedAmount
                                     ? formatCurrency(application.proposedAmount)
@@ -264,15 +279,15 @@ export function CompanyApplicationDetailPage() {
                     </div>
 
                     <div className="mt-6 rounded-xl border border-gray-100 p-4">
-                        <p className="text-sm font-semibold text-gray-900">Cover letter</p>
+                        <p className="text-sm font-semibold text-gray-900">Thư xin việc</p>
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                            {application.coverLetter || 'Ứng viên chưa nhập cover letter.'}
+                            {application.coverLetter || 'Ứng viên chưa nhập thư xin việc.'}
                         </p>
                     </div>
 
                     {application.rejectedReason && (
                         <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
-                            <p className="text-sm font-semibold text-red-700">Rejected reason</p>
+                            <p className="text-sm font-semibold text-red-700">Lý do từ chối</p>
                             <p className="mt-2 text-sm text-red-700">{application.rejectedReason}</p>
                         </div>
                     )}
@@ -280,10 +295,10 @@ export function CompanyApplicationDetailPage() {
                     <div className="mt-6 rounded-xl border border-gray-100 p-4">
                         <div className="flex items-center gap-2 text-gray-900">
                             <UserRound className="h-5 w-5" />
-                            <p className="text-sm font-semibold">Candidate profile snapshot</p>
+                            <p className="text-sm font-semibold">Hồ sơ tóm tắt</p>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-gray-600">
-                            {candidate?.profile?.bio || candidate?.profile?.experience || 'Ứng viên chưa có bio / experience chi tiết.'}
+                            {candidate?.profile?.bio || candidate?.profile?.experience || 'Ứng viên chưa cập nhật mô tả bản thân.'}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2">
                             {(candidate?.profile?.skillIds || []).slice(0, 10).map((skillId) => (
@@ -306,7 +321,7 @@ export function CompanyApplicationDetailPage() {
                         onAccept={() => acceptMutation.mutate()}
                         onReject={() => {
                             if (!rejectReason.trim()) {
-                                toast.error('Vui lòng nhập lý do từ chối');
+                                toast.error('Vui lòng nhập lý do trước khi từ chối.');
                                 return;
                             }
                             rejectMutation.mutate();
@@ -320,7 +335,7 @@ export function CompanyApplicationDetailPage() {
                         onNoteDraftChange={setNoteDraft}
                         onSubmit={() => {
                             if (!noteDraft.trim()) {
-                                toast.error('Vui lòng nhập private note');
+                                toast.error('Vui lòng nhập ghi chú trước khi lưu.');
                                 return;
                             }
                             noteMutation.mutate();

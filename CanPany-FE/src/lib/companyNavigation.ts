@@ -9,6 +9,8 @@ export const companyPaths = {
     candidateSearch: '/company/candidates/search',
     applications: '/company/applications',
     applicationDetail: (applicationId: string) => `/company/applications/${applicationId}`,
+    messages: '/company/messages',
+    messageThread: (conversationId: string) => `/company/messages/${conversationId}`,
 } as const;
 
 export interface CompanyNavItem {
@@ -40,5 +42,9 @@ export const companyNavigationItems: CompanyNavItem[] = [
     {
         label: 'Candidate Search',
         path: companyPaths.candidateSearch,
+    },
+    {
+        label: 'Nhắn tin',
+        path: companyPaths.messages,
     },
 ] as const;
