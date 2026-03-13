@@ -182,7 +182,7 @@ export function JobsPage() {
   const hasActiveFilters = keyword || location || selectedLevel || selectedBudgetType || isRemote || searchParams.get('categoryId');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* Search Header - TopCV Style */}
       <div className="bg-gradient-to-r from-[#00b14f] to-[#008f3c]">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -195,7 +195,7 @@ export function JobsPage() {
             </p>
           </div>
           <form onSubmit={handleSearch} className="mt-6">
-            <div className="flex flex-col gap-3 rounded-xl bg-white p-2 shadow-xl sm:flex-row">
+            <div className="flex flex-col gap-3 rounded-xl bg-white p-2 shadow-xl dark:bg-slate-900 sm:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                 <input
@@ -203,7 +203,7 @@ export function JobsPage() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Vị trí tuyển dụng, tên công ty..."
-                  className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
+                  className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
                   aria-label="Tìm kiếm việc làm"
                 />
               </div>
@@ -214,7 +214,7 @@ export function JobsPage() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Địa điểm..."
-                  className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
+                  className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
                   aria-label="Địa điểm"
                 />
               </div>
@@ -233,15 +233,15 @@ export function JobsPage() {
           {/* Filters Sidebar - Desktop */}
           <div className="hidden lg:block lg:w-72">
             <div className="sticky top-24 space-y-6">
-              <div className="rounded-xl border border-gray-100 bg-white p-5">
-                <h3 className="flex items-center gap-2 font-semibold text-gray-900">
+              <div className="rounded-xl border border-gray-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <h3 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-slate-100">
                   <SlidersHorizontal className="h-5 w-5 text-[#00b14f]" aria-hidden="true" />
                   Bộ lọc tìm kiếm
                 </h3>
                 <div className="mt-4 space-y-4">
                   {/* Level Filter */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Cấp bậc</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Cấp bậc</label>
                     <div className="mt-2 space-y-2">
                       {LEVELS.map((level) => (
                         <label key={level} className="flex cursor-pointer items-center gap-2">
@@ -249,9 +249,9 @@ export function JobsPage() {
                             type="checkbox"
                             checked={selectedLevel === level}
                             onChange={() => handleLevelChange(level)}
-                            className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f]"
+                            className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                           />
-                          <span className="text-sm text-gray-600">{level}</span>
+                          <span className="text-sm text-gray-600 dark:text-slate-300">{level}</span>
                         </label>
                       ))}
                     </div>
@@ -259,41 +259,41 @@ export function JobsPage() {
 
                   {/* Budget Type Filter */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Hình thức lương</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Hình thức lương</label>
                     <div className="mt-2 space-y-2">
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
                           type="checkbox"
                           checked={selectedBudgetType === 'Fixed'}
                           onChange={() => handleBudgetTypeChange('Fixed')}
-                          className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f]"
+                          className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                         />
-                        <span className="text-sm text-gray-600">Cố định</span>
+                        <span className="text-sm text-gray-600 dark:text-slate-300">Cố định</span>
                       </label>
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
                           type="checkbox"
                           checked={selectedBudgetType === 'Hourly'}
                           onChange={() => handleBudgetTypeChange('Hourly')}
-                          className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f]"
+                          className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                         />
-                        <span className="text-sm text-gray-600">Theo giờ</span>
+                        <span className="text-sm text-gray-600 dark:text-slate-300">Theo giờ</span>
                       </label>
                     </div>
                   </div>
 
                   {/* Remote Filter */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Hình thức làm việc</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Hình thức làm việc</label>
                     <div className="mt-2 space-y-2">
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
                           type="checkbox"
                           checked={isRemote}
                           onChange={(e) => setIsRemote(e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f]"
+                          className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                         />
-                        <span className="text-sm text-gray-600">Remote</span>
+                        <span className="text-sm text-gray-600 dark:text-slate-300">Remote</span>
                       </label>
                     </div>
                   </div>
@@ -347,21 +347,21 @@ export function JobsPage() {
           {showFilters && (
             <div className="fixed inset-0 z-50 lg:hidden">
               <div className="absolute inset-0 bg-black/50" onClick={() => setShowFilters(false)} aria-hidden="true" />
-              <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-6">
+              <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-6 dark:bg-slate-900">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Bộ lọc tìm kiếm</h3>
+                  <h3 className="text-lg font-semibold dark:text-slate-100">Bộ lọc tìm kiếm</h3>
                   <button
                     onClick={() => setShowFilters(false)}
-                    className="rounded-full p-2 hover:bg-gray-100"
+                    className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-slate-800"
                     aria-label="Đóng bộ lọc"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-5 w-5 dark:text-slate-200" />
                   </button>
                 </div>
 
                 {/* Level Filter */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700">Cấp bậc</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Cấp bậc</label>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {LEVELS.map((level) => (
                       <button
@@ -370,7 +370,7 @@ export function JobsPage() {
                         className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                           selectedLevel === level
                             ? 'bg-[#00b14f] text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
                         }`}
                       >
                         {level}
@@ -381,14 +381,14 @@ export function JobsPage() {
 
                 {/* Budget Type Filter */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700">Hình thức lương</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Hình thức lương</label>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => handleBudgetTypeChange('Fixed')}
                       className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                         selectedBudgetType === 'Fixed'
                           ? 'bg-[#00b14f] text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       Cố định
@@ -398,7 +398,7 @@ export function JobsPage() {
                       className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                         selectedBudgetType === 'Hourly'
                           ? 'bg-[#00b14f] text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       Theo giờ
@@ -413,9 +413,9 @@ export function JobsPage() {
                       type="checkbox"
                       checked={isRemote}
                       onChange={(e) => setIsRemote(e.target.checked)}
-                      className="h-5 w-5 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f]"
+                      className="h-5 w-5 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                     />
-                    <span className="font-medium text-gray-700">Remote</span>
+                    <span className="font-medium text-gray-700 dark:text-slate-200">Remote</span>
                   </label>
                 </div>
 
@@ -448,7 +448,7 @@ export function JobsPage() {
             {/* Active Filters */}
             {hasActiveFilters && (
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-500">Bộ lọc đang áp dụng:</span>
+                <span className="text-sm text-gray-500 dark:text-slate-400">Bộ lọc đang áp dụng:</span>
                 {searchParams.get('keyword') && (
                   <Badge variant="default" className="gap-1">
                     Từ khóa: {searchParams.get('keyword')}
@@ -499,7 +499,7 @@ export function JobsPage() {
             )}
 
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-slate-300">
                 {isLoadingAny ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -515,16 +515,16 @@ export function JobsPage() {
             {isLoadingAny ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-44 animate-pulse rounded-xl bg-gray-200" />
+                  <div key={i} className="h-44 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-800" />
                 ))}
               </div>
             ) : jobs.length === 0 ? (
-              <div className="rounded-xl border border-gray-100 bg-white py-16 text-center">
-                <div className="mx-auto h-20 w-20 rounded-full bg-gray-100 p-5">
-                  <Briefcase className="h-10 w-10 text-gray-400" aria-hidden="true" />
+              <div className="rounded-xl border border-gray-100 bg-white py-16 text-center dark:border-slate-800 dark:bg-slate-900">
+                <div className="mx-auto h-20 w-20 rounded-full bg-gray-100 p-5 dark:bg-slate-800">
+                  <Briefcase className="h-10 w-10 text-gray-400 dark:text-slate-500" aria-hidden="true" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900">Không tìm thấy việc làm</h3>
-                <p className="mt-2 text-gray-500">Thử thay đổi từ khóa hoặc điều chỉnh bộ lọc</p>
+                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Không tìm thấy việc làm</h3>
+                <p className="mt-2 text-gray-500 dark:text-slate-400">Thử thay đổi từ khóa hoặc điều chỉnh bộ lọc</p>
                 <Button variant="outline" className="mt-4" onClick={clearFilters}>
                   Xóa bộ lọc
                 </Button>

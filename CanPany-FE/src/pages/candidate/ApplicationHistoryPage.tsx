@@ -13,6 +13,7 @@ import {
   Hourglass,
   FileText
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { applicationsApi } from '../../api/applications.api';
 import type { Application, ApplicationStatus } from '../../types/application.types';
@@ -29,6 +30,12 @@ const statusConfig: Record<ApplicationStatus, {
     color: 'text-amber-600',
     bgColor: 'bg-amber-50',
     icon: <Hourglass className="h-4 w-4" />
+  },
+  Shortlisted: {
+    label: 'Shortlisted',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    icon: <CheckCircle className="h-4 w-4" />
   },
   Accepted: {
     label: 'Accepted',
@@ -57,6 +64,8 @@ export function ApplicationHistoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<ApplicationStatus | 'All'>('All');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmingApplicationId, setConfirmingApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
     loadApplications();
@@ -77,20 +86,34 @@ export function ApplicationHistoryPage() {
   };
 
   const handleWithdraw = async (applicationId: string) => {
-    if (!window.confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
-      return;
-    }
+    setConfirmingApplicationId(applicationId);
+    setShowConfirm(true);
+  };
+
+  const confirmWithdraw = async () => {
+    if (!confirmingApplicationId) return;
 
     try {
-      setWithdrawingId(applicationId);
-      await applicationsApi.withdraw(applicationId);
+      setWithdrawingId(confirmingApplicationId);
+      await applicationsApi.withdraw(confirmingApplicationId);
       await loadApplications();
+      toast.success('Đơn đã rút', {
+        duration: 2000,
+        position: 'top-right',
+      });
     } catch (err) {
-      alert('Failed to withdraw application. Please try again.');
+      toast.error('Không thể rút đơn. Vui lòng thử lại.');
       console.error('Error withdrawing application:', err);
     } finally {
       setWithdrawingId(null);
+      setShowConfirm(false);
+      setConfirmingApplicationId(null);
     }
+  };
+
+  const cancelWithdraw = () => {
+    setShowConfirm(false);
+    setConfirmingApplicationId(null);
   };
 
   // Filter applications based on selected status
@@ -98,15 +121,16 @@ export function ApplicationHistoryPage() {
     ? applications 
     : applications.filter(app => app.status === filterStatus);
 
-  // Check if withdraw is allowed (before status becomes Pending)
+  // Check if withdraw is allowed (only on Pending status)
   const canWithdraw = (status: ApplicationStatus): boolean => {
-    return status !== 'Pending' && status !== 'Withdrawn' && status !== 'Accepted' && status !== 'Rejected';
+    return status === 'Pending';
   };
 
   // Calculate statistics
   const stats = {
     total: applications.length,
     pending: applications.filter(a => a.status === 'Pending').length,
+    shortlisted: applications.filter(a => a.status === 'Shortlisted').length,
     accepted: applications.filter(a => a.status === 'Accepted').length,
     rejected: applications.filter(a => a.status === 'Rejected').length,
     withdrawn: applications.filter(a => a.status === 'Withdrawn').length,
@@ -158,7 +182,7 @@ export function ApplicationHistoryPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
           <div className="text-sm text-gray-500">Total</div>
@@ -166,6 +190,10 @@ export function ApplicationHistoryPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
           <div className="text-sm text-gray-500">Pending</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-blue-600">{stats.shortlisted}</div>
+          <div className="text-sm text-gray-500">Shortlisted</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-green-600">{stats.accepted}</div>
@@ -184,7 +212,7 @@ export function ApplicationHistoryPage() {
       {/* Filter */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-sm text-gray-600">Filter by status:</span>
-        {(['All', 'Pending', 'Accepted', 'Rejected', 'Withdrawn'] as const).map((status) => (
+        {(['All', 'Pending', 'Shortlisted', 'Accepted', 'Rejected', 'Withdrawn'] as const).map((status) => (
           <Button
             key={status}
             variant={filterStatus === status ? 'default' : 'outline'}
@@ -335,7 +363,7 @@ export function ApplicationHistoryPage() {
                     {/* Status Message */}
                     {!withdrawAllowed && (
                       <p className="text-xs text-gray-500 text-right">
-                        {application.status === 'Pending' && 'Application is under review'}
+                        {application.status === 'Shortlisted' && 'You have been shortlisted!'}
                         {application.status === 'Accepted' && 'Congratulations!'}
                         {application.status === 'Rejected' && 'Application was not selected'}
                         {application.status === 'Withdrawn' && 'You withdrew this application'}
@@ -346,6 +374,31 @@ export function ApplicationHistoryPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Confirm Withdraw Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Rút đơn ứng tuyển</h3>
+            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn rút đơn ứng tuyển của mình không? Hành động này không thể hoàn tác.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={cancelWithdraw}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Không
+              </button>
+              <button
+                onClick={confirmWithdraw}
+                disabled={withdrawingId === confirmingApplicationId}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors"
+              >
+                {withdrawingId === confirmingApplicationId ? 'Đang rút...' : 'Có, rút ngay'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
