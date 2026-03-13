@@ -1,20 +1,134 @@
-import { Bell, Search, Bot, LogOut, Settings, User, Menu, X, Sun, Moon, ChevronDown, Briefcase } from 'lucide-react';
+import { Bell, Search, Bot, LogOut, Settings, User, Menu, X, Sun, Moon, ChevronDown, Briefcase, BellOff, CheckCheck, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '../../ui/Button';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useThemeStore } from '../../../stores/theme.store';
+import { useNotifications } from '../../../hooks/useNotifications';
+import type { NotificationItem } from '../../../types/notification.types';
+import { cn } from '../../../utils';
 
 interface CandidateNavbarProps {
   onMenuClick: () => void;
   isMenuOpen: boolean;
 }
 
+function timeAgo(date: string | Date): string {
+  const diff = (Date.now() - new Date(date).getTime()) / 1000;
+  if (diff < 60) return 'Vừa xong';
+  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+  return `${Math.floor(diff / 86400)} ngày trước`;
+}
+
+function NotificationPanel({
+  notifications,
+  unreadCount,
+  onMarkAsRead,
+  onMarkAllAsRead,
+  isMarkingAllAsRead,
+  onClose,
+}: {
+  notifications: NotificationItem[];
+  unreadCount: number;
+  onMarkAsRead: (id: string) => void;
+  onMarkAllAsRead: () => void;
+  isMarkingAllAsRead: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-gray-100 bg-white shadow-xl z-50">
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-900 text-sm">Thông báo</span>
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-[#00b14f] px-1.5 py-0.5 text-xs font-semibold text-white leading-none">
+              {unreadCount}
+            </span>
+          )}
+        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={onMarkAllAsRead}
+            disabled={isMarkingAllAsRead}
+            className="text-xs text-[#00b14f] hover:underline flex items-center gap-1"
+          >
+            <CheckCheck className="h-3 w-3" />
+            Đọc tất cả
+          </button>
+        )}
+      </div>
+
+      <div className="max-h-80 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <BellOff className="h-8 w-8 text-gray-300 mb-2" />
+            <p className="text-sm text-gray-500">Không có thông báo mới</p>
+          </div>
+        ) : (
+          notifications.slice(0, 8).map((n) => (
+            <div
+              key={n.id}
+              className={cn(
+                'flex items-start gap-3 px-4 py-3 border-b border-gray-50 last:border-0',
+                !n.isRead ? 'bg-[#00b14f]/[0.03]' : ''
+              )}
+            >
+              <div className="mt-0.5 flex-1 min-w-0">
+                <p className={cn('text-xs', !n.isRead ? 'font-semibold text-gray-900' : 'text-gray-700')}>
+                  {n.title}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{n.content}</p>
+                <p className="mt-1 text-xs text-gray-400">{timeAgo(n.timestamp)}</p>
+              </div>
+              {!n.isRead && (
+                <button
+                  onClick={() => onMarkAsRead(n.id)}
+                  className="mt-1 shrink-0 rounded-full p-1 text-gray-300 hover:bg-gray-100 hover:text-[#00b14f]"
+                  title="Đánh dấu đã đọc"
+                >
+                  <Check className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="border-t border-gray-100 p-2">
+        <Link
+          to="/candidate/notifications"
+          onClick={onClose}
+          className="flex w-full items-center justify-center rounded-lg py-2 text-sm font-medium text-[#00b14f] transition-colors hover:bg-[#00b14f]/5"
+        >
+          Xem tất cả thông báo
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isMarkingAllAsRead } = useNotifications({
+    enabled: true,
+  });
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    }
+    if (isNotifOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isNotifOpen]);
 
   const handleLogout = () => {
     logout();
@@ -60,7 +174,6 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
-          {/* AI Advisor Button */}
           <Button
             variant="outline"
             size="sm"
@@ -84,14 +197,32 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
           </button>
 
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-[#00b14f] rounded-full" />
-          </Button>
+          <div className="relative" ref={notifRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => setIsNotifOpen((prev) => !prev)}
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#00b14f] text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+
+            {isNotifOpen && (
+              <NotificationPanel
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                isMarkingAllAsRead={isMarkingAllAsRead}
+                onClose={() => setIsNotifOpen(false)}
+              />
+            )}
+          </div>
 
           {/* User Menu */}
           <div className="relative">
