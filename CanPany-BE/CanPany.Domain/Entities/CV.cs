@@ -35,6 +35,9 @@ public class CV : AggregateRoot
     [BsonElement("latestAnalysisId"), BsonRepresentation(BsonType.ObjectId)]
     public string? LatestAnalysisId { get; set; }
 
+    [BsonElement("extractedSkills")]
+    public List<string> ExtractedSkills { get; set; } = new();
+
     [BsonElement("createdAt")]
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

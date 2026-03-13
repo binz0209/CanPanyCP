@@ -243,7 +243,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"])),
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? string.Empty)),
         NameClaimType = "sub",
         RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
@@ -352,6 +352,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+// Serve static files from wwwroot (e.g. CVs)
+app.UseStaticFiles();
 
 // Use Hangfire Dashboard (before authentication for development)
 var hangfireDashboardConfig = app.Configuration.GetSection("Hangfire");

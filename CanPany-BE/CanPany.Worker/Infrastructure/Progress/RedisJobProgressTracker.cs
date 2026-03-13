@@ -32,12 +32,23 @@ public class RedisJobProgressTracker : IJobProgressTracker
     }
 
     private string GetProgressKey(string jobId) => $"{_progressKeyPrefix}{jobId}";
+    private string GetUserJobsKey(string userId) => $"canpany:user:jobs:{userId}";
+    private static readonly TimeSpan UserJobsExpiry = TimeSpan.FromDays(30);
 
-    public async Task InitializeAsync(string jobId, int totalSteps = 0, CancellationToken cancellationToken = default)
+    public async Task InitializeAsync(
+        string jobId,
+        int totalSteps = 0,
+        string? userId = null,
+        string? jobType = null,
+        string? jobTitle = null,
+        CancellationToken cancellationToken = default)
     {
         var progress = new JobProgress
         {
             JobId = jobId,
+            UserId = userId,
+            JobType = jobType,
+            JobTitle = jobTitle,
             Status = JobStatus.Pending,
             PercentComplete = 0,
             TotalSteps = totalSteps,
@@ -47,7 +58,17 @@ public class RedisJobProgressTracker : IJobProgressTracker
 
         await SaveProgressAsync(progress, cancellationToken);
 
-        _logger.LogDebug("[PROGRESS_INIT] JobId: {JobId} | TotalSteps: {TotalSteps}", jobId, totalSteps);
+        // Index this jobId under the user's job list (sorted by timestamp score)
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var userKey = GetUserJobsKey(userId);
+            var score = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            await _db.SortedSetAddAsync(userKey, jobId, score);
+            await _db.KeyExpireAsync(userKey, UserJobsExpiry);
+        }
+
+        _logger.LogDebug("[PROGRESS_INIT] JobId: {JobId} | UserId: {UserId} | JobType: {JobType} | TotalSteps: {TotalSteps}",
+            jobId, userId, jobType, totalSteps);
     }
 
     public async Task UpdateProgressAsync(
@@ -61,7 +82,10 @@ public class RedisJobProgressTracker : IJobProgressTracker
 
         progress.PercentComplete = Math.Clamp(percentComplete, 0, 100);
         progress.CurrentStep = currentStep;
-        progress.Details = details;
+        if (details != null)
+        {
+            progress.Details = details;
+        }
         progress.UpdatedAt = DateTime.UtcNow;
 
         await SaveProgressAsync(progress, cancellationToken);
@@ -216,6 +240,40 @@ public class RedisJobProgressTracker : IJobProgressTracker
             _logger.LogError(ex, "[PROGRESS_DELETE_FAILED] JobId: {JobId}", jobId);
         }
     }
+
+    public async Task<List<JobProgress>> GetUserJobsAsync(
+        string userId,
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var userKey = GetUserJobsKey(userId);
+            // Sorted set, score = enqueue timestamp ms → newest first via Desc order
+            var jobIds = await _db.SortedSetRangeByRankAsync(
+                userKey,
+                start: skip,
+                stop: skip + take - 1,
+                order: StackExchange.Redis.Order.Descending);
+
+            var results = new List<JobProgress>();
+            foreach (var jobId in jobIds)
+            {
+                var progress = await GetProgressAsync(jobId!, cancellationToken);
+                if (progress != null)
+                    results.Add(progress);
+            }
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[USER_JOBS_GET_FAILED] UserId: {UserId}", userId);
+            return new List<JobProgress>();
+        }
+    }
+
 
     private async Task SaveProgressAsync(JobProgress progress, CancellationToken cancellationToken = default)
     {

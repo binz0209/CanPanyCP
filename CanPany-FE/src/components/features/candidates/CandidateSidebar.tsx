@@ -13,6 +13,7 @@ import {
   Bookmark,
   Bell,
   BellRing,
+  Activity,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useNotifications } from '../../../hooks/useNotifications';
@@ -62,6 +63,11 @@ const navItems: NavItem[] = [
     label: 'Job Alerts',
     icon: <BellRing className="h-5 w-5" />,
     path: '/candidate/job-alerts',
+  },
+  {
+    label: 'Tiến trình',
+    icon: <Activity className="h-5 w-5" />,
+    path: '/candidate/background-jobs',
   },
   {
     label: 'AI Career',

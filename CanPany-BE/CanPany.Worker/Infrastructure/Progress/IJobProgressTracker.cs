@@ -10,7 +10,13 @@ public interface IJobProgressTracker
     /// <summary>
     /// Initialize job progress
     /// </summary>
-    Task InitializeAsync(string jobId, int totalSteps = 0, CancellationToken cancellationToken = default);
+    Task InitializeAsync(
+        string jobId,
+        int totalSteps = 0,
+        string? userId = null,
+        string? jobType = null,
+        string? jobTitle = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Update job progress
@@ -62,6 +68,15 @@ public interface IJobProgressTracker
     /// Get job progress
     /// </summary>
     Task<JobProgress?> GetProgressAsync(string jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all jobs for a specific user (paginated, newest first)
+    /// </summary>
+    Task<List<JobProgress>> GetUserJobsAsync(
+        string userId,
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete job progress (cleanup)

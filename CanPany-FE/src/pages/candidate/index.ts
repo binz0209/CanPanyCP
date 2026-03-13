@@ -6,3 +6,4 @@ export { ApplicationHistoryPage } from './ApplicationHistoryPage';
 export { SavedJobsPage } from './SavedJobsPage';
 export { JobAlertsPage } from './JobAlertsPage';
 export { NotificationCenterPage } from './NotificationCenterPage';
+export { BackgroundJobsPage } from './BackgroundJobsPage';

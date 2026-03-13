@@ -36,6 +36,34 @@ export interface GitHubSyncResult {
     message: string;
 }
 
+export type JobStatus = 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Cancelled' | 'Retrying';
+
+export interface JobProgressRecord {
+    jobId: string;
+    userId?: string;
+    jobType?: string;
+    jobTitle?: string;
+    status: JobStatus;
+    percentComplete: number;
+    currentStep?: string;
+    totalSteps: number;
+    completedSteps: number;
+    details?: Record<string, any>;
+    result?: Record<string, any>;
+    errorMessage?: string;
+    startedAt?: string;
+    completedAt?: string;
+    durationMs?: number;
+    updatedAt: string;
+}
+
+export interface MyJobsResponse {
+    total: number;
+    skip: number;
+    take: number;
+    jobs: JobProgressRecord[];
+}
+
 export interface CandidatePublicInfo {
     id: string;
     fullName: string;
@@ -206,7 +234,7 @@ export const candidateApi = {
     // Start Gemini skill-extraction job on selected repos
     syncSkillsFromRepos: async (repositoryNames: string[]): Promise<GitHubSyncResult> => {
         const response = await apiClient.post<ApiResponse<GitHubSyncResult>>('/github/sync-skills', {
-            repositoryNames,
+            RepositoryNames: repositoryNames,
         });
         return response.data.data!;
     },
@@ -222,4 +250,18 @@ export const candidateApi = {
         const response = await apiClient.get('/github/analysis/latest');
         return response.data;
     },
-};
+
+    // Get list of all background jobs for the current user (newest first)
+    getMyJobs: async (skip = 0, take = 20): Promise<MyJobsResponse> => {
+        const response = await apiClient.get<MyJobsResponse>('/background-jobs/my-jobs', {
+            params: { skip, take },
+        });
+        return response.data;
+    },
+
+    // Get detail of a specific job
+    getMyJobDetail: async (jobId: string): Promise<JobProgressRecord> => {
+        const response = await apiClient.get<JobProgressRecord>(`/background-jobs/my-jobs/${jobId}`);
+        return response.data;
+    },
+};

@@ -54,6 +54,8 @@ public class Program
         // Repositories
         builder.Services.AddScoped<IGitHubAnalysisRepository, GitHubAnalysisRepository>();
         builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        builder.Services.AddScoped<ICVRepository, CVRepository>();
+        builder.Services.AddScoped<ICVAnalysisRepository, CVAnalysisRepository>();
 
         // Redis Connection
         var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
@@ -91,6 +93,7 @@ public class Program
         builder.Services.AddSingleton<IJobHandler, AIMatchingJobHandler>();
         builder.Services.AddSingleton<IJobHandler, GenerateReportJobHandler>();
         builder.Services.AddSingleton<IJobHandler, GitHubAnalysisJobHandler>();
+        builder.Services.AddSingleton<IJobHandler, CVAnalysisJobHandler>();
 
         // Job Handler Registry (register and populate)
         builder.Services.AddSingleton<JobHandlerRegistry>(sp =>

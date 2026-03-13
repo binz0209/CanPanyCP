@@ -363,6 +363,25 @@ public class GitHubController : ControllerBase
             if (string.IsNullOrEmpty(jobId))
                 return StatusCode(500, ApiResponse.CreateError("Failed to enqueue job", "EnqueueFailed"));
 
+            // Initialize progress record immediately so user can track it
+            await _progressTracker.InitializeAsync(
+                jobId: jobId,
+                totalSteps: request.RepositoryNames.Count + 2,
+                userId: userId,
+                jobType: "SyncSkills",
+                jobTitle: $"Sync Skills từ {request.RepositoryNames.Count} repo(s)");
+
+            // Store selected repos context in Details for FE detail view
+            await _progressTracker.UpdateProgressAsync(
+                jobId: jobId,
+                percentComplete: 0,
+                currentStep: "Đang chờ xử lý...",
+                details: new Dictionary<string, object>
+                {
+                    ["selectedRepos"] = request.RepositoryNames,
+                    ["gitHubUsername"] = username
+                });
+
             _logger.LogInformation(
                 "[SYNC_SKILLS] Queued for user {UserId} ({Username}) | Repos: [{Repos}] | JobId: {JobId}",
                 userId, username, string.Join(", ", request.RepositoryNames), jobId);
@@ -377,6 +396,7 @@ public class GitHubController : ControllerBase
                 },
                 "Skill sync job started"));
         }
+
         catch (Exception ex)
         {
             _logger.LogError(ex, "[SYNC_SKILLS_ERROR]");
