@@ -1,28 +1,31 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, Search } from 'lucide-react';
+import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, MessageSquare, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui';
 import { cn } from '../../../utils';
 import { companyNavigationItems } from '../../../lib/companyNavigation';
 
 interface NavItem {
-    label: string;
+    labelKey: string;
     icon: ReactNode;
     path?: string;
-    items?: { label: string; path: string }[];
+    items?: { labelKey: string; path: string }[];
 }
 
+// Icons keyed by stable labelKey (not translated label)
 const navIcons: Record<string, ReactNode> = {
-    Dashboard: <LayoutDashboard className="h-5 w-5" />,
-    'Company Profile': <Building2 className="h-5 w-5" />,
-    'Job Management': <BriefcaseBusiness className="h-5 w-5" />,
-    'Candidate Search': <Search className="h-5 w-5" />,
+    'sidebar.dashboard': <LayoutDashboard className="h-5 w-5" />,
+    'sidebar.companyProfile': <Building2 className="h-5 w-5" />,
+    'sidebar.jobManagement': <BriefcaseBusiness className="h-5 w-5" />,
+    'sidebar.candidateSearch': <Search className="h-5 w-5" />,
+    'sidebar.messages': <MessageSquare className="h-5 w-5" />,
 };
 
 const navItems: NavItem[] = companyNavigationItems.map((item) => ({
     ...item,
-    icon: navIcons[item.label],
+    icon: navIcons[item.labelKey] ?? <LayoutDashboard className="h-5 w-5" />,
 }));
 
 interface CompanySidebarProps {
@@ -31,9 +34,10 @@ interface CompanySidebarProps {
 }
 
 export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
+    const { t } = useTranslation('company');
     const location = useLocation();
     const [expandedItems, setExpandedItems] = useState<Set<string>>(
-        new Set(['Company Profile', 'Job Management'])
+        new Set(['sidebar.companyProfile', 'sidebar.jobManagement'])
     );
 
     const isActive = (path?: string) => {
@@ -49,13 +53,13 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
         return false;
     };
 
-    const toggleExpand = (label: string) => {
+    const toggleExpand = (key: string) => {
         setExpandedItems((previous) => {
             const next = new Set(previous);
-            if (next.has(label)) {
-                next.delete(label);
+            if (next.has(key)) {
+                next.delete(key);
             } else {
-                next.add(label);
+                next.add(key);
             }
             return next;
         });
@@ -79,7 +83,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
             >
                 <div className="space-y-2 p-4">
                     {navItems.map((item) => (
-                        <div key={item.label}>
+                        <div key={item.labelKey}>
                             {item.path ? (
                                 <Link to={item.path} onClick={onClose}>
                                     <Button
@@ -92,7 +96,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                         <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                                             {item.icon}
                                         </div>
-                                        <span className="flex-1 text-left">{item.label}</span>
+                                        <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
                                     </Button>
                                 </Link>
                             ) : (
@@ -102,22 +106,22 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                         'w-full justify-start gap-3 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
                                         isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
                                     )}
-                                    onClick={() => toggleExpand(item.label)}
+                                    onClick={() => toggleExpand(item.labelKey)}
                                 >
                                     <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                                         {item.icon}
                                     </div>
-                                    <span className="flex-1 text-left">{item.label}</span>
+                                    <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
                                     <ChevronDown
                                         className={cn(
                                             'h-4 w-4 transition-transform duration-200',
-                                            expandedItems.has(item.label) && 'rotate-180'
+                                            expandedItems.has(item.labelKey) && 'rotate-180'
                                         )}
                                     />
                                 </Button>
                             )}
 
-                            {item.items && expandedItems.has(item.label) && (
+                            {item.items && expandedItems.has(item.labelKey) && (
                                 <div className="ml-4 space-y-1 border-l border-gray-200 py-2 pl-3">
                                     {item.items.map((subItem) => (
                                         <Link key={subItem.path} to={subItem.path} onClick={onClose}>
@@ -128,7 +132,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                                     isActive(subItem.path) && 'bg-[#00b14f]/10 text-[#00b14f]'
                                                 )}
                                             >
-                                                {subItem.label}
+                                                {t(subItem.labelKey as any)}
                                             </Button>
                                         </Link>
                                     ))}

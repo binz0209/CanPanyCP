@@ -1,11 +1,13 @@
 import { Bell, Search, Bot, LogOut, Settings, User, Menu, X, Sun, Moon, ChevronDown, Briefcase, BellOff, CheckCheck, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useThemeStore } from '../../../stores/theme.store';
 import { useNotifications } from '../../../hooks/useNotifications';
 import type { NotificationItem } from '../../../types/notification.types';
+import { LanguageSwitcher } from '../../layout/LanguageSwitcher';
 import { cn } from '../../../utils';
 
 interface CandidateNavbarProps {
@@ -109,6 +111,7 @@ function NotificationPanel({
 }
 
 export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProps) {
+  const { t } = useTranslation('candidate');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { user, logout } = useAuthStore();
@@ -141,12 +144,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
       <div className="flex h-full items-center justify-between px-6">
         {/* Left: Logo and Mobile Menu */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={onMenuClick}
-          >
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           <Link to="/" className="flex items-center gap-2">
@@ -166,7 +164,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm công việc..."
+              placeholder={t('nav.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 focus:border-[#00b14f] dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
             />
           </div>
@@ -174,26 +172,22 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
           <Button
             variant="outline"
             size="sm"
             className="hidden sm:flex gap-2 bg-transparent border-gray-300 hover:bg-[#00b14f] hover:text-white"
           >
             <Bot className="h-4 w-4" />
-            <span>AI Advisor</span>
+            <span>{t('nav.aiAdvisor')}</span>
           </Button>
 
-          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
             className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-[#00b14f]"
-            title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+            title={theme === 'light' ? t('nav.darkMode') : t('nav.lightMode')}
           >
-            {theme === 'light' ? (
-              <Moon className="h-5 w-5" />
-            ) : (
-              <Sun className="h-5 w-5" />
-            )}
+            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </button>
 
           {/* Notifications */}
@@ -224,18 +218,13 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
             )}
           </div>
 
-          {/* User Menu */}
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 transition-colors hover:border-[#00b14f]/30 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.fullName}
-                  className="w-7 h-7 rounded-full"
-                />
+                <img src={user.avatarUrl} alt={user.fullName} className="w-7 h-7 rounded-full" />
               ) : (
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00b14f] text-xs font-semibold text-white">
                   {user?.fullName.charAt(0).toUpperCase()}
@@ -256,7 +245,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                   onClick={() => setIsProfileOpen(false)}
                 >
                   <User className="h-4 w-4" />
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Link>
                 <Link
                   to="/candidate/settings"
@@ -264,7 +253,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                   onClick={() => setIsProfileOpen(false)}
                 >
                   <Settings className="h-4 w-4" />
-                  Cài đặt
+                  {t('nav.settings')}
                 </Link>
                 <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                 <button
@@ -272,7 +261,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <LogOut className="h-4 w-4" />
-                  Đăng xuất
+                  {t('nav.logout')}
                 </button>
               </div>
             )}

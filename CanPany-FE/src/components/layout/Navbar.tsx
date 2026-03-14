@@ -1,18 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Menu, X, User, LogOut, Briefcase, Settings, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
 
 export function Navbar() {
+    const { t } = useTranslation('common');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const { user, isAuthenticated, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const navigate = useNavigate();
 
-    const displayName = user?.fullName?.trim() || 'Người dùng';
+    const displayName = user?.fullName?.trim() || t('nav.login');
     const displayInitial = displayName.charAt(0).toUpperCase();
     const displayFirstName = displayName.split(' ')[0];
 
@@ -58,25 +61,26 @@ export function Navbar() {
                                 to="/jobs"
                                 className="text-sm font-medium text-gray-700 transition-colors hover:text-[#00b14f] dark:text-gray-300 dark:hover:text-[#00b14f]"
                             >
-                                Tìm việc làm
+                                {t('nav.jobs')}
                             </Link>
                             <Link
                                 to="/companies"
                                 className="text-sm font-medium text-gray-700 transition-colors hover:text-[#00b14f] dark:text-gray-300 dark:hover:text-[#00b14f]"
                             >
-                                Danh sách công ty
+                                {t('nav.companies')}
                             </Link>
                             <Link
                                 to="/cv"
                                 className="text-sm font-medium text-gray-700 transition-colors hover:text-[#00b14f] dark:text-gray-300 dark:hover:text-[#00b14f]"
                             >
-                                Hồ sơ & CV
+                                {t('nav.cvProfile')}
                             </Link>
                         </div>
                     </div>
 
                     {/* Desktop Actions */}
                     <div className="hidden items-center gap-3 lg:flex">
+                        <LanguageSwitcher />
                         {isAuthenticated && user ? (
                             <>
                                 <button className="relative rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800">
@@ -106,7 +110,7 @@ export function Navbar() {
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <User className="h-4 w-4" />
-                                                Dashboard
+                                                {t('nav.candidateDashboard')}
                                             </Link>
                                             <Link
                                                 to={`/${user.role.toLowerCase()}/settings`}
@@ -114,7 +118,7 @@ export function Navbar() {
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <Settings className="h-4 w-4" />
-                                                Cài đặt
+                                                {t('userMenu.profile')}
                                             </Link>
                                             <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                                             <button
@@ -122,7 +126,7 @@ export function Navbar() {
                                                 className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                                             >
                                                 <LogOut className="h-4 w-4" />
-                                                Đăng xuất
+                                                {t('nav.logout')}
                                             </button>
                                         </div>
                                     )}
@@ -132,15 +136,15 @@ export function Navbar() {
                             <>
                                 <Link to="/auth/login">
                                     <Button variant="outline" className="border-gray-300 text-gray-700 hover:border-[#00b14f] hover:text-[#00b14f] dark:border-gray-600 dark:text-gray-300">
-                                        Đăng nhập
+                                        {t('nav.login')}
                                     </Button>
                                 </Link>
                                 <Link to="/auth/register">
-                                    <Button>Đăng ký</Button>
+                                    <Button>{t('nav.register')}</Button>
                                 </Link>
                                 <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
                                 <Link to="/auth/register?role=company" className="flex items-center gap-2 text-sm font-medium text-gray-700 transition-colors hover:text-[#00b14f] dark:text-gray-300">
-                                    Nhà tuyển dụng
+                                    {t('nav.companyWorkspace')}
                                     <Settings className="h-4 w-4" />
                                 </Link>
                             </>
@@ -150,7 +154,7 @@ export function Navbar() {
                         <button
                             onClick={toggleTheme}
                             className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-[#00b14f]"
-                            title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+                            title={theme === 'light' ? t('nav.darkMode') : t('nav.lightMode')}
                         >
                             {theme === 'light' ? (
                                 <Moon className="h-5 w-5" />
@@ -187,21 +191,21 @@ export function Navbar() {
                             className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-800"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Tìm việc làm
+                            {t('nav.jobs')}
                         </Link>
                         <Link
                             to="/companies"
                             className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-800"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Danh sách công ty
+                            {t('nav.companies')}
                         </Link>
                         <Link
                             to="/cv"
                             className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-800"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Hồ sơ & CV
+                            {t('nav.cvProfile')}
                         </Link>
                     </div>
                     {!isAuthenticated && (
@@ -209,11 +213,11 @@ export function Navbar() {
                             <div className="flex flex-col gap-2">
                                 <Link to="/auth/login" onClick={() => setIsMenuOpen(false)}>
                                     <Button variant="outline" className="w-full">
-                                        Đăng nhập
+                                        {t('nav.login')}
                                     </Button>
                                 </Link>
                                 <Link to="/auth/register" onClick={() => setIsMenuOpen(false)}>
-                                    <Button className="w-full">Đăng ký</Button>
+                                    <Button className="w-full">{t('nav.register')}</Button>
                                 </Link>
                                 <Link
                                     to="/auth/register?role=company"
@@ -221,7 +225,7 @@ export function Navbar() {
                                     className="mt-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
                                     <Settings className="h-4 w-4" />
-                                    Nhà tuyển dụng
+                                    {t('nav.companyWorkspace')}
                                 </Link>
                             </div>
                         </div>

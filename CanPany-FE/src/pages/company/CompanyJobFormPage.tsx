@@ -67,6 +67,7 @@ export function CompanyJobFormPage() {
         handleSubmit,
         reset,
         control,
+        watch,
         formState: { errors, isDirty },
     } = useForm<CompanyJobFormValues>({
         resolver: zodResolver(jobFormSchema),
@@ -246,6 +247,7 @@ export function CompanyJobFormPage() {
                             isEditMode={isEditMode}
                             budgetTypeOptions={budgetTypeOptions}
                             levelOptions={levelOptions}
+                            categoryIdValue={watch('categoryId')}
                         />
 
                         <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-4">

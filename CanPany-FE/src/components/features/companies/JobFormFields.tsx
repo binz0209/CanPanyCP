@@ -22,6 +22,7 @@ interface JobFormFieldsProps {
     isEditMode: boolean;
     budgetTypeOptions: BudgetType[];
     levelOptions: JobLevel[];
+    categoryIdValue?: string;
 }
 
 export function JobFormFields({
@@ -30,6 +31,7 @@ export function JobFormFields({
     isEditMode,
     budgetTypeOptions,
     levelOptions,
+    categoryIdValue,
 }: JobFormFieldsProps) {
     return (
         <>
@@ -55,12 +57,33 @@ export function JobFormFields({
             </div>
 
             {!isEditMode && (
-                <Input
-                    label="Category ID"
-                    placeholder="Nhập mã danh mục (Category ID)"
-                    error={errors.categoryId?.message}
-                    {...register('categoryId')}
-                />
+                <div className="space-y-1.5">
+                    <Input
+                        label="Category ID"
+                        placeholder="Nhập mã danh mục (Category ID) do hệ thống / team vận hành cung cấp"
+                        error={errors.categoryId?.message}
+                        {...register('categoryId')}
+                    />
+                    <p className="text-xs text-gray-500">
+                        Category ID là <span className="font-medium">mã danh mục nội bộ</span> dùng để phân loại job
+                        (ví dụ: <code>DEV_FRONTEND</code>, <code>BA_MID</code>...), không nhất thiết trùng với tiêu đề
+                        job bạn hiển thị cho ứng viên.
+                    </p>
+                    {categoryIdValue && categoryIdValue.trim().includes(' ') && (
+                        <p className="text-xs text-amber-600">
+                            Giá trị bạn nhập trông giống <span className="font-medium">tên vị trí</span> (có khoảng
+                            trắng) hơn là <span className="font-medium">mã Category nội bộ</span>. Hãy kiểm tra lại với
+                            tài liệu danh mục hoặc liên hệ team vận hành để lấy đúng mã nếu cần thống kê/báo cáo theo
+                            danh mục.
+                        </p>
+                    )}
+                    {!categoryIdValue && (
+                        <p className="text-xs text-gray-500">
+                            Nếu hiện tại bạn chưa có mã Category phù hợp, có thể tạm thời để trống. Hệ thống vẫn tạo
+                            job, nhưng việc thống kê theo danh mục có thể kém chính xác hơn.
+                        </p>
+                    )}
+                </div>
             )}
 
             <Input

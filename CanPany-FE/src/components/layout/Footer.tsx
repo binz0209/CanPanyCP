@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Briefcase, Facebook, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function Footer() {
+    const { t } = useTranslation('public');
+
     return (
         <footer className="border-t border-gray-100 bg-gray-50">
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -17,19 +20,13 @@ export function Footer() {
                             </span>
                         </Link>
                         <p className="mt-4 max-w-md text-sm leading-relaxed text-gray-600">
-                            Nền tảng tuyển dụng thông minh được hỗ trợ bởi AI, kết nối ứng viên tài năng với các công ty hàng đầu Việt Nam.
+                            {t('footer.brandDesc')}
                         </p>
                         <div className="mt-6 flex gap-3">
-                            <a
-                                href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white"
-                            >
+                            <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
                                 <Facebook className="h-5 w-5" />
                             </a>
-                            <a
-                                href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white"
-                            >
+                            <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
                                 <Linkedin className="h-5 w-5" />
                             </a>
                         </div>
@@ -37,26 +34,26 @@ export function Footer() {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">Dành cho ứng viên</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">{t('footer.candidatesTitle')}</h3>
                         <ul className="mt-4 space-y-3">
                             <li>
                                 <Link to="/jobs" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    Tìm việc làm
+                                    {t('footer.findJobs')}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/companies" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    Danh sách công ty
+                                    {t('footer.companies')}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/auth/register" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    Tạo CV online
+                                    {t('footer.createCV')}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/auth/register" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    Cẩm nang nghề nghiệp
+                                    {t('footer.careerGuide')}
                                 </Link>
                             </li>
                         </ul>
@@ -64,7 +61,7 @@ export function Footer() {
 
                     {/* Contact */}
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">Liên hệ</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">{t('footer.contactTitle')}</h3>
                         <ul className="mt-4 space-y-3">
                             <li className="flex items-center gap-2 text-sm text-gray-600">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00b14f]/10">
@@ -91,12 +88,12 @@ export function Footer() {
                 <div className="mt-12 border-t border-gray-200 pt-8">
                     <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
                         <p className="text-sm text-gray-500">
-                            © {new Date().getFullYear()} CanPany. All rights reserved.
+                            {t('footer.copyright', { year: new Date().getFullYear() })}
                         </p>
                         <div className="flex gap-6">
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">Điều khoản</a>
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">Bảo mật</a>
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">Trợ giúp</a>
+                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{t('footer.terms')}</a>
+                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{t('footer.privacy')}</a>
+                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{t('footer.help')}</a>
                         </div>
                     </div>
                 </div>

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Building2, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 import { CompanyCard } from '@/components/features/companies';
 import { companiesApi } from '@/api';
 import type { Company } from '@/types';
 
 export function CompaniesPage() {
+    const { t } = useTranslation('public');
     const [searchParams, setSearchParams] = useSearchParams();
     const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
 
@@ -35,7 +37,7 @@ export function CompaniesPage() {
             {/* Search Header */}
             <div className="border-b border-gray-200 bg-white">
                 <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <h1 className="text-2xl font-bold text-gray-900">Danh sách công ty</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('companies.title')}</h1>
 
                     <form onSubmit={handleSearch} className="mt-4">
                         <div className="flex flex-col gap-3 sm:flex-row">
@@ -45,12 +47,12 @@ export function CompaniesPage() {
                                     type="text"
                                     value={keyword}
                                     onChange={(e) => setKeyword(e.target.value)}
-                                    placeholder="Tìm kiếm công ty..."
+                                    placeholder={t('companies.searchPlaceholder')}
                                     className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                 />
                             </div>
                             <Button type="submit" size="lg">
-                                Tìm kiếm
+                                {t('companies.searchButton')}
                             </Button>
                         </div>
                     </form>
@@ -70,7 +72,7 @@ export function CompaniesPage() {
                             }}
                         >
                             <CheckCircle className="h-4 w-4" />
-                            Đã xác thực
+                            {t('companies.filterVerified')}
                         </Button>
                     </div>
                 </div>
@@ -80,7 +82,9 @@ export function CompaniesPage() {
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-6 flex items-center justify-between">
                     <p className="text-sm text-gray-600">
-                        {isLoading ? 'Đang tải...' : `Tìm thấy ${data?.total || 0} công ty`}
+                        {isLoading
+                            ? t('companies.loading')
+                            : t('companies.resultCount', { count: data?.total || 0 })}
                     </p>
                 </div>
 
@@ -96,8 +100,8 @@ export function CompaniesPage() {
                         <div className="mx-auto h-24 w-24 rounded-full bg-gray-100 p-6">
                             <Building2 className="h-12 w-12 text-gray-400" />
                         </div>
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">Không tìm thấy công ty</h3>
-                        <p className="mt-2 text-gray-500">Thử thay đổi từ khóa tìm kiếm</p>
+                        <h3 className="mt-4 text-lg font-medium text-gray-900">{t('companies.emptyTitle')}</h3>
+                        <p className="mt-2 text-gray-500">{t('companies.emptyDesc')}</p>
                     </div>
                 ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

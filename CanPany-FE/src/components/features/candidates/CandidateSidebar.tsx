@@ -14,76 +14,78 @@ import {
   Bell,
   BellRing,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { cn } from '../../../utils';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   path?: string;
-  items?: { label: string; path: string; icon: React.ReactNode }[];
+  items?: { labelKey: string; path: string; icon: React.ReactNode }[];
 }
 
+// Keys are stable — labels come from i18n
 const navItems: NavItem[] = [
   {
-    label: 'Tổng quan',
+    labelKey: 'sidebar.overview',
     icon: <LayoutDashboard className="h-5 w-5" />,
     path: '/candidate/dashboard',
   },
   {
-    label: 'Hồ sơ cá nhân',
+    labelKey: 'sidebar.profile',
     icon: <UserIcon className="h-5 w-5" />,
     path: '/candidate/profile',
   },
   {
-    label: 'Quản lý CV',
+    labelKey: 'sidebar.cvManagement',
     icon: <FileText className="h-5 w-5" />,
     items: [
-      { label: 'CV của tôi', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Trợ lý tạo CV AI', path: '/candidate/cv/ai', icon: <Wand2 className="h-4 w-4" /> },
+      { labelKey: 'sidebar.myCVs', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
+      { labelKey: 'sidebar.aiCVAssistant', path: '/candidate/cv/ai', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: 'Việc làm',
+    labelKey: 'sidebar.jobs',
     icon: <Briefcase className="h-5 w-5" />,
     items: [
-      { label: 'Tìm kiếm việc làm', path: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-      { label: 'Việc làm đã lưu', path: '/candidate/jobs/bookmarks', icon: <Bookmark className="h-4 w-4" /> },
-      { label: 'Gợi ý từ AI', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
+      { labelKey: 'sidebar.findJobs', path: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
+      { labelKey: 'sidebar.savedJobs', path: '/candidate/jobs/bookmarks', icon: <Bookmark className="h-4 w-4" /> },
+      { labelKey: 'sidebar.aiSuggestions', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: 'Đơn ứng tuyển',
+    labelKey: 'sidebar.applications',
     icon: <Send className="h-5 w-5" />,
     path: '/candidate/applications/history',
   },
   {
-    label: 'Job Alerts',
+    labelKey: 'sidebar.jobAlerts',
     icon: <BellRing className="h-5 w-5" />,
     path: '/candidate/job-alerts',
   },
   {
-    label: 'AI Career',
+    labelKey: 'sidebar.aiCareer',
     icon: <Wand2 className="h-5 w-5" />,
     items: [
-      { label: 'Tư vấn nghề nghiệp AI', path: '/candidate/ai/chat', icon: <Wand2 className="h-4 w-4" /> },
-      { label: 'Phân tích kỹ năng', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Định hướng nghề nghiệp', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
+      { labelKey: 'sidebar.aiAdvisor', path: '/candidate/ai/chat', icon: <Wand2 className="h-4 w-4" /> },
+      { labelKey: 'sidebar.skillAnalysis', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
+      { labelKey: 'sidebar.careerPath', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: 'Gói Premium',
+    labelKey: 'sidebar.premium',
     icon: <Crown className="h-5 w-5" />,
     path: '/candidate/premium',
   },
   {
-    label: 'Cài đặt',
+    labelKey: 'sidebar.settingsGroup',
     icon: <Settings className="h-5 w-5" />,
     items: [
-      { label: 'Tài khoản', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
-      { label: 'Thông báo', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Quyền riêng tư', path: '/candidate/settings/privacy', icon: <Settings className="h-4 w-4" /> },
+      { labelKey: 'sidebar.account', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
+      { labelKey: 'sidebar.notifications', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
+      { labelKey: 'sidebar.privacy', path: '/candidate/settings/privacy', icon: <Settings className="h-4 w-4" /> },
     ],
   },
 ];
@@ -94,19 +96,20 @@ interface CandidateSidebarProps {
 }
 
 export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
+  const { t } = useTranslation('candidate');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(['Hồ sơ cá nhân'])
+    new Set(['sidebar.profile'])
   );
   const location = useLocation();
   const { unreadCount } = useNotifications({ enabled: true });
 
-  const toggleExpand = (label: string) => {
+  const toggleExpand = (key: string) => {
     setExpandedItems((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(label)) {
-        newSet.delete(label);
+      if (newSet.has(key)) {
+        newSet.delete(key);
       } else {
-        newSet.add(label);
+        newSet.add(key);
       }
       return newSet;
     });
@@ -125,14 +128,13 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
     return false;
   };
 
-  const getBadge = (label: string) => {
-    if (label === 'Notifications' && unreadCount > 0) return unreadCount;
+  const getBadge = (labelKey: string) => {
+    if (labelKey === 'sidebar.notifications' && unreadCount > 0) return unreadCount;
     return null;
   };
 
   return (
     <>
-      {/* Mobile backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"
@@ -140,7 +142,6 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           'fixed left-0 top-16 h-[calc(100vh-64px)] w-64 border-r border-gray-200 bg-white overflow-y-auto transition-transform duration-300 z-40',
@@ -162,7 +163,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
               <div className={cn('text-gray-500', isActive('/candidate/notifications') && 'text-[#00b14f]')}>
                 <Bell className="h-5 w-5" />
               </div>
-              <span className="flex-1 text-left">Thông báo</span>
+              <span className="flex-1 text-left">{t('sidebar.notifications')}</span>
               {unreadCount > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -174,9 +175,9 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
 
         <div className="space-y-2 px-4 pb-4">
           {navItems.map((item) => {
-            const badge = getBadge(item.label);
+            const badge = getBadge(item.labelKey);
             return (
-              <div key={item.label}>
+              <div key={item.labelKey}>
                 {item.path ? (
                   <Link to={item.path} onClick={onClose}>
                     <Button
@@ -190,8 +191,8 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                       <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                         {item.icon}
                       </div>
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {badge && (
+                      <span className="flex-1 text-left">{t(item.labelKey as never)}</span>
+                      {badge != null && (
                         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
                           {badge > 99 ? '99+' : badge}
                         </span>
@@ -206,28 +207,27 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                       'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                       isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
                     )}
-                    onClick={() => toggleExpand(item.label)}
+                    onClick={() => toggleExpand(item.labelKey)}
                   >
                     <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                       {item.icon}
                     </div>
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className="flex-1 text-left">{t(item.labelKey as never)}</span>
                     {item.items && (
                       <ChevronDown
                         className={cn(
                           'h-4 w-4 transition-transform duration-200',
-                          expandedItems.has(item.label) ? 'rotate-180' : ''
+                          expandedItems.has(item.labelKey) ? 'rotate-180' : ''
                         )}
                       />
                     )}
                   </Button>
                 )}
 
-                {/* Sub-items */}
-                {item.items && expandedItems.has(item.label) && (
+                {item.items != null && expandedItems.has(item.labelKey) && (
                   <div className="ml-4 space-y-1 border-l border-gray-200 pl-3 py-2">
                     {item.items.map((subItem) => (
-                      <Link key={subItem.label} to={subItem.path} onClick={onClose}>
+                      <Link key={subItem.labelKey} to={subItem.path} onClick={onClose}>
                         <Button
                           variant="ghost"
                           className={cn(
@@ -239,7 +239,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                           <div className={cn('text-gray-400', isActive(subItem.path) && 'text-[#00b14f]')}>
                             {subItem.icon}
                           </div>
-                          <span>{subItem.label}</span>
+                          <span>{t(subItem.labelKey as never)}</span>
                         </Button>
                       </Link>
                     ))}

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Button, Badge, Card } from '../../components/ui';
 import { ApplyModal } from '../../components/features/jobs';
 import { jobsApi } from '../../api';
@@ -12,6 +13,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useBookmarks } from '@/hooks/candidate/useBookmarks';
 
 export function JobDetailPage() {
+    const { t } = useTranslation('public');
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -24,8 +26,6 @@ export function JobDetailPage() {
         enabled: !!id,
     });
 
-    // useBookmarks is the single source of truth for bookmark state.
-    // It is safe to call unconditionally – it no-ops when not authenticated.
     const { isBookmarked, toggle, isToggling } = useBookmarks();
 
     if (isLoading) {
@@ -41,11 +41,11 @@ export function JobDetailPage() {
     if (error || !data) {
         return (
             <div className="min-h-screen bg-gray-50 py-20 text-center dark:bg-slate-950">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">Không tìm thấy việc làm</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.notFound')}</h2>
                 <Link to="/jobs">
                     <Button variant="outline" className="mt-4">
                         <ArrowLeft className="h-4 w-4" />
-                        Quay lại danh sách
+                        {t('jobDetail.backToList')}
                     </Button>
                 </Link>
             </div>
@@ -53,10 +53,6 @@ export function JobDetailPage() {
     }
 
     const { job } = data;
-
-    // Prefer the hook's live state (updated immediately on toggle via optimistic update).
-    // Fall back to the value returned by the job-detail API for the very first render
-    // before the bookmarks list has been fetched.
     const bookmarked = isBookmarked(job.id) || data.isBookmarked;
 
     const levelColors = {
@@ -74,7 +70,7 @@ export function JobDetailPage() {
                 <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
                     <Link to="/jobs" className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200">
                         <ArrowLeft className="h-4 w-4" />
-                        Quay lại
+                        {t('jobDetail.back')}
                     </Link>
 
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -84,7 +80,7 @@ export function JobDetailPage() {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 lg:text-3xl">{job.title}</h1>
-                                <p className="mt-1 text-lg text-gray-600 dark:text-slate-300">Company Name</p>
+                                <p className="mt-1 text-lg text-gray-600 dark:text-slate-300">{job.companyId}</p>
                                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-slate-400">
                                     {job.location && (
                                         <span className="flex items-center gap-1">
@@ -106,25 +102,16 @@ export function JobDetailPage() {
                                 size="lg"
                                 onClick={() => toggle(job)}
                                 isLoading={isToggling(job.id)}
-                                aria-label={bookmarked ? 'Bỏ lưu việc làm' : 'Lưu việc làm'}
+                                aria-label={bookmarked ? t('jobDetail.saveAriaUnbookmark') : t('jobDetail.saveAriaSave')}
                             >
-                                <Bookmark
-                                    className={cn(
-                                        'h-4 w-4',
-                                        bookmarked && 'fill-current text-[#00b14f]'
-                                    )}
-                                />
-                                {bookmarked ? 'Đã lưu' : 'Lưu'}
+                                <Bookmark className={cn('h-4 w-4', bookmarked && 'fill-current text-[#00b14f]')} />
+                                {bookmarked ? t('jobDetail.saved') : t('jobDetail.save')}
                             </Button>
                             <Button
                                 size="lg"
-                                onClick={() =>
-                                    isAuthenticated
-                                        ? setShowApplyModal(true)
-                                        : navigate('/auth/login')
-                                }
+                                onClick={() => isAuthenticated ? setShowApplyModal(true) : navigate('/auth/login')}
                             >
-                                Ứng tuyển ngay
+                                {t('jobDetail.applyNow')}
                             </Button>
                         </div>
                     </div>
@@ -137,7 +124,7 @@ export function JobDetailPage() {
                     {/* Main Content */}
                     <div className="lg:col-span-2">
                         <Card className="p-6 dark:border-slate-800 dark:bg-slate-900">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Mô tả công việc</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.descriptionSection')}</h2>
                             <div className="prose prose-gray mt-4 max-w-none dark:prose-invert">
                                 <p className="whitespace-pre-wrap text-gray-600 dark:text-slate-300">{job.description}</p>
                             </div>
@@ -145,7 +132,7 @@ export function JobDetailPage() {
 
                         {job.skillIds && job.skillIds.length > 0 && (
                             <Card className="mt-6 p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Kỹ năng yêu cầu</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.skillsSection')}</h2>
                                 <div className="mt-4 flex flex-wrap gap-2">
                                     {job.skillIds.map((skill) => (
                                         <Badge key={skill} variant="secondary">{skill}</Badge>
@@ -158,35 +145,35 @@ export function JobDetailPage() {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         <Card className="p-6 dark:border-slate-800 dark:bg-slate-900">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Thông tin chung</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.infoSection')}</h2>
                             <dl className="mt-4 space-y-4">
                                 {job.budgetAmount && (
                                     <div>
-                                        <dt className="text-sm text-gray-500 dark:text-slate-400">Mức lương</dt>
+                                        <dt className="text-sm text-gray-500 dark:text-slate-400">{t('jobDetail.salary')}</dt>
                                         <dd className="mt-1 flex items-center gap-1 font-medium text-gray-900 dark:text-slate-100">
                                             <DollarSign className="h-4 w-4 text-green-600" />
                                             {formatCurrency(job.budgetAmount)}
-                                            {job.budgetType === 'Hourly' && <span className="text-gray-500 dark:text-slate-400">/giờ</span>}
+                                            {job.budgetType === 'Hourly' && <span className="text-gray-500 dark:text-slate-400">{t('jobDetail.salaryPerHour')}</span>}
                                         </dd>
                                     </div>
                                 )}
                                 {job.level && (
                                     <div>
-                                        <dt className="text-sm text-gray-500 dark:text-slate-400">Cấp độ</dt>
+                                        <dt className="text-sm text-gray-500 dark:text-slate-400">{t('jobDetail.level')}</dt>
                                         <dd className="mt-1">
                                             <Badge className={levelColors[job.level]}>{job.level}</Badge>
                                         </dd>
                                     </div>
                                 )}
                                 <div>
-                                    <dt className="text-sm text-gray-500 dark:text-slate-400">Hình thức</dt>
+                                    <dt className="text-sm text-gray-500 dark:text-slate-400">{t('jobDetail.workType')}</dt>
                                     <dd className="mt-1 font-medium text-gray-900 dark:text-slate-100">
-                                        {job.isRemote ? 'Remote' : 'Onsite'}
+                                        {job.isRemote ? t('jobDetail.remote') : t('jobDetail.onsite')}
                                     </dd>
                                 </div>
                                 {job.deadline && (
                                     <div>
-                                        <dt className="text-sm text-gray-500 dark:text-slate-400">Hạn nộp</dt>
+                                        <dt className="text-sm text-gray-500 dark:text-slate-400">{t('jobDetail.deadline')}</dt>
                                         <dd className="mt-1 font-medium text-gray-900 dark:text-slate-100">{formatDate(job.deadline)}</dd>
                                     </div>
                                 )}
@@ -194,15 +181,15 @@ export function JobDetailPage() {
                         </Card>
 
                         <Card className="p-6 dark:border-slate-800 dark:bg-slate-900">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Thống kê</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.statsSection')}</h2>
                             <dl className="mt-4 grid grid-cols-2 gap-4">
                                 <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-slate-800">
                                     <dt className="text-2xl font-bold text-blue-600 dark:text-blue-300">{job.viewCount}</dt>
-                                    <dd className="text-sm text-gray-500 dark:text-slate-400">Lượt xem</dd>
+                                    <dd className="text-sm text-gray-500 dark:text-slate-400">{t('jobDetail.views')}</dd>
                                 </div>
                                 <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-slate-800">
                                     <dt className="text-2xl font-bold text-green-600 dark:text-green-300">{job.applicationCount}</dt>
-                                    <dd className="text-sm text-gray-500 dark:text-slate-400">Ứng viên</dd>
+                                    <dd className="text-sm text-gray-500 dark:text-slate-400">{t('jobDetail.applicants')}</dd>
                                 </div>
                             </dl>
                         </Card>
@@ -219,10 +206,7 @@ export function JobDetailPage() {
             onSuccess={() => {
                 setShowApplyModal(false);
                 queryClient.invalidateQueries({ queryKey: ['job', id] });
-                toast.success('Ứng tuyển thành công!', {
-                    duration: 2000,
-                    position: 'top-right',
-                });
+                toast.success(t('jobDetail.applySuccess'), { duration: 2000, position: 'top-right' });
             }}
         />
         </>
