@@ -15,11 +15,12 @@ public class CVsControllerTests
 {
     private readonly Mock<ICVService> _cvServiceMock = new();
     private readonly Mock<ILogger<CVsController>> _loggerMock = new();
+    private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
     private readonly CVsController _controller;
 
     public CVsControllerTests()
     {
-        _controller = new CVsController(_cvServiceMock.Object, _loggerMock.Object);
+        _controller = new CVsController(_cvServiceMock.Object, _loggerMock.Object, _cloudinaryServiceMock.Object);
         
         // Setup authenticated user
         var claims = new List<Claim> { new Claim("sub", "user123") };
