@@ -184,7 +184,14 @@ Provide an objective analysis and return a JSON structured exactly like this:
 
             // Update CV record as well
             cv.LatestAnalysisId = savedAnalysis.Id;
-            var combinedSkills = analysisDto.ExtractedSkills.Technical.Concat(analysisDto.ExtractedSkills.Soft).ToList();
+            var technical = analysisDto.ExtractedSkills?.Technical ?? new List<string>();
+            var soft = analysisDto.ExtractedSkills?.Soft ?? new List<string>();
+            var combinedSkills = technical.Concat(soft)
+                                          .Where(s => !string.IsNullOrWhiteSpace(s))
+                                          .ToList();
+            
+            Logger.LogInformation("[CV_ANALYSIS] Extracted {Count} skills: {Skills}", combinedSkills.Count, string.Join(", ", combinedSkills));
+
             cv.ExtractedSkills = combinedSkills;
             await _cvRepository.UpdateAsync(cv);
 

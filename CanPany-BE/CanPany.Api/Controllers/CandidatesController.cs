@@ -199,7 +199,8 @@ public class CandidatesController : ControllerBase
                     cv.Id,
                     cv.FileName,
                     cv.IsDefault,
-                    cv.LatestAnalysisId
+                    cv.LatestAnalysisId,
+                    cv.ExtractedSkills
                 })
             };
 
