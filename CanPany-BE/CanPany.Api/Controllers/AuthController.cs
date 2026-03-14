@@ -246,7 +246,7 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var clientId = _configuration["GitHub:ClientId"];
+            var clientId = _configuration["OAuth:GitHub:ClientId"];
             if (string.IsNullOrEmpty(clientId))
                 return StatusCode(500, ApiResponse.CreateError("GitHub OAuth chưa được cấu hình", "NotConfigured"));
 
@@ -254,7 +254,7 @@ public class AuthController : ControllerBase
             var state = Guid.NewGuid().ToString("N");
             _cache.Set($"gh_oauth_{state}", userId, TimeSpan.FromMinutes(10));
 
-            var callbackUrl = Uri.EscapeDataString(_configuration["GitHub:CallbackUrl"] ?? "");
+            var callbackUrl = Uri.EscapeDataString(_configuration["OAuth:GitHub:RedirectUri"] ?? "");
             var scope = Uri.EscapeDataString("read:user user:email");
             var oauthUrl = $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={callbackUrl}&state={state}&scope={scope}";
 
@@ -279,7 +279,7 @@ public class AuthController : ControllerBase
         [FromQuery] string? state,
         [FromQuery] string? error)
     {
-        var frontendUrl = _configuration["GitHub:FrontendCallbackUrl"] ?? "http://localhost:5173/profile";
+        var frontendUrl = _configuration["OAuth:GitHub:FrontendCallbackUrl"] ?? "http://localhost:5173/profile";
 
         // User từ chối cấp quyền
         if (!string.IsNullOrEmpty(error))
@@ -301,8 +301,8 @@ public class AuthController : ControllerBase
 
         try
         {
-            var clientId = _configuration["GitHub:ClientId"];
-            var clientSecret = _configuration["GitHub:ClientSecret"];
+            var clientId = _configuration["OAuth:GitHub:ClientId"];
+            var clientSecret = _configuration["OAuth:GitHub:ClientSecret"];
 
             // Đổi code lấy access token
             var tokenHttp = _httpClientFactory.CreateClient();
