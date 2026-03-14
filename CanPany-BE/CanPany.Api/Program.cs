@@ -18,6 +18,7 @@ using Hangfire.Mongo;
 using Hangfire.Mongo.Migration.Strategies;
 using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
+using CanPany.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,9 @@ builder.Services.AddSwaggerGen(c =>
 // Configure MongoDB
 builder.Services.Configure<MongoOptions>(builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<MongoDbContext>();
+
+// Configure Cloudinary
+builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection("Cloudinary"));
 
 // Configure Redis for Background Jobs
 var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
@@ -248,6 +252,7 @@ builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
 // Register Reset Code Store as Singleton (to persist codes across requests)
 builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();

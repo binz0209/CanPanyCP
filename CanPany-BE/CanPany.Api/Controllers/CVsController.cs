@@ -3,6 +3,7 @@ using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CanPany.Application.Interfaces.Services;
 
 namespace CanPany.Api.Controllers;
 
@@ -16,13 +17,16 @@ public class CVsController : ControllerBase
 {
     private readonly ICVService _cvService;
     private readonly ILogger<CVsController> _logger;
+    private readonly ICloudinaryService _cloudinaryService;
 
     public CVsController(
         ICVService cvService,
-        ILogger<CVsController> logger)
+        ILogger<CVsController> logger,
+        ICloudinaryService cloudinaryService)
     {
         _cvService = cvService;
         _logger = logger;
+        _cloudinaryService = cloudinaryService;
     }
 
     /// <summary>
@@ -77,15 +81,24 @@ public class CVsController : ControllerBase
         try
         {
             var userId = User.FindFirst("sub")?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+            //if (string.IsNullOrEmpty(userId))
+            //    return Unauthorized();
 
-            // TODO: Upload file to Cloudinary and get URL
+            if (request.File == null || request.File.Length == 0)
+                return BadRequest(ApiResponse.CreateError("File is required", "FileRequired"));
+
+            // Upload file to Cloudinary
+            await using var stream = request.File.OpenReadStream();
+            var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
+                stream,
+                request.File.FileName,
+                "cvs");
+
             var cv = new CV
             {
                 UserId = userId,
                 FileName = request.File.FileName,
-                FileUrl = "", // TODO: Set from Cloudinary upload result
+                FileUrl = secureUrl,
                 FileSize = request.File.Length,
                 MimeType = request.File.ContentType,
                 IsDefault = request.IsDefault ?? false,
@@ -93,7 +106,14 @@ public class CVsController : ControllerBase
             };
 
             var created = await _cvService.CreateAsync(cv);
-            return Ok(ApiResponse<CV>.CreateSuccess(created, "CV uploaded successfully"));
+            var responseData = new
+            {
+                Cv = created,
+                Url = secureUrl,
+                PublicId = publicId
+            };
+
+            return Ok(ApiResponse<object>.CreateSuccess(responseData, "CV uploaded successfully"));
         }
         catch (Exception ex)
         {
