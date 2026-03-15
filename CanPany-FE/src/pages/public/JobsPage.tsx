@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Search, Filter, MapPin, Briefcase, X, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { Button, Badge } from '../../components/ui';
 import { JobCard } from '../../components/features/jobs';
 import { jobsApi, companiesApi } from '../../api';
 import type { Job, JobLevel, BudgetType, Company } from '../../types';
 import { useBookmarks } from '../../hooks/candidate/useBookmarks';
+import { useAuthStore } from '@/stores/auth.store';
 
 const LEVELS: JobLevel[] = ['Junior', 'Mid', 'Senior', 'Expert'];
 
@@ -29,6 +30,18 @@ export function JobsPage() {
 
   // Bookmark state shared with the hook – no-ops for unauthenticated users.
   const { isBookmarked, toggle } = useBookmarks();
+  const { isAuthenticated } = useAuthStore();
+
+  // Track click interaction
+  const trackClickMutation = useMutation({
+    mutationFn: (jobId: string) => jobsApi.trackInteraction(jobId, 2), // Type 2 = Click
+  });
+
+  const handleJobClick = (jobId: string) => {
+    if (isAuthenticated) {
+      trackClickMutation.mutate(jobId);
+    }
+  };
 
   // Debounced keyword and location
   const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
@@ -543,6 +556,7 @@ export function JobsPage() {
                     job={job}
                     isBookmarked={isBookmarked(job.id)}
                     onBookmark={(_id) => toggle(job)}
+                    onClick={handleJobClick}
                   />
                 ))}
               </div>

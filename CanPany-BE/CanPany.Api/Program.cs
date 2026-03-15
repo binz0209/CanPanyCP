@@ -302,6 +302,12 @@ builder.Services.AddScoped<IJobAlertService, JobAlertService>();
 builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
 builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
+// Register CF Recommendation Services
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserJobInteractionRepository, CanPany.Infrastructure.Repositories.UserJobInteractionRepository>();
+builder.Services.AddScoped<IInteractionTrackingService, InteractionTrackingService>();
+builder.Services.AddScoped<ICollaborativeFilteringService, CollaborativeFilteringService>();
+builder.Services.AddScoped<IHybridRecommendationService, HybridRecommendationService>();
+
 // Register Background Email Services
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
 builder.Services.AddScoped<EmailJobProcessor>();

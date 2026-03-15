@@ -55,6 +55,12 @@ export interface JobListResponse {
     totalPages: number;
 }
 
+/** Response item from GET /api/jobs/recommended (Hybrid CF + Semantic) */
+export interface RecommendedJob {
+    job: Job;
+    hybridScore: number;
+}
+
 export interface CreateJobRequest {
     companyId: string;
     title: string;

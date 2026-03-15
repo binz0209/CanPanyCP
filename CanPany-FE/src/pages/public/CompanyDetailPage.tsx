@@ -3,11 +3,25 @@ import { useQuery } from '@tanstack/react-query';
 import { MapPin, Phone, Globe, Building2, CheckCircle, ArrowLeft, Briefcase } from 'lucide-react';
 import { Button, Badge, Card } from '@/components/ui';
 import { JobCard } from '@/components/features/jobs';
-import { companiesApi } from '@/api';
+import { companiesApi, jobsApi } from '@/api';
 import { companiesKeys } from '@/lib/queryKeys';
+import { useMutation } from '@tanstack/react-query';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function CompanyDetailPage() {
     const { id } = useParams<{ id: string }>();
+    const { isAuthenticated } = useAuthStore();
+
+    // Track click interaction
+    const trackClickMutation = useMutation({
+        mutationFn: (jobId: string) => jobsApi.trackInteraction(jobId, 2), // Type 2 = Click
+    });
+
+    const handleJobClick = (jobId: string) => {
+        if (isAuthenticated) {
+            trackClickMutation.mutate(jobId);
+        }
+    };
 
     const { data: company, isLoading } = useQuery({
         queryKey: companiesKeys.detail(id!),
@@ -141,7 +155,7 @@ export function CompanyDetailPage() {
                             ) : (
                                 <div className="mt-4 space-y-4">
                                     {jobs.map((job) => (
-                                        <JobCard key={job.id} job={job} />
+                                        <JobCard key={job.id} job={job} onClick={handleJobClick} />
                                     ))}
                                 </div>
                             )}

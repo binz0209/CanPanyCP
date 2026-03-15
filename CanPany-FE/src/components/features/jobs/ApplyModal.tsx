@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, CheckCircle, DollarSign, FileText } from 'lucide-react';
 import { Button } from '../../ui';
-import { applicationsApi, cvApi } from '../../../api';
+import { applicationsApi, cvApi, jobsApi } from '../../../api';
 import type { CV } from '../../../types';
 
 interface ApplyModalProps {
@@ -55,6 +55,10 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose, onSuccess }: Appl
                 coverLetter.trim() || undefined,
                 expectedSalary ? Number(expectedSalary) : undefined
             );
+            
+            // Fire and forget tracking. type: 4 = Apply
+            jobsApi.trackInteraction(jobId, 4).catch(console.error);
+            
             setIsSuccess(true);
             onSuccess();
         } catch (err: unknown) {

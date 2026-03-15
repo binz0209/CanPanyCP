@@ -40,6 +40,8 @@ export function useBookmarks() {
                 await jobsApi.removeBookmark(job.id);
             } else {
                 await jobsApi.bookmark(job.id);
+                // Fire and forget tracking. type: 3 = Bookmark
+                jobsApi.trackInteraction(job.id, 3).catch(console.error);
             }
             return job;
         },

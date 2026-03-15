@@ -625,25 +625,140 @@ public class DatabaseSeeder
         var skillsCollection = _context.Skills;
         var existingCount = await jobsCollection.CountDocumentsAsync(_ => true);
 
-        if (existingCount > 0) return;
+        // Ensure we always have at least 50 jobs in the database.
+        // If there are already 50 or more, don't seed more.
+        const int targetJobCount = 50;
+        if (existingCount >= targetJobCount) return;
 
         var companies = await companiesCollection.Find(_ => true).ToListAsync();
         var categories = await categoriesCollection.Find(_ => true).ToListAsync();
         var skills = await skillsCollection.Find(_ => true).Limit(30).ToListAsync();
 
-        if (!companies.Any() || !categories.Any()) return;
+        if (!companies.Any() || !categories.Any() || !skills.Any()) return;
 
-        var jobTitles = new[] { "Senior Full Stack Developer", "React Native Mobile Developer", "Python Data Scientist", "UI/UX Designer", "DevOps Engineer", "Backend Developer (.NET)", "Frontend Developer (React)", "Machine Learning Engineer" };
-        var jobDescriptions = new[] { "We are looking for an experienced full stack developer to join our team.", "Join our mobile development team to create amazing iOS and Android apps.", "Looking for a data scientist to help us analyze large datasets.", "Creative UI/UX designer needed to design beautiful interfaces.", "DevOps engineer to manage our cloud infrastructure.", "Backend developer with .NET experience.", "Frontend developer skilled in React.", "ML engineer to develop and deploy machine learning models." };
+        var jobTitles = new[]
+        {
+            "Senior Full Stack Developer",
+            "React Native Mobile Developer",
+            "Python Data Scientist",
+            "UI/UX Designer",
+            "DevOps Engineer",
+            "Backend Developer (.NET)",
+            "Frontend Developer (React)",
+            "Machine Learning Engineer",
+            "Node.js Backend Developer",
+            "Vue.js Frontend Developer",
+            "Angular Developer",
+            "Flutter Mobile Developer",
+            "iOS Developer (Swift)",
+            "Android Developer (Kotlin)",
+            "Cloud Architect (AWS/Azure)",
+            "Database Administrator",
+            "Security Engineer",
+            "QA Automation Engineer",
+            "Product Manager",
+            "Scrum Master",
+            "Technical Lead",
+            "Solution Architect",
+            "Blockchain Developer",
+            "Game Developer (Unity)",
+            "Embedded Systems Engineer",
+            "Network Engineer",
+            "System Administrator",
+            "Business Analyst",
+            "Data Engineer",
+            "Big Data Engineer",
+            "AI Research Scientist",
+            "Computer Vision Engineer",
+            "NLP Engineer",
+            "Cybersecurity Specialist",
+            "Penetration Tester",
+            "Site Reliability Engineer (SRE)",
+            "Kubernetes Administrator",
+            "Docker Specialist",
+            "Microservices Architect",
+            "API Developer",
+            "GraphQL Developer",
+            "WordPress Developer",
+            "Shopify Developer",
+            "E-commerce Developer",
+            "Magento Developer",
+            "Laravel Developer",
+            "Django Developer",
+            "Ruby on Rails Developer",
+            "Go Developer",
+            "Rust Developer",
+            "C++ Developer"
+        };
+
+        var jobDescriptions = new[]
+        {
+            "We are looking for an experienced full stack developer to join our team.",
+            "Join our mobile development team to create amazing iOS and Android apps.",
+            "Looking for a data scientist to help us analyze large datasets.",
+            "Creative UI/UX designer needed to design beautiful interfaces.",
+            "DevOps engineer to manage our cloud infrastructure.",
+            "Backend developer with .NET experience.",
+            "Frontend developer skilled in React.",
+            "ML engineer to develop and deploy machine learning models.",
+            "Node.js backend developer to build scalable APIs.",
+            "Vue.js frontend developer for modern web applications.",
+            "Angular developer to work on enterprise applications.",
+            "Flutter developer to create cross-platform mobile apps.",
+            "iOS developer with Swift expertise.",
+            "Android developer proficient in Kotlin.",
+            "Cloud architect to design scalable cloud solutions.",
+            "Database administrator to manage and optimize databases.",
+            "Security engineer to protect our systems and data.",
+            "QA automation engineer to ensure quality.",
+            "Product manager to drive product strategy.",
+            "Scrum master to facilitate agile development.",
+            "Technical lead to guide development teams.",
+            "Solution architect to design system solutions.",
+            "Blockchain developer for decentralized applications.",
+            "Game developer using Unity engine.",
+            "Embedded systems engineer for IoT devices.",
+            "Network engineer to manage network infrastructure.",
+            "System administrator to maintain IT systems.",
+            "Business analyst to bridge business and technology.",
+            "Data engineer to build data pipelines.",
+            "Big data engineer for large-scale data processing.",
+            "AI research scientist to advance AI capabilities.",
+            "Computer vision engineer for image processing.",
+            "NLP engineer for natural language understanding.",
+            "Cybersecurity specialist to protect against threats.",
+            "Penetration tester to find security vulnerabilities.",
+            "SRE to ensure system reliability and performance.",
+            "Kubernetes administrator for container orchestration.",
+            "Docker specialist for containerization.",
+            "Microservices architect to design distributed systems.",
+            "API developer to create RESTful services.",
+            "GraphQL developer for flexible data queries.",
+            "WordPress developer for CMS websites.",
+            "Shopify developer for e-commerce platforms.",
+            "E-commerce developer for online stores.",
+            "Magento developer for enterprise e-commerce.",
+            "Laravel developer for PHP applications.",
+            "Django developer for Python web apps.",
+            "Ruby on Rails developer for rapid development.",
+            "Go developer for high-performance systems.",
+            "Rust developer for systems programming.",
+            "C++ developer for performance-critical applications."
+        };
 
         var jobs = new List<Job>();
         var random = new Random();
 
-        for (int i = 0; i < Math.Min(jobTitles.Length, companies.Count * 2); i++)
+        var jobsToCreate = targetJobCount - (int)existingCount;
+        for (int i = 0; i < jobsToCreate; i++)
         {
             var company = companies[i % companies.Count];
             var category = categories[random.Next(categories.Count)];
-            var selectedSkills = skills.OrderBy(x => random.Next()).Take(3 + random.Next(5)).Select(s => s.Id).ToList();
+            var selectedSkills = skills
+                .OrderBy(_ => random.Next())
+                .Take(3 + random.Next(5))
+                .Select(s => s.Id)
+                .ToList();
 
             jobs.Add(new Job
             {
@@ -653,7 +768,9 @@ public class DatabaseSeeder
                 CategoryId = category.Id,
                 SkillIds = selectedSkills,
                 BudgetType = random.Next(2) == 0 ? "Fixed" : "Hourly",
-                BudgetAmount = random.Next(2) == 0 ? (decimal)(10 + random.Next(40)) * 1000000 : (decimal)(500 + random.Next(1500)) * 1000,
+                BudgetAmount = random.Next(2) == 0
+                    ? (decimal)(10 + random.Next(40)) * 1_000_000
+                    : (decimal)(500 + random.Next(1500)) * 1_000,
                 Level = new[] { "Junior", "Mid", "Senior", "Expert" }[random.Next(4)],
                 Location = new[] { "Ho Chi Minh City", "Hanoi", "Da Nang", "Remote" }[random.Next(4)],
                 IsRemote = random.Next(2) == 0,
@@ -665,7 +782,10 @@ public class DatabaseSeeder
             });
         }
 
-        await jobsCollection.InsertManyAsync(jobs);
+        if (jobs.Any())
+        {
+            await jobsCollection.InsertManyAsync(jobs);
+        }
     }
 
     // SeedProjectsAsync removed — Projects merged into Jobs

@@ -2,6 +2,8 @@ using CanPany.Api.Controllers;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
+using CanPany.Worker.Infrastructure.Progress;
+using CanPany.Worker.Infrastructure.Queue;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,6 +18,10 @@ public class JobsControllerTests
     private readonly Mock<IJobService> _jobServiceMock = new();
     private readonly Mock<IBookmarkService> _bookmarkServiceMock = new();
     private readonly Mock<IJobMatchingService> _jobMatchingServiceMock = new();
+    private readonly Mock<IHybridRecommendationService> _recommendationServiceMock = new();
+    private readonly Mock<IInteractionTrackingService> _interactionServiceMock = new();
+    private readonly Mock<IJobProducer> _jobProducerMock = new();
+    private readonly Mock<IJobProgressTracker> _progressTrackerMock = new();
     private readonly Mock<ILogger<JobsController>> _loggerMock = new();
     private readonly JobsController _controller;
 
@@ -25,6 +31,10 @@ public class JobsControllerTests
             _jobServiceMock.Object,
             _bookmarkServiceMock.Object,
             _jobMatchingServiceMock.Object,
+            _recommendationServiceMock.Object,
+            _interactionServiceMock.Object,
+            _jobProducerMock.Object,
+            _progressTrackerMock.Object,
             _loggerMock.Object);
         
         // Setup default HttpContext
@@ -144,16 +154,20 @@ public class JobsControllerTests
     public async Task GetRecommendedJobs_ShouldReturnSuccess_WhenUserAuthenticated()
     {
         // Arrange
-        // Controller returns empty list for now (TODO: Implement AI recommendation)
+        var recommendations = new List<(Job Job, double HybridScore)>
+        {
+            (new Job { Id = "job1", Title = "Recommended Job" }, 85.5)
+        };
+        _recommendationServiceMock.Setup(x => x.GetRecommendedJobsAsync("user123", 10))
+            .ReturnsAsync(recommendations);
 
         // Act
         var result = await _controller.GetRecommendedJobs();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse<IEnumerable<Job>>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<object>>(okResult.Value);
         Assert.True(response.Success);
-        Assert.Empty(response.Data ?? Enumerable.Empty<Job>());
     }
 
     [Fact]

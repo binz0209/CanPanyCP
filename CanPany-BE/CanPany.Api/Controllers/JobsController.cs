@@ -3,8 +3,14 @@ using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CanPany.Worker.Infrastructure.Progress;
+using CanPany.Worker.Infrastructure.Queue;
+using CanPany.Worker.Models;
+using CanPany.Worker.Models.Payloads;
+using System.Text.Json;
 
 using CanPany.Application.DTOs.Jobs;
+using System.Text.Json.Serialization;
 
 namespace CanPany.Api.Controllers;
 
@@ -17,23 +23,36 @@ public class JobsController : ControllerBase
 {
     private readonly IJobService _jobService;
     private readonly IBookmarkService _bookmarkService;
-    private readonly IJobMatchingService _jobMatchingService; // ? ADD THIS
+    private readonly IJobMatchingService _jobMatchingService;
+    private readonly IHybridRecommendationService _recommendationService;
+    private readonly IInteractionTrackingService _interactionService;
+    private readonly IJobProducer _jobProducer;
+    private readonly IJobProgressTracker _progressTracker;
     private readonly ILogger<JobsController> _logger;
 
     public JobsController(
         IJobService jobService,
         IBookmarkService bookmarkService,
-        IJobMatchingService jobMatchingService, // ? ADD THIS
+        IJobMatchingService jobMatchingService,
+        IHybridRecommendationService recommendationService,
+        IInteractionTrackingService interactionService,
+        IJobProducer jobProducer,
+        IJobProgressTracker progressTracker,
         ILogger<JobsController> logger)
     {
         _jobService = jobService;
         _bookmarkService = bookmarkService;
-        _jobMatchingService = jobMatchingService; // ? ADD THIS
+        _jobMatchingService = jobMatchingService;
+        _recommendationService = recommendationService;
+        _interactionService = interactionService;
+        _jobProducer = jobProducer;
+        _progressTracker = progressTracker;
         _logger = logger;
     }
 
     /// <summary>
     /// UC-CAN-13: Search Jobs
+    /// If user is authenticated, results are sorted by hybrid score (relevance)
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
@@ -41,7 +60,41 @@ public class JobsController : ControllerBase
     {
         try
         {
-            var jobs = await _jobService.SearchAsync(keyword, categoryId, skillIds, minBudget, maxBudget);
+            var jobs = (await _jobService.SearchAsync(keyword, categoryId, skillIds, minBudget, maxBudget)).ToList();
+            
+            // If user is authenticated, calculate scores and sort by relevance
+            var userId = User.FindFirst("sub")?.Value;
+            if (!string.IsNullOrEmpty(userId) && jobs.Any())
+            {
+                try
+                {
+                    var scores = await _recommendationService.CalculateScoresForJobsAsync(userId, jobs);
+                    
+                    // Sort jobs by score (descending), then by createdAt (descending) for same scores
+                    jobs = jobs
+                        .OrderByDescending(j => scores.TryGetValue(j.Id, out var score) ? score : 0)
+                        .ThenByDescending(j => j.CreatedAt)
+                        .ToList();
+                    
+                    _logger.LogDebug(
+                        "Sorted {JobCount} jobs by hybrid score for user {UserId}. Score range: {MinScore:F2} - {MaxScore:F2}",
+                        jobs.Count, userId,
+                        scores.Values.Any() ? scores.Values.Min() : 0,
+                        scores.Values.Any() ? scores.Values.Max() : 0);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to calculate scores for search results, returning unsorted");
+                    // Fallback: sort by createdAt
+                    jobs = jobs.OrderByDescending(j => j.CreatedAt).ToList();
+                }
+            }
+            else
+            {
+                // For anonymous users, sort by createdAt (newest first)
+                jobs = jobs.OrderByDescending(j => j.CreatedAt).ToList();
+            }
+            
             return Ok(ApiResponse<IEnumerable<Job>>.CreateSuccess(jobs));
         }
         catch (Exception ex)
@@ -82,7 +135,7 @@ public class JobsController : ControllerBase
     }
 
     /// <summary>
-    /// UC-CAN-15: View AI-Recommended Jobs
+    /// UC-CAN-15: View AI-Recommended Jobs (Hybrid CF + Semantic)
     /// </summary>
     [HttpGet("recommended")]
     [Authorize]
@@ -94,16 +147,43 @@ public class JobsController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            // TODO: Implement AI recommendation logic
-            // This should use vector search and matching algorithms
-            // For now, return empty list
-            await Task.CompletedTask;
-            return Ok(ApiResponse<IEnumerable<Job>>.CreateSuccess(new List<Job>()));
+            var recommendations = await _recommendationService.GetRecommendedJobsAsync(userId, limit);
+
+            var result = recommendations.Select(r => new
+            {
+                job = r.Job,
+                hybridScore = Math.Round(r.HybridScore, 2)
+            });
+
+            return Ok(ApiResponse<object>.CreateSuccess(result));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting recommended jobs");
             return StatusCode(500, ApiResponse.CreateError("Failed to get recommended jobs", "GetRecommendedJobsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Track user-job interaction (View, Click, Bookmark, Apply) for CF
+    /// </summary>
+    [HttpPost("{id}/track")]
+    [Authorize]
+    public async Task<IActionResult> TrackInteraction(string id, [FromBody] TrackInteractionRequest request)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            await _interactionService.TrackInteractionAsync(userId, id, request.Type);
+            return Ok(ApiResponse.CreateSuccess("Interaction tracked"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error tracking interaction");
+            return StatusCode(500, ApiResponse.CreateError("Failed to track interaction", "TrackInteractionFailed"));
         }
     }
 
@@ -121,6 +201,18 @@ public class JobsController : ControllerBase
                 return Unauthorized();
 
             await _bookmarkService.BookmarkJobAsync(userId, id);
+            
+            // Track bookmark interaction for CF
+            try
+            {
+                await _interactionService.TrackInteractionAsync(userId, id, InteractionType.Bookmark);
+            }
+            catch (Exception trackEx)
+            {
+                // Log but don't fail the bookmark operation if tracking fails
+                _logger.LogWarning(trackEx, "Failed to track bookmark interaction for CF: {UserId} - {JobId}", userId, id);
+            }
+            
             return Ok(ApiResponse.CreateSuccess("Job bookmarked successfully"));
         }
         catch (Exception ex)
@@ -144,6 +236,11 @@ public class JobsController : ControllerBase
                 return Unauthorized();
 
             await _bookmarkService.RemoveBookmarkAsync(userId, id);
+            
+            // Note: We don't remove the interaction record when unbookmarking
+            // The interaction history is preserved for CF, but future recommendations
+            // will naturally reflect the reduced interest over time
+            
             return Ok(ApiResponse.CreateSuccess("Bookmark removed successfully"));
         }
         catch (Exception ex)
@@ -317,6 +414,68 @@ public class JobsController : ControllerBase
         {
             _logger.LogError(ex, "Error reopening job");
             return StatusCode(500, ApiResponse.CreateError("Failed to reopen job", "ReopenJobFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Trigger background sync for recommendation skills using Gemini.
+    /// Profile page can call this endpoint when user clicks "sync skills for recommended jobs".
+    /// </summary>
+    [HttpPost("recommended/sync-skills")]
+    [Authorize]
+    public async Task<IActionResult> SyncRecommendedJobSkills([FromQuery] int limit = 20)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var payload = new RecommendationSyncPayload
+            {
+                UserId = userId,
+                Limit = Math.Clamp(limit, 5, 100)
+            };
+
+            var job = new JobMessage
+            {
+                I18nKey = "Job.Recommendation.SyncSkills",
+                Payload = JsonSerializer.Serialize(payload),
+                UserId = userId,
+                Priority = JobPriority.Normal
+            };
+
+            var jobId = await _jobProducer.EnqueueJobAsync(job);
+            if (string.IsNullOrWhiteSpace(jobId))
+                return StatusCode(500, ApiResponse.CreateError("Failed to enqueue recommendation sync job", "EnqueueFailed"));
+
+            await _progressTracker.InitializeAsync(
+                jobId: jobId,
+                totalSteps: 4,
+                userId: userId,
+                jobType: "SyncRecommendationSkills",
+                jobTitle: "Đồng bộ kỹ năng để gợi ý việc làm");
+
+            await _progressTracker.UpdateProgressAsync(
+                jobId: jobId,
+                percentComplete: 0,
+                currentStep: "Đang chờ xử lý...",
+                details: new Dictionary<string, object>
+                {
+                    ["limit"] = payload.Limit
+                });
+
+            return Ok(ApiResponse<object>.CreateSuccess(new
+            {
+                jobId,
+                limit = payload.Limit,
+                message = "Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm"
+            }, "Recommendation sync job started"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error queueing recommendation sync job");
+            return StatusCode(500, ApiResponse.CreateError("Failed to start recommendation sync", "RecommendationSyncFailed"));
         }
     }
 }
