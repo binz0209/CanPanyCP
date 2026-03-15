@@ -3,7 +3,6 @@ using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CanPany.Application.Interfaces.Services;
 
 namespace CanPany.Api.Controllers;
 
@@ -94,37 +93,11 @@ public class CVsController : ControllerBase
                 request.File.FileName,
                 "cvs");
 
-<<<<<<< HEAD
-            // Save file locally to wwwroot/cvs
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "cvs");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var uniqueFileName = $"{Guid.NewGuid()}_{request.File.FileName}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await request.File.CopyToAsync(fileStream);
-            }
-
-            // Generate relative URL for access
-            var requestUrl = $"{Request.Scheme}://{Request.Host}";
-            var fileUrl = $"{requestUrl}/cvs/{uniqueFileName}";
-
-=======
->>>>>>> 6597c67 (CC-387 Setup Cloudinary Integration)
             var cv = new CV
             {
                 UserId = userId,
                 FileName = request.File.FileName,
-<<<<<<< HEAD
-                FileUrl = fileUrl,
-=======
                 FileUrl = secureUrl,
->>>>>>> 6597c67 (CC-387 Setup Cloudinary Integration)
                 FileSize = request.File.Length,
                 MimeType = request.File.ContentType,
                 IsDefault = request.IsDefault ?? false,
