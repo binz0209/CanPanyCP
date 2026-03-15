@@ -76,6 +76,7 @@ public class MongoDbContext
 
     public IMongoCollection<CandidateAlert> CandidateAlerts => _database.GetCollection<CandidateAlert>("candidate_alerts");
     public IMongoCollection<JobBookmark> JobBookmarks => _database.GetCollection<JobBookmark>("job_bookmarks");
+    public IMongoCollection<UserJobInteraction> UserJobInteractions => _database.GetCollection<UserJobInteraction>("user_job_interactions");
 }
 
 public class MongoOptions

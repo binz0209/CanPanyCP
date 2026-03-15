@@ -39,8 +39,15 @@ public class GeminiService : IGeminiService
     private readonly IConfiguration _configuration;
     private readonly ILogger<GeminiService> _logger;
     private readonly string _apiKey;
-    private readonly string _embeddingModelUrl = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
     private readonly string _chatModelUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+
+    // Fallback order for embedding models/endpoints (Gemini API can change available model names by version/project)
+    private static readonly (string Model, string Url)[] EmbeddingCandidates =
+    {
+        ("models/text-embedding-004", "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent"),
+        ("models/embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent"),
+        ("models/gemini-embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent")
+    };
 
     // Rate limit config
     private const int MaxRetries = 3;
@@ -118,33 +125,57 @@ public class GeminiService : IGeminiService
 
         try
         {
-            var requestBody = new
+            for (int i = 0; i < EmbeddingCandidates.Length; i++)
             {
-                model = "models/text-embedding-004",
-                content = new { parts = new[] { new { text = text } } }
-            };
+                var (model, url) = EmbeddingCandidates[i];
 
-            var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var requestBody = new
+                {
+                    model,
+                    content = new { parts = new[] { new { text } } }
+                };
 
-            // Use retry-aware send
-            var response = await SendWithRetryAsync($"{_embeddingModelUrl}?key={_apiKey}", content);
-            response.EnsureSuccessStatusCode();
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var responseString = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(responseString);
+                var response = await SendWithRetryAsync($"{url}?key={_apiKey}", content);
 
-            var values = doc.RootElement
-                .GetProperty("embedding")
-                .GetProperty("values");
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(
+                        "[GEMINI_EMBED_404] Embedding endpoint/model not found. Trying fallback {Index}/{Total}. Model: {Model}",
+                        i + 1,
+                        EmbeddingCandidates.Length,
+                        model);
+                    continue;
+                }
 
-            var result = new List<double>();
-            foreach (var value in values.EnumerateArray())
-            {
-                result.Add(value.GetDouble());
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    throw new HttpRequestException(
+                        $"Gemini Embedding API Error: {response.StatusCode} - {errorBody}",
+                        null,
+                        response.StatusCode);
+                }
+
+                var responseString = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(responseString);
+
+                var values = doc.RootElement
+                    .GetProperty("embedding")
+                    .GetProperty("values");
+
+                var result = new List<double>();
+                foreach (var value in values.EnumerateArray())
+                {
+                    result.Add(value.GetDouble());
+                }
+
+                return result;
             }
 
-            return result;
+            throw new HttpRequestException("Gemini embedding failed: all configured embedding endpoints returned 404.", null, HttpStatusCode.NotFound);
         }
         catch (GeminiRateLimitException)
         {

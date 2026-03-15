@@ -36,6 +36,12 @@ export interface GitHubSyncResult {
     message: string;
 }
 
+export interface RecommendationSyncResult {
+    jobId: string;
+    limit: number;
+    message: string;
+}
+
 export type JobStatus = 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Cancelled' | 'Retrying';
 
 export interface JobProgressRecord {
@@ -239,6 +245,14 @@ export const candidateApi = {
         return response.data.data!;
     },
 
+    // Trigger background sync for recommendation skills (Gemini + profile/CV/GitHub aggregation)
+    syncRecommendationSkills: async (limit = 20): Promise<RecommendationSyncResult> => {
+        const response = await apiClient.post<ApiResponse<RecommendationSyncResult>>('/jobs/recommended/sync-skills', null, {
+            params: { limit },
+        });
+        return response.data.data!;
+    },
+
     // Poll background job status
     getGitHubJobStatus: async (jobId: string): Promise<GitHubJobStatus> => {
         const response = await apiClient.get<GitHubJobStatus>(`/github/status/${jobId}`);
@@ -264,4 +278,4 @@ export const candidateApi = {
         const response = await apiClient.get<JobProgressRecord>(`/background-jobs/my-jobs/${jobId}`);
         return response.data;
     },
-};
+};

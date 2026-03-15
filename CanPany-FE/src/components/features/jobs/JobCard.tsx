@@ -9,9 +9,10 @@ interface JobCardProps {
     job: Job;
     onBookmark?: (id: string) => void;
     isBookmarked?: boolean;
+    onClick?: (id: string) => void; // Track click interaction
 }
 
-export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
+export function JobCard({ job, onBookmark, isBookmarked, onClick }: JobCardProps) {
     const levelColors: Record<string, string> = {
         Junior: 'bg-green-50 text-green-700 border-green-200',
         Mid: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -41,7 +42,10 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <Link to={`/jobs/${job.id}`}>
+                        <Link 
+                            to={`/jobs/${job.id}`}
+                            onClick={() => onClick?.(job.id)}
+                        >
                             <h3 className="font-semibold text-gray-900 transition line-clamp-1 group-hover:text-[#00b14f]">
                                 {job.title}
                             </h3>
@@ -119,7 +123,10 @@ export function JobCard({ job, onBookmark, isBookmarked }: JobCardProps) {
                         {job.viewCount} lượt xem
                     </span>
                 </div>
-                <Link to={`/jobs/${job.id}`}>
+                <Link 
+                    to={`/jobs/${job.id}`}
+                    onClick={() => onClick?.(job.id)}
+                >
                     <Button variant="ghost" size="sm" className="text-[#00b14f] hover:bg-[#00b14f]/10">
                         Xem chi tiết
                     </Button>

@@ -93,6 +93,7 @@ public class Program
         builder.Services.AddSingleton<IJobHandler, AIMatchingJobHandler>();
         builder.Services.AddSingleton<IJobHandler, GenerateReportJobHandler>();
         builder.Services.AddSingleton<IJobHandler, GitHubAnalysisJobHandler>();
+        builder.Services.AddSingleton<IJobHandler, RecommendationSyncJobHandler>();
         builder.Services.AddSingleton<IJobHandler, CVAnalysisJobHandler>();
 
         // Job Handler Registry (register and populate)
@@ -168,3 +169,4 @@ public class WorkerHealthCheck : IHealthCheck
         }
     }
 }
+

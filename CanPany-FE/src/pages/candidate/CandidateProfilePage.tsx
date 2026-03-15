@@ -14,6 +14,7 @@ export function CandidateProfilePage() {
     const [showRepoModal, setShowRepoModal] = useState(false);
     const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
+    const [recommendationSyncJobId, setRecommendationSyncJobId] = useState<string | null>(null);
     const [isOAuthLoading, setIsOAuthLoading] = useState(false);
     const [showLinkedInSync, setShowLinkedInSync] = useState(false);
     const [linkedInData, setLinkedInData] = useState('');
@@ -96,6 +97,17 @@ export function CandidateProfilePage() {
         },
         onError: () => {
             toast.error('Không thể bắt đầu phân tích. Vui lòng thử lại.');
+        },
+    });
+
+    const syncRecommendationMutation = useMutation({
+        mutationFn: () => candidateApi.syncRecommendationSkills(20),
+        onSuccess: (data) => {
+            setRecommendationSyncJobId(data.jobId);
+            toast.success('Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm.');
+        },
+        onError: () => {
+            toast.error('Không thể bắt đầu đồng bộ kỹ năng gợi ý việc làm.');
         },
     });
 
@@ -506,15 +518,43 @@ export function CandidateProfilePage() {
                                 placeholder="Nhập kỹ năng, cách nhau bằng dấu phẩy"
                             />
                         ) : (
-                            <div className="flex flex-wrap gap-2">
-                                {profile?.skillIds?.length ? (
-                                    profile.skillIds.map((skill: string, index: number) => (
-                                        <span key={index} className="px-3 py-1 bg-[#00b14f]/10 text-[#00b14f] rounded-full text-sm font-medium">
-                                            {skill}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500">Chưa cập nhật</p>
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap gap-2">
+                                    {profile?.skillIds?.length ? (
+                                        profile.skillIds.map((skill: string, index: number) => (
+                                            <span key={index} className="px-3 py-1 bg-[#00b14f]/10 text-[#00b14f] rounded-full text-sm font-medium">
+                                                {skill}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500">Chưa cập nhật</p>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        onClick={() => syncRecommendationMutation.mutate()}
+                                        disabled={syncRecommendationMutation.isPending}
+                                        isLoading={syncRecommendationMutation.isPending}
+                                        className="bg-[#00b14f] hover:bg-[#00a047] text-white text-sm"
+                                    >
+                                        <RefreshCw className="h-4 w-4 mr-2" />
+                                        Sync kỹ năng cho gợi ý việc làm
+                                    </Button>
+
+                                    <Link
+                                        to="/candidate/background-jobs"
+                                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                    >
+                                        <Activity className="h-4 w-4" />
+                                        Xem tiến trình
+                                    </Link>
+                                </div>
+
+                                {recommendationSyncJobId && (
+                                    <p className="text-xs text-gray-500">
+                                        Job đang chạy: <span className="font-medium">{recommendationSyncJobId}</span>
+                                    </p>
                                 )}
                             </div>
                         )}

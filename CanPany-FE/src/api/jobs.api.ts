@@ -8,6 +8,7 @@ import type {
     JobSearchParams,
     UpdateJobRequest,
 } from '../types';
+import type { RecommendedJob } from '../types/job.types';
 
 /**
  * Job Search API for Candidates
@@ -56,17 +57,28 @@ export const jobsApi = {
     },
 
     /**
-     * UC-CAN-15: View AI-Recommended Jobs
+     * UC-CAN-15: View AI-Recommended Jobs (Hybrid CF + Semantic)
      * GET /api/jobs/recommended
      * 
      * @param limit - Maximum number of recommendations (default: 10)
-     * @returns Array of AI-recommended jobs
+     * @returns Array of { job, hybridScore } recommendations
      */
-    getRecommended: async (limit: number = 10): Promise<Job[]> => {
-        const response = await apiClient.get<ApiResponse<Job[]>>('/jobs/recommended', { 
+    getRecommended: async (limit: number = 10): Promise<RecommendedJob[]> => {
+        const response = await apiClient.get<ApiResponse<RecommendedJob[]>>('/jobs/recommended', { 
             params: { limit } 
         });
         return response.data.data || [];
+    },
+
+    /**
+     * Track user-job interaction for Collaborative Filtering
+     * POST /api/jobs/{id}/track
+     * 
+     * @param jobId - Job ID to track
+     * @param type - Interaction type: 1=View, 2=Click, 3=Bookmark, 4=Apply
+     */
+    trackInteraction: async (jobId: string, type: 1 | 2 | 3 | 4): Promise<void> => {
+        await apiClient.post(`/jobs/${jobId}/track`, { type });
     },
 
     /**

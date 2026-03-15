@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft } from 'lucide-react';
@@ -23,6 +23,13 @@ export function JobDetailPage() {
         queryFn: () => jobsApi.getById(id!),
         enabled: !!id,
     });
+
+    // Track View interaction when page loads
+    useEffect(() => {
+        if (id && isAuthenticated) {
+            jobsApi.trackInteraction(id, 1).catch(console.error);
+        }
+    }, [id, isAuthenticated]);
 
     // useBookmarks is the single source of truth for bookmark state.
     // It is safe to call unconditionally – it no-ops when not authenticated.
