@@ -1,4 +1,5 @@
 using CanPany.Application.Services;
+using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
@@ -11,11 +12,12 @@ public class CVServiceTests
 {
     private readonly Mock<ICVRepository> _cvRepositoryMock = new();
     private readonly Mock<ILogger<CVService>> _loggerMock = new();
+    private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
     private readonly CVService _cvService;
 
     public CVServiceTests()
     {
-        _cvService = new CVService(_cvRepositoryMock.Object, _loggerMock.Object);
+        _cvService = new CVService(_cvRepositoryMock.Object, _loggerMock.Object, _cloudinaryServiceMock.Object);
     }
 
     [Fact]
@@ -139,7 +141,9 @@ public class CVServiceTests
     {
         // Arrange
         var cvId = "cv123";
+        var cv = new CV { Id = cvId, UserId = "user123", FileName = "cv.pdf", CloudinaryPublicId = null };
         
+        _cvRepositoryMock.Setup(x => x.GetByIdAsync(cvId)).ReturnsAsync(cv);
         _cvRepositoryMock.Setup(x => x.DeleteAsync(cvId))
             .Returns(Task.CompletedTask);
 
@@ -165,5 +169,26 @@ public class CVServiceTests
 
         // Assert
         _cvRepositoryMock.Verify(x => x.SetAsDefaultAsync(cvId, userId), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallCloudinaryDelete_WhenCloudinaryPublicIdExists()
+    {
+        // Arrange
+        var cvId = "cv123";
+        var publicId = "cloudinary_id";
+        var cv = new CV { Id = cvId, UserId = "user123", FileName = "cv.pdf", CloudinaryPublicId = publicId };
+        
+        _cvRepositoryMock.Setup(x => x.GetByIdAsync(cvId)).ReturnsAsync(cv);
+        _cvRepositoryMock.Setup(x => x.DeleteAsync(cvId)).Returns(Task.CompletedTask);
+        _cloudinaryServiceMock.Setup(x => x.DeleteAsync(publicId, "raw")).ReturnsAsync(true);
+
+        // Act
+        var result = await _cvService.DeleteAsync(cvId);
+
+        // Assert
+        Assert.True(result);
+        _cloudinaryServiceMock.Verify(x => x.DeleteAsync(publicId, "raw"), Times.Once);
+        _cvRepositoryMock.Verify(x => x.DeleteAsync(cvId), Times.Once);
     }
 }

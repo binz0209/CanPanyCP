@@ -29,6 +29,9 @@ public class CV : AggregateRoot
     [BsonElement("mimeType")]
     public string MimeType { get; set; } = string.Empty;
 
+    [BsonElement("cloudinaryPublicId")]
+    public string? CloudinaryPublicId { get; set; }
+
     [BsonElement("isDefault")]
     public bool IsDefault { get; set; } = false;
 

@@ -1,4 +1,5 @@
 using CanPany.Application.Services;
+using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
@@ -11,11 +12,12 @@ public class CompanyServiceTests
 {
     private readonly Mock<ICompanyRepository> _repoMock = new();
     private readonly Mock<ILogger<CompanyService>> _loggerMock = new();
+    private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
     private readonly CompanyService _service;
 
     public CompanyServiceTests()
     {
-        _service = new CompanyService(_repoMock.Object, _loggerMock.Object);
+        _service = new CompanyService(_repoMock.Object, _loggerMock.Object, _cloudinaryServiceMock.Object);
     }
 
     [Fact]
@@ -166,6 +168,8 @@ public class CompanyServiceTests
     public async Task DeleteAsync_ShouldReturnTrue_WhenValid()
     {
         // Arrange
+        var company = new Company { Id = "co1", Name = "Acme Corp", CloudinaryPublicId = null };
+        _repoMock.Setup(x => x.GetByIdAsync("co1")).ReturnsAsync(company);
         _repoMock.Setup(x => x.DeleteAsync("co1")).Returns(Task.CompletedTask);
 
         // Act
@@ -182,5 +186,26 @@ public class CompanyServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() => _service.DeleteAsync(""));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallCloudinaryDelete_WhenCloudinaryPublicIdExists()
+    {
+        // Arrange
+        var companyId = "co1";
+        var publicId = "logo_id";
+        var company = new Company { Id = companyId, Name = "Acme Corp", CloudinaryPublicId = publicId };
+        
+        _repoMock.Setup(x => x.GetByIdAsync(companyId)).ReturnsAsync(company);
+        _repoMock.Setup(x => x.DeleteAsync(companyId)).Returns(Task.CompletedTask);
+        _cloudinaryServiceMock.Setup(x => x.DeleteAsync(publicId, "image")).ReturnsAsync(true);
+
+        // Act
+        var result = await _service.DeleteAsync(companyId);
+
+        // Assert
+        Assert.True(result);
+        _cloudinaryServiceMock.Verify(x => x.DeleteAsync(publicId, "image"), Times.Once);
+        _repoMock.Verify(x => x.DeleteAsync(companyId), Times.Once);
     }
 }

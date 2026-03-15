@@ -28,6 +28,9 @@ public class User : AggregateRoot
     [BsonElement("avatarUrl")]
     public string? AvatarUrl { get; set; }
 
+    [BsonElement("cloudinaryPublicId")]
+    public string? CloudinaryPublicId { get; set; }
+
     [BsonElement("isLocked")]
     public bool IsLocked { get; set; } = false;
 

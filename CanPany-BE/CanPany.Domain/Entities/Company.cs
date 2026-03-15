@@ -24,6 +24,9 @@ public class Company : AggregateRoot
     [BsonElement("logoUrl")]
     public string? LogoUrl { get; set; }
 
+    [BsonElement("cloudinaryPublicId")]
+    public string? CloudinaryPublicId { get; set; }
+
     [BsonElement("website")]
     public string? Website { get; set; }
 

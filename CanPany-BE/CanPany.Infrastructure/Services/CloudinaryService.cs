@@ -51,6 +51,7 @@ public class CloudinaryService : ICloudinaryService
         Stream fileStream,
         string fileName,
         string folder,
+        string resourceType = "raw",
         CancellationToken cancellationToken = default)
     {
         try
@@ -60,30 +61,54 @@ public class CloudinaryService : ICloudinaryService
                 throw new ArgumentNullException(nameof(fileStream));
             }
 
-            var uploadParams = new RawUploadParams
+            // Select upload parameters based on resource type
+            string secureUrl;
+            string publicId;
+
+            if (resourceType.ToLower() == "image")
             {
-                File = new FileDescription(fileName, fileStream),
-                Folder = folder,
-                UseFilename = true,
-                UniqueFilename = true,
-                Overwrite = false
-            };
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(fileName, fileStream),
+                    Folder = folder,
+                    UseFilename = true,
+                    UniqueFilename = true,
+                    Overwrite = false
+                };
+                var imageResult = await _cloudinary.UploadAsync(uploadParams, cancellationToken);
 
-            // In CloudinaryDotNet 1.28.0, raw upload uses Upload (not UploadAsync overload with cancellation token)
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                if (imageResult.Error != null)
+                {
+                    _logger.LogError("Cloudinary upload failed. Error: {Error}", imageResult.Error.Message);
+                    throw new InvalidOperationException($"Failed to upload file to Cloudinary: {imageResult.Error.Message}");
+                }
 
-            if ((int)uploadResult.StatusCode < 200 ||
-                (int)uploadResult.StatusCode >= 300)
-            {
-                _logger.LogError("Cloudinary upload failed. Status: {StatusCode}, Error: {Error}",
-                    uploadResult.StatusCode,
-                    uploadResult.Error?.Message);
-
-                throw new InvalidOperationException("Failed to upload file to Cloudinary.");
+                secureUrl = imageResult.SecureUrl?.ToString() ?? string.Empty;
+                publicId = imageResult.PublicId ?? string.Empty;
             }
+            else
+            {
+                // For raw/document files (PDF, DOCX), use RawUploadParams
+                // SDK v1.23.0 signature: UploadAsync(RawUploadParams, string resourceType, CancellationToken)
+                var uploadParams = new RawUploadParams
+                {
+                    File = new FileDescription(fileName, fileStream),
+                    Folder = folder,
+                    UseFilename = true,
+                    UniqueFilename = true,
+                    Overwrite = false
+                };
+                var rawResult = await _cloudinary.UploadAsync(uploadParams, "raw", cancellationToken);
 
-            var secureUrl = uploadResult.SecureUrl?.ToString() ?? string.Empty;
-            var publicId = uploadResult.PublicId ?? string.Empty;
+                if (rawResult.Error != null)
+                {
+                    _logger.LogError("Cloudinary upload failed. Error: {Error}", rawResult.Error.Message);
+                    throw new InvalidOperationException($"Failed to upload file to Cloudinary: {rawResult.Error.Message}");
+                }
+
+                secureUrl = rawResult.SecureUrl?.ToString() ?? string.Empty;
+                publicId = rawResult.PublicId ?? string.Empty;
+            }
 
             if (string.IsNullOrEmpty(secureUrl))
             {
@@ -97,6 +122,38 @@ public class CloudinaryService : ICloudinaryService
         {
             _logger.LogError(ex, "Error uploading file {FileName} to Cloudinary", fileName);
             throw;
+        }
+    }
+
+    public async Task<bool> DeleteAsync(string publicId, string resourceType = "raw")
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(publicId))
+            {
+                return false;
+            }
+
+            var deletionParams = new DeletionParams(publicId)
+            {
+                ResourceType = resourceType.ToLower() == "image" ? ResourceType.Image : ResourceType.Raw
+            };
+
+            var result = await _cloudinary.DestroyAsync(deletionParams);
+
+            if (result.Result == "ok")
+            {
+                _logger.LogInformation("Successfully deleted file from Cloudinary: {PublicId}", publicId);
+                return true;
+            }
+
+            _logger.LogWarning("Cloudinary deletion returned non-ok result: {Result} for {PublicId}", result.Result, publicId);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting file {PublicId} from Cloudinary", publicId);
+            return false;
         }
     }
 }
