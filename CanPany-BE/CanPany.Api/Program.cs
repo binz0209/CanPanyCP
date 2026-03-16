@@ -317,6 +317,7 @@ builder.Services.AddScoped<IHybridRecommendationService, HybridRecommendationSer
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
 builder.Services.AddScoped<EmailJobProcessor>();
 builder.Services.AddScoped<JobAlertProcessor>();
+builder.Services.AddScoped<CandidateAlertProcessor>();
 
 // Register Global Interceptors
 builder.Services.AddGlobalInterceptors();
@@ -446,6 +447,16 @@ using (var scope = app.Services.CreateScope())
         "send-weekly-job-digest",
         processor => processor.SendWeeklyDigestAsync(),
         Cron.Weekly(DayOfWeek.Monday, 9), // Monday 9 AM
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Local
+        });
+
+    // Daily candidate alert processing - runs at 10 AM every day
+    recurringJobManager.AddOrUpdate<CandidateAlertProcessor>(
+        "process-daily-candidate-alerts",
+        processor => processor.ProcessDailyCandidateAlertsAsync(),
+        Cron.Daily(10), // 10 AM daily
         new RecurringJobOptions
         {
             TimeZone = TimeZoneInfo.Local
