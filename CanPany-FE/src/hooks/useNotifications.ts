@@ -50,14 +50,6 @@ export function useNotifications(options?: UseNotificationsOptions) {
     },
   });
 
-  // Delete notification mutation
-  const { mutate: deleteNotification } = useMutation({
-    mutationFn: (id: string) => notificationsApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-    },
-  });
-
   return {
     notifications: notifications as NotificationItem[],
     unreadCount,
@@ -65,6 +57,5 @@ export function useNotifications(options?: UseNotificationsOptions) {
     markAsRead,
     markAllAsRead,
     isMarkingAllAsRead,
-    deleteNotification,
   };
 }

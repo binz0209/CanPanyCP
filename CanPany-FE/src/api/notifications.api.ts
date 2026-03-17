@@ -12,38 +12,38 @@ interface NotificationFilters {
 export const notificationsApi = {
   // Get all notifications with filters
   getAll: async (filters?: NotificationFilters): Promise<NotificationItem[]> => {
-    const response = await apiClient.get<ApiResponse<PaginatedNotifications>>(
-      '/api/notifications',
+    const response = await apiClient.get<ApiResponse<NotificationItem[]>>(
+      '/notifications',
       { params: filters }
     );
-    return response.data.data?.items || [];
+    return response.data.data || [];
   },
 
   // Get unread notifications count
   getUnreadCount: async (): Promise<number> => {
-    const response = await apiClient.get<ApiResponse<{ count: number }>>(
-      '/api/notifications/unread-count'
+    const response = await apiClient.get<ApiResponse<{ notifications: unknown[]; unreadCount: number }>>(
+      '/notifications/unread'
     );
-    return response.data.data?.count || 0;
+    return response.data.data?.unreadCount || 0;
   },
 
   // Mark single notification as read
   markAsRead: async (id: string): Promise<void> => {
-    await apiClient.patch(`/api/notifications/${id}/read`);
+    await apiClient.put(`/notifications/${id}/read`);
   },
 
   // Mark all notifications as read
   markAllAsRead: async (): Promise<void> => {
-    await apiClient.patch('/api/notifications/read-all');
+    await apiClient.put('/notifications/read-all');
   },
 
-  // Delete notification
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/notifications/${id}`);
-  },
+  // Delete notification (not implemented in backend - disabled)
+  // delete: async (id: string): Promise<void> => {
+  //   await apiClient.delete(`/notifications/${id}`);
+  // },
 
-  // Delete all notifications
-  deleteAll: async (): Promise<void> => {
-    await apiClient.delete('/api/notifications');
-  },
+  // Delete all notifications (not implemented in backend - disabled)
+  // deleteAll: async (): Promise<void> => {
+  //   await apiClient.delete('/notifications');
+  // },
 };

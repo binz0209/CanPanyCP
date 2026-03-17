@@ -1,15 +1,12 @@
-export type NotificationType = 'JobMatch' | 'ApplicationUpdate' | 'NewMessage' | 'PaymentConfirmation';
+export type NotificationType = 'JobMatch' | 'ApplicationUpdate' | 'NewMessage' | 'PaymentConfirmation' | 'ProposalAccepted' | 'JobAlert' | 'SystemNotification' | string;
 
 export interface NotificationItem {
   id: string;
-  userId: string;
-  type: NotificationType;
+  type: string;
   title: string;
   content: string;
   timestamp: string;
   isRead: boolean;
-  relatedId?: string;
-  relatedType?: string;
 }
 
 export interface PaginatedNotifications {
