@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { Sparkles, Briefcase, RefreshCw, Eye, Bookmark, Send, Info } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Sparkles, Briefcase, RefreshCw, Eye, Bookmark, Send, Info, Brain, FileText, CheckCircle2 } from 'lucide-react';
 import { jobsApi } from '../../api/jobs.api';
+import { cvApi } from '../../api/cv.api';
+import { candidateApi } from '../../api/candidate.api';
 import type { RecommendedJob } from '../../types';
 import toast from 'react-hot-toast';
 
@@ -33,14 +35,53 @@ function formatBudget(amount?: number, type?: string) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function RecommendedJobsPage() {
+    const queryClient = useQueryClient();
     const [limit] = useState(12);
     const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
+    const [syncJobId, setSyncJobId] = useState<string | null>(null);
 
     const { data: recommendations = [], isLoading, refetch, isFetching } = useQuery({
         queryKey: ['jobs', 'recommended', limit],
         queryFn: () => jobsApi.getRecommended(limit),
-        staleTime: 2 * 60 * 1000, // 2 minutes
+        staleTime: 2 * 60 * 1000,
     });
+
+    // Sync skills mutation
+    const syncMutation = useMutation({
+        mutationFn: () => candidateApi.syncRecommendationSkills(20),
+        onSuccess: (d) => {
+            setSyncJobId(d.jobId);
+            toast.success('🔄 Đang đồng bộ kỹ năng cho AI gợi ý...');
+        },
+        onError: () => toast.error('Không thể bắt đầu đồng bộ kỹ năng.'),
+    });
+
+    // Poll sync job
+    const { data: syncProgress } = useQuery({
+        queryKey: ['recommendation-sync-job', syncJobId],
+        queryFn: () => candidateApi.getMyJobDetail(syncJobId!),
+        enabled: !!syncJobId,
+        refetchInterval: (q) => {
+            const s = q.state.data?.status;
+            if (s === 'Completed' || s === 'Failed') return false;
+            return 2000;
+        },
+    });
+
+    useEffect(() => {
+        if (syncProgress?.status === 'Completed' && syncJobId) {
+            setSyncJobId(null);
+            queryClient.invalidateQueries({ queryKey: ['jobs', 'recommended'] });
+            refetch();
+            toast.success('✅ Đồng bộ xong! Gợi ý đã được cập nhật.');
+        }
+        if (syncProgress?.status === 'Failed' && syncJobId) {
+            setSyncJobId(null);
+            toast.error('Đồng bộ kỹ năng thất bại.');
+        }
+    }, [syncProgress?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const isSyncing = !!syncJobId;
 
     const trackMutation = useMutation({
         mutationFn: ({ jobId, type }: { jobId: string; type: InteractionType }) =>
@@ -77,22 +118,48 @@ export function RecommendedJobsPage() {
                             Tương tác nhiều hơn giúp gợi ý chính xác hơn.
                         </p>
                     </div>
-                    <button
-                        onClick={() => refetch()}
-                        disabled={isFetching}
-                        className="flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-60 self-start lg:self-auto"
-                    >
-                        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                        Làm mới
-                    </button>
+                    <div className="flex flex-col gap-2 self-start lg:self-auto">
+                        <button
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                            className="flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-60"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                            Làm mới
+                        </button>
+                        <button
+                            onClick={() => syncMutation.mutate()}
+                            disabled={isSyncing || syncMutation.isPending}
+                            className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-60"
+                        >
+                            <Brain className={`h-4 w-4 ${isSyncing ? 'animate-pulse' : ''}`} />
+                            {isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ kỹ năng AI'}
+                        </button>
+                    </div>
                 </div>
 
-                {/* ── Cold-start tip ── */}
+                {/* Sync progress */}
+                {isSyncing && syncProgress && (
+                    <div className="mt-4 space-y-1">
+                        <div className="flex justify-between text-xs text-emerald-100">
+                            <span>{syncProgress.currentStep ?? 'Đang đồng bộ...'}</span>
+                            <span>{syncProgress.percentComplete}%</span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                className="h-full bg-white transition-all duration-500"
+                                style={{ width: `${syncProgress.percentComplete}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Cold-start tip */}
                 {recommendations.length > 0 && recommendations[0].hybridScore < 20 && (
                     <div className="mt-4 flex items-start gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm text-emerald-50">
                         <Info className="h-4 w-4 mt-0.5 shrink-0" />
                         <span>
-                            Bạn chưa có nhiều tương tác. Hãy xem và lưu thêm việc làm để AI cải thiện gợi ý theo thời gian.
+                            Bạn chưa có nhiều tương tác. Nhấn <strong>Đồng bộ kỹ năng AI</strong> để cải thiện gợi ý ngay.
                         </span>
                     </div>
                 )}
@@ -102,7 +169,7 @@ export function RecommendedJobsPage() {
             {isLoading ? (
                 <SkeletonList />
             ) : recommendations.length === 0 ? (
-                <EmptyState />
+                <EmptyState onSync={() => syncMutation.mutate()} isSyncing={syncMutation.isPending} />
             ) : (
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {recommendations.map(({ job, hybridScore }) => (
@@ -131,6 +198,38 @@ interface CardProps {
 function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
     const { job, hybridScore } = item;
     const score = Math.round(hybridScore);
+    const [cvDone, setCvDone] = useState(false);
+    const [cvJobId, setCvJobId] = useState<string | null>(null);
+
+    const genCVMutation = useMutation({
+        mutationFn: () => cvApi.generateCV(job.id),
+        onSuccess: (d) => {
+            setCvJobId(d.jobId);
+            toast.success('🚀 Đang tạo CV phù hợp...');
+        },
+        onError: () => toast.error('Không thể tạo CV.'),
+    });
+
+    const { data: cvProgress } = useQuery({
+        queryKey: ['cv-gen', cvJobId],
+        queryFn: () => candidateApi.getMyJobDetail(cvJobId!),
+        enabled: !!cvJobId,
+        refetchInterval: (q) => {
+            const s = q.state.data?.status;
+            if (s === 'Completed' || s === 'Failed') return false;
+            return 2000;
+        },
+    });
+
+    useEffect(() => {
+        if (cvProgress?.status === 'Completed' && cvJobId) {
+            setCvJobId(null);
+            setCvDone(true);
+            toast.success(`✅ CV cho "${job.title}" tạo xong!`);
+        }
+    }, [cvProgress?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const cvIsRunning = !!cvJobId;
 
     return (
         <div
@@ -178,6 +277,25 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
                 </span>
             </div>
 
+            {/* CV mini-progress */}
+            {cvIsRunning && cvProgress && (
+                <div className="rounded-lg bg-[#00b14f]/5 border border-[#00b14f]/10 p-2.5 space-y-1">
+                    <div className="flex justify-between text-xs text-gray-600">
+                        <span className="flex items-center gap-1">
+                            <RefreshCw className="h-3 w-3 animate-spin text-[#00b14f]" />
+                            {cvProgress.currentStep ?? 'Đang tạo CV...'}
+                        </span>
+                        <span>{cvProgress.percentComplete ?? 0}%</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1 overflow-hidden">
+                        <div
+                            className="h-full bg-[#00b14f] transition-all"
+                            style={{ width: `${cvProgress.percentComplete ?? 0}%` }}
+                        />
+                    </div>
+                </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center gap-2 border-t border-gray-50 pt-3 -mx-1">
                 <Link
@@ -188,6 +306,23 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
                     <Eye className="h-3.5 w-3.5" />
                     Xem chi tiết
                 </Link>
+
+                {/* AI CV button */}
+                <button
+                    onClick={() => !cvDone && genCVMutation.mutate()}
+                    disabled={cvIsRunning || genCVMutation.isPending || cvDone}
+                    title={cvDone ? 'CV đã tạo' : 'Tạo CV phù hợp với vị trí này'}
+                    className={`flex items-center justify-center rounded-xl border p-2 transition-colors ${
+                        cvDone
+                            ? 'border-emerald-200 text-emerald-500 bg-emerald-50'
+                            : 'border-gray-200 hover:border-[#00b14f] hover:text-[#00b14f] text-gray-500'
+                    } disabled:opacity-60`}
+                >
+                    {cvDone ? <CheckCircle2 className="h-4 w-4" /> :
+                     cvIsRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> :
+                     <FileText className="h-4 w-4" />}
+                </button>
+
                 <button
                     onClick={onBookmark}
                     title="Lưu việc làm"
@@ -219,7 +354,7 @@ function SkeletonList() {
     );
 }
 
-function EmptyState() {
+function EmptyState({ onSync, isSyncing }: { onSync: () => void; isSyncing: boolean }) {
     return (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
@@ -230,9 +365,17 @@ function EmptyState() {
                 Hãy hoàn thiện hồ sơ và tương tác với các tin tuyển dụng để AI có thể gợi ý việc làm phù hợp.
             </p>
             <div className="mt-6 flex gap-3 justify-center flex-wrap">
+                <button
+                    onClick={onSync}
+                    disabled={isSyncing}
+                    className="flex items-center gap-2 rounded-xl bg-[#00b14f] text-white px-4 py-2.5 text-sm font-medium hover:bg-[#009940] transition-colors disabled:opacity-60"
+                >
+                    {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
+                    Đồng bộ kỹ năng AI
+                </button>
                 <Link
                     to="/candidate/profile"
-                    className="flex items-center gap-2 rounded-xl bg-[#00b14f] text-white px-4 py-2.5 text-sm font-medium hover:bg-[#009940] transition-colors"
+                    className="flex items-center gap-2 rounded-xl border border-gray-200 text-gray-700 px-4 py-2.5 text-sm font-medium hover:border-gray-300 transition-colors"
                 >
                     <Send className="h-4 w-4" />
                     Cập nhật hồ sơ

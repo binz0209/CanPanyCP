@@ -13,7 +13,7 @@ export const notificationsApi = {
   // Get all notifications with filters
   getAll: async (filters?: NotificationFilters): Promise<NotificationItem[]> => {
     const response = await apiClient.get<ApiResponse<PaginatedNotifications>>(
-      '/api/notifications',
+      '/notifications',
       { params: filters }
     );
     return response.data.data?.items || [];
@@ -22,28 +22,28 @@ export const notificationsApi = {
   // Get unread notifications count
   getUnreadCount: async (): Promise<number> => {
     const response = await apiClient.get<ApiResponse<{ count: number }>>(
-      '/api/notifications/unread-count'
+      '/notifications/unread-count'
     );
     return response.data.data?.count || 0;
   },
 
   // Mark single notification as read
   markAsRead: async (id: string): Promise<void> => {
-    await apiClient.patch(`/api/notifications/${id}/read`);
+    await apiClient.patch(`/notifications/${id}/read`);
   },
 
   // Mark all notifications as read
   markAllAsRead: async (): Promise<void> => {
-    await apiClient.patch('/api/notifications/read-all');
+    await apiClient.patch('/notifications/read-all');
   },
 
   // Delete notification
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/notifications/${id}`);
+    await apiClient.delete(`/notifications/${id}`);
   },
 
   // Delete all notifications
   deleteAll: async (): Promise<void> => {
-    await apiClient.delete('/api/notifications');
+    await apiClient.delete('/notifications');
   },
 };
