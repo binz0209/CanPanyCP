@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft, Sparkles, CheckCircle, XCircle, RefreshCw, FileText, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button, Badge, Card } from '../../components/ui';
 import { ApplyModal } from '../../components/features/jobs';
 import { jobsApi } from '../../api';
+import { cvApi } from '../../api/cv.api';
+import { candidateApi } from '../../api/candidate.api';
 import { formatRelativeTime, formatCurrency, formatDate } from '../../utils';
 import { cn } from '../../utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -17,6 +19,11 @@ export function JobDetailPage() {
     const queryClient = useQueryClient();
     const { isAuthenticated } = useAuthStore();
     const [showApplyModal, setShowApplyModal] = useState(false);
+
+    // AI CV gen state
+    const [showCVModal, setShowCVModal] = useState(false);
+    const [cvJobId, setCvJobId] = useState<string | null>(null);
+    const [cvUrl, setCvUrl] = useState<string | null>(null);
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['job', id],
@@ -31,9 +38,46 @@ export function JobDetailPage() {
         }
     }, [id, isAuthenticated]);
 
-    // useBookmarks is the single source of truth for bookmark state.
-    // It is safe to call unconditionally – it no-ops when not authenticated.
     const { isBookmarked, toggle, isToggling } = useBookmarks();
+
+    // Generate CV mutation
+    const generateCVMutation = useMutation({
+        mutationFn: () => cvApi.generateCV(id),
+        onSuccess: (d) => {
+            setCvJobId(d.jobId);
+            setCvUrl(null);
+            toast.success('🚀 Đang tạo CV phù hợp với vị trí này...');
+        },
+        onError: () => toast.error('Không thể bắt đầu tạo CV. Vui lòng thử lại.'),
+    });
+
+    // Poll CV generation progress
+    const { data: cvJobStatus } = useQuery({
+        queryKey: ['cv-gen-job', cvJobId],
+        queryFn: () => candidateApi.getMyJobDetail(cvJobId!),
+        enabled: !!cvJobId,
+        refetchInterval: (q) => {
+            const s = q.state.data?.status;
+            if (s === 'Completed' || s === 'Failed') return false;
+            return 2000;
+        },
+    });
+
+    useEffect(() => {
+        if (cvJobStatus?.status === 'Completed' && cvJobId) {
+            const url = cvJobStatus.result?.FileUrl || cvJobStatus.result?.fileUrl;
+            if (url) setCvUrl(url as string);
+            setCvJobId(null);
+            queryClient.invalidateQueries({ queryKey: ['candidate-cvs'] });
+            toast.success('🎉 CV đã được tạo thành công!');
+        }
+        if (cvJobStatus?.status === 'Failed' && cvJobId) {
+            setCvJobId(null);
+            toast.error('Tạo CV thất bại. Vui lòng thử lại.');
+        }
+    }, [cvJobStatus?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const cvIsRunning = !!cvJobId && cvJobStatus?.status !== 'Completed' && cvJobStatus?.status !== 'Failed';
 
     if (isLoading) {
         return (
@@ -60,10 +104,6 @@ export function JobDetailPage() {
     }
 
     const { job } = data;
-
-    // Prefer the hook's live state (updated immediately on toggle via optimistic update).
-    // Fall back to the value returned by the job-detail API for the very first render
-    // before the bookmarks list has been fetched.
     const bookmarked = isBookmarked(job.id) || data.isBookmarked;
 
     const levelColors = {
@@ -107,7 +147,7 @@ export function JobDetailPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-3">
                             <Button
                                 variant="outline"
                                 size="lg"
@@ -123,6 +163,20 @@ export function JobDetailPage() {
                                 />
                                 {bookmarked ? 'Đã lưu' : 'Lưu'}
                             </Button>
+
+                            {/* AI CV button – only for logged-in candidates */}
+                            {isAuthenticated && (
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    onClick={() => setShowCVModal(true)}
+                                    className="gap-2 border-[#00b14f] text-[#00b14f] hover:bg-[#00b14f]/5"
+                                >
+                                    <Sparkles className="h-4 w-4" />
+                                    Tạo CV phù hợp
+                                </Button>
+                            )}
+
                             <Button
                                 size="lg"
                                 onClick={() =>
@@ -159,6 +213,28 @@ export function JobDetailPage() {
                                     ))}
                                 </div>
                             </Card>
+                        )}
+
+                        {/* AI CV banner */}
+                        {isAuthenticated && (
+                            <div className="mt-6 rounded-xl border border-[#00b14f]/20 bg-gradient-to-br from-[#00b14f]/5 to-transparent p-5 flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                                        <Sparkles className="h-4 w-4 text-[#00b14f]" />
+                                        Tạo CV được tối ưu cho vị trí này
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Gemini AI sẽ viết lại CV của bạn để highlight đúng kỹ năng nhà tuyển dụng cần.
+                                    </p>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    onClick={() => setShowCVModal(true)}
+                                    className="bg-[#00b14f] hover:bg-[#00a047] text-white shrink-0"
+                                >
+                                    Tạo ngay
+                                </Button>
+                            </div>
                         )}
                     </div>
 
@@ -232,6 +308,125 @@ export function JobDetailPage() {
                 });
             }}
         />
+
+        {/* AI CV Generation Modal */}
+        {showCVModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+                <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+                    {/* Modal header */}
+                    <div className="rounded-t-2xl bg-gradient-to-br from-[#00b14f] to-[#009940] px-6 py-5 text-white">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5" />
+                            <h3 className="text-lg font-semibold">Tạo CV bằng AI</h3>
+                        </div>
+                        <p className="mt-1 text-sm text-emerald-100">
+                            CV sẽ được tối ưu cho vị trí <strong>{job.title}</strong>
+                        </p>
+                    </div>
+
+                    <div className="p-6">
+                        {/* Idle / start */}
+                        {!cvJobId && !cvJobStatus && !cvUrl && (
+                            <>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Gemini AI sẽ đọc thông tin hồ sơ + mô tả công việc để tạo CV phù hợp nhất.
+                                </p>
+                                <ul className="space-y-1.5 text-xs text-gray-500 mb-6">
+                                    <li className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-[#00b14f]" /> Highlight đúng kỹ năng nhà tuyển dụng cần</li>
+                                    <li className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-[#00b14f]" /> Viết lại Summary phù hợp vị trí</li>
+                                    <li className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-[#00b14f]" /> Tự động lưu vào danh sách CV của bạn</li>
+                                </ul>
+                                <div className="flex gap-3">
+                                    <Button
+                                        className="flex-1 bg-[#00b14f] hover:bg-[#00a047] text-white"
+                                        onClick={() => generateCVMutation.mutate()}
+                                        isLoading={generateCVMutation.isPending}
+                                    >
+                                        <Sparkles className="h-4 w-4 mr-2" />
+                                        Tạo CV ngay
+                                    </Button>
+                                    <Button variant="outline" onClick={() => setShowCVModal(false)}>
+                                        Hủy
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Running */}
+                        {cvIsRunning && cvJobStatus && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <RefreshCw className="h-5 w-5 text-[#00b14f] animate-spin" />
+                                    <span className="text-sm font-medium text-gray-700">Đang tạo CV...</span>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>{cvJobStatus.currentStep ?? 'Đang xử lý...'}</span>
+                                        <span>{cvJobStatus.percentComplete ?? 0}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-[#00b14f] to-emerald-400 transition-all duration-500"
+                                            style={{ width: `${cvJobStatus.percentComplete ?? 0}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-400 text-center">Quá trình thường mất 30-60 giây</p>
+                            </div>
+                        )}
+
+                        {/* Success */}
+                        {cvUrl && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 text-emerald-600">
+                                    <CheckCircle className="h-6 w-6" />
+                                    <span className="font-semibold">CV đã được tạo thành công!</span>
+                                </div>
+                                <div className="flex gap-3">
+                                    <a
+                                        href={cvUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#00b14f] text-white py-2.5 text-sm font-medium hover:bg-[#00a047] transition-colors"
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
+                                        Xem CV
+                                    </a>
+                                    <Link
+                                        to="/candidate/cv/list"
+                                        className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-gray-200 text-gray-700 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+                                        onClick={() => setShowCVModal(false)}
+                                    >
+                                        <FileText className="h-4 w-4" />
+                                        Danh sách CV
+                                    </Link>
+                                </div>
+                                <button
+                                    onClick={() => { setCvUrl(null); }}
+                                    className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    Tạo lại
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Failed */}
+                        {cvJobStatus?.status === 'Failed' && !cvUrl && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 text-red-500">
+                                    <XCircle className="h-6 w-6" />
+                                    <span className="font-semibold">Tạo CV thất bại</span>
+                                </div>
+                                <p className="text-sm text-gray-500">{cvJobStatus.errorMessage ?? 'Đã có lỗi xảy ra.'}</p>
+                                <Button className="w-full bg-[#00b14f] hover:bg-[#00a047] text-white" onClick={() => generateCVMutation.mutate()}>
+                                    Thử lại
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
         </>
     );
 }

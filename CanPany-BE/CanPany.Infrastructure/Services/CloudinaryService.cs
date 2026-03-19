@@ -9,7 +9,8 @@ namespace CanPany.Infrastructure.Services;
 
 public class CloudinaryService : ICloudinaryService
 {
-    private readonly Cloudinary _cloudinary;
+    private readonly Cloudinary? _cloudinary;
+    private readonly bool _isConfigured;
     private readonly ILogger<CloudinaryService> _logger;
 
     public CloudinaryService(
@@ -33,11 +34,16 @@ public class CloudinaryService : ICloudinaryService
             ? Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET") ?? string.Empty
             : config.ApiSecret;
 
-        if (string.IsNullOrWhiteSpace(cloudName) ||
-            string.IsNullOrWhiteSpace(apiKey) ||
-            string.IsNullOrWhiteSpace(apiSecret))
+        _isConfigured = !string.IsNullOrWhiteSpace(cloudName) &&
+                        !string.IsNullOrWhiteSpace(apiKey) &&
+                        !string.IsNullOrWhiteSpace(apiSecret);
+
+        if (!_isConfigured)
         {
-            _logger.LogWarning("Cloudinary configuration is missing or incomplete. Uploads will fail until configured.");
+            _logger.LogWarning(
+                "Cloudinary configuration is missing or incomplete. " +
+                "CV upload will fail. Please set Cloudinary:CloudName, ApiKey, ApiSecret.");
+            return; // Don't construct the SDK object — avoids crash
         }
 
         var account = new Account(cloudName, apiKey, apiSecret);
@@ -53,6 +59,11 @@ public class CloudinaryService : ICloudinaryService
         string folder,
         CancellationToken cancellationToken = default)
     {
+        if (!_isConfigured || _cloudinary == null)
+            throw new InvalidOperationException(
+                "Cloudinary is not configured. Please set Cloudinary:CloudName, ApiKey, and ApiSecret " +
+                "in appsettings.json or environment variables.");
+
         try
         {
             if (fileStream == null)

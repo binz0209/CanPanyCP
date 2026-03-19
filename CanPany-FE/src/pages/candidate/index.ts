@@ -2,6 +2,7 @@ export { CandidateProfilePage } from './CandidateProfilePage';
 export { CandidateDashboardPage } from './CandidateDashboardPage';
 export { CVListPage } from './CVListPage';
 export { AICVPage } from './AICVPage';
+export { CVEditorPage } from './CVEditorPage';
 export { ApplicationHistoryPage } from './ApplicationHistoryPage';
 export { SavedJobsPage } from './SavedJobsPage';
 export { JobAlertsPage } from './JobAlertsPage';

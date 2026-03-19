@@ -1,5 +1,6 @@
 using CanPany.Application.Interfaces.Interceptors;
 using CanPany.Application.Interfaces.Services;
+using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Infrastructure.Data;
 using CanPany.Infrastructure.Interceptors;
@@ -56,6 +57,13 @@ public class Program
         builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         builder.Services.AddScoped<ICVRepository, CVRepository>();
         builder.Services.AddScoped<ICVAnalysisRepository, CVAnalysisRepository>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+        builder.Services.AddScoped<IJobRepository, JobRepository>();
+
+        // Options
+        builder.Services.Configure<CloudinaryOptions>(
+            builder.Configuration.GetSection("Cloudinary"));
 
         // Redis Connection
         var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
@@ -84,9 +92,10 @@ public class Program
         builder.Services.AddSingleton<IExceptionCapture, WorkerExceptionCapture>();
         builder.Services.AddSingleton<IHostedServiceInterceptor, HostedServiceInterceptor>();
 
-        // External Services (GitHub, Gemini)
+        // External Services (GitHub, Gemini, Cloudinary)
         builder.Services.AddHttpClient<IGitHubService, GitHubService>();
         builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+        builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 
         // Register Job Handlers
         builder.Services.AddSingleton<IJobHandler, SendEmailJobHandler>();
@@ -95,6 +104,7 @@ public class Program
         builder.Services.AddSingleton<IJobHandler, GitHubAnalysisJobHandler>();
         builder.Services.AddSingleton<IJobHandler, RecommendationSyncJobHandler>();
         builder.Services.AddSingleton<IJobHandler, CVAnalysisJobHandler>();
+        builder.Services.AddSingleton<IJobHandler, CVGenerationJobHandler>();
 
         // Job Handler Registry (register and populate)
         builder.Services.AddSingleton<JobHandlerRegistry>(sp =>

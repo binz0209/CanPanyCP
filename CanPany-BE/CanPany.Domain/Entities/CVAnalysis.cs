@@ -42,6 +42,29 @@ public class CVAnalysis : AggregateRoot
 
     [BsonElement("createdAt")]
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Profile extraction fields
+    [BsonElement("profile")]
+    public ExtractedProfile? Profile { get; set; }
+
+    // Simple string fields for experience and education (for backward compatibility)
+    [BsonElement("experience")]
+    public string? Experience { get; set; }
+
+    [BsonElement("education")]
+    public string? Education { get; set; }
+
+    [BsonElement("experiences")]
+    public List<ExtractedExperience> Experiences { get; set; } = new();
+
+    [BsonElement("educations")]
+    public List<ExtractedEducation> Educations { get; set; } = new();
+
+    [BsonElement("languages")]
+    public List<ExtractedLanguage> Languages { get; set; } = new();
+
+    [BsonElement("certifications")]
+    public List<ExtractedCertification> Certifications { get; set; } = new();
 }
 
 public class ATSScoreBreakdown
@@ -69,6 +92,96 @@ public class ExtractedSkills
 
     [BsonElement("soft")]
     public List<string> Soft { get; set; } = new();
+}
+
+public class ExtractedProfile
+{
+    [BsonElement("fullName")]
+    public string? FullName { get; set; }
+
+    [BsonElement("email")]
+    public string? Email { get; set; }
+
+    [BsonElement("phone")]
+    public string? Phone { get; set; }
+
+    [BsonElement("title")]
+    public string? Title { get; set; }
+
+    [BsonElement("location")]
+    public string? Location { get; set; }
+
+    [BsonElement("address")]
+    public string? Address { get; set; }
+
+    [BsonElement("linkedIn")]
+    public string? LinkedIn { get; set; }
+
+    [BsonElement("github")]
+    public string? GitHub { get; set; }
+
+    [BsonElement("portfolio")]
+    public string? Portfolio { get; set; }
+
+    [BsonElement("summary")]
+    public string? Summary { get; set; }
+}
+
+public class ExtractedExperience
+{
+    [BsonElement("company")]
+    public string? Company { get; set; }
+
+    [BsonElement("position")]
+    public string? Position { get; set; }
+
+    [BsonElement("startDate")]
+    public string? StartDate { get; set; }
+
+    [BsonElement("endDate")]
+    public string? EndDate { get; set; }
+
+    [BsonElement("description")]
+    public string? Description { get; set; }
+}
+
+public class ExtractedEducation
+{
+    [BsonElement("school")]
+    public string? School { get; set; }
+
+    [BsonElement("degree")]
+    public string? Degree { get; set; }
+
+    [BsonElement("field")]
+    public string? Field { get; set; }
+
+    [BsonElement("startDate")]
+    public string? StartDate { get; set; }
+
+    [BsonElement("endDate")]
+    public string? EndDate { get; set; }
+}
+
+public class ExtractedLanguage
+{
+    [BsonElement("language")]
+    public string? Language { get; set; }
+
+    [BsonElement("level")]
+    public string? Level { get; set; }
+}
+
+public class ExtractedCertification
+{
+    [BsonElement("name")]
+    public string? Name { get; set; }
+
+    [BsonElement("issuer")]
+    public string? Issuer { get; set; }
+
+    [BsonElement("date")]
+    public string? Date { get; set; }
 }
 
 

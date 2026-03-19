@@ -6,9 +6,9 @@ import type {
     JobDetailsResponse,
     JobListResponse,
     JobSearchParams,
+    RecommendedJob,
     UpdateJobRequest,
 } from '../types';
-import type { RecommendedJob } from '../types/job.types';
 
 /**
  * Job Search API for Candidates
@@ -64,8 +64,8 @@ export const jobsApi = {
      * @returns Array of { job, hybridScore } recommendations
      */
     getRecommended: async (limit: number = 10): Promise<RecommendedJob[]> => {
-        const response = await apiClient.get<ApiResponse<RecommendedJob[]>>('/jobs/recommended', { 
-            params: { limit } 
+        const response = await apiClient.get<ApiResponse<RecommendedJob[]>>('/jobs/recommended', {
+            params: { limit }
         });
         return response.data.data || [];
     },
@@ -187,8 +187,8 @@ export const jobsApi = {
      * @returns Array of jobs within the salary range
      */
     getBySalaryRange: async (
-        minSalary?: number, 
-        maxSalary?: number, 
+        minSalary?: number,
+        maxSalary?: number,
         params?: Partial<JobSearchParams>
     ): Promise<Job[]> => {
         const response = await apiClient.get<ApiResponse<Job[]>>('/jobs', {
@@ -227,7 +227,7 @@ export const jobsApi = {
      * @returns Array of jobs at the specified level
      */
     getByLevel: async (
-        level: string, 
+        level: string,
         params?: Partial<JobSearchParams>
     ): Promise<Job[]> => {
         const response = await apiClient.get<ApiResponse<Job[]>>('/jobs', {
@@ -248,7 +248,7 @@ export const jobsApi = {
      * @returns Array of jobs with the specified budget type
      */
     getByBudgetType: async (
-        budgetType: 'Fixed' | 'Hourly', 
+        budgetType: 'Fixed' | 'Hourly',
         params?: Partial<JobSearchParams>
     ): Promise<Job[]> => {
         const response = await apiClient.get<ApiResponse<Job[]>>('/jobs', {
