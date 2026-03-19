@@ -18,6 +18,7 @@ public class CompaniesController : ControllerBase
     private readonly IJobService _jobService;
     private readonly IUserService _userService;
     private readonly IApplicationService _applicationService;
+    private readonly ICloudinaryService _cloudinaryService;
     private readonly ILogger<CompaniesController> _logger;
 
     public CompaniesController(
@@ -25,13 +26,74 @@ public class CompaniesController : ControllerBase
         IJobService jobService,
         IUserService userService,
         IApplicationService applicationService,
+        ICloudinaryService cloudinaryService,
         ILogger<CompaniesController> logger)
     {
         _companyService = companyService;
         _jobService = jobService;
         _userService = userService;
         _applicationService = applicationService;
+        _cloudinaryService = cloudinaryService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Upload company logo image
+    /// </summary>
+    [HttpPost("logo")]
+    [Authorize(Roles = "Company,Admin")]
+    public async Task<IActionResult> UploadLogo([FromForm] IFormFile file)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            if (file == null || file.Length == 0)
+                return BadRequest(ApiResponse.CreateError("File is required", "FileRequired"));
+
+            // 1. Image Validation
+            // Size limit: 2MB
+            if (file.Length > 2 * 1024 * 1024)
+                return BadRequest(ApiResponse.CreateError("Image size exceeds 2MB limit", "FileTooLarge"));
+
+            // Type validation
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(ApiResponse.CreateError("Only JPG, PNG and WebP images are allowed", "InvalidFileType"));
+
+            // 2. Fetch company to delete old logo if exists
+            var company = await _companyService.GetByUserIdAsync(userId);
+            if (company == null)
+                return NotFound(ApiResponse.CreateError("Company not found", "CompanyNotFound"));
+
+            if (!string.IsNullOrWhiteSpace(company.CloudinaryPublicId))
+            {
+                await _cloudinaryService.DeleteAsync(company.CloudinaryPublicId, "image");
+            }
+
+            // 3. Upload new image to Cloudinary
+            await using var stream = file.OpenReadStream();
+            var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
+                stream,
+                file.FileName,
+                "company-logos",
+                "image");
+
+            // 4. Update company entity
+            company.LogoUrl = secureUrl;
+            company.CloudinaryPublicId = publicId;
+            await _companyService.UpdateAsync(company.Id, company);
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { Url = secureUrl, PublicId = publicId }, "Logo updated successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading logo");
+            return StatusCode(500, ApiResponse.CreateError("Failed to upload logo", "UploadLogoFailed"));
+        }
     }
 
     /// <summary>

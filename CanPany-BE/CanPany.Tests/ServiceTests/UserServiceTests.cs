@@ -17,6 +17,7 @@ public class UserServiceTests
     private readonly Mock<IUserProfileService> _userProfileServiceMock = new();
     private readonly Mock<ICompanyService> _companyServiceMock = new();
     private readonly Mock<IBackgroundEmailService> _backgroundEmailServiceMock = new();
+    private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
     private readonly Mock<ILogger<UserService>> _loggerMock = new();
     private readonly UserService _userService;
 
@@ -29,6 +30,7 @@ public class UserServiceTests
             _userProfileServiceMock.Object,
             _companyServiceMock.Object,
             _backgroundEmailServiceMock.Object,
+            _cloudinaryServiceMock.Object,
             _loggerMock.Object);
     }
 
@@ -239,5 +241,44 @@ public class UserServiceTests
         // Assert
         Assert.False(succeeded);
         Assert.NotEmpty(errors);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnTrue_WhenUserExists()
+    {
+        // Arrange
+        var userId = "user123";
+        var user = new User { Id = userId, Email = "test@example.com", CloudinaryPublicId = null };
+        
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(x => x.DeleteAsync(userId)).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _userService.DeleteAsync(userId);
+
+        // Assert
+        Assert.True(result);
+        _userRepositoryMock.Verify(x => x.DeleteAsync(userId), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallCloudinaryDelete_WhenCloudinaryPublicIdExists()
+    {
+        // Arrange
+        var userId = "user123";
+        var publicId = "avatar_id";
+        var user = new User { Id = userId, Email = "test@example.com", CloudinaryPublicId = publicId };
+        
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(x => x.DeleteAsync(userId)).Returns(Task.CompletedTask);
+        _cloudinaryServiceMock.Setup(x => x.DeleteAsync(publicId, "image")).ReturnsAsync(true);
+
+        // Act
+        var result = await _userService.DeleteAsync(userId);
+
+        // Assert
+        Assert.True(result);
+        _cloudinaryServiceMock.Verify(x => x.DeleteAsync(publicId, "image"), Times.Once);
+        _userRepositoryMock.Verify(x => x.DeleteAsync(userId), Times.Once);
     }
 }

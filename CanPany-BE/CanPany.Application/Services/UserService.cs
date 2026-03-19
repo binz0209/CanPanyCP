@@ -17,6 +17,7 @@ public class UserService : IUserService
     private readonly IUserProfileService _profileService;
     private readonly ICompanyService _companyService;
     private readonly IBackgroundEmailService _backgroundEmailService;
+    private readonly ICloudinaryService _cloudinaryService;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -26,6 +27,7 @@ public class UserService : IUserService
         IUserProfileService profileService,
         ICompanyService companyService,
         IBackgroundEmailService backgroundEmailService,
+        ICloudinaryService cloudinaryService,
         ILogger<UserService> logger)
     {
         _repo = repo;
@@ -34,6 +36,7 @@ public class UserService : IUserService
         _profileService = profileService;
         _companyService = companyService;
         _backgroundEmailService = backgroundEmailService;
+        _cloudinaryService = cloudinaryService;
         _logger = logger;
     }
 
@@ -266,6 +269,12 @@ public class UserService : IUserService
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("User ID cannot be null or empty", nameof(id));
+
+            var user = await _repo.GetByIdAsync(id);
+            if (user != null && !string.IsNullOrWhiteSpace(user.CloudinaryPublicId))
+            {
+                await _cloudinaryService.DeleteAsync(user.CloudinaryPublicId, "image");
+            }
 
             await _repo.DeleteAsync(id);
             return true;

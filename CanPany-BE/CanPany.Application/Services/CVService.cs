@@ -12,13 +12,16 @@ public class CVService : ICVService
 {
     private readonly ICVRepository _repo;
     private readonly ILogger<CVService> _logger;
+    private readonly ICloudinaryService _cloudinaryService;
 
     public CVService(
         ICVRepository repo,
-        ILogger<CVService> logger)
+        ILogger<CVService> logger,
+        ICloudinaryService cloudinaryService)
     {
         _repo = repo;
         _logger = logger;
+        _cloudinaryService = cloudinaryService;
     }
 
     public async Task<CV?> GetByIdAsync(string id)
@@ -113,6 +116,12 @@ public class CVService : ICVService
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("CV ID cannot be null or empty", nameof(id));
+
+            var cv = await _repo.GetByIdAsync(id);
+            if (cv != null && !string.IsNullOrWhiteSpace(cv.CloudinaryPublicId))
+            {
+                await _cloudinaryService.DeleteAsync(cv.CloudinaryPublicId, "raw");
+            }
 
             await _repo.DeleteAsync(id);
             return true;

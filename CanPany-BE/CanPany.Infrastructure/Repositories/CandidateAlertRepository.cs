@@ -24,6 +24,11 @@ public class CandidateAlertRepository : ICandidateAlertRepository
         return await _collection.Find(ca => ca.CompanyId == companyId).ToListAsync();
     }
 
+    public async Task<IEnumerable<CandidateAlert>> GetActiveAlertsAsync()
+    {
+        return await _collection.Find(ca => ca.IsActive == true).ToListAsync();
+    }
+
     public async Task<IEnumerable<CandidateAlert>> GetActiveAlertsAsync(string companyId)
     {
         return await _collection.Find(ca => ca.CompanyId == companyId && ca.IsActive == true).ToListAsync();

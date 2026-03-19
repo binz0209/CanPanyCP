@@ -10,6 +10,7 @@ public interface IUserProfileRepository
     Task<UserProfile?> GetByIdAsync(string id);
     Task<UserProfile?> GetByUserIdAsync(string userId);
     Task<IEnumerable<UserProfile>> GetAllAsync();
+    Task<IEnumerable<UserProfile>> GetProfilesCreatedAfterAsync(DateTime date);
     
     /// <summary>
     /// Search profiles using vector similarity

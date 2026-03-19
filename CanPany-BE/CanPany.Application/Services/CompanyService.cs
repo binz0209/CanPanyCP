@@ -12,13 +12,16 @@ public class CompanyService : ICompanyService
 {
     private readonly ICompanyRepository _repo;
     private readonly ILogger<CompanyService> _logger;
+    private readonly ICloudinaryService _cloudinaryService;
 
     public CompanyService(
         ICompanyRepository repo,
-        ILogger<CompanyService> logger)
+        ILogger<CompanyService> logger,
+        ICloudinaryService cloudinaryService)
     {
         _repo = repo;
         _logger = logger;
+        _cloudinaryService = cloudinaryService;
     }
 
     public async Task<Company?> GetByIdAsync(string id)
@@ -110,6 +113,12 @@ public class CompanyService : ICompanyService
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Company ID cannot be null or empty", nameof(id));
+
+            var company = await _repo.GetByIdAsync(id);
+            if (company != null && !string.IsNullOrWhiteSpace(company.CloudinaryPublicId))
+            {
+                await _cloudinaryService.DeleteAsync(company.CloudinaryPublicId, "image");
+            }
 
             await _repo.DeleteAsync(id);
             return true;

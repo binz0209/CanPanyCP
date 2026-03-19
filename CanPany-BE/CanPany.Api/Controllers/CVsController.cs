@@ -74,33 +74,73 @@ public class CVsController : ControllerBase
     /// <summary>
     /// UC-CAN-06: Upload CV
     /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> UploadCV([FromForm] UploadCVRequest request)
+    [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadCV([FromForm] IFormFile file, [FromForm] bool? isDefault = false)
     {
         try
         {
+            _logger.LogInformation("=== UploadCV Debug Start ===");
+            _logger.LogInformation("Content-Type: {ContentType}", Request.ContentType);
+            _logger.LogInformation("Content-Length Header: {ContentLength}", Request.ContentLength);
+            
+            foreach (var header in Request.Headers)
+            {
+                _logger.LogInformation("Header: {Key}={Value}", header.Key, header.Value);
+            }
+
+            _logger.LogInformation("Form files count: {Count}", Request.Form.Files.Count);
+            foreach (var f in Request.Form.Files)
+            {
+                _logger.LogInformation("Found form file: Name={Name}, FileName={FileName}, Length={Length}, ContentType={ContentType}", 
+                    f.Name, f.FileName, f.Length, f.ContentType);
+            }
+
             var userId = User.FindFirst("sub")?.Value;
-            //if (string.IsNullOrEmpty(userId))
-            //    return Unauthorized();
 
-            if (request.File == null || request.File.Length == 0)
-                return BadRequest(ApiResponse.CreateError("File is required", "FileRequired"));
+            if (file == null || file.Length == 0)
+            {
+                _logger.LogWarning("File parameter is null or empty. Checking Request.Form.Files directly...");
+                file = Request.Form.Files.GetFile("file") ?? Request.Form.Files.FirstOrDefault();
+                
+                if (file == null || file.Length == 0)
+                {
+                    _logger.LogError("Upload failed: No file content received (file is null or length is 0)");
+                    return BadRequest(ApiResponse.CreateError("File is required and must not be empty", "FileRequiredOrEmpty"));
+                }
+                
+                _logger.LogInformation("File recovered from Request.Form.Files: {FileName}, Length={Length}", file.FileName, file.Length);
+            }
+            _logger.LogInformation("=== UploadCV Debug End ===");
 
-            // Upload file to Cloudinary
-            await using var stream = request.File.OpenReadStream();
+            // 1. File Validation
+            // Size limit: 5MB
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(ApiResponse.CreateError("File size exceeds 5MB limit", "FileTooLarge"));
+
+            // Type validation
+            var allowedExtensions = new[] { ".pdf", ".docx", ".doc" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(ApiResponse.CreateError("Only PDF and Word documents are allowed", "InvalidFileType"));
+
+            // 2. Upload file to Cloudinary
+            await using var stream = file.OpenReadStream();
             var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
                 stream,
-                request.File.FileName,
-                "cvs");
+                file.FileName,
+                "cvs",
+                "raw"); // CVs are treated as raw files in Cloudinary
 
             var cv = new CV
             {
                 UserId = userId,
-                FileName = request.File.FileName,
+                FileName = file.FileName,
                 FileUrl = secureUrl,
-                FileSize = request.File.Length,
-                MimeType = request.File.ContentType,
-                IsDefault = request.IsDefault ?? false,
+                CloudinaryPublicId = publicId,
+                FileSize = file.Length,
+                MimeType = file.ContentType,
+                IsDefault = isDefault ?? false,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -370,7 +410,8 @@ public class CVsController : ControllerBase
     }
 }
 
-public record UploadCVRequest(IFormFile File, bool? IsDefault = false);
+
+
 public record UpdateCVRequest(string? FileName);
 
 
