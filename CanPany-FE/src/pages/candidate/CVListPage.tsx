@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     FileText,
@@ -12,14 +14,16 @@ import {
     FileCheck,
     Calendar,
     CheckCircle2,
-    Sparkles
+    Sparkles,
 } from 'lucide-react';
+
 import toast from 'react-hot-toast';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Input } from '../../components/ui';
 import { cvApi } from '../../api';
 import type { CV } from '../../types';
 
 export function CVListPage() {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedCV, setSelectedCV] = useState<CV | null>(null);
@@ -109,6 +113,24 @@ export function CVListPage() {
         },
     });
 
+    // Helper to normalize job status - handles both string and integer values
+    const normalizeStatus = (status: string | number | undefined): string => {
+        if (status === undefined || status === null) return 'Unknown';
+        if (typeof status === 'number') {
+            // JobStatus enum: 0=Pending, 1=Running, 2=Completed, 3=Failed, 4=Cancelled
+            const statusMap: Record<number, string> = {
+                0: 'Pending',
+                1: 'Running',
+                2: 'Completed',
+                3: 'Failed',
+                4: 'Cancelled',
+                5: 'Retrying'
+            };
+            return statusMap[status] ?? String(status);
+        }
+        return String(status);
+    };
+
     const getJobStatusSafe = async (jobId: string) => {
         try {
             // Need to import jobApi or fetch it directly. Let's fetch directly for simplicity if jobApi is not imported in this file.
@@ -119,7 +141,12 @@ export function CVListPage() {
             });
             if (!response.ok) return null;
             const data = await response.json();
-            return data.data;
+            const result = data.data;
+            // Normalize status to string
+            if (result && result.status !== undefined) {
+                result.status = normalizeStatus(result.status);
+            }
+            return result;
         } catch {
             return null;
         }
@@ -263,11 +290,10 @@ export function CVListPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Upload Area */}
                 <Card
-                    className={`mb-8 border-2 border-dashed transition-all ${
-                        isDragging
-                            ? 'border-[#00b14f] bg-[#00b14f]/5'
-                            : 'border-gray-300 hover:border-gray-400'
-                    }`}
+                    className={`mb-8 border-2 border-dashed transition-all ${isDragging
+                        ? 'border-[#00b14f] bg-[#00b14f]/5'
+                        : 'border-gray-300 hover:border-gray-400'
+                        }`}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -346,12 +372,12 @@ export function CVListPage() {
                                     <p className="text-lg font-bold text-gray-900">
                                         {cvs.length > 0
                                             ? formatDate(
-                                                  [...cvs].sort(
-                                                      (a, b) =>
-                                                          new Date(b.createdAt).getTime() -
-                                                          new Date(a.createdAt).getTime()
-                                                  )[0].createdAt
-                                              )
+                                                [...cvs].sort(
+                                                    (a, b) =>
+                                                        new Date(b.createdAt).getTime() -
+                                                        new Date(a.createdAt).getTime()
+                                                )[0].createdAt
+                                            )
                                             : '—'}
                                     </p>
                                 </div>
@@ -391,9 +417,8 @@ export function CVListPage() {
                         {cvs.map((cv) => (
                             <Card
                                 key={cv.id}
-                                className={`group cursor-pointer transition-all hover:shadow-lg ${
-                                    cv.isDefault ? 'ring-2 ring-[#00b14f] ring-offset-2' : ''
-                                }`}
+                                className={`group cursor-pointer transition-all hover:shadow-lg ${cv.isDefault ? 'ring-2 ring-[#00b14f] ring-offset-2' : ''
+                                    }`}
                                 onClick={() => openDetailModal(cv)}
                             >
                                 <CardHeader className="pb-3">
@@ -410,12 +435,20 @@ export function CVListPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        {cv.isDefault && (
-                                            <Badge variant="success" className="flex-shrink-0">
-                                                <Star className="h-3 w-3 mr-1 fill-current" />
-                                                Mặc định
-                                            </Badge>
-                                        )}
+                                        <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                                            {cv.isDefault && (
+                                                <Badge variant="success">
+                                                    <Star className="h-3 w-3 mr-1 fill-current" />
+                                                    Mặc định
+                                                </Badge>
+                                            )}
+                                            {cv.isAIGenerated && (
+                                                <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-xs">
+                                                    <Sparkles className="h-3 w-3 mr-1" />
+                                                    AI CV
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
@@ -429,7 +462,7 @@ export function CVListPage() {
                                         <div className="flex justify-between">
                                             <span>Định dạng:</span>
                                             <span className="font-medium text-gray-700">
-                                                {cv.mimeType?.includes('pdf') ? 'PDF' : 'Word'}
+                                                {cv.isAIGenerated ? 'AI CV' : cv.mimeType?.includes('pdf') ? 'PDF' : 'Word'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
@@ -454,19 +487,61 @@ export function CVListPage() {
                                                     <Eye className="h-4 w-4 mr-1" />
                                                     Chi tiết
                                                 </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleAnalyze(cv.id);
-                                                    }}
-                                                    disabled={analyzeMutation.isPending}
-                                                >
-                                                    <Sparkles className="h-4 w-4 mr-1" />
-                                                    Phân tích
-                                                </Button>
+                                                {cv.isAIGenerated ? (
+                                                    <>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-indigo-600 hover:bg-indigo-50 px-2"
+                                                            onClick={(e) => { e.stopPropagation(); navigate(`/candidate/cv/editor/${cv.id}`); }}
+                                                        >
+                                                            <Edit2 className="h-4 w-4 mr-1" />
+                                                            Chỉnh sửa
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-orange-600 hover:bg-orange-50 px-2"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/candidate/cv/editor/${cv.id}?download=1`);
+                                                            }}
+                                                        >
+                                                            <Download className="h-4 w-4 mr-1" />
+                                                            Tải PDF
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAnalyze(cv.id);
+                                                            }}
+                                                            disabled={analyzeMutation.isPending}
+                                                        >
+                                                            <Sparkles className="h-4 w-4 mr-1" />
+                                                            Phân tích
+                                                        </Button>
+                                                        {cv.fileUrl && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-orange-600 hover:bg-orange-50 px-2"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    window.open(cv.fileUrl, '_blank');
+                                                                }}
+                                                            >
+                                                                <Download className="h-4 w-4 mr-1" />
+                                                                Tải về
+                                                            </Button>
+                                                        )}
+                                                    </>
+                                                )}
                                             </div>
                                             {!cv.isDefault && (
                                                 <Button
@@ -542,6 +617,12 @@ export function CVListPage() {
                                                         CV mặc định
                                                     </Badge>
                                                 )}
+                                                {selectedCV.isAIGenerated && (
+                                                    <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-xs">
+                                                        <Sparkles className="h-3 w-3 mr-1" />
+                                                        AI Generated
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </>
                                     )}
@@ -568,7 +649,11 @@ export function CVListPage() {
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <p className="text-sm text-gray-500 mb-1">Định dạng</p>
                                     <p className="font-medium text-gray-900">
-                                        {selectedCV.mimeType?.includes('pdf') ? 'PDF' : 'Microsoft Word'}
+                                        {selectedCV.isAIGenerated
+                                            ? 'AI Generated (JSON)'
+                                            : selectedCV.mimeType?.includes('pdf')
+                                                ? 'PDF'
+                                                : 'Microsoft Word'}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 rounded-lg p-4">
@@ -595,8 +680,8 @@ export function CVListPage() {
                                         Tiến trình phân tích AI (Mã CV: {selectedCV.fileName})
                                     </h3>
                                     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                                        <div 
-                                            className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+                                        <div
+                                            className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
                                             style={{ width: `${jobStatus.progressPercentage}%` }}
                                         ></div>
                                     </div>
@@ -636,15 +721,59 @@ export function CVListPage() {
 
                             {/* Actions */}
                             <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => handleAnalyze(selectedCV.id)}
-                                    disabled={analyzeMutation.isPending}
-                                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200"
-                                >
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    Phân tích CV bằng AI
-                                </Button>
+                                {selectedCV.isAIGenerated ? (
+                                    <>
+                                        <Button
+                                            className="bg-[#00b14f] hover:bg-[#00a045] text-white"
+                                            onClick={() => { closeDetailModal(); navigate(`/candidate/cv/editor/${selectedCV.id}`); }}
+                                        >
+                                            <Edit2 className="h-4 w-4 mr-2" />
+                                            Chỉnh sửa nội dung CV
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => { closeDetailModal(); navigate(`/candidate/cv/editor/${selectedCV.id}?download=1`); }}
+                                        >
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Tải PDF
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleAnalyze(selectedCV.id)}
+                                            disabled={analyzeMutation.isPending}
+                                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200"
+                                        >
+                                            <Sparkles className="h-4 w-4 mr-2" />
+                                            Phân tích CV bằng AI
+                                        </Button>
+                                        {selectedCV.fileUrl && (
+                                            <>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => window.open(selectedCV.fileUrl, '_blank')}
+                                                >
+                                                    <Eye className="h-4 w-4 mr-2" />
+                                                    Xem file
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        const link = document.createElement('a');
+                                                        link.href = selectedCV.fileUrl;
+                                                        link.download = selectedCV.fileName;
+                                                        link.click();
+                                                    }}
+                                                >
+                                                    <Download className="h-4 w-4 mr-2" />
+                                                    Tải xuống
+                                                </Button>
+                                            </>
+                                        )}
+                                    </>
+                                )}
                                 <Button
                                     variant="outline"
                                     onClick={() => setIsEditingName(true)}
@@ -652,25 +781,6 @@ export function CVListPage() {
                                 >
                                     <Edit2 className="h-4 w-4 mr-2" />
                                     Chỉnh sửa tên
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => window.open(selectedCV.fileUrl, '_blank')}
-                                >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Xem file
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        const link = document.createElement('a');
-                                        link.href = selectedCV.fileUrl;
-                                        link.download = selectedCV.fileName;
-                                        link.click();
-                                    }}
-                                >
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Tải xuống
                                 </Button>
                                 {!selectedCV.isDefault && (
                                     <Button

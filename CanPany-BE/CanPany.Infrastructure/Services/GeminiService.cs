@@ -2,7 +2,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Models;
 using CanPany.Domain.DTOs.Analysis;
+using CanPany.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -418,5 +420,234 @@ Please provide a JSON response with this exact structure (no additional text):
             Summary = $"{expertiseLevel} developer with {totalRepos} repositories and {totalStars} stars. " +
                      $"Primary focus on {string.Join(", ", topLanguages.Take(3))}."
         };
+    }
+
+    public async Task<string> GenerateCVHtmlAsync(
+        CVGenerationContext ctx,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+            throw new InvalidOperationException("Gemini API Key is missing.");
+
+        var skillsLine   = ctx.Skills.Any()         ? string.Join(", ", ctx.Skills)         : "N/A";
+        var languageLine = ctx.Languages.Any()       ? string.Join(", ", ctx.Languages)      : "";
+        var certLine     = ctx.Certifications.Any()  ? string.Join(", ", ctx.Certifications) : "";
+
+        var systemPrompt = @"You are a professional CV/resume designer. Your task is to generate a complete, 
+self-contained HTML document representing a modern, professional CV. 
+Return ONLY the raw HTML document starting with <!DOCTYPE html>. 
+No markdown fences, no extra explanation — just the HTML file content.";
+
+        // Build JD section for the prompt (only when a target job is set)
+        var jdSection = string.Empty;
+        if (ctx.HasTargetJob)
+        {
+            var jdSkills = ctx.TargetJobSkillIds.Any() ? string.Join(", ", ctx.TargetJobSkillIds) : "";
+            jdSection = $"""
+
+TARGET JOB (tailor the CV to match this posting):
+Position: {ctx.TargetJobTitle}
+{(string.IsNullOrWhiteSpace(ctx.TargetJobDescription) ? "" : $"Job Description:\n{ctx.TargetJobDescription}")}
+{(string.IsNullOrWhiteSpace(jdSkills) ? "" : $"Required Skills: {jdSkills}")}
+
+IMPORTANT TAILORING INSTRUCTIONS:
+- In the Professional Summary section, explicitly mention interest in the position "{ctx.TargetJobTitle}".
+- Reorder and emphasize skills so the ones matching the job's requirements appear first.
+- In the Experience section, highlight achievements and technologies most relevant to this role.
+- If the candidate has matching skills/experience, add a small "Why I'm a great fit" note at the top of the Summary.
+""";
+        }
+
+        var userPrompt = $@"Generate a complete, ATS-optimized, STAR-format HTML CV for the following candidate.
+
+━━━ CANDIDATE DATA ━━━
+Name: {ctx.FullName}
+Email: {ctx.Email}
+Phone: {(string.IsNullOrWhiteSpace(ctx.Phone) ? "N/A" : ctx.Phone)}
+Location: {(string.IsNullOrWhiteSpace(ctx.Location) ? (string.IsNullOrWhiteSpace(ctx.Address) ? "N/A" : ctx.Address) : ctx.Location)}
+Title: {(string.IsNullOrWhiteSpace(ctx.Title) ? "Software Developer" : ctx.Title)}
+Bio/Summary: {(string.IsNullOrWhiteSpace(ctx.Bio) ? "Experienced professional." : ctx.Bio)}
+LinkedIn: {(string.IsNullOrWhiteSpace(ctx.LinkedInUrl) ? "" : ctx.LinkedInUrl)}
+GitHub: {(string.IsNullOrWhiteSpace(ctx.GitHubUrl) ? "" : ctx.GitHubUrl)}
+Portfolio: {(string.IsNullOrWhiteSpace(ctx.Portfolio) ? "" : ctx.Portfolio)}
+
+━━━ EXPERIENCE ━━━
+{(string.IsNullOrWhiteSpace(ctx.Experience) ? "Not provided" : ctx.Experience)}
+
+━━━ EDUCATION ━━━
+{(string.IsNullOrWhiteSpace(ctx.Education) ? "Not provided" : ctx.Education)}
+
+━━━ SKILLS ━━━
+Technical Skills: {skillsLine}
+{(string.IsNullOrWhiteSpace(languageLine) ? "" : $"Programming Languages: {languageLine}")}
+{(string.IsNullOrWhiteSpace(certLine) ? "" : $"Certifications: {certLine}")}
+{jdSection}
+━━━ ATS & STAR REQUIREMENTS ━━━
+You MUST follow ALL of these rules:
+
+**ATS OPTIMIZATION (Applicant Tracking System):**
+1. Use standard section headings: 'Professional Summary', 'Work Experience', 'Education', 'Technical Skills', 'Certifications'
+2. Do NOT use tables, columns, text boxes, headers/footers, or images for main content — ATS parsers cannot read them
+3. Use a clean linear layout (single column) for the main body
+4. Write skills as keyword-rich plain text (not only icons or logos)
+5. Include the job title from the candidate's current/latest role prominently
+6. Quantify achievements wherever possible: use numbers, percentages, dollar amounts
+
+**STAR FORMAT for every Experience bullet point:**
+Each bullet MUST follow: Situation/Task → Action → Result
+Format: 'Action verb + what you did + using what tools/method + measurable result'
+Examples:
+✅ 'Reduced API response time by 40% by migrating to Redis caching, improving user satisfaction scores'
+✅ 'Led a team of 5 engineers to deliver a microservices rewrite 2 weeks ahead of schedule'
+✅ 'Automated CI/CD pipeline using GitHub Actions, cutting deployment time from 2 hours to 8 minutes'
+❌ 'Responsible for developing APIs' (no result, no metric)
+❌ 'Worked on frontend' (vague, no action, no result)
+
+**PROFESSIONAL SUMMARY (3-4 sentences):**
+- Start with years of experience + specialization
+- Include 2-3 core technical strengths (use actual skill keywords)
+- End with a value statement or career goal
+- If tailored to a JD, mention the target role explicitly
+
+**HTML OUTPUT REQUIREMENTS:**
+1. Use a clean, modern layout with a tasteful accent color (#005f73 or similar)
+2. Inline ALL CSS — fully self-contained, no external stylesheets
+3. ATS-safe: use semantic HTML (h1, h2, p, ul, li) not tables for layout
+4. Good typography via Google Fonts @import
+5. Print-ready: fits on 1-2 A4 pages, proper margins
+6. Return complete HTML starting from <!DOCTYPE html>
+NO markdown fences, NO explanations — just the HTML.";
+
+
+        _logger.LogInformation("[GEMINI_CV_GEN] Generating CV HTML for {Name}", ctx.FullName);
+
+        var htmlContent = await GenerateChatResponseAsync(systemPrompt, userPrompt);
+
+        // Strip markdown fences if Gemini wraps it
+        var htmlStart = htmlContent.IndexOf("<!DOCTYPE", StringComparison.OrdinalIgnoreCase);
+        if (htmlStart > 0)
+            htmlContent = htmlContent[htmlStart..];
+
+        var htmlEnd = htmlContent.LastIndexOf("</html>", StringComparison.OrdinalIgnoreCase);
+        if (htmlEnd > 0)
+            htmlContent = htmlContent[..(htmlEnd + 7)];
+
+        _logger.LogInformation("[GEMINI_CV_GEN] Generated HTML CV: {Length} chars", htmlContent.Length);
+
+        return htmlContent;
+    }
+
+    /// <summary>
+    /// Generate structured CV data (JSON) — editable on frontend, PDF generated client-side
+    /// </summary>
+    public async Task<CVStructuredData> GenerateCVDataAsync(
+        CVGenerationContext ctx,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+            throw new InvalidOperationException("Gemini API Key is missing.");
+
+        var skillsLine   = ctx.Skills.Any()        ? string.Join(", ", ctx.Skills)        : "N/A";
+        var languageLine = ctx.Languages.Any()      ? string.Join(", ", ctx.Languages)     : "";
+        var certLine     = ctx.Certifications.Any() ? string.Join(", ", ctx.Certifications): "";
+
+        var jdSection = string.Empty;
+        if (ctx.HasTargetJob)
+        {
+            var jdSkills = ctx.TargetJobSkillIds.Any() ? string.Join(", ", ctx.TargetJobSkillIds) : "";
+            jdSection = $"""
+
+TARGET JOB (tailor the CV to match this posting):
+Position: {ctx.TargetJobTitle}
+{(string.IsNullOrWhiteSpace(ctx.TargetJobDescription) ? "" : $"Job Description:\n{ctx.TargetJobDescription}")}
+{(string.IsNullOrWhiteSpace(jdSkills) ? "" : $"Required Skills: {jdSkills}")}
+""";
+        }
+
+        var systemPrompt = "You are a professional CV writer API. Return ONLY raw JSON — no markdown fences, no explanation.";
+
+        var userPrompt = $@"Generate a structured, ATS-optimized CV for the following candidate using STAR-format experience bullets.
+
+CANDIDATE:
+Name: {ctx.FullName}
+Email: {ctx.Email}
+Phone: {ctx.Phone ?? ""}
+Location: {ctx.Location ?? ctx.Address ?? ""}
+Title: {ctx.Title ?? "Software Developer"}
+Summary/Bio: {ctx.Bio ?? ""}
+LinkedIn: {ctx.LinkedInUrl ?? ""}
+GitHub: {ctx.GitHubUrl ?? ""}
+Portfolio: {ctx.Portfolio ?? ""}
+
+EXPERIENCE (raw input): {ctx.Experience ?? "Not provided"}
+EDUCATION (raw input):  {ctx.Education ?? "Not provided"}
+SKILLS: {skillsLine}
+{(string.IsNullOrWhiteSpace(languageLine) ? "" : $"LANGUAGES: {languageLine}")}
+{(string.IsNullOrWhiteSpace(certLine) ? "" : $"CERTIFICATIONS: {certLine}")}
+{jdSection}
+
+INSTRUCTIONS:
+1. Professional Summary: 3-4 sentences. Years of experience + specialization + 2-3 core skills + value statement.
+2. Experience bullets: STAR format — Action verb + what + how/tools + measurable result.
+   ✅ ""Reduced API response time by 40% by migrating to Redis caching""
+   ❌ ""Responsible for developing APIs""
+3. Skills: ATS-friendly plain list of technical skills.
+4. Parse the raw experience/education text into structured entries as best as possible.
+
+Return EXACTLY this JSON structure (no extra keys, no markdown):
+{{
+  ""fullName"": ""{ctx.FullName}"",
+  ""title"": ""{ctx.Title ?? "Software Developer"}"",
+  ""email"": ""{ctx.Email}"",
+  ""phone"": ""{ctx.Phone ?? ""}"",
+  ""location"": ""{ctx.Location ?? ctx.Address ?? ""}"",
+  ""linkedIn"": ""{ctx.LinkedInUrl ?? ""}"",
+  ""gitHub"": ""{ctx.GitHubUrl ?? ""}"",
+  ""portfolio"": ""{ctx.Portfolio ?? ""}"",
+  ""summary"": ""<generated professional summary>"",
+  ""experience"": [
+    {{
+      ""company"": ""Company Name"",
+      ""role"": ""Job Title"",
+      ""period"": ""Jan 2022 – Present"",
+      ""bullets"": [""STAR bullet 1"", ""STAR bullet 2""]
+    }}
+  ],
+  ""education"": [
+    {{
+      ""institution"": ""University Name"",
+      ""degree"": ""Bachelor of Computer Science"",
+      ""period"": ""2018 – 2022"",
+      ""notes"": """"
+    }}
+  ],
+  ""skills"": [""Skill1"", ""Skill2""],
+  ""languages"": [],
+  ""certifications"": [],
+  ""targetJobTitle"": {(ctx.HasTargetJob ? $"\"{ctx.TargetJobTitle}\"" : "null")}
+}}";
+
+        _logger.LogInformation("[GEMINI_CV_DATA] Generating structured CV JSON for {Name}", ctx.FullName);
+
+        var raw = await GenerateChatResponseAsync(systemPrompt, userPrompt);
+
+        // Strip markdown fences
+        var start = raw.IndexOf('{');
+        var end   = raw.LastIndexOf('}');
+        if (start < 0 || end <= start)
+            throw new InvalidOperationException("Gemini did not return valid JSON for CV data.");
+
+        var json = raw[start..(end + 1)];
+
+        var data = System.Text.Json.JsonSerializer.Deserialize<CVStructuredData>(json,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        if (data == null)
+            throw new InvalidOperationException("Could not deserialize Gemini CV JSON response.");
+
+        _logger.LogInformation("[GEMINI_CV_DATA] Generated structured CV with {ExpCount} experience entries",
+            data.Experience.Count);
+
+        return data;
     }
 }

@@ -12,38 +12,38 @@ interface NotificationFilters {
 export const notificationsApi = {
   // Get all notifications with filters
   getAll: async (filters?: NotificationFilters): Promise<NotificationItem[]> => {
-    const response = await apiClient.get<ApiResponse<NotificationItem[]>>(
+    const response = await apiClient.get<ApiResponse<PaginatedNotifications>>(
       '/notifications',
       { params: filters }
     );
-    return response.data.data || [];
+    return response.data.data?.items || [];
   },
 
   // Get unread notifications count
   getUnreadCount: async (): Promise<number> => {
-    const response = await apiClient.get<ApiResponse<{ notifications: unknown[]; unreadCount: number }>>(
-      '/notifications/unread'
+    const response = await apiClient.get<ApiResponse<{ count: number }>>(
+      '/notifications/unread-count'
     );
-    return response.data.data?.unreadCount || 0;
+    return response.data.data?.count || 0;
   },
 
   // Mark single notification as read
   markAsRead: async (id: string): Promise<void> => {
-    await apiClient.put(`/notifications/${id}/read`);
+    await apiClient.patch(`/notifications/${id}/read`);
   },
 
   // Mark all notifications as read
   markAllAsRead: async (): Promise<void> => {
-    await apiClient.put('/notifications/read-all');
+    await apiClient.patch('/notifications/read-all');
   },
 
-  // Delete notification (not implemented in backend - disabled)
-  // delete: async (id: string): Promise<void> => {
-  //   await apiClient.delete(`/notifications/${id}`);
-  // },
+  // Delete notification
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/notifications/${id}`);
+  },
 
-  // Delete all notifications (not implemented in backend - disabled)
-  // deleteAll: async (): Promise<void> => {
-  //   await apiClient.delete('/notifications');
-  // },
+  // Delete all notifications
+  deleteAll: async (): Promise<void> => {
+    await apiClient.delete('/notifications');
+  },
 };

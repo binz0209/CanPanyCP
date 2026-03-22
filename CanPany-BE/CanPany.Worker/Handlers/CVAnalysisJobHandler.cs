@@ -122,14 +122,35 @@ public class CVAnalysisJobHandler : BaseJobHandler
 
             await ReportProgressAsync(job.JobId, 60, "Analyzing CV content with AI...");
 
+            // New comprehensive prompt that extracts profile data for updating user profile
             var prompt = $@"
 You are an expert technical recruiter and resume parser.
-Extract the following information from this CV text:
+Analyze this CV text and extract ALL profile information.
 
 {cvText}
 
-Provide an objective analysis and return a JSON structured exactly like this:
+Provide a comprehensive analysis with EXACTLY this JSON structure (no extra keys, no markdown):
 {{
+    ""profile"": {{
+        ""fullName"": ""John Doe"",
+        ""email"": ""john@example.com"",
+        ""phone"": ""+84 123 456 789"",
+        ""title"": ""Senior Software Engineer"",
+        ""bio"": ""Experienced developer with 5+ years in..."",
+        ""location"": ""Ho Chi Minh City, Vietnam"",
+        ""address"": ""123 Main St, District 1, HCMC"",
+        ""linkedInUrl"": ""https://linkedin.com/in/johndoe"",
+        ""gitHubUrl"": ""https://github.com/johndoe"",
+        ""portfolio"": ""https://johndoe.dev""
+    }},
+    ""experience"": ""- Senior Developer at ABC Corp (2020-Present): Led team of 5 developers...\n- Developer at XYZ Inc (2018-2020): Built REST APIs using Node.js..."",
+    ""education"": ""- Bachelor of Computer Science, ABC University (2014-2018)\n- High School, XYZ High School (2011-2014)"",
+    ""extractedSkills"": {{
+        ""technical"": [""C#"", "".NET"", ""React"", ""SQL Server"", ""Azure"", ""Docker""],
+        ""soft"": [""Leadership"", ""Communication"", ""Problem Solving""]
+    }},
+    ""languages"": [""English (Fluent)"", ""Vietnamese (Native)""],
+    ""certifications"": [""AWS Solutions Architect"", ""Microsoft Azure Developer Associate""],
     ""atsScore"": 85,
     ""scoreBreakdown"": {{
         ""keywords"": 80,
@@ -138,14 +159,16 @@ Provide an objective analysis and return a JSON structured exactly like this:
         ""experience"": 90,
         ""education"": 80
     }},
-    ""extractedSkills"": {{
-        ""technical"": [""C#"", "".NET"", ""React"", ""SQL""],
-        ""soft"": [""Leadership"", ""Communication""]
-    }},
     ""missingKeywords"": [""Docker"", ""Cloud"", ""Microservices""],
     ""improvementSuggestions"": [""Add more metrics to experience"", ""Include links to portfolio""],
     ""summary"": ""A strong mid-level backend developer with good C# skills.""
 }}
+
+IMPORTANT:
+- Extract ALL information available in the CV
+- If a field is not found, use empty string "" or empty array []
+- For experience and education, provide as detailed text as possible
+- Return ONLY valid JSON, no explanation
 ";
             
             var systemPrompt = "You are a Resume Parser API. Return ONLY raw JSON matching the requested structure.";
@@ -163,15 +186,57 @@ Provide an objective analysis and return a JSON structured exactly like this:
 
             var cleanJson = geminiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
 
-            CVAnalysis? analysisDto = JsonSerializer.Deserialize<CVAnalysis>(cleanJson, new JsonSerializerOptions
+            // Parse the comprehensive CV extraction response
+            CVExtractedProfile? extractedProfile = JsonSerializer.Deserialize<CVExtractedProfile>(cleanJson, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            if (analysisDto == null)
+            if (extractedProfile == null)
             {
                 return JobResult.FailureResult("AI response could not be parsed", "DESERIALIZATION_ERROR");
             }
+
+            // Convert to CVAnalysis format for storage
+            var analysisDto = new CVAnalysis
+            {
+                CVId = payload.CVId,
+                CandidateId = payload.UserId,
+                ATSScore = extractedProfile.AtsScore ?? 0,
+                MissingKeywords = extractedProfile.MissingKeywords ?? new List<string>(),
+                ImprovementSuggestions = extractedProfile.ImprovementSuggestions ?? new List<string>(),
+                ExtractedSkills = new Domain.Entities.ExtractedSkills
+                {
+                    Technical = extractedProfile.ExtractedSkills?.Technical ?? new List<string>(),
+                    Soft = extractedProfile.ExtractedSkills?.Soft ?? new List<string>()
+                },
+                ScoreBreakdown = extractedProfile.ScoreBreakdown != null ? new ATSScoreBreakdown
+                {
+                    Keywords = extractedProfile.ScoreBreakdown.Keywords,
+                    Formatting = extractedProfile.ScoreBreakdown.Formatting,
+                    Skills = extractedProfile.ScoreBreakdown.Skills,
+                    Experience = extractedProfile.ScoreBreakdown.Experience,
+                    Education = extractedProfile.ScoreBreakdown.Education
+                } : new ATSScoreBreakdown(),
+                // Map profile extraction data
+                Profile = extractedProfile.Profile != null ? new Domain.Entities.ExtractedProfile
+                {
+                    FullName = extractedProfile.Profile.FullName,
+                    Email = extractedProfile.Profile.Email,
+                    Phone = extractedProfile.Profile.Phone,
+                    Title = extractedProfile.Profile.Title,
+                    Location = extractedProfile.Profile.Location,
+                    Address = extractedProfile.Profile.Address,
+                    LinkedIn = extractedProfile.Profile.LinkedInUrl,
+                    GitHub = extractedProfile.Profile.GitHubUrl,
+                    Portfolio = extractedProfile.Profile.Portfolio,
+                    Summary = extractedProfile.Profile.Bio
+                } : null,
+                Experience = extractedProfile.Experience,
+                Education = extractedProfile.Education,
+                Languages = extractedProfile.Languages?.Select(l => new Domain.Entities.ExtractedLanguage { Language = l, Level = "" }).ToList() ?? new List<Domain.Entities.ExtractedLanguage>(),
+                Certifications = extractedProfile.Certifications?.Select(c => new Domain.Entities.ExtractedCertification { Name = c }).ToList() ?? new List<Domain.Entities.ExtractedCertification>()
+            };
 
             await ReportProgressAsync(job.JobId, 80, "Saving analysis results...");
 
@@ -195,22 +260,110 @@ Provide an objective analysis and return a JSON structured exactly like this:
             cv.ExtractedSkills = combinedSkills;
             await _cvRepository.UpdateAsync(cv);
 
-            // Sync with UserProfile
+            // Sync with UserProfile - Update ALL extracted profile data
             var userProfile = await _userProfileRepository.GetByUserIdAsync(payload.UserId);
-            if (userProfile != null)
+            if (userProfile == null)
             {
-                var existingSkills = userProfile.SkillIds.Select(s => s.ToLower()).ToHashSet();
-                foreach (var skill in combinedSkills)
+                // Create new profile if doesn't exist
+                userProfile = new UserProfile
                 {
-                    if (!existingSkills.Contains(skill.ToLower()))
+                    UserId = payload.UserId
+                };
+            }
+
+            // Update skills - add new skills without duplicates
+            var existingSkills = userProfile.SkillIds.Select(s => s.ToLower()).ToHashSet();
+            foreach (var skill in combinedSkills)
+            {
+                if (!existingSkills.Contains(skill.ToLower()))
+                {
+                    userProfile.SkillIds.Add(skill);
+                    existingSkills.Add(skill.ToLower());
+                }
+            }
+
+            // Update profile with extracted data (only if not already set or if CV analysis provides better data)
+            if (analysisDto.Profile != null)
+            {
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Summary))
+                    userProfile.Bio = analysisDto.Profile.Summary;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Phone))
+                    userProfile.Phone = analysisDto.Profile.Phone;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Title))
+                    userProfile.Title = analysisDto.Profile.Title;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Location))
+                    userProfile.Location = analysisDto.Profile.Location;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Address))
+                    userProfile.Address = analysisDto.Profile.Address;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.LinkedIn))
+                    userProfile.LinkedInUrl = analysisDto.Profile.LinkedIn;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.GitHub))
+                    userProfile.GitHubUrl = analysisDto.Profile.GitHub;
+                
+                if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Portfolio))
+                    userProfile.Portfolio = analysisDto.Profile.Portfolio;
+            }
+
+            // Update experience if extracted
+            if (!string.IsNullOrWhiteSpace(analysisDto.Experience))
+            {
+                userProfile.Experience = analysisDto.Experience;
+                Logger.LogInformation("[CV_ANALYSIS] Extracted experience: {Experience}",
+                    analysisDto.Experience.Substring(0, Math.Min(100, analysisDto.Experience.Length)));
+            }
+
+            // Update education if extracted
+            if (!string.IsNullOrWhiteSpace(analysisDto.Education))
+            {
+                userProfile.Education = analysisDto.Education;
+                Logger.LogInformation("[CV_ANALYSIS] Extracted education: {Education}",
+                    analysisDto.Education.Substring(0, Math.Min(100, analysisDto.Education.Length)));
+            }
+
+            // Update languages if extracted
+            if (analysisDto.Languages != null && analysisDto.Languages.Count > 0)
+            {
+                var existingLangs = userProfile.Languages.Select(l => l.ToLower()).ToHashSet();
+                foreach (var lang in analysisDto.Languages)
+                {
+                    var langName = lang.Language ?? "";
+                    if (!string.IsNullOrWhiteSpace(langName) && !existingLangs.Contains(langName.ToLower()))
                     {
-                        userProfile.SkillIds.Add(skill);
-                        existingSkills.Add(skill.ToLower());
+                        userProfile.Languages.Add(langName);
+                        existingLangs.Add(langName.ToLower());
                     }
                 }
-                userProfile.MarkAsUpdated();
-                await _userProfileRepository.UpdateAsync(userProfile);
+                Logger.LogInformation("[CV_ANALYSIS] Extracted {Count} languages: {Languages}",
+                    analysisDto.Languages.Count, string.Join(", ", analysisDto.Languages.Select(l => l.Language)));
             }
+
+            // Update certifications if extracted
+            if (analysisDto.Certifications != null && analysisDto.Certifications.Count > 0)
+            {
+                var existingCerts = userProfile.Certifications.Select(c => c.ToLower()).ToHashSet();
+                foreach (var cert in analysisDto.Certifications)
+                {
+                    var certName = cert.Name ?? "";
+                    if (!string.IsNullOrWhiteSpace(certName) && !existingCerts.Contains(certName.ToLower()))
+                    {
+                        userProfile.Certifications.Add(certName);
+                        existingCerts.Add(certName.ToLower());
+                    }
+                }
+                Logger.LogInformation("[CV_ANALYSIS] Extracted {Count} certifications: {Certifications}",
+                    analysisDto.Certifications.Count, string.Join(", ", analysisDto.Certifications.Select(c => c.Name)));
+            }
+
+            userProfile.MarkAsUpdated();
+            await _userProfileRepository.UpdateAsync(userProfile);
+            
+            Logger.LogInformation("[CV_ANALYSIS_PROFILE_UPDATED] UserId: {UserId} - Profile updated with CV data", payload.UserId);
 
             await ReportProgressAsync(job.JobId, 100, "CV analysis completed successfully!");
 

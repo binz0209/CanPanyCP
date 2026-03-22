@@ -87,12 +87,27 @@ public class UserProfileRepository : IUserProfileRepository
     public async Task<IEnumerable<UserProfile>> GetAllAsync()
     {
         try
-    {
-        return await _collection.Find(_ => true).ToListAsync();
+        {
+            return await _collection.Find(_ => true).ToListAsync();
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Error getting all user profiles");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<UserProfile>> GetProfilesCreatedAfterAsync(DateTime date)
+    {
+        try
+        {
+            return await _collection.Find(p => p.CreatedAt >= date)
+                .SortByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error getting user profiles created after {Date}", date);
             throw;
         }
     }

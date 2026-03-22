@@ -91,34 +91,69 @@ public class JobAlertProcessor
     [AutomaticRetry(Attempts = 3)]
     public async Task ProcessDailyAlertsAsync()
     {
+        var runId = Guid.NewGuid().ToString().Substring(0, 8);
         try
         {
-            _logger.LogInformation("Starting daily job alert processing");
+            _logger.LogInformation("[JobAlert-{RunId}] Starting daily job alert processing", runId);
 
             // Get all active "Daily" alerts
             var dailyAlerts = await _alertRepo.GetActiveAlertsByFrequencyAsync("Daily");
             var alertsList = dailyAlerts.ToList();
 
-            _logger.LogInformation("Found {Count} daily alerts to process", alertsList.Count);
+            _logger.LogInformation("[JobAlert-{RunId}] Found {Count} active daily alerts to process", runId, alertsList.Count);
 
             // Get new jobs from last 24 hours
             var yesterday = DateTime.UtcNow.AddDays(-1);
             var newJobs = await _jobRepo.GetJobsCreatedAfterAsync(yesterday);
-            var jobsList = newJobs.Where(j => j.Status == "Open").ToList(); // Changed "Active" to "Open"
+            var jobsList = newJobs.Where(j => j.Status == "Open").ToList();
 
-            _logger.LogInformation("Found {Count} new jobs to check", jobsList.Count);
+            _logger.LogInformation("[JobAlert-{RunId}] Found {Count} new 'Open' jobs created since {Since}", runId, jobsList.Count, yesterday);
 
+            int totalMatches = 0;
             foreach (var alert in alertsList)
             {
-                await ProcessAlertAsync(alert, jobsList);
+                var matchesCount = await ProcessAlertWithCountAsync(alert, jobsList);
+                totalMatches += matchesCount;
             }
 
-            _logger.LogInformation("Completed daily job alert processing");
+            _logger.LogInformation("[JobAlert-{RunId}] Completed daily job alert processing. Total matches found: {TotalMatches}", runId, totalMatches);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing daily alerts");
+            _logger.LogError(ex, "[JobAlert-{RunId}] Error processing daily alerts", runId);
             throw;
+        }
+    }
+
+    private async Task<int> ProcessAlertWithCountAsync(JobAlert alert, List<Job> jobs)
+    {
+        try
+        {
+            var matchedJobs = await _jobAlertService.FindMatchingJobsAsync(alert, jobs);
+            var matchesList = matchedJobs.ToList();
+
+            if (matchesList.Any())
+            {
+                _logger.LogInformation(
+                    "Alert {AlertId} ('{Title}') matched {Count} jobs", 
+                    alert.Id, alert.Title, matchesList.Count);
+
+                foreach (var job in matchesList)
+                {
+                    await ProcessMatchAsync(alert, job);
+                }
+
+                // Update alert statistics
+                alert.LastTriggeredAt = DateTime.UtcNow;
+                alert.MatchCount += matchesList.Count;
+                await _alertRepo.UpdateAsync(alert);
+            }
+            return matchesList.Count;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing alert {AlertId}", alert.Id);
+            return 0;
         }
     }
 

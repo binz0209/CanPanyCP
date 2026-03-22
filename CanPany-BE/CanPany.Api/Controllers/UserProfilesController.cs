@@ -17,16 +17,77 @@ public class UserProfilesController : ControllerBase
 {
     private readonly IUserProfileService _profileService;
     private readonly IUserService _userService;
+    private readonly ICloudinaryService _cloudinaryService;
     private readonly ILogger<UserProfilesController> _logger;
 
     public UserProfilesController(
         IUserProfileService profileService,
         IUserService userService,
+        ICloudinaryService cloudinaryService,
         ILogger<UserProfilesController> logger)
     {
         _profileService = profileService;
         _userService = userService;
+        _cloudinaryService = cloudinaryService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Upload avatar image
+    /// </summary>
+    [HttpPost("avatar")]
+    public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            if (file == null || file.Length == 0)
+                return BadRequest(ApiResponse.CreateError("File is required", "FileRequired"));
+
+            // 1. Image Validation
+            // Size limit: 2MB
+            if (file.Length > 2 * 1024 * 1024)
+                return BadRequest(ApiResponse.CreateError("Image size exceeds 2MB limit", "FileTooLarge"));
+
+            // Type validation
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(ApiResponse.CreateError("Only JPG, PNG and WebP images are allowed", "InvalidFileType"));
+
+            // 2. Fetch user to delete old avatar if exists
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null)
+                return NotFound(ApiResponse.CreateError("User not found", "UserNotFound"));
+
+            if (!string.IsNullOrWhiteSpace(user.CloudinaryPublicId))
+            {
+                await _cloudinaryService.DeleteAsync(user.CloudinaryPublicId, "image");
+            }
+
+            // 3. Upload new image to Cloudinary
+            await using var stream = file.OpenReadStream();
+            var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
+                stream,
+                file.FileName,
+                "avatars",
+                "image");
+
+            // 4. Update user entity
+            user.AvatarUrl = secureUrl;
+            user.CloudinaryPublicId = publicId;
+            await _userService.UpdateAsync(userId, user);
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { Url = secureUrl, PublicId = publicId }, "Avatar updated successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading avatar");
+            return StatusCode(500, ApiResponse.CreateError("Failed to upload avatar", "UploadAvatarFailed"));
+        }
     }
 
     /// <summary>

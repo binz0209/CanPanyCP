@@ -8,6 +8,8 @@ export interface CV {
     fileSize: number;
     mimeType: string;
     isDefault: boolean;
+    isAIGenerated?: boolean;
+    structuredData?: Record<string, unknown>;
     latestAnalysisId?: string;
     extractedSkills?: string[];
     createdAt: string;

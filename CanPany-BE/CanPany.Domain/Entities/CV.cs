@@ -29,6 +29,9 @@ public class CV : AggregateRoot
     [BsonElement("mimeType")]
     public string MimeType { get; set; } = string.Empty;
 
+    [BsonElement("cloudinaryPublicId")]
+    public string? CloudinaryPublicId { get; set; }
+
     [BsonElement("isDefault")]
     public bool IsDefault { get; set; } = false;
 
@@ -43,5 +46,51 @@ public class CV : AggregateRoot
 
     [BsonElement("updatedAt")]
     public new DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Structured CV data (JSON) for AI-generated, editable CVs.
+    /// When set, FileUrl is empty — PDF is generated client-side on download.
+    /// </summary>
+    [BsonElement("structuredData")]
+    public CVStructuredData? StructuredData { get; set; }
+
+    [BsonElement("isAIGenerated")]
+    public bool IsAIGenerated { get; set; } = false;
+}
+
+/// <summary>Structured CV data returned by Gemini and editable by the user.</summary>
+public class CVStructuredData
+{
+    public string FullName { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public string LinkedIn { get; set; } = string.Empty;
+    public string GitHub { get; set; } = string.Empty;
+    public string Portfolio { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public List<CVExperienceEntry> Experience { get; set; } = new();
+    public List<CVEducationEntry> Education { get; set; } = new();
+    public List<string> Skills { get; set; } = new();
+    public List<string> Languages { get; set; } = new();
+    public List<string> Certifications { get; set; } = new();
+    public string? TargetJobTitle { get; set; }
+}
+
+public class CVExperienceEntry
+{
+    public string Company { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public string Period { get; set; } = string.Empty;
+    public List<string> Bullets { get; set; } = new();
+}
+
+public class CVEducationEntry
+{
+    public string Institution { get; set; } = string.Empty;
+    public string Degree { get; set; } = string.Empty;
+    public string Period { get; set; } = string.Empty;
+    public string? Notes { get; set; }
 }
 

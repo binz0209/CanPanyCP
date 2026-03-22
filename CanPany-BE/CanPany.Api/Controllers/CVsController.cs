@@ -74,33 +74,73 @@ public class CVsController : ControllerBase
     /// <summary>
     /// UC-CAN-06: Upload CV
     /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> UploadCV([FromForm] UploadCVRequest request)
+    [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadCV([FromForm] IFormFile file, [FromForm] bool? isDefault = false)
     {
         try
         {
+            _logger.LogInformation("=== UploadCV Debug Start ===");
+            _logger.LogInformation("Content-Type: {ContentType}", Request.ContentType);
+            _logger.LogInformation("Content-Length Header: {ContentLength}", Request.ContentLength);
+            
+            foreach (var header in Request.Headers)
+            {
+                _logger.LogInformation("Header: {Key}={Value}", header.Key, header.Value);
+            }
+
+            _logger.LogInformation("Form files count: {Count}", Request.Form.Files.Count);
+            foreach (var f in Request.Form.Files)
+            {
+                _logger.LogInformation("Found form file: Name={Name}, FileName={FileName}, Length={Length}, ContentType={ContentType}", 
+                    f.Name, f.FileName, f.Length, f.ContentType);
+            }
+
             var userId = User.FindFirst("sub")?.Value;
-            //if (string.IsNullOrEmpty(userId))
-            //    return Unauthorized();
 
-            if (request.File == null || request.File.Length == 0)
-                return BadRequest(ApiResponse.CreateError("File is required", "FileRequired"));
+            if (file == null || file.Length == 0)
+            {
+                _logger.LogWarning("File parameter is null or empty. Checking Request.Form.Files directly...");
+                file = Request.Form.Files.GetFile("file") ?? Request.Form.Files.FirstOrDefault();
+                
+                if (file == null || file.Length == 0)
+                {
+                    _logger.LogError("Upload failed: No file content received (file is null or length is 0)");
+                    return BadRequest(ApiResponse.CreateError("File is required and must not be empty", "FileRequiredOrEmpty"));
+                }
+                
+                _logger.LogInformation("File recovered from Request.Form.Files: {FileName}, Length={Length}", file.FileName, file.Length);
+            }
+            _logger.LogInformation("=== UploadCV Debug End ===");
 
-            // Upload file to Cloudinary
-            await using var stream = request.File.OpenReadStream();
+            // 1. File Validation
+            // Size limit: 5MB
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(ApiResponse.CreateError("File size exceeds 5MB limit", "FileTooLarge"));
+
+            // Type validation
+            var allowedExtensions = new[] { ".pdf", ".docx", ".doc" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(ApiResponse.CreateError("Only PDF and Word documents are allowed", "InvalidFileType"));
+
+            // 2. Upload file to Cloudinary
+            await using var stream = file.OpenReadStream();
             var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
                 stream,
-                request.File.FileName,
-                "cvs");
+                file.FileName,
+                "cvs",
+                "raw"); // CVs are treated as raw files in Cloudinary
 
             var cv = new CV
             {
                 UserId = userId,
-                FileName = request.File.FileName,
+                FileName = file.FileName,
                 FileUrl = secureUrl,
-                FileSize = request.File.Length,
-                MimeType = request.File.ContentType,
-                IsDefault = request.IsDefault ?? false,
+                CloudinaryPublicId = publicId,
+                FileSize = file.Length,
+                MimeType = file.ContentType,
+                IsDefault = isDefault ?? false,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -251,9 +291,128 @@ public class CVsController : ControllerBase
             return StatusCode(500, ApiResponse.CreateError("Failed to start CV analysis", "AnalyzeCVFailed"));
         }
     }
+
+    /// <summary>
+    /// UC-CAN-13: Generate CV from candidate profile using AI.
+    /// Optional: pass ?targetJobId=... to tailor the CV for a specific job posting.
+    /// POST /api/cvs/generate
+    /// </summary>
+    [HttpPost("generate")]
+    public async Task<IActionResult> GenerateCV(
+        [FromQuery] string? targetJobId,
+        [FromServices] CanPany.Worker.Infrastructure.Progress.IJobProgressTracker progressTracker,
+        [FromServices] CanPany.Worker.Infrastructure.Queue.IJobProducer jobProducer)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var jobId = Guid.NewGuid().ToString();
+
+            var jobTitle = string.IsNullOrEmpty(targetJobId)
+                ? "Tạo CV bằng AI"
+                : "Tạo CV phù hợp với JD";
+
+            // Initialize progress tracking
+            await progressTracker.InitializeAsync(
+                jobId: jobId,
+                userId: userId,
+                jobType: "GenerateCV",
+                jobTitle: jobTitle,
+                totalSteps: 100);
+
+            // Enqueue job
+            var payload = new CanPany.Worker.Models.Payloads.CVGenerationPayload
+            {
+                UserId   = userId,
+                JobTitle = jobTitle,
+                JobId    = targetJobId,
+            };
+
+            var jobMessage = new CanPany.Worker.Models.JobMessage
+            {
+                JobId    = jobId,
+                I18nKey  = "Job.CV.Generate.Gemini",
+                Payload  = System.Text.Json.JsonSerializer.Serialize(payload),
+            };
+
+            await jobProducer.EnqueueJobAsync(jobMessage);
+
+            _logger.LogInformation(
+                "[CV_GENERATE_QUEUED] JobId: {JobId} | UserId: {UserId} | TargetJobId: {TargetJobId}",
+                jobId, userId, targetJobId ?? "none");
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { JobId = jobId },
+                "CV generation started. Check job status for progress."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error starting CV generation");
+            return StatusCode(500, ApiResponse.CreateError("Failed to start CV generation", "GenerateCVFailed"));
+        }
+    }
+
+    /// <summary>
+    /// GET /api/cvs/{id}/data — return structured CV data for the editor
+    /// </summary>
+    [HttpGet("{id}/data")]
+    public async Task<IActionResult> GetCVData(string id)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var cv = await _cvService.GetByIdAsync(id);
+            if (cv == null || cv.UserId != userId)
+                return NotFound(ApiResponse.CreateError("CV not found", "NotFound"));
+
+            return Ok(ApiResponse<CVStructuredData>.CreateSuccess(
+                cv.StructuredData ?? new CVStructuredData { FullName = "", Email = "" },
+                "OK"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GET_CV_DATA] id={Id}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to get CV data", "GetCVDataFailed"));
+        }
+    }
+
+    /// <summary>
+    /// PUT /api/cvs/{id}/data — save edited structured CV data
+    /// </summary>
+    [HttpPut("{id}/data")]
+    public async Task<IActionResult> UpdateCVData(string id, [FromBody] CVStructuredData data)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var cv = await _cvService.GetByIdAsync(id);
+            if (cv == null || cv.UserId != userId)
+                return NotFound(ApiResponse.CreateError("CV not found", "NotFound"));
+
+            cv.StructuredData = data;
+            cv.UpdatedAt = DateTime.UtcNow;
+            await _cvService.UpdateAsync(id, cv);
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { updated = true }, "CV data saved."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[UPDATE_CV_DATA] id={Id}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to save CV data", "UpdateCVDataFailed"));
+        }
+    }
 }
 
-public record UploadCVRequest(IFormFile File, bool? IsDefault = false);
+
+
 public record UpdateCVRequest(string? FileName);
+
 
 

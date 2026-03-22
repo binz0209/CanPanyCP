@@ -8,6 +8,9 @@ public interface ICloudinaryService
         Stream fileStream,
         string fileName,
         string folder,
+        string resourceType = "raw",
         CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteAsync(string publicId, string resourceType = "raw");
 }
 
