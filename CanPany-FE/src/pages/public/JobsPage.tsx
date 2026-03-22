@@ -86,17 +86,19 @@ export function JobsPage() {
     queryKey: ['companies-for-jobs', companyIds],
     queryFn: async () => {
       if (companyIds.length === 0) return [];
-      // Fetch companies sequentially
-      const companies: Company[] = [];
-      for (const id of companyIds) {
-        try {
-          const company = await companiesApi.getById(id);
-          companies.push(company);
-        } catch (e) {
-          // Skip failed company fetches
-        }
-      }
-      return companies;
+      // Fetch companies in parallel using Promise.all
+      const results = await Promise.all(
+        companyIds.map(async (id) => {
+          try {
+            return await companiesApi.getById(id);
+          } catch (e) {
+            // Skip failed company fetches
+            return null;
+          }
+        })
+      );
+      // Filter out null values from failed fetches
+      return results.filter((company): company is Company => company !== null);
     },
     enabled: companyIds.length > 0,
   });

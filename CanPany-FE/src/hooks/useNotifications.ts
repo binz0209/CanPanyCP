@@ -26,13 +26,16 @@ export function useNotifications(options?: UseNotificationsOptions) {
     refetchInterval,
   });
 
-  // Fetch unread count
-  const { data: unreadCount = 0, isLoading: isUnreadLoading } = useQuery({
+  // Fetch unread notifications and count
+  const { data: unreadData, isLoading: isUnreadLoading } = useQuery({
     queryKey: notificationKeys.unread(),
     queryFn: () => notificationsApi.getUnreadCount(),
     enabled,
     refetchInterval,
   });
+  
+  const unreadNotifications = unreadData?.notifications || [];
+  const unreadCount = unreadData?.unreadCount || 0;
 
   // Mark as read mutation
   const { mutate: markAsRead } = useMutation({
@@ -52,6 +55,7 @@ export function useNotifications(options?: UseNotificationsOptions) {
 
   return {
     notifications: notifications as NotificationItem[],
+    unreadNotifications: unreadNotifications as NotificationItem[],
     unreadCount,
     isLoading: isLoading || isUnreadLoading,
     markAsRead,
