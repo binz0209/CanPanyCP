@@ -4,6 +4,7 @@ using CanPany.Infrastructure.Security.Encryption;
 using CanPany.Infrastructure.Security.Hashing;
 using CanPany.Infrastructure.Services;
 using CanPany.Infrastructure.Jobs;
+using CanPany.Api.Hubs;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Services;
@@ -32,6 +33,9 @@ builder.Host.UseSerilog(Log.Logger, dispose: true);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Add SignalR for real-time messaging
+builder.Services.AddSignalR();
 
 // Register FluentValidation (using new non-deprecated API)
 builder.Services.AddFluentValidationAutoValidation();
@@ -253,6 +257,17 @@ builder.Services.AddAuthentication(options =>
     };
     options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
     {
+        OnMessageReceived = context =>
+        {
+            // SignalR sends the access token via query string for WebSocket connections
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        },
         OnTokenValidated = context =>
         {
             var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
@@ -388,6 +403,9 @@ app.UseGlobalAuditMiddleware();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Map SignalR hub for real-time messaging
+app.MapHub<ChatHub>("/hubs/chat");
 
 // Log server information before running
 Log.Information("═══════════════════════════════════════════════════════════");
