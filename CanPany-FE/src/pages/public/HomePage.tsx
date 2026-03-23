@@ -3,35 +3,35 @@ import { Search, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin }
 import { useTranslation } from 'react-i18next';
 import { Button, Carousel } from '../../components/ui';
 
+const jobBanners = [
+    {
+        id: 1,
+        title: 'Senior Frontend Developer',
+        company: 'FPT Software',
+        location: 'Hà Nội',
+        salary: '20-30 triệu',
+        image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
+    },
+    {
+        id: 2,
+        title: 'UI/UX Designer',
+        company: 'VNG Corporation',
+        location: 'TP. Hồ Chí Minh',
+        salary: '15-25 triệu',
+        image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=400&fit=crop',
+    },
+    {
+        id: 3,
+        title: 'Data Analyst',
+        company: 'Viettel',
+        location: 'Đà Nẵng',
+        salary: '18-28 triệu',
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
+    },
+];
+
 export function HomePage() {
     const { t } = useTranslation('public');
-
-    const jobBanners = [
-        {
-            id: 1,
-            title: 'Senior Frontend Developer',
-            company: 'FPT Software',
-            location: t('home.bannerLocation1'),
-            salary: t('home.bannerSalary1'),
-            image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
-        },
-        {
-            id: 2,
-            title: 'UI/UX Designer',
-            company: 'VNG Corporation',
-            location: t('home.bannerLocation2'),
-            salary: t('home.bannerSalary2'),
-            image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=400&fit=crop',
-        },
-        {
-            id: 3,
-            title: 'Data Analyst',
-            company: 'Viettel',
-            location: t('home.bannerLocation3'),
-            salary: t('home.bannerSalary3'),
-            image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
-        },
-    ];
 
     const features = [
         {
@@ -117,9 +117,9 @@ export function HomePage() {
                                         <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                         <select className="w-full appearance-none rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20">
                                             <option>{t('home.allLocations')}</option>
-                                            <option>{t('home.locations.hanoi')}</option>
-                                            <option>{t('home.locations.hcm')}</option>
-                                            <option>{t('home.locations.danang')}</option>
+                                            <option>Hà Nội</option>
+                                            <option>TP. Hồ Chí Minh</option>
+                                            <option>Đà Nẵng</option>
                                         </select>
                                     </div>
                                     <Link to="/jobs">

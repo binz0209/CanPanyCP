@@ -1,4 +1,5 @@
 import { AlertTriangle, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../ui';
 import type { CandidateCVSummary } from '../../../api/candidate.api';
 
@@ -15,12 +16,14 @@ export function CandidateCVsCard({
     cvs,
     hasError,
 }: CandidateCVsCardProps) {
+    const { t } = useTranslation('company');
+
     return (
         <>
             <Card className="p-6">
                 <div className="flex items-center gap-2 text-gray-900">
                     <FileText className="h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Candidate CVs</h2>
+                    <h2 className="text-lg font-semibold">{t('applicationDetail.cvsTitle')}</h2>
                 </div>
 
                 {isLoading ? (
@@ -31,7 +34,7 @@ export function CandidateCVsCard({
                     </div>
                 ) : cvs.length === 0 ? (
                     <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-600">
-                        Ứng viên chưa có CV khả dụng.
+                        {t('applicationDetail.noCVAvailable')}
                     </div>
                 ) : (
                     <div className="mt-4 space-y-3">
@@ -39,7 +42,7 @@ export function CandidateCVsCard({
                             <div key={cv.id} className="rounded-xl border border-gray-100 p-4">
                                 <p className="font-medium text-gray-900">{cv.fileName}</p>
                                 <p className="mt-1 text-sm text-gray-500">
-                                    {cv.isDefault ? 'CV mặc định' : 'CV bổ sung'}
+                                    {cv.isDefault ? t('applicationDetail.cvDefault') : t('applicationDetail.cvAdditional')}
                                 </p>
                             </div>
                         ))}
@@ -52,7 +55,7 @@ export function CandidateCVsCard({
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-700" />
                         <p className="text-sm leading-6 text-amber-800">
-                            Quyền xem CV của ứng viên hiện chưa sẵn sàng. Vui lòng thử lại sau hoặc kiểm tra lại quyền truy cập/mức độ mở khóa hồ sơ.
+                            {t('applicationDetail.cvAccessNotReady')}
                         </p>
                     </div>
                 </Card>

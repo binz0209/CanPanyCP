@@ -17,11 +17,13 @@ import {
 import { useCandidateProfilesMap } from '../../hooks/company/useCandidateProfilesMap';
 import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { applicationKeys, candidateKeys, companyKeys } from '../../lib/queryKeys';
+import { useTranslation } from 'react-i18next';
 
 type StatusFilter = 'All' | ApplicationStatus;
 
 export function CompanyApplicationsPage() {
     const queryClient = useQueryClient();
+    const { t } = useTranslation('company');
     const [selectedJobId, setSelectedJobId] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
     const [processingApplicationId, setProcessingApplicationId] = useState<string | null>(null);
@@ -66,15 +68,15 @@ export function CompanyApplicationsPage() {
                 currentApplication ? { ...currentApplication, status: 'Accepted' } : currentApplication
             );
             await queryClient.invalidateQueries({ queryKey: applicationKeys.byJob(selectedJobId), exact: true });
-            toast.success('Đã chấp nhận application');
+            toast.success(t('applications.toastAccepted'));
         },
         onSettled: () => {
             setProcessingApplicationId(null);
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể chấp nhận application'
-                : 'Không thể chấp nhận application';
+                ? error.response?.data?.message || t('applications.toastAcceptFailed')
+                : t('applications.toastAcceptFailed');
             toast.error(message);
         },
     });
@@ -124,8 +126,8 @@ export function CompanyApplicationsPage() {
     if (isMissingProfile) {
         return (
             <CompanyProfileRequiredState
-                title="Bạn chưa có hồ sơ công ty"
-                description="Hãy hoàn thiện hồ sơ công ty trước khi review applications."
+                title={t('applications.profileRequired')}
+                description={t('applications.profileRequiredDesc')}
                 icon={<FileSearch className="h-6 w-6" />}
             />
         );
@@ -134,8 +136,8 @@ export function CompanyApplicationsPage() {
     if (hasFatalError || jobsQuery.error || applicationsQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải danh sách ứng tuyển"
-                description="Đã xảy ra lỗi khi tải dữ liệu ứng tuyển. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ."
+                title={t('applications.errorTitle')}
+                description={t('applications.errorDesc')}
                 icon={<FileSearch className="h-6 w-6" />}
             />
         );
@@ -144,22 +146,22 @@ export function CompanyApplicationsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader
-                title="Review ứng tuyển"
-                description="Chọn một job để xem danh sách hồ sơ ứng tuyển, lọc theo trạng thái và cập nhật quyết định Accepted/Rejected."
+                title={t('applications.title')}
+                description={t('applications.description')}
             />
 
             <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                 <Card className="p-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Bộ lọc review</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('applications.filterTitle')}</h2>
                     <div className="mt-5 space-y-5">
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-gray-700">Chọn job</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">{t('applications.selectJobLabel')}</label>
                             <select
                                 value={selectedJobId}
                                 onChange={(event) => setSelectedJobId(event.target.value)}
                                 className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                             >
-                                <option value="">Chọn tin tuyển dụng</option>
+                                <option value="">{t('applications.selectJobPlaceholder')}</option>
                                 {(jobsQuery.data || []).map((job) => (
                                     <option key={job.id} value={job.id}>
                                         {job.title}
@@ -169,7 +171,7 @@ export function CompanyApplicationsPage() {
                         </div>
 
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-gray-700">Lọc trạng thái</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">{t('applications.filterStatusLabel')}</label>
                             <div className="flex flex-wrap gap-2">
                                 {(['All', 'Pending', 'Accepted', 'Rejected', 'Withdrawn'] as StatusFilter[]).map((filter) => (
                                     <Button
@@ -178,7 +180,11 @@ export function CompanyApplicationsPage() {
                                         variant={statusFilter === filter ? 'default' : 'outline'}
                                         onClick={() => setStatusFilter(filter)}
                                     >
-                                        {({'All':'Tất cả','Pending':'Chờ duyệt','Accepted':'Đã chấp nhận','Rejected':'Bị từ chối','Withdrawn':'Đã rút đơn'} as Record<string,string>)[filter] ?? filter}
+                                        {filter === 'All' ? t('applications.filterAll') : null}
+                                        {filter === 'Pending' ? t('applications.filterPending') : null}
+                                        {filter === 'Accepted' ? t('applications.filterAccepted') : null}
+                                        {filter === 'Rejected' ? t('applications.filterRejected') : null}
+                                        {filter === 'Withdrawn' ? t('applications.filterWithdrawn') : null}
                                     </Button>
                                 ))}
                             </div>
@@ -186,8 +192,8 @@ export function CompanyApplicationsPage() {
 
                         <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
                             {selectedJob
-                                ? `Đang review job: ${selectedJob.title}`
-                                : 'Chọn một job để tải danh sách applications.'}
+                                ? t('applications.reviewingJob', { title: selectedJob.title })
+                                : t('applications.selectJobFirst')}
                         </div>
                     </div>
                 </Card>
@@ -195,13 +201,13 @@ export function CompanyApplicationsPage() {
                 <Card className="p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Danh sách applications</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('applications.listTitle')}</h2>
                             <p className="mt-1 text-sm text-gray-500">
-                                {selectedJob ? selectedJob.title : 'Chưa chọn job'}
+                                {selectedJob ? selectedJob.title : t('applications.noJobSelected')}
                             </p>
                         </div>
                         <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
-                            {filteredApplications.length} hồ sơ
+                            {t('applications.applicantCount', { count: filteredApplications.length })}
                         </span>
                     </div>
 
@@ -214,16 +220,16 @@ export function CompanyApplicationsPage() {
                     ) : !selectedJobId ? (
                         <div className="mt-6">
                             <EmptyState
-                                title="Chưa chọn job"
-                                description="Hãy chọn một tin tuyển dụng ở panel bên trái để xem hồ sơ ứng tuyển."
+                                title={t('applications.emptyNoJob')}
+                                description={t('applications.emptyNoJobDesc')}
                                 icon={<BriefcaseBusiness className="h-6 w-6" />}
                             />
                         </div>
                     ) : filteredApplications.length === 0 ? (
                         <div className="mt-6">
                             <EmptyState
-                                title="Chưa có application phù hợp"
-                                description="Chưa có ứng viên nào apply hoặc bộ lọc hiện tại không khớp."
+                                title={t('applications.emptyNoMatch')}
+                                description={t('applications.emptyNoMatchDesc')}
                                 icon={<FileSearch className="h-6 w-6" />}
                             />
                         </div>

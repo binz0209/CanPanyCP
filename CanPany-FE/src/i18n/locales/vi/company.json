@@ -81,7 +81,12 @@
     "validAddressMax": "Địa chỉ quá dài",
     "validDescMax": "Mô tả tối đa 2000 ký tự",
     "profileRequired": "Bạn chưa có hồ sơ công ty",
-    "profileRequiredDesc": "Hãy hoàn thiện hồ sơ công ty trước khi tạo và quản lý tin tuyển dụng."
+    "profileRequiredDesc": "Hãy hoàn thiện hồ sơ công ty trước khi tạo và quản lý tin tuyển dụng.",
+    "previewCardTitle": "Xem trước hồ sơ",
+    "logoPreviewAlt": "Logo xem trước",
+    "previewNameFallback": "Tên công ty",
+    "previewAddressFallback": "Địa chỉ sẽ hiển thị ở đây",
+    "previewDescriptionFallback": "Mô tả công ty sẽ hiển thị ở đây"
   },
   "verification": {
     "title": "Xác minh doanh nghiệp",
@@ -108,7 +113,10 @@
     "errorDesc": "Đã xảy ra lỗi khi tải thông tin xác minh. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ.",
     "toastSuccess": "Gửi yêu cầu xác minh thành công",
     "toastFailed": "Không thể gửi yêu cầu xác minh",
-    "validDocRequired": "Vui lòng nhập ít nhất một document URL"
+    "validDocRequired": "Vui lòng nhập ít nhất một document URL",
+    "statusApproved": "Đã duyệt",
+    "statusPending": "Chờ duyệt",
+    "statusRejected": "Bị từ chối"
   },
   "jobs": {
     "title": "Quản lý tin tuyển dụng",
@@ -139,7 +147,8 @@
     "errorDesc": "Đã xảy ra lỗi khi tải danh sách tin tuyển dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ.",
     "toastClosed": "Đã đóng tin tuyển dụng",
     "toastReopened": "Đã mở lại tin tuyển dụng",
-    "toastStatusFailed": "Không thể cập nhật trạng thái job"
+    "toastStatusFailed": "Không thể cập nhật trạng thái job",
+    "actionHint": "Bạn có thể tạo mới, chỉnh sửa và đóng/mở lại tin tuyển dụng trực tiếp tại đây."
   },
   "jobForm": {
     "titleLabel": "Tiêu đề job",
@@ -184,7 +193,17 @@
     "tipsTitle": "Gợi ý viết tin hiệu quả",
     "tip1": "Tiêu đề rõ ràng, nêu đúng vị trí và level mong muốn.",
     "tip2": "Mô tả tập trung vào nhiệm vụ chính, yêu cầu kỹ năng và quyền lợi.",
-    "tip3": "Địa điểm, hình thức làm việc và mức lương nên minh bạch để thu hút ứng viên phù hợp."
+    "tip3": "Địa điểm, hình thức làm việc và mức lương nên minh bạch để thu hút ứng viên phù hợp.",
+    "previewTitle": "Preview nhanh",
+    "previewTitleLabel": "Tiêu đề",
+    "previewTitleFallback": "Chưa có tiêu đề",
+    "previewLocationLabel": "Địa điểm",
+    "previewLocationRemote": "Remote",
+    "previewLocationFallbackNone": "Chưa cập nhật",
+    "previewSkillsLabel": "Kỹ năng yêu cầu",
+    "previewSkillsFallback": "Chưa có kỹ năng",
+    "previewDescriptionLabel": "Mô tả",
+    "previewDescriptionFallback": "Chưa có mô tả"
   },
   "candidateSearch": {
     "title": "Tìm kiếm ứng viên",
@@ -205,7 +224,7 @@
     "keywordsPlaceholder": "React, .NET, Designer...",
     "skillsPlaceholder": "React, TypeScript, Tailwind",
     "descriptionPlaceholder": "Mô tả chân dung ứng viên bạn đang tìm, kỹ năng chính, level, domain...",
-    "locationPlaceholder": "Hồ Chí Minh, Hà Nội...",
+    "locationPlaceholder": "Chưa cập nhật địa điểm",
     "levelPlaceholder": "Junior, Mid, Senior...",
     "btnSearch": "Tìm ứng viên",
     "btnReset": "Làm mới",
@@ -229,7 +248,16 @@
     "toastEnterDesc": "Vui lòng nhập mô tả công việc để semantic search",
     "toastUnlocked": "Đã mở khóa liên hệ ứng viên",
     "toastUnlockFailed": "Không thể mở khóa liên hệ ứng viên",
-    "searchFailed": "Tìm kiếm ứng viên thất bại"
+    "searchFailed": "Tìm kiếm ứng viên thất bại",
+    "positionPlaceholder": "Chưa cập nhật vị trí",
+    "salaryPlaceholder": "Chưa cập nhật mức lương",
+    "bioPlaceholder": "Chưa có mô tả hồ sơ",
+    "matchLabel": "Mức phù hợp",
+    "emailLabel": "Email:",
+    "emailPlaceholder": "Chưa cập nhật email",
+    "emailHidden": "Đã ẩn – cần mở khóa để xem",
+    "btnUnlockContact": "Mở khóa liên hệ",
+    "unlockedBadge": "Đã mở khóa"
   },
   "applications": {
     "title": "Xem xét hồ sơ ứng tuyển",
@@ -291,7 +319,12 @@
     "toastUnlockCVFirst": "Vui lòng mở khóa liên hệ ứng viên trước khi xem danh sách CV.",
     "toastLoadCVFailed": "Không thể tải danh sách CV của ứng viên. Vui lòng thử lại sau.",
     "toastEnterRejectReason": "Vui lòng nhập lý do trước khi từ chối.",
-    "toastEnterNote": "Vui lòng nhập ghi chú trước khi lưu."
+    "toastEnterNote": "Vui lòng nhập ghi chú trước khi lưu.",
+    "cvsTitle": "CV của ứng viên",
+    "noCVAvailable": "Ứng viên chưa có CV khả dụng.",
+    "cvDefault": "CV mặc định",
+    "cvAdditional": "CV bổ sung",
+    "cvAccessNotReady": "Quyền xem CV của ứng viên hiện chưa sẵn sàng. Vui lòng thử lại sau hoặc kiểm tra lại quyền truy cập/mức độ mở khóa hồ sơ."
   },
   "messages": {
     "title": "Nhắn tin",

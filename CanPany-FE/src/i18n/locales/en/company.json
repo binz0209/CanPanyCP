@@ -81,7 +81,12 @@
     "validAddressMax": "Address is too long",
     "validDescMax": "Description must be at most 2000 characters",
     "profileRequired": "No company profile",
-    "profileRequiredDesc": "Please complete your company profile before managing job postings."
+    "profileRequiredDesc": "Please complete your company profile before managing job postings.",
+    "previewCardTitle": "Profile preview",
+    "logoPreviewAlt": "Logo preview",
+    "previewNameFallback": "Company name",
+    "previewAddressFallback": "Address will be shown here",
+    "previewDescriptionFallback": "Company description will be shown here"
   },
   "verification": {
     "title": "Business verification",
@@ -108,7 +113,10 @@
     "errorDesc": "An error occurred while loading verification information. Please try again later or contact the admin.",
     "toastSuccess": "Verification request submitted successfully",
     "toastFailed": "Unable to submit verification request",
-    "validDocRequired": "Please enter at least one document URL"
+    "validDocRequired": "Please enter at least one document URL",
+    "statusApproved": "Approved",
+    "statusPending": "Pending",
+    "statusRejected": "Rejected"
   },
   "jobs": {
     "title": "Manage job postings",
@@ -139,7 +147,8 @@
     "errorDesc": "An error occurred while loading job postings. Please try again later or contact the admin.",
     "toastClosed": "Job posting closed",
     "toastReopened": "Job posting reopened",
-    "toastStatusFailed": "Unable to update job status"
+    "toastStatusFailed": "Unable to update job status",
+    "actionHint": "You can create, edit, and close/reopen job postings directly here."
   },
   "jobForm": {
     "titleLabel": "Job title",
@@ -184,7 +193,17 @@
     "tipsTitle": "Tips for writing effective job posts",
     "tip1": "Use a clear title that states the role and level.",
     "tip2": "Focus the description on main responsibilities, required skills and benefits.",
-    "tip3": "Be transparent about location, work type and salary to attract the right candidates."
+    "tip3": "Be transparent about location, work type and salary to attract the right candidates.",
+    "previewTitle": "Quick preview",
+    "previewTitleLabel": "Title",
+    "previewTitleFallback": "No title yet",
+    "previewLocationLabel": "Location",
+    "previewLocationRemote": "Remote",
+    "previewLocationFallbackNone": "Not updated yet",
+    "previewSkillsLabel": "Required skills",
+    "previewSkillsFallback": "No skills yet",
+    "previewDescriptionLabel": "Description",
+    "previewDescriptionFallback": "No description yet"
   },
   "candidateSearch": {
     "title": "Candidate search",
@@ -205,7 +224,7 @@
     "keywordsPlaceholder": "React, .NET, Designer...",
     "skillsPlaceholder": "React, TypeScript, Tailwind",
     "descriptionPlaceholder": "Describe the ideal candidate: key skills, level, domain...",
-    "locationPlaceholder": "Ho Chi Minh City, Hanoi...",
+    "locationPlaceholder": "Location not updated",
     "levelPlaceholder": "Junior, Mid, Senior...",
     "btnSearch": "Find candidates",
     "btnReset": "Reset",
@@ -229,7 +248,16 @@
     "toastEnterDesc": "Please enter a job description for semantic search",
     "toastUnlocked": "Candidate contact unlocked",
     "toastUnlockFailed": "Unable to unlock candidate contact",
-    "searchFailed": "Candidate search failed"
+    "searchFailed": "Candidate search failed",
+    "positionPlaceholder": "Position not updated",
+    "salaryPlaceholder": "Salary not updated",
+    "bioPlaceholder": "No profile description",
+    "matchLabel": "Match",
+    "emailLabel": "Email:",
+    "emailPlaceholder": "Email not updated",
+    "emailHidden": "Hidden - unlock to view",
+    "btnUnlockContact": "Unlock contact",
+    "unlockedBadge": "Unlocked"
   },
   "applications": {
     "title": "Review applications",
@@ -291,7 +319,12 @@
     "toastUnlockCVFirst": "Please unlock candidate contact before viewing CVs.",
     "toastLoadCVFailed": "Unable to load candidate CVs. Please try again.",
     "toastEnterRejectReason": "Please enter a reason before rejecting.",
-    "toastEnterNote": "Please enter a note before saving."
+    "toastEnterNote": "Please enter a note before saving.",
+    "cvsTitle": "Candidate CVs",
+    "noCVAvailable": "The candidate has no available CVs.",
+    "cvDefault": "Default CV",
+    "cvAdditional": "Additional CV",
+    "cvAccessNotReady": "Candidate CV access is not ready yet. Please try again later or check your access/unlock level."
   },
   "messages": {
     "title": "Messages",

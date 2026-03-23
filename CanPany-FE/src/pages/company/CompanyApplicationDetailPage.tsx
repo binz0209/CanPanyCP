@@ -19,10 +19,12 @@ import {
 import type { Application } from '../../types';
 import { applicationKeys, candidateKeys, companyKeys } from '../../lib/queryKeys';
 import { formatCurrency, formatDateTime } from '../../utils';
+import { useTranslation } from 'react-i18next';
 
 export function CompanyApplicationDetailPage() {
     const { applicationId } = useParams<{ applicationId: string }>();
     const queryClient = useQueryClient();
+    const { t } = useTranslation('company');
     const [rejectReason, setRejectReason] = useState('');
     const [noteDraft, setNoteDraft] = useState('');
     const [sessionNotes, setSessionNotes] = useState<string[]>([]);
@@ -87,12 +89,12 @@ export function CompanyApplicationDetailPage() {
                     ? queryClient.invalidateQueries({ queryKey: applicationKeys.byJob(applicationQuery.data.jobId), exact: true })
                     : Promise.resolve(),
             ]);
-            toast.success('Đã cập nhật trạng thái Accepted');
+            toast.success(t('applicationDetail.toastAccepted'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể accept application'
-                : 'Không thể accept application';
+                ? error.response?.data?.message || t('applicationDetail.toastAcceptFailed')
+                : t('applicationDetail.toastAcceptFailed');
             toast.error(message);
         },
     });
@@ -112,12 +114,12 @@ export function CompanyApplicationDetailPage() {
                     ? queryClient.invalidateQueries({ queryKey: applicationKeys.byJob(applicationQuery.data.jobId), exact: true })
                     : Promise.resolve(),
             ]);
-            toast.success('Đã cập nhật trạng thái Rejected');
+            toast.success(t('applicationDetail.toastRejected'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể reject application'
-                : 'Không thể reject application';
+                ? error.response?.data?.message || t('applicationDetail.toastRejectFailed')
+                : t('applicationDetail.toastRejectFailed');
             toast.error(message);
         },
     });
@@ -127,12 +129,12 @@ export function CompanyApplicationDetailPage() {
         onSuccess: () => {
             setSessionNotes((previous) => [noteDraft.trim(), ...previous]);
             setNoteDraft('');
-            toast.success('Đã gửi private note');
+            toast.success(t('applicationDetail.toastNoteSaved'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể lưu private note'
-                : 'Không thể lưu private note';
+                ? error.response?.data?.message || t('applicationDetail.toastNoteFailed')
+                : t('applicationDetail.toastNoteFailed');
             toast.error(message);
         },
     });
@@ -140,9 +142,9 @@ export function CompanyApplicationDetailPage() {
     const cvAccessMessage = useMemo(() => {
         if (!candidateCVsQuery.error) return null;
         if (isAxiosError(candidateCVsQuery.error) && candidateCVsQuery.error.response?.status === 403) {
-            return 'Vui lòng mở khóa liên hệ ứng viên trước khi xem danh sách CV.';
+            return t('applicationDetail.toastUnlockCVFirst');
         }
-        return 'Không thể tải danh sách CV của ứng viên. Vui lòng thử lại sau.';
+        return t('applicationDetail.toastLoadCVFailed');
     }, [candidateCVsQuery.error]);
 
     const syncApplicationCaches = (updater: (application: Application) => Application) => {
@@ -167,8 +169,8 @@ export function CompanyApplicationDetailPage() {
     if (!applicationId) {
         return (
             <EmptyState
-                title="Thiếu applicationId"
-                description="Đường dẫn hiện tại chưa có mã application hợp lệ."
+                title={t('applicationDetail.missingIdTitle')}
+                description={t('applicationDetail.missingIdDesc')}
                 icon={<FileText className="h-6 w-6" />}
             />
         );
@@ -189,8 +191,8 @@ export function CompanyApplicationDetailPage() {
     if (applicationQuery.error || !applicationQuery.data) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải chi tiết application"
-                description="Vui lòng kiểm tra lại route hoặc thử reload trang."
+                title={t('applicationDetail.errorTitle')}
+                description={t('applicationDetail.errorDesc')}
                 icon={<FileText className="h-6 w-6" />}
             />
         );
@@ -200,6 +202,8 @@ export function CompanyApplicationDetailPage() {
     const candidate = candidateProfileQuery.data;
     const job = jobQuery.data?.job;
     const canReviewStatus = application.status === 'Pending';
+    // UC-36 (private note) hiện BE đang TODO/chưa persist. Tạm ẩn UI note để tránh hiểu nhầm.
+    const enableNotes = false;
 
     // Build the messaging URL using the application's candidateId as a conversation
     // routing key.  The full conversationId comes from the server; for now we
@@ -210,14 +214,14 @@ export function CompanyApplicationDetailPage() {
     return (
         <div className="space-y-6">
             <SectionHeader
-                title="Chi tiết hồ sơ ứng tuyển"
-                description="Xem đầy đủ thông tin ứng viên, job liên quan, cover letter và lịch sử xử lý; cập nhật trạng thái hồ sơ và ghi lại private note cho phiên review hiện tại."
+                title={t('applicationDetail.title')}
+                description={t('applicationDetail.description')}
                 backLink="/company/applications"
                 actions={
                     <Link to={messagingPath}>
                         <Button variant="outline">
                             <MessageSquare className="h-4 w-4" />
-                            Nhắn tin với ứng viên
+                            {t('applicationDetail.btnMessage')}
                         </Button>
                     </Link>
                 }
@@ -228,66 +232,66 @@ export function CompanyApplicationDetailPage() {
                     <div className="flex flex-wrap items-center gap-3">
                         <StatusBadge status={application.status} kind="application" />
                         <span className="text-sm text-gray-500">
-                            Ứng tuyển lúc {formatDateTime(application.createdAt)}
+                            {t('applicationDetail.appliedAt', { datetime: formatDateTime(application.createdAt) })}
                         </span>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ứng viên</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('applicationDetail.labelCandidate')}</p>
                             <p className="mt-2 text-lg font-semibold text-gray-900">
                                 {candidate?.user.fullName || application.candidateId}
                             </p>
                             <p className="mt-1 text-sm text-gray-500">
-                                {candidate?.profile?.title || 'Chưa cập nhật vị trí'}
+                                {candidate?.profile?.title || t('candidateSearch.positionPlaceholder')}
                             </p>
                             <p className="mt-3 text-sm text-gray-600">
-                                {candidate?.profile?.location || 'Chưa cập nhật địa điểm'}
+                                {candidate?.profile?.location || t('applicationDetail.noLocation')}
                             </p>
                         </div>
 
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Tin tuyển dụng</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('applicationDetail.labelJob')}</p>
                             <p className="mt-2 text-lg font-semibold text-gray-900">
                                 {job?.title || application.jobId}
                             </p>
                             <p className="mt-1 text-sm text-gray-500">
-                                {job?.location || 'Chưa cập nhật địa điểm'}
+                                {job?.location || t('applicationDetail.noJobLocation')}
                             </p>
                             <p className="mt-3 text-sm text-gray-600">
-                                Mức phù hợp: {Math.round(Number(application.matchScore || 0))}%
+                                {t('applicationDetail.matchScore', { score: Math.round(Number(application.matchScore || 0)) })}
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl border border-gray-100 p-4">
-                            <p className="text-sm font-semibold text-gray-900">Mức lương đề xuất</p>
+                            <p className="text-sm font-semibold text-gray-900">{t('applicationDetail.salaryLabel')}</p>
                             <p className="mt-2 text-sm text-gray-600">
                                 {application.proposedAmount
                                     ? formatCurrency(application.proposedAmount)
-                                    : 'Ứng viên chưa nhập mức đề xuất'}
+                                    : t('applicationDetail.noSalary')}
                             </p>
                         </div>
 
                         <div className="rounded-xl border border-gray-100 p-4">
-                            <p className="text-sm font-semibold text-gray-900">CV được dùng khi apply</p>
+                            <p className="text-sm font-semibold text-gray-900">{t('applicationDetail.cvLabel')}</p>
                             <p className="mt-2 text-sm text-gray-600">
-                                {application.cvId || 'Ứng viên không chỉ định CV'}
+                                {application.cvId || t('applicationDetail.noCV')}
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-6 rounded-xl border border-gray-100 p-4">
-                        <p className="text-sm font-semibold text-gray-900">Thư xin việc</p>
+                        <p className="text-sm font-semibold text-gray-900">{t('applicationDetail.coverLetterLabel')}</p>
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                            {application.coverLetter || 'Ứng viên chưa nhập thư xin việc.'}
+                            {application.coverLetter || t('applicationDetail.noCoverLetter')}
                         </p>
                     </div>
 
                     {application.rejectedReason && (
                         <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
-                            <p className="text-sm font-semibold text-red-700">Lý do từ chối</p>
+                            <p className="text-sm font-semibold text-red-700">{t('applicationDetail.rejectReasonLabel')}</p>
                             <p className="mt-2 text-sm text-red-700">{application.rejectedReason}</p>
                         </div>
                     )}
@@ -295,10 +299,10 @@ export function CompanyApplicationDetailPage() {
                     <div className="mt-6 rounded-xl border border-gray-100 p-4">
                         <div className="flex items-center gap-2 text-gray-900">
                             <UserRound className="h-5 w-5" />
-                            <p className="text-sm font-semibold">Hồ sơ tóm tắt</p>
+                            <p className="text-sm font-semibold">{t('applicationDetail.profileSummary')}</p>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-gray-600">
-                            {candidate?.profile?.bio || candidate?.profile?.experience || 'Ứng viên chưa cập nhật mô tả bản thân.'}
+                            {candidate?.profile?.bio || candidate?.profile?.experience || t('applicationDetail.noProfileSummary')}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2">
                             {(candidate?.profile?.skillIds || []).slice(0, 10).map((skillId) => (
@@ -321,7 +325,7 @@ export function CompanyApplicationDetailPage() {
                         onAccept={() => acceptMutation.mutate()}
                         onReject={() => {
                             if (!rejectReason.trim()) {
-                                toast.error('Vui lòng nhập lý do trước khi từ chối.');
+                                toast.error(t('applicationDetail.toastEnterRejectReason'));
                                 return;
                             }
                             rejectMutation.mutate();
@@ -330,19 +334,21 @@ export function CompanyApplicationDetailPage() {
                         isRejecting={rejectMutation.isPending}
                     />
 
-                    <ApplicationNotesCard
-                        noteDraft={noteDraft}
-                        onNoteDraftChange={setNoteDraft}
-                        onSubmit={() => {
-                            if (!noteDraft.trim()) {
-                                toast.error('Vui lòng nhập ghi chú trước khi lưu.');
-                                return;
-                            }
-                            noteMutation.mutate();
-                        }}
-                        isSubmitting={noteMutation.isPending}
-                        sessionNotes={sessionNotes}
-                    />
+                    {enableNotes && (
+                        <ApplicationNotesCard
+                            noteDraft={noteDraft}
+                            onNoteDraftChange={setNoteDraft}
+                            onSubmit={() => {
+                                if (!noteDraft.trim()) {
+                                    toast.error(t('applicationDetail.toastEnterNote'));
+                                    return;
+                                }
+                                noteMutation.mutate();
+                            }}
+                            isSubmitting={noteMutation.isPending}
+                            sessionNotes={sessionNotes}
+                        />
+                    )}
 
                     <CandidateCVsCard
                         isLoading={candidateCVsQuery.isLoading}
