@@ -58,7 +58,17 @@ export function CompanyApplicationDetailPage() {
     useEffect(() => {
         if (!sessionNoteStorageKey) return;
         const storedNotes = sessionStorage.getItem(sessionNoteStorageKey);
-        if (!storedNotes) return;
+        if (!storedNotes) {
+            const privateNotes = applicationQuery.data?.privateNotes;
+            if (privateNotes) {
+                const parsed = privateNotes
+                    .split('\n')
+                    .map((n) => n.trim())
+                    .filter(Boolean);
+                setSessionNotes(parsed);
+            }
+            return;
+        }
 
         try {
             const parsedNotes = JSON.parse(storedNotes) as string[];
@@ -68,7 +78,7 @@ export function CompanyApplicationDetailPage() {
         } catch {
             sessionStorage.removeItem(sessionNoteStorageKey);
         }
-    }, [sessionNoteStorageKey]);
+    }, [sessionNoteStorageKey, applicationQuery.data?.privateNotes]);
 
     useEffect(() => {
         if (!sessionNoteStorageKey) return;
@@ -202,8 +212,8 @@ export function CompanyApplicationDetailPage() {
     const candidate = candidateProfileQuery.data;
     const job = jobQuery.data?.job;
     const canReviewStatus = application.status === 'Pending';
-    // UC-36 (private note) hiện BE đang TODO/chưa persist. Tạm ẩn UI note để tránh hiểu nhầm.
-    const enableNotes = false;
+    // UC-36: Private notes (persisted in BE)
+    const enableNotes = true;
 
     // Build the messaging URL using the application's candidateId as a conversation
     // routing key.  The full conversationId comes from the server; for now we
