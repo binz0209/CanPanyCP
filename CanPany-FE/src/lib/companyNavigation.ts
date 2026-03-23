@@ -14,37 +14,38 @@ export const companyPaths = {
 } as const;
 
 export interface CompanyNavItem {
-    label: string;
+    labelKey: string;
     path?: string;
-    items?: { label: string; path: string }[];
+    items?: { labelKey: string; path: string }[];
 }
 
+// Labels are i18n keys under the 'company' namespace
 export const companyNavigationItems: CompanyNavItem[] = [
     {
-        label: 'Dashboard',
+        labelKey: 'sidebar.dashboard',
         path: companyPaths.dashboard,
     },
     {
-        label: 'Company Profile',
+        labelKey: 'sidebar.companyProfile',
         items: [
-            { label: 'Thông tin công ty', path: companyPaths.profile },
-            { label: 'Xác minh công ty', path: companyPaths.verification },
+            { labelKey: 'sidebar.companyInfo', path: companyPaths.profile },
+            { labelKey: 'sidebar.verification', path: companyPaths.verification },
         ],
     },
     {
-        label: 'Job Management',
+        labelKey: 'sidebar.jobManagement',
         items: [
-            { label: 'Danh sách tin tuyển dụng', path: companyPaths.jobs },
-            { label: 'Tạo tin tuyển dụng', path: companyPaths.newJob },
-            { label: 'Review applications', path: companyPaths.applications },
+            { labelKey: 'sidebar.jobList', path: companyPaths.jobs },
+            { labelKey: 'sidebar.createJob', path: companyPaths.newJob },
+            { labelKey: 'sidebar.reviewApplications', path: companyPaths.applications },
         ],
     },
     {
-        label: 'Candidate Search',
+        labelKey: 'sidebar.candidateSearch',
         path: companyPaths.candidateSearch,
     },
     {
-        label: 'Nhắn tin',
+        labelKey: 'sidebar.messages',
         path: companyPaths.messages,
     },
 ] as const;

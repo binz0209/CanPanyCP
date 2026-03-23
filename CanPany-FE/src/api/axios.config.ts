@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '../stores/auth.store';
+import i18n from '../i18n';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -17,6 +18,9 @@ apiClient.interceptors.request.use(
         const token = useAuthStore.getState().token;
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
+        }
+        if (config.headers) {
+            config.headers['Accept-Language'] = i18n.language || 'vi';
         }
         return config;
     },

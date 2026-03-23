@@ -1,4 +1,5 @@
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { BriefcaseBusiness, MapPin, Wallet } from 'lucide-react';
 import { Input } from '../../ui';
 import type { BudgetType, JobLevel } from '../../../types';
@@ -22,6 +23,7 @@ interface JobFormFieldsProps {
     isEditMode: boolean;
     budgetTypeOptions: BudgetType[];
     levelOptions: JobLevel[];
+    categoryIdValue?: string;
 }
 
 export function JobFormFields({
@@ -30,23 +32,25 @@ export function JobFormFields({
     isEditMode,
     budgetTypeOptions,
     levelOptions,
+    categoryIdValue,
 }: JobFormFieldsProps) {
+    const { t } = useTranslation('company');
     return (
         <>
             <Input
-                label="Tiêu đề job"
-                placeholder="Senior Frontend Developer"
+                label={t('jobForm.titleLabel')}
+                placeholder={t('jobForm.titlePlaceholder')}
                 icon={<BriefcaseBusiness className="h-4 w-4" />}
                 error={errors.title?.message}
                 {...register('title')}
             />
 
             <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Mô tả công việc</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700">{t('jobForm.descriptionLabel')}</label>
                 <textarea
                     rows={10}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
-                    placeholder="Mô tả trách nhiệm, yêu cầu, quyền lợi..."
+                    placeholder={t('jobForm.descriptionPlaceholder')}
                     {...register('description')}
                 />
                 {errors.description?.message && (
@@ -55,24 +59,39 @@ export function JobFormFields({
             </div>
 
             {!isEditMode && (
-                <Input
-                    label="Category ID"
-                    placeholder="Nhập mã danh mục (Category ID)"
-                    error={errors.categoryId?.message}
-                    {...register('categoryId')}
-                />
+                <div className="space-y-1.5">
+                    <Input
+                        label={t('jobForm.categoryLabel')}
+                        placeholder={t('jobForm.categoryPlaceholder')}
+                        error={errors.categoryId?.message}
+                        {...register('categoryId')}
+                    />
+                    <p className="text-xs text-gray-500">
+                        {t('jobForm.categoryHint')}
+                    </p>
+                    {categoryIdValue && categoryIdValue.trim().includes(' ') && (
+                        <p className="text-xs text-amber-600">
+                            {t('jobForm.categoryHintLooksLikeTitle')}
+                        </p>
+                    )}
+                    {!categoryIdValue && (
+                        <p className="text-xs text-gray-500">
+                            {t('jobForm.categoryHintEmpty')}
+                        </p>
+                    )}
+                </div>
             )}
 
             <Input
-                label="Skills"
-                placeholder="React, TypeScript, Tailwind CSS"
+                label={t('jobForm.skillsLabel')}
+                placeholder={t('jobForm.skillsPlaceholder')}
                 error={errors.skillIdsText?.message}
                 {...register('skillIdsText')}
             />
 
             <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Loại ngân sách</label>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">{t('jobForm.budgetTypeLabel')}</label>
                     <select
                         className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20 disabled:bg-gray-50"
                         disabled={isEditMode}
@@ -85,8 +104,8 @@ export function JobFormFields({
                 </div>
 
                 <Input
-                    label="Mức lương / Ngân sách"
-                    placeholder="30000000"
+                    label={t('jobForm.budgetAmountLabel')}
+                    placeholder={t('jobForm.budgetAmountPlaceholder')}
                     icon={<Wallet className="h-4 w-4" />}
                     error={errors.budgetAmount?.message}
                     {...register('budgetAmount')}
@@ -95,12 +114,12 @@ export function JobFormFields({
 
             <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Cấp độ kinh nghiệm</label>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">{t('jobForm.levelLabel')}</label>
                     <select
                         className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                         {...register('level')}
                     >
-                        <option value="">Chọn cấp độ</option>
+                        <option value="">{t('jobForm.levelPlaceholder')}</option>
                         {levelOptions.map((option) => (
                             <option key={option} value={option}>{option}</option>
                         ))}
@@ -108,8 +127,8 @@ export function JobFormFields({
                 </div>
 
                 <Input
-                    label="Địa điểm làm việc"
-                    placeholder="Hồ Chí Minh"
+                    label={t('jobForm.locationLabel')}
+                    placeholder={t('jobForm.locationPlaceholder')}
                     icon={<MapPin className="h-4 w-4" />}
                     error={errors.location?.message}
                     {...register('location')}
@@ -118,7 +137,7 @@ export function JobFormFields({
 
             <div className="grid gap-5 md:grid-cols-2">
                 <Input
-                    label="Deadline"
+                    label={t('jobForm.deadlineLabel')}
                     type="date"
                     error={errors.deadline?.message}
                     {...register('deadline')}
@@ -131,13 +150,13 @@ export function JobFormFields({
                         disabled={isEditMode}
                         {...register('isRemote')}
                     />
-                    Làm việc từ xa (Remote)
+                    {t('jobForm.isRemoteLabel')}
                 </label>
             </div>
 
             {isEditMode && (
                 <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                    Một số trường cơ bản như <code>categoryId</code>, <code>budgetType</code> và <code>isRemote</code> không thể thay đổi sau khi job đã được tạo. Nếu cần chỉnh sửa, hãy tạo tin tuyển dụng mới với thông tin chính xác.
+                    {t('jobForm.editModeNote')}
                 </div>
             )}
         </>
