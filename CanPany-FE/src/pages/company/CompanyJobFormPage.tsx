@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { BriefcaseBusiness } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import { jobsApi } from '../../api';
@@ -22,9 +23,9 @@ import type { CompanyJobFormValues } from '../../components/features/companies';
 import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { companyKeys } from '../../lib/queryKeys';
 
-const jobFormSchema = z.object({
-    title: z.string().trim().min(5, 'Tiêu đề job tối thiểu 5 ký tự'),
-    description: z.string().trim().min(20, 'Mô tả job tối thiểu 20 ký tự'),
+const createJobFormSchema = (t: (key: string) => string) => z.object({
+    title: z.string().trim().min(5, t('jobForm.validTitleMin')),
+    description: z.string().trim().min(20, t('jobForm.validDescriptionMin')),
     categoryId: z.string().trim().optional(),
     skillIdsText: z.string().trim().optional(),
     budgetType: z.enum(['Fixed', 'Hourly']),
@@ -32,7 +33,7 @@ const jobFormSchema = z.object({
         .string()
         .trim()
         .optional()
-        .refine((value) => !value || !Number.isNaN(Number(value)), 'Budget phải là số hợp lệ'),
+        .refine((value) => !value || !Number.isNaN(Number(value)), t('jobForm.validBudgetNumber')),
     level: z.enum(['Junior', 'Mid', 'Senior', 'Expert']).optional(),
     location: z.string().trim().optional(),
     isRemote: z.boolean(),
@@ -50,6 +51,8 @@ function toDateInputValue(value?: Date | string) {
 }
 
 export function CompanyJobFormPage() {
+    const { t } = useTranslation('company');
+    const jobFormSchema = createJobFormSchema(t as (key: string) => string);
     const { jobId } = useParams<{ jobId: string }>();
     const isEditMode = Boolean(jobId);
     const navigate = useNavigate();
@@ -150,15 +153,15 @@ export function CompanyJobFormPage() {
                     ? queryClient.invalidateQueries({ queryKey: companyKeys.workspaceJobDetail(jobId), exact: true })
                     : Promise.resolve(),
             ]);
-            toast.success(isEditMode ? 'Cập nhật job thành công' : 'Tạo job thành công');
+            toast.success(isEditMode ? t('jobForm.updateSuccess') : t('jobForm.createSuccess'));
             navigate('/company/jobs', { replace: true });
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể lưu tin tuyển dụng'
+                ? error.response?.data?.message || t('jobForm.saveFailed')
                 : error instanceof Error
                     ? error.message
-                    : 'Không thể lưu tin tuyển dụng';
+                    : t('jobForm.saveFailed');
             toast.error(message);
         },
     });
@@ -170,12 +173,12 @@ export function CompanyJobFormPage() {
     if (isMissingProfile) {
         return (
             <CompanyProfileRequiredState
-                title="Bạn chưa có hồ sơ công ty"
-                description="Hãy hoàn thiện hồ sơ công ty trước khi tạo hoặc chỉnh sửa tin tuyển dụng."
+                title={t('jobForm.profileRequiredTitle')}
+                description={t('jobForm.profileRequiredDesc')}
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
                 action={
                     <Link to="/company/profile">
-                        <Button>Đi tới hồ sơ công ty</Button>
+                        <Button>{t('jobForm.btnGoProfile')}</Button>
                     </Link>
                 }
             />
@@ -185,8 +188,8 @@ export function CompanyJobFormPage() {
     if (hasFatalError || jobQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải dữ liệu job"
-                description="Đã xảy ra lỗi khi tải dữ liệu tin tuyển dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ."
+                title={t('jobForm.errorLoadTitle')}
+                description={t('jobForm.errorLoadDesc')}
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
             />
         );
@@ -233,9 +236,9 @@ export function CompanyJobFormPage() {
         <div className="space-y-6">
             <SectionHeader
                 backLink="/company/jobs"
-                backLabel="Quay lại danh sách job"
-                title={isEditMode ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng mới'}
-                description="Tạo hoặc chỉnh sửa nội dung tin tuyển dụng: tiêu đề, mô tả, kỹ năng, mức lương, địa điểm và deadline."
+                backLabel={t('jobForm.backLabel')}
+                title={isEditMode ? t('jobForm.pageTitleEdit') : t('jobForm.pageTitleCreate')}
+                description={t('jobForm.pageDescription')}
             />
 
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -256,7 +259,7 @@ export function CompanyJobFormPage() {
                                 isLoading={saveMutation.isPending}
                                 disabled={isEditMode ? !isDirty : false}
                             >
-                                {isEditMode ? 'Lưu thay đổi' : 'Tạo job'}
+                                {isEditMode ? t('jobForm.btnSave') : t('jobForm.btnCreate')}
                             </Button>
                             <Button
                                 type="button"
@@ -264,7 +267,7 @@ export function CompanyJobFormPage() {
                                 onClick={handleReset}
                                 disabled={saveMutation.isPending}
                             >
-                                Làm mới form
+                                {t('jobForm.btnReset')}
                             </Button>
                         </div>
                     </form>
@@ -274,11 +277,11 @@ export function CompanyJobFormPage() {
                     <CompanyJobPreviewCard control={control} />
 
                     <Card className="p-6">
-                        <h2 className="text-lg font-semibold text-gray-900">Gợi ý viết tin hiệu quả</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">{t('jobForm.tipsTitle')}</h2>
                         <ul className="mt-4 space-y-2 text-sm leading-6 text-gray-600">
-                            <li>Tiêu đề rõ ràng, nêu đúng vị trí và level mong muốn.</li>
-                            <li>Mô tả tập trung vào nhiệm vụ chính, yêu cầu kỹ năng và quyền lợi.</li>
-                            <li>Địa điểm, hình thức làm việc và mức lương nên minh bạch để thu hút ứng viên phù hợp.</li>
+                            <li>{t('jobForm.tip1')}</li>
+                            <li>{t('jobForm.tip2')}</li>
+                            <li>{t('jobForm.tip3')}</li>
                         </ul>
                     </Card>
                 </div>

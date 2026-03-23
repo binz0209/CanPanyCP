@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Search, Filter, MapPin, Briefcase, X, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { Button, Badge } from '../../components/ui';
 import { JobCard } from '../../components/features/jobs';
@@ -11,6 +12,7 @@ import { useBookmarks } from '../../hooks/candidate/useBookmarks';
 const LEVELS: JobLevel[] = ['Junior', 'Mid', 'Senior', 'Expert'];
 
 export function JobsPage() {
+  const { t } = useTranslation('public');
   const [searchParams, setSearchParams] = useSearchParams();
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [location, setLocation] = useState(searchParams.get('location') || '');
@@ -194,10 +196,10 @@ export function JobsPage() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white sm:text-3xl">
-              Tìm việc làm nhanh 24h, việc làm mới nhất trên toàn quốc
+              {t('jobs.pageTitle')}
             </h1>
             <p className="mt-2 text-white/80">
-              Tiếp cận <span className="font-semibold">50,000+</span> tin tuyển dụng việc làm mỗi ngày
+              {t('jobs.pageSubtitlePrefix')} <span className="font-semibold">50,000+</span> {t('jobs.pageSubtitleSuffix')}
             </p>
           </div>
           <form onSubmit={handleSearch} className="mt-6">
@@ -208,9 +210,9 @@ export function JobsPage() {
                   type="text"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="Vị trí tuyển dụng, tên công ty..."
+                  placeholder={t('jobs.searchPlaceholder')}
                   className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
-                  aria-label="Tìm kiếm việc làm"
+                  aria-label={t('jobs.searchAriaLabel')}
                 />
               </div>
               <div className="relative flex-1">
@@ -219,14 +221,14 @@ export function JobsPage() {
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Địa điểm..."
+                  placeholder={t('jobs.locationPlaceholder')}
                   className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
-                  aria-label="Địa điểm"
+                  aria-label={t('jobs.locationAriaLabel')}
                 />
               </div>
               <Button type="submit" size="lg" className="sm:px-8">
                 <Search className="h-4 w-4" aria-hidden="true" />
-                Tìm kiếm
+                {t('jobs.searchButton')}
               </Button>
             </div>
           </form>
@@ -242,12 +244,12 @@ export function JobsPage() {
               <div className="rounded-xl border border-gray-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-slate-100">
                   <SlidersHorizontal className="h-5 w-5 text-[#00b14f]" aria-hidden="true" />
-                  Bộ lọc tìm kiếm
+                  {t('jobs.filterTitle')}
                 </h3>
                 <div className="mt-4 space-y-4">
                   {/* Level Filter */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Cấp bậc</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('jobs.levelLabel')}</label>
                     <div className="mt-2 space-y-2">
                       {LEVELS.map((level) => (
                         <label key={level} className="flex cursor-pointer items-center gap-2">
@@ -265,7 +267,7 @@ export function JobsPage() {
 
                   {/* Budget Type Filter */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Hình thức lương</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('jobs.budgetTypeLabel')}</label>
                     <div className="mt-2 space-y-2">
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
@@ -274,7 +276,7 @@ export function JobsPage() {
                           onChange={() => handleBudgetTypeChange('Fixed')}
                           className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                         />
-                        <span className="text-sm text-gray-600 dark:text-slate-300">Cố định</span>
+                        <span className="text-sm text-gray-600 dark:text-slate-300">{t('jobs.budgetFixed')}</span>
                       </label>
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
@@ -283,14 +285,14 @@ export function JobsPage() {
                           onChange={() => handleBudgetTypeChange('Hourly')}
                           className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f] dark:border-slate-600"
                         />
-                        <span className="text-sm text-gray-600 dark:text-slate-300">Theo giờ</span>
+                        <span className="text-sm text-gray-600 dark:text-slate-300">{t('jobs.budgetHourly')}</span>
                       </label>
                     </div>
                   </div>
 
                   {/* Remote Filter */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Hình thức làm việc</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('jobs.workTypeLabel')}</label>
                     <div className="mt-2 space-y-2">
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
@@ -311,7 +313,7 @@ export function JobsPage() {
                     onClick={applyFilters}
                   >
                     <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Áp dụng lọc
+                    {t('jobs.applyFilters')}
                   </Button>
 
                   {/* Clear Filters Button */}
@@ -323,7 +325,7 @@ export function JobsPage() {
                       onClick={clearFilters}
                     >
                       <X className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Xóa bộ lọc
+                      {t('jobs.clearFilters')}
                     </Button>
                   )}
                 </div>
@@ -337,10 +339,10 @@ export function JobsPage() {
               variant="outline"
               className="w-full"
               onClick={() => setShowFilters(true)}
-              aria-label="Mở bộ lọc"
+              aria-label={t('jobs.mobileFilterAriaOpen')}
             >
               <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
-              Bộ lọc
+              {t('jobs.filterShort')}
               {hasActiveFilters && (
                 <Badge className="ml-2 bg-[#00b14f] text-white">
                   {(keyword ? 1 : 0) + (location ? 1 : 0) + (selectedLevel ? 1 : 0) + (selectedBudgetType ? 1 : 0) + (isRemote ? 1 : 0)}
@@ -355,11 +357,11 @@ export function JobsPage() {
               <div className="absolute inset-0 bg-black/50" onClick={() => setShowFilters(false)} aria-hidden="true" />
               <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-6 dark:bg-slate-900">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold dark:text-slate-100">Bộ lọc tìm kiếm</h3>
+                  <h3 className="text-lg font-semibold dark:text-slate-100">{t('jobs.mobileFilterTitle')}</h3>
                   <button
                     onClick={() => setShowFilters(false)}
                     className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-slate-800"
-                    aria-label="Đóng bộ lọc"
+                    aria-label={t('jobs.mobileFilterAriaClose')}
                   >
                     <X className="h-5 w-5 dark:text-slate-200" />
                   </button>
@@ -367,7 +369,7 @@ export function JobsPage() {
 
                 {/* Level Filter */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Cấp bậc</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('jobs.levelLabel')}</label>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {LEVELS.map((level) => (
                       <button
@@ -387,7 +389,7 @@ export function JobsPage() {
 
                 {/* Budget Type Filter */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Hình thức lương</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('jobs.budgetTypeLabel')}</label>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => handleBudgetTypeChange('Fixed')}
@@ -397,7 +399,7 @@ export function JobsPage() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
-                      Cố định
+                      {t('jobs.budgetFixed')}
                     </button>
                     <button
                       onClick={() => handleBudgetTypeChange('Hourly')}
@@ -407,7 +409,7 @@ export function JobsPage() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
-                      Theo giờ
+                      {t('jobs.budgetHourly')}
                     </button>
                   </div>
                 </div>
@@ -432,7 +434,7 @@ export function JobsPage() {
                     className="flex-1"
                     onClick={clearFilters}
                   >
-                    Xóa bộ lọc
+                    {t('jobs.clearFilters')}
                   </Button>
                   <Button
                     type="button"
@@ -442,7 +444,7 @@ export function JobsPage() {
                       setShowFilters(false);
                     }}
                   >
-                    Áp dụng
+                    {t('jobs.mobileApply')}
                   </Button>
                 </div>
               </div>
@@ -454,43 +456,43 @@ export function JobsPage() {
             {/* Active Filters */}
             {hasActiveFilters && (
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-500 dark:text-slate-400">Bộ lọc đang áp dụng:</span>
+                <span className="text-sm text-gray-500 dark:text-slate-400">{t('jobs.activeFiltersLabel')}</span>
                 {searchParams.get('keyword') && (
                   <Badge variant="default" className="gap-1">
-                    Từ khóa: {searchParams.get('keyword')}
-                    <button onClick={() => { setKeyword(''); applyFilters(); }} className="ml-1" aria-label="Xóa từ khóa">
+                    {t('jobs.filterKeyword', { value: searchParams.get('keyword') })}
+                    <button onClick={() => { setKeyword(''); applyFilters(); }} className="ml-1" aria-label={t('jobs.clearAriaKeyword')}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 )}
                 {searchParams.get('location') && (
                   <Badge variant="default" className="gap-1">
-                    Địa điểm: {searchParams.get('location')}
-                    <button onClick={() => { setLocation(''); applyFilters(); }} className="ml-1" aria-label="Xóa địa điểm">
+                    {t('jobs.filterLocation', { value: searchParams.get('location') })}
+                    <button onClick={() => { setLocation(''); applyFilters(); }} className="ml-1" aria-label={t('jobs.clearAriaLocation')}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 )}
                 {searchParams.get('level') && (
                   <Badge variant="default" className="gap-1">
-                    Cấp bậc: {searchParams.get('level')}
-                    <button onClick={() => { setSelectedLevel(''); applyFilters(); }} className="ml-1" aria-label="Xóa cấp bậc">
+                    {t('jobs.filterLevel', { value: searchParams.get('level') })}
+                    <button onClick={() => { setSelectedLevel(''); applyFilters(); }} className="ml-1" aria-label={t('jobs.clearAriaLevel')}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 )}
                 {searchParams.get('budgetType') && (
                   <Badge variant="default" className="gap-1">
-                    Hình thức: {searchParams.get('budgetType') === 'Fixed' ? 'Cố định' : 'Theo giờ'}
-                    <button onClick={() => { setSelectedBudgetType(''); applyFilters(); }} className="ml-1" aria-label="Xóa hình thức lương">
+                    {t('jobs.filterBudgetType', { value: searchParams.get('budgetType') === 'Fixed' ? t('jobs.budgetFixed') : t('jobs.budgetHourly') })}
+                    <button onClick={() => { setSelectedBudgetType(''); applyFilters(); }} className="ml-1" aria-label={t('jobs.clearAriaBudgetType')}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 )}
                 {searchParams.get('isRemote') === 'true' && (
                   <Badge variant="default" className="gap-1">
-                    Remote
-                    <button onClick={() => { setIsRemote(false); applyFilters(); }} className="ml-1" aria-label="Xóa Remote">
+                    {t('jobs.remoteLabel')}
+                    <button onClick={() => { setIsRemote(false); applyFilters(); }} className="ml-1" aria-label={t('jobs.clearAriaRemote')}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
@@ -499,7 +501,7 @@ export function JobsPage() {
                   onClick={clearFilters}
                   className="text-sm text-[#00b14f] hover:underline"
                 >
-                  Xóa tất cả
+                  {t('jobs.clearAll')}
                 </button>
               </div>
             )}
@@ -509,10 +511,10 @@ export function JobsPage() {
                 {isLoadingAny ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    Đang tải...
+                    {t('jobs.loading')}
                   </span>
                 ) : (
-                  <>Tìm thấy <span className="font-semibold text-[#00b14f]">{jobs.length}</span> việc làm</>
+                  <span dangerouslySetInnerHTML={{ __html: t('jobs.resultCount', { count: jobs.length }) }} />
                 )}
               </p>
             </div>
@@ -529,10 +531,10 @@ export function JobsPage() {
                 <div className="mx-auto h-20 w-20 rounded-full bg-gray-100 p-5 dark:bg-slate-800">
                   <Briefcase className="h-10 w-10 text-gray-400 dark:text-slate-500" aria-hidden="true" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Không tìm thấy việc làm</h3>
-                <p className="mt-2 text-gray-500 dark:text-slate-400">Thử thay đổi từ khóa hoặc điều chỉnh bộ lọc</p>
+                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobs.emptyTitle')}</h3>
+                <p className="mt-2 text-gray-500 dark:text-slate-400">{t('jobs.emptyDesc')}</p>
                 <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                  Xóa bộ lọc
+                  {t('jobs.clearFilters')}
                 </Button>
               </div>
             ) : (
@@ -550,7 +552,7 @@ export function JobsPage() {
 
             {/* Results count for screen readers */}
             <p className="sr-only" aria-live="polite">
-              {jobs.length > 0 ? `Tìm thấy ${jobs.length} việc làm` : 'Không tìm thấy việc làm nào'}
+              {jobs.length > 0 ? t('jobs.srFound', { count: jobs.length }) : t('jobs.srNotFound')}
             </p>
           </div>
         </div>

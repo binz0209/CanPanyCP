@@ -15,14 +15,6 @@ interface CandidateNavbarProps {
   isMenuOpen: boolean;
 }
 
-function timeAgo(date: string | Date): string {
-  const diff = (Date.now() - new Date(date).getTime()) / 1000;
-  if (diff < 60) return 'Vừa xong';
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  return `${Math.floor(diff / 86400)} ngày trước`;
-}
-
 function NotificationPanel({
   notifications,
   unreadCount,
@@ -30,6 +22,8 @@ function NotificationPanel({
   onMarkAllAsRead,
   isMarkingAllAsRead,
   onClose,
+  t,
+  timeAgo,
 }: {
   notifications: NotificationItem[];
   unreadCount: number;
@@ -37,12 +31,14 @@ function NotificationPanel({
   onMarkAllAsRead: () => void;
   isMarkingAllAsRead: boolean;
   onClose: () => void;
+  t: (key: string, opts?: { count?: number }) => string;
+  timeAgo: (date: string | Date) => string;
 }) {
   return (
     <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-gray-100 bg-white shadow-xl z-50">
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-gray-900 text-sm">Thông báo</span>
+          <span className="font-semibold text-gray-900 text-sm">{t('notificationsPanel.title')}</span>
           {unreadCount > 0 && (
             <span className="rounded-full bg-[#00b14f] px-1.5 py-0.5 text-xs font-semibold text-white leading-none">
               {unreadCount}
@@ -56,7 +52,7 @@ function NotificationPanel({
             className="text-xs text-[#00b14f] hover:underline flex items-center gap-1"
           >
             <CheckCheck className="h-3 w-3" />
-            Đọc tất cả
+            {t('notificationsPanel.markAllRead')}
           </button>
         )}
       </div>
@@ -65,7 +61,7 @@ function NotificationPanel({
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <BellOff className="h-8 w-8 text-gray-300 mb-2" />
-            <p className="text-sm text-gray-500">Không có thông báo mới</p>
+            <p className="text-sm text-gray-500">{t('notificationsPanel.empty')}</p>
           </div>
         ) : (
           notifications.slice(0, 8).map((n) => (
@@ -87,7 +83,7 @@ function NotificationPanel({
                 <button
                   onClick={() => onMarkAsRead(n.id)}
                   className="mt-1 shrink-0 rounded-full p-1 text-gray-300 hover:bg-gray-100 hover:text-[#00b14f]"
-                  title="Đánh dấu đã đọc"
+                  title={t('notificationsPanel.markAsRead')}
                 >
                   <Check className="h-3 w-3" />
                 </button>
@@ -103,7 +99,7 @@ function NotificationPanel({
           onClick={onClose}
           className="flex w-full items-center justify-center rounded-lg py-2 text-sm font-medium text-[#00b14f] transition-colors hover:bg-[#00b14f]/5"
         >
-          Xem tất cả thông báo
+          {t('notificationsPanel.viewAll')}
         </Link>
       </div>
     </div>
@@ -122,6 +118,14 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
   const { notifications, unreadCount, markAsRead, markAllAsRead, isMarkingAllAsRead } = useNotifications({
     enabled: true,
   });
+
+  const timeAgo = (date: string | Date): string => {
+    const diff = (Date.now() - new Date(date).getTime()) / 1000;
+    if (diff < 60) return t('notificationsPanel.timeAgoJustNow');
+    if (diff < 3600) return t('notificationsPanel.timeAgoMinutes', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('notificationsPanel.timeAgoHours', { count: Math.floor(diff / 3600) });
+    return t('notificationsPanel.timeAgoDays', { count: Math.floor(diff / 86400) });
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -214,6 +218,8 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                 onMarkAllAsRead={markAllAsRead}
                 isMarkingAllAsRead={isMarkingAllAsRead}
                 onClose={() => setIsNotifOpen(false)}
+                t={t as (key: string, opts?: { count?: number }) => string}
+                timeAgo={timeAgo}
               />
             )}
           </div>

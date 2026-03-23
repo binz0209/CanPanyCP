@@ -8,6 +8,11 @@
     "locationPlaceholder": "Địa điểm...",
     "searchButton": "Tìm kiếm",
     "allLocations": "Tất cả địa điểm",
+    "locations": {
+      "hanoi": "Hà Nội",
+      "hcm": "TP. Hồ Chí Minh",
+      "danang": "Đà Nẵng"
+    },
     "popularLabel": "Phổ biến:",
     "whyChooseTitle": "Tại sao chọn CanPany?",
     "statsJobs": "Việc làm đang tuyển",
@@ -41,10 +46,18 @@
     "ctaFindJob": "Tìm việc ngay",
     "ctaPostJob": "Đăng tin tuyển dụng",
     "trustedBy": "Được tin dùng bởi:",
-    "jobsUnit": "việc làm"
+    "jobsUnit": "việc làm",
+    "bannerLocation1": "Hà Nội",
+    "bannerLocation2": "TP. Hồ Chí Minh",
+    "bannerLocation3": "Đà Nẵng",
+    "bannerSalary1": "20-30 triệu",
+    "bannerSalary2": "15-25 triệu",
+    "bannerSalary3": "18-28 triệu"
   },
   "jobs": {
-    "pageTitle": "Tìm việc làm",
+    "pageTitle": "Tìm việc làm nhanh 24h, việc làm mới nhất trên toàn quốc",
+    "pageSubtitlePrefix": "Tiếp cận",
+    "pageSubtitleSuffix": "tin tuyển dụng việc làm mỗi ngày",
     "pageSubtitle": "Tiếp cận <strong>50,000+</strong> tin tuyển dụng việc làm mỗi ngày",
     "searchPlaceholder": "Vị trí tuyển dụng, tên công ty...",
     "searchAriaLabel": "Tìm kiếm việc làm",
@@ -52,6 +65,7 @@
     "locationAriaLabel": "Địa điểm",
     "searchButton": "Tìm kiếm",
     "filterTitle": "Bộ lọc tìm kiếm",
+    "filterShort": "Bộ lọc",
     "levelLabel": "Cấp bậc",
     "budgetTypeLabel": "Hình thức lương",
     "budgetFixed": "Cố định",
@@ -131,6 +145,20 @@
     "resultCount": "Tìm thấy {{count}} công ty",
     "emptyTitle": "Không tìm thấy công ty",
     "emptyDesc": "Thử thay đổi từ khóa tìm kiếm"
+  },
+  "companyDetail": {
+    "notFound": "Không tìm thấy công ty",
+    "backToList": "Quay lại danh sách",
+    "back": "Quay lại",
+    "verifiedBadge": "Đã xác thực",
+    "jobsCount": "{{count}} việc làm",
+    "aboutTitle": "Giới thiệu",
+    "openJobsTitle": "Việc làm đang tuyển ({{count}})",
+    "noJobs": "Chưa có việc làm nào",
+    "contactTitle": "Thông tin liên hệ",
+    "address": "Địa chỉ",
+    "phone": "Điện thoại",
+    "website": "Website"
   },
   "jobCard": {
     "companyFallback": "Tên công ty",

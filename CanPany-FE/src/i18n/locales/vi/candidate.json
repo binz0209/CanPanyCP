@@ -8,6 +8,17 @@
     "settings": "Cài đặt",
     "logout": "Đăng xuất"
   },
+  "notificationsPanel": {
+    "title": "Thông báo",
+    "markAllRead": "Đọc tất cả",
+    "empty": "Không có thông báo mới",
+    "markAsRead": "Đánh dấu đã đọc",
+    "viewAll": "Xem tất cả thông báo",
+    "timeAgoJustNow": "Vừa xong",
+    "timeAgoMinutes": "{{count}} phút trước",
+    "timeAgoHours": "{{count}} giờ trước",
+    "timeAgoDays": "{{count}} ngày trước"
+  },
   "sidebar": {
     "overview": "Tổng quan",
     "profile": "Hồ sơ cá nhân",

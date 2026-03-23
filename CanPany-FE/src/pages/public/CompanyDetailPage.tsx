@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Phone, Globe, Building2, CheckCircle, ArrowLeft, Briefcase } from 'lucide-react';
 import { Button, Badge, Card } from '@/components/ui';
 import { JobCard } from '@/components/features/jobs';
@@ -7,6 +8,7 @@ import { companiesApi } from '@/api';
 import { companiesKeys } from '@/lib/queryKeys';
 
 export function CompanyDetailPage() {
+    const { t } = useTranslation('public');
     const { id } = useParams<{ id: string }>();
 
     const { data: company, isLoading } = useQuery({
@@ -34,11 +36,11 @@ export function CompanyDetailPage() {
     if (!company) {
         return (
             <div className="min-h-screen bg-gray-50 py-20 text-center">
-                <h2 className="text-xl font-semibold text-gray-900">Không tìm thấy công ty</h2>
+                <h2 className="text-xl font-semibold text-gray-900">{t('companyDetail.notFound')}</h2>
                 <Link to="/companies">
                     <Button variant="outline" className="mt-4">
                         <ArrowLeft className="h-4 w-4" />
-                        Quay lại danh sách
+                        {t('companyDetail.backToList')}
                     </Button>
                 </Link>
             </div>
@@ -52,7 +54,7 @@ export function CompanyDetailPage() {
                 <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
                     <Link to="/companies" className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
                         <ArrowLeft className="h-4 w-4" />
-                        Quay lại
+                        {t('companyDetail.back')}
                     </Link>
 
                     <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
@@ -104,9 +106,9 @@ export function CompanyDetailPage() {
 
                             <div className="mt-3 flex gap-2">
                                 {company.isVerified && (
-                                    <Badge variant="success">Đã xác thực</Badge>
+                                    <Badge variant="success">{t('companyDetail.verifiedBadge')}</Badge>
                                 )}
-                                <Badge variant="outline">{jobs.length} việc làm</Badge>
+                                <Badge variant="outline">{t('companyDetail.jobsCount', { count: jobs.length })}</Badge>
                             </div>
                         </div>
                     </div>
@@ -120,7 +122,7 @@ export function CompanyDetailPage() {
                     <div className="lg:col-span-2">
                         {company.description && (
                             <Card className="p-6">
-                                <h2 className="text-lg font-semibold text-gray-900">Giới thiệu</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">{t('companyDetail.aboutTitle')}</h2>
                                 <p className="mt-4 whitespace-pre-wrap text-gray-600">{company.description}</p>
                             </Card>
                         )}
@@ -129,14 +131,14 @@ export function CompanyDetailPage() {
                         <div className="mt-8">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-gray-900">
-                                    Việc làm đang tuyển ({jobs.length})
+                                    {t('companyDetail.openJobsTitle', { count: jobs.length })}
                                 </h2>
                             </div>
 
                             {jobs.length === 0 ? (
                                 <Card className="mt-4 p-8 text-center">
                                     <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
-                                    <p className="mt-2 text-gray-500">Chưa có việc làm nào</p>
+                                    <p className="mt-2 text-gray-500">{t('companyDetail.noJobs')}</p>
                                 </Card>
                             ) : (
                                 <div className="mt-4 space-y-4">
@@ -151,23 +153,23 @@ export function CompanyDetailPage() {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         <Card className="p-6">
-                            <h2 className="text-lg font-semibold text-gray-900">Thông tin liên hệ</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('companyDetail.contactTitle')}</h2>
                             <dl className="mt-4 space-y-4">
                                 {company.address && (
                                     <div>
-                                        <dt className="text-sm text-gray-500">Địa chỉ</dt>
+                                        <dt className="text-sm text-gray-500">{t('companyDetail.address')}</dt>
                                         <dd className="mt-1 font-medium text-gray-900">{company.address}</dd>
                                     </div>
                                 )}
                                 {company.phone && (
                                     <div>
-                                        <dt className="text-sm text-gray-500">Điện thoại</dt>
+                                        <dt className="text-sm text-gray-500">{t('companyDetail.phone')}</dt>
                                         <dd className="mt-1 font-medium text-gray-900">{company.phone}</dd>
                                     </div>
                                 )}
                                 {company.website && (
                                     <div>
-                                        <dt className="text-sm text-gray-500">Website</dt>
+                                        <dt className="text-sm text-gray-500">{t('companyDetail.website')}</dt>
                                         <dd className="mt-1">
                                             <a
                                                 href={company.website}

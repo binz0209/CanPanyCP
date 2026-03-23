@@ -8,6 +8,11 @@
     "locationPlaceholder": "Location...",
     "searchButton": "Search",
     "allLocations": "All locations",
+    "locations": {
+      "hanoi": "Hanoi",
+      "hcm": "Ho Chi Minh City",
+      "danang": "Da Nang"
+    },
     "popularLabel": "Popular:",
     "whyChooseTitle": "Why choose CanPany?",
     "statsJobs": "Open job postings",
@@ -41,10 +46,18 @@
     "ctaFindJob": "Find jobs now",
     "ctaPostJob": "Post a job",
     "trustedBy": "Trusted by:",
-    "jobsUnit": "jobs"
+    "jobsUnit": "jobs",
+    "bannerLocation1": "Hanoi",
+    "bannerLocation2": "Ho Chi Minh City",
+    "bannerLocation3": "Da Nang",
+    "bannerSalary1": "20-30M VND",
+    "bannerSalary2": "15-25M VND",
+    "bannerSalary3": "18-28M VND"
   },
   "jobs": {
-    "pageTitle": "Find jobs",
+    "pageTitle": "Find jobs 24/7, latest jobs nationwide",
+    "pageSubtitlePrefix": "Access",
+    "pageSubtitleSuffix": "job postings every day",
     "pageSubtitle": "Access <strong>50,000+</strong> job postings every day",
     "searchPlaceholder": "Job title, company name...",
     "searchAriaLabel": "Search for jobs",
@@ -52,6 +65,7 @@
     "locationAriaLabel": "Location",
     "searchButton": "Search",
     "filterTitle": "Search filters",
+    "filterShort": "Filters",
     "levelLabel": "Level",
     "budgetTypeLabel": "Budget type",
     "budgetFixed": "Fixed",
@@ -131,6 +145,20 @@
     "resultCount": "Found {{count}} companies",
     "emptyTitle": "No companies found",
     "emptyDesc": "Try changing your search keyword"
+  },
+  "companyDetail": {
+    "notFound": "Company not found",
+    "backToList": "Back to list",
+    "back": "Back",
+    "verifiedBadge": "Verified",
+    "jobsCount": "{{count}} jobs",
+    "aboutTitle": "About",
+    "openJobsTitle": "Open positions ({{count}})",
+    "noJobs": "No open positions",
+    "contactTitle": "Contact info",
+    "address": "Address",
+    "phone": "Phone",
+    "website": "Website"
   },
   "jobCard": {
     "companyFallback": "Company name",

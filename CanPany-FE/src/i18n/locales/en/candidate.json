@@ -8,6 +8,17 @@
     "settings": "Settings",
     "logout": "Logout"
   },
+  "notificationsPanel": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No new notifications",
+    "markAsRead": "Mark as read",
+    "viewAll": "View all notifications",
+    "timeAgoJustNow": "Just now",
+    "timeAgoMinutes": "{{count}} min ago",
+    "timeAgoHours": "{{count}} hours ago",
+    "timeAgoDays": "{{count}} days ago"
+  },
   "sidebar": {
     "overview": "Overview",
     "profile": "My profile",

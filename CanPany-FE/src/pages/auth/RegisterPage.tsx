@@ -194,7 +194,7 @@ export function RegisterPage() {
                         <Input
                             label={t('register.fullNameLabel')}
                             type="text"
-                            placeholder="Nguyễn Văn A"
+                            placeholder={t('register.fullNamePlaceholder')}
                             icon={<User className="h-5 w-5" />}
                             error={errors.fullName?.message}
                             {...register('fullName')}
