@@ -36,6 +36,12 @@ export function CompanyApplicationDetailPage() {
         enabled: !!applicationId,
     });
 
+    const getPrivateNotesFromApplication = (app: any): string | undefined => {
+        // Backend uses C# PascalCase property name by default (`PrivateNotes`)
+        // while FE expects camelCase (`privateNotes`). Normalize both.
+        return app?.privateNotes ?? app?.PrivateNotes ?? undefined;
+    };
+
     const candidateProfileQuery = useQuery({
         queryKey: candidateKeys.profile(applicationQuery.data?.candidateId || ''),
         queryFn: () => candidateApi.getCandidateProfile(applicationQuery.data!.candidateId),
@@ -59,7 +65,7 @@ export function CompanyApplicationDetailPage() {
         if (!sessionNoteStorageKey) return;
         const storedNotes = sessionStorage.getItem(sessionNoteStorageKey);
         if (!storedNotes) {
-            const privateNotes = applicationQuery.data?.privateNotes;
+            const privateNotes = getPrivateNotesFromApplication(applicationQuery.data);
             if (privateNotes) {
                 const parsed = privateNotes
                     .split('\n')
@@ -78,7 +84,7 @@ export function CompanyApplicationDetailPage() {
         } catch {
             sessionStorage.removeItem(sessionNoteStorageKey);
         }
-    }, [sessionNoteStorageKey, applicationQuery.data?.privateNotes]);
+    }, [sessionNoteStorageKey, applicationQuery.data]);
 
     useEffect(() => {
         if (!sessionNoteStorageKey) return;
@@ -214,6 +220,23 @@ export function CompanyApplicationDetailPage() {
     const canReviewStatus = application.status === 'Pending';
     // UC-36: Private notes (persisted in BE)
     const enableNotes = true;
+
+    // Robust rendering:
+    // - Prefer notes from session (if present)
+    // - Fallback to persisted notes from BE (in case sessionStorage has an empty/old value)
+    //
+    // Important: do NOT use hooks here (no useMemo) because this code lives after
+    // early-return branches; violating Rules of Hooks can crash React -> blank page.
+    const persistedNotes = (() => {
+        const privateNotes = getPrivateNotesFromApplication(application);
+        if (!privateNotes) return [];
+        return privateNotes
+            .split('\n')
+            .map((n) => n.trim())
+            .filter(Boolean);
+    })();
+
+    const notesToRender = sessionNotes.length > 0 ? sessionNotes : persistedNotes;
 
     // Build the messaging URL using the application's candidateId as a conversation
     // routing key.  The full conversationId comes from the server; for now we
@@ -356,7 +379,7 @@ export function CompanyApplicationDetailPage() {
                                 noteMutation.mutate();
                             }}
                             isSubmitting={noteMutation.isPending}
-                            sessionNotes={sessionNotes}
+                            sessionNotes={notesToRender}
                         />
                     )}
 
