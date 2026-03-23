@@ -18,16 +18,21 @@ import {
 } from '../../components/features/companies';
 import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { companyKeys } from '../../lib/queryKeys';
+import { useTranslation } from 'react-i18next';
 
-const verificationSchema = z.object({
-    documentUrlsText: z.string().trim().min(1, 'Vui lòng nhập ít nhất một document URL'),
-});
+const createVerificationSchema = (t: (key: string) => string) =>
+    z.object({
+        documentUrlsText: z.string().trim().min(1, t('verification.validDocRequired')),
+    });
 
-type VerificationFormValues = z.infer<typeof verificationSchema>;
+type VerificationFormValues = z.infer<ReturnType<typeof createVerificationSchema>>;
 
 export function CompanyVerificationPage() {
     const queryClient = useQueryClient();
+    const { t } = useTranslation('company');
     const { companyId, isLoading: isWorkspaceLoading, isMissingProfile, hasFatalError } = useCompanyWorkspace();
+
+    const verificationSchema = createVerificationSchema(t as unknown as (key: string) => string);
 
     const verificationQuery = useQuery({
         queryKey: companyKeys.verification(companyId!),
@@ -68,12 +73,12 @@ export function CompanyVerificationPage() {
                 queryClient.invalidateQueries({ queryKey: companyKeys.verification(companyId!), exact: true }),
                 queryClient.invalidateQueries({ queryKey: companyKeys.statistics(companyId!), exact: true }),
             ]);
-            toast.success('Gửi yêu cầu xác minh thành công');
+            toast.success(t('verification.toastSuccess'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể gửi yêu cầu xác minh'
-                : 'Không thể gửi yêu cầu xác minh';
+                ? error.response?.data?.message || t('verification.toastFailed')
+                : t('verification.toastFailed');
             toast.error(message);
         },
     });
@@ -85,8 +90,8 @@ export function CompanyVerificationPage() {
     if (isMissingProfile) {
         return (
             <CompanyProfileRequiredState
-                title="Bạn chưa có hồ sơ công ty"
-                description="Hãy hoàn thiện hồ sơ công ty trước khi gửi yêu cầu xác minh."
+                title={t('verification.profileRequired')}
+                description={t('verification.profileRequiredDesc')}
                 icon={<ShieldCheck className="h-6 w-6" />}
             />
         );
@@ -95,8 +100,8 @@ export function CompanyVerificationPage() {
     if (hasFatalError || verificationQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải thông tin xác minh"
-                description="Đã xảy ra lỗi khi tải thông tin xác minh. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ."
+                title={t('verification.errorTitle')}
+                description={t('verification.errorDesc')}
                 icon={<ShieldCheck className="h-6 w-6" />}
             />
         );
@@ -108,39 +113,39 @@ export function CompanyVerificationPage() {
     return (
         <div className="space-y-6">
             <SectionHeader
-                title="Xác minh doanh nghiệp"
-                description="Gửi tài liệu pháp lý (giấy phép kinh doanh, mã số thuế, v.v.) để đội ngũ CanPany xác minh và gắn nhãn doanh nghiệp uy tín trên hệ thống."
+                title={t('verification.title')}
+                description={t('verification.description')}
             />
 
             <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
                 <Card className="p-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Trạng thái xác minh</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('verification.statusTitle')}</h2>
                     <div className="mt-5 space-y-4">
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-sm text-gray-500">Trạng thái hiện tại</p>
+                            <p className="text-sm text-gray-500">{t('verification.statusCurrent')}</p>
                             <div className="mt-2">
                                 <StatusBadge status={verification?.verificationStatus || 'Pending'} kind="verification" />
                             </div>
                         </div>
 
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-sm text-gray-500">Đã xác minh</p>
+                            <p className="text-sm text-gray-500">{t('verification.isVerified')}</p>
                             <p className="mt-2 text-sm font-semibold text-gray-900">
-                                {verification?.isVerified ? 'Có' : 'Chưa'}
+                                {verification?.isVerified ? t('verification.verifiedYes') : t('verification.verifiedNo')}
                             </p>
                         </div>
 
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-sm text-gray-500">Thời điểm duyệt</p>
+                            <p className="text-sm text-gray-500">{t('verification.verifiedAt')}</p>
                             <p className="mt-2 text-sm font-semibold text-gray-900">
-                                {verification?.verifiedAt ? formatDateTime(verification.verifiedAt) : 'Chưa có'}
+                                {verification?.verifiedAt ? formatDateTime(verification.verifiedAt) : t('verification.verifiedAtFallback')}
                             </p>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-600">
                             {isApproved
-                                ? 'Công ty đã được xác minh. Bạn vẫn có thể gửi lại hồ sơ nếu muốn cập nhật tài liệu.'
-                                : 'Nếu công ty đang Pending hoặc Rejected, nên rà soát lại URL tài liệu để tránh admin phải yêu cầu bổ sung.'}
+                                ? t('verification.alreadyVerifiedHint')
+                                : t('verification.reviewHint')}
                         </div>
                     </div>
                 </Card>
@@ -151,17 +156,15 @@ export function CompanyVerificationPage() {
                             <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Gửi hồ sơ xác minh</h2>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Mỗi dòng là một đường dẫn tới tài liệu (PDF, hình ảnh...) được lưu trữ trên hệ thống của bạn.
-                            </p>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('verification.formTitle')}</h2>
+                            <p className="mt-1 text-sm text-gray-500">{t('verification.formHint')}</p>
                         </div>
                     </div>
 
                     <form onSubmit={handleSubmit((values) => requestMutation.mutate(values))} className="mt-6 space-y-5">
                         <div>
                             <label className="mb-2 block text-sm font-medium text-gray-700">
-                                Danh sách tài liệu
+                                {t('verification.documentsLabel')}
                             </label>
                             <textarea
                                 rows={10}
@@ -176,7 +179,7 @@ export function CompanyVerificationPage() {
 
                         <div className="flex flex-wrap gap-3">
                             <Button type="submit" isLoading={requestMutation.isPending}>
-                                Gửi yêu cầu xác minh
+                                {t('verification.btnSubmit')}
                             </Button>
                             <Button
                                 type="button"
@@ -184,7 +187,7 @@ export function CompanyVerificationPage() {
                                 onClick={() => reset({ documentUrlsText: verification?.verificationDocuments?.join('\n') || '' })}
                                 disabled={requestMutation.isPending}
                             >
-                                Khôi phục dữ liệu hiện tại
+                                {t('verification.btnReset')}
                             </Button>
                         </div>
                     </form>
@@ -192,7 +195,7 @@ export function CompanyVerificationPage() {
                     <div className="mt-6 rounded-xl bg-gray-50 p-4">
                         <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-gray-500" />
-                            <p className="text-sm font-semibold text-gray-900">Documents hiện có</p>
+                            <p className="text-sm font-semibold text-gray-900">{t('verification.existingDocs')}</p>
                         </div>
 
                         {verification?.verificationDocuments?.length ? (
@@ -210,13 +213,13 @@ export function CompanyVerificationPage() {
                                 ))}
                             </div>
                         ) : (
-                            <p className="mt-4 text-sm text-gray-500">Chưa có tài liệu nào được gửi.</p>
+                            <p className="mt-4 text-sm text-gray-500">{t('verification.noDocuments')}</p>
                         )}
 
                         {isApproved && (
                             <div className="mt-4 flex items-start gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
                                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                                <span>Company đã ở trạng thái verified.</span>
+                                <span>{t('verification.alreadyVerifiedHint')}</span>
                             </div>
                         )}
                     </div>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
@@ -18,10 +19,12 @@ export function SectionHeader({
     eyebrow,
     actions,
     backLink,
-    backLabel = 'Quay lại',
+    backLabel,
     tone = 'default',
 }: SectionHeaderProps) {
     const isHero = tone === 'hero';
+    const { t } = useTranslation('common');
+    const resolvedBackLabel = backLabel ?? t('buttons.back');
 
     return (
         <section
@@ -41,7 +44,7 @@ export function SectionHeader({
                                 : 'inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700'}
                         >
                             <ArrowLeft className="h-4 w-4" />
-                            {backLabel}
+                            {resolvedBackLabel}
                         </Link>
                     )}
                     {eyebrow && (

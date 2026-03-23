@@ -18,6 +18,7 @@ import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { messageKeys } from '../../lib/queryKeys';
 import { useAuthStore } from '../../stores/auth.store';
 import { formatRelativeTime } from '../../utils';
+import { useTranslation } from 'react-i18next';
 
 // BE does not expose a WebSocket/SignalR hub; we fall back to REST polling.
 // 3 s is a reasonable tradeoff between perceived responsiveness and server load.
@@ -28,6 +29,7 @@ export function CompanyMessagesPage() {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
     const [draft, setDraft] = useState('');
+    const { t } = useTranslation('company');
 
     // Invisible anchor element at the bottom of the message list used for auto-scroll.
     const bottomAnchorRef = useRef<HTMLDivElement>(null);
@@ -111,8 +113,8 @@ export function CompanyMessagesPage() {
             );
 
             const message = isAxiosError(_error)
-                ? _error.response?.data?.message || 'Không thể gửi tin nhắn'
-                : 'Không thể gửi tin nhắn';
+                ? _error.response?.data?.message || t('messages.toastSendFailed')
+                : t('messages.toastSendFailed');
             toast.error(message);
         },
 
@@ -145,8 +147,8 @@ export function CompanyMessagesPage() {
     if (hasFatalError) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải trang nhắn tin"
-                description="Đã xảy ra lỗi khi kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên."
+                title={t('messages.errorTitle')}
+                description={t('messages.errorDesc')}
                 icon={<MessageSquare className="h-6 w-6" />}
             />
         );
@@ -158,12 +160,12 @@ export function CompanyMessagesPage() {
         return (
             <div className="space-y-6">
                 <SectionHeader
-                    title="Nhắn tin"
-                    description="Trao đổi trực tiếp với ứng viên trong quá trình tuyển dụng."
+                    title={t('messages.title')}
+                    description={t('messages.description')}
                 />
                 <EmptyState
-                    title="Chưa chọn cuộc trò chuyện"
-                    description="Mở trang chi tiết hồ sơ ứng tuyển và nhấn 'Nhắn tin với ứng viên' để bắt đầu cuộc trò chuyện."
+                    title={t('messages.noConversationTitle')}
+                    description={t('messages.noConversationDesc')}
                     icon={<MessageSquare className="h-6 w-6" />}
                 />
             </div>
@@ -176,10 +178,10 @@ export function CompanyMessagesPage() {
     return (
         <div className="flex h-[calc(100vh-10rem)] flex-col gap-4">
             <SectionHeader
-                title="Nhắn tin"
-                description="Tin nhắn được tự động làm mới. Mọi nội dung trao đổi được mã hóa."
+                title={t('messages.title')}
+                description={t('messages.descriptionActive')}
                 backLink="/company/applications"
-                backLabel="Quay lại danh sách ứng tuyển"
+                backLabel={t('messages.backLabel')}
             />
 
             <Card className="flex flex-1 flex-col overflow-hidden p-0">
@@ -192,13 +194,13 @@ export function CompanyMessagesPage() {
                     ) : isFetchError ? (
                         <div className="flex h-full items-center justify-center">
                             <p className="text-sm text-red-500">
-                                Không thể tải tin nhắn. Vui lòng kiểm tra kết nối và thử lại.
+                                {t('messages.loadFailed')}
                             </p>
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="flex h-full items-center justify-center">
                             <p className="text-sm text-gray-400">
-                                Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.
+                                {t('messages.noMessages')}
                             </p>
                         </div>
                     ) : (
@@ -225,7 +227,7 @@ export function CompanyMessagesPage() {
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Nhập tin nhắn…"
+                            placeholder={t('messages.inputPlaceholder')}
                             disabled={sendMutation.isPending}
                             className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20 disabled:bg-gray-50"
                         />
@@ -233,14 +235,14 @@ export function CompanyMessagesPage() {
                             onClick={handleSend}
                             disabled={!draft.trim() || sendMutation.isPending}
                             isLoading={sendMutation.isPending}
-                            aria-label="Gửi tin nhắn"
+                            aria-label={t('messages.sendAriaLabel')}
                         >
                             <Send className="h-4 w-4" />
-                            Gửi
+                            {sendMutation.isPending ? t('messages.sendingLabel') : t('messages.sendButton')}
                         </Button>
                     </div>
                     <p className="mt-2 text-xs text-gray-400">
-                        Enter để gửi · Shift+Enter để xuống dòng
+                        {t('messages.sendHint')}
                     </p>
                 </div>
             </Card>
@@ -259,6 +261,7 @@ interface MessageBubbleProps {
 }
 
 function MessageBubble({ message, isSelf }: MessageBubbleProps) {
+    const { t } = useTranslation('company');
     const isOptimistic = message.id.startsWith('optimistic-');
 
     return (
@@ -279,7 +282,7 @@ function MessageBubble({ message, isSelf }: MessageBubbleProps) {
                         isSelf ? 'text-white/70' : 'text-gray-400'
                     }`}
                 >
-                    {isOptimistic ? 'Đang gửi…' : formatRelativeTime(message.createdAt)}
+                    {isOptimistic ? t('messages.sendingLabel') : formatRelativeTime(message.createdAt)}
                 </p>
             </div>
         </div>

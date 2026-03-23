@@ -4,6 +4,7 @@ import { Briefcase, ChevronDown, LogOut, Menu, Moon, Sun, User, X } from 'lucide
 import { Button } from '../../ui';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useThemeStore } from '../../../stores/theme.store';
+import { LanguageSwitcher } from '../../layout/LanguageSwitcher';
 
 interface CompanyNavbarProps {
     onMenuClick: () => void;
@@ -55,6 +56,7 @@ export function CompanyNavbar({ onMenuClick, isMenuOpen }: CompanyNavbarProps) {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <LanguageSwitcher />
                     <button
                         onClick={toggleTheme}
                         className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f]"

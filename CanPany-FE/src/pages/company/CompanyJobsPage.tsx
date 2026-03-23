@@ -18,11 +18,13 @@ import {
 } from '../../components/features/companies';
 import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { companyKeys } from '../../lib/queryKeys';
+import { useTranslation } from 'react-i18next';
 
 type JobFilter = 'All' | JobStatus;
 
 export function CompanyJobsPage() {
     const queryClient = useQueryClient();
+    const { t } = useTranslation('company');
     const [activeFilter, setActiveFilter] = useState<JobFilter>('All');
     const [processingJobId, setProcessingJobId] = useState<string | null>(null);
     const { companyId, isLoading: isWorkspaceLoading, isMissingProfile, hasFatalError } = useCompanyWorkspace();
@@ -53,8 +55,8 @@ export function CompanyJobsPage() {
             await queryClient.invalidateQueries({ queryKey: companyKeys.workspaceJobs(companyId!), exact: true });
             toast.success(
                 variables.nextStatus === 'Closed'
-                    ? 'Đã đóng tin tuyển dụng'
-                    : 'Đã mở lại tin tuyển dụng'
+                    ? t('jobs.toastClosed')
+                    : t('jobs.toastReopened')
             );
         },
         onSettled: () => {
@@ -62,8 +64,8 @@ export function CompanyJobsPage() {
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể cập nhật trạng thái job'
-                : 'Không thể cập nhật trạng thái job';
+                ? error.response?.data?.message || t('jobs.toastStatusFailed')
+                : t('jobs.toastStatusFailed');
             toast.error(message);
         },
     });
@@ -90,12 +92,12 @@ export function CompanyJobsPage() {
     if (isMissingProfile) {
         return (
             <CompanyProfileRequiredState
-                title="Bạn chưa có hồ sơ công ty"
-                description="Hãy hoàn thiện hồ sơ công ty trước khi tạo và quản lý tin tuyển dụng."
+                title={t('jobs.profileRequired')}
+                description={t('jobs.profileRequiredDesc')}
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
                 action={
                     <Link to="/company/profile">
-                        <Button>Đi tới hồ sơ công ty</Button>
+                        <Button>{t('jobs.btnGoProfile')}</Button>
                     </Link>
                 }
             />
@@ -105,8 +107,8 @@ export function CompanyJobsPage() {
     if (hasFatalError || jobsQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải danh sách job"
-                description="Đã xảy ra lỗi khi tải danh sách tin tuyển dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu cần thêm hỗ trợ."
+                title={t('jobs.errorTitle')}
+                description={t('jobs.errorDesc')}
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
             />
         );
@@ -115,13 +117,13 @@ export function CompanyJobsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader
-                title="Quản lý tin tuyển dụng"
-                description="Xem, lọc và quản lý danh sách tin tuyển dụng của công ty; đóng/mở lại job tuỳ theo nhu cầu tuyển dụng thực tế."
+                title={t('jobs.title')}
+                description={t('jobs.description')}
                 actions={
                     <Link to="/company/jobs/new">
                         <Button>
                             <Plus className="h-4 w-4" />
-                            Tạo tin tuyển dụng
+                            {t('jobs.btnCreate')}
                         </Button>
                     </Link>
                 }
@@ -129,19 +131,19 @@ export function CompanyJobsPage() {
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Tổng số job</p>
+                    <p className="text-sm text-gray-500">{t('jobs.statTotal')}</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.total)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Đang tuyển</p>
+                    <p className="text-sm text-gray-500">{t('jobs.statOpen')}</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.open)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Đã đóng</p>
+                    <p className="text-sm text-gray-500">{t('jobs.statClosed')}</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.closed)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Bản nháp</p>
+                    <p className="text-sm text-gray-500">{t('jobs.statDraft')}</p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics.draft)}</p>
                 </Card>
             </section>
@@ -156,21 +158,24 @@ export function CompanyJobsPage() {
                                 size="sm"
                                 onClick={() => setActiveFilter(filter)}
                             >
-                                {({'All':'Tất cả','Open':'Đang tuyển','Closed':'Đã đóng','Draft':'Bản nháp'} as Record<string,string>)[filter]}
+                                {filter === 'All' ? t('jobs.filterAll') : null}
+                                {filter === 'Open' ? t('jobs.filterOpen') : null}
+                                {filter === 'Closed' ? t('jobs.filterClosed') : null}
+                                {filter === 'Draft' ? t('jobs.filterDraft') : null}
                             </Button>
                         ))}
                     </div>
 
                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                        Bạn có thể tạo mới, chỉnh sửa và đóng/mở lại tin tuyển dụng trực tiếp tại đây.
+                        {t('jobs.actionHint')}
                     </div>
                 </div>
 
                 {filteredJobs.length === 0 ? (
                     <div className="mt-6">
                         <EmptyState
-                            title="Chưa có tin tuyển dụng phù hợp"
-                            description="Hãy tạo tin tuyển dụng mới hoặc đổi bộ lọc để xem dữ liệu khác."
+                            title={t('jobs.emptyTitle')}
+                            description={t('jobs.emptyDesc')}
                             icon={<BriefcaseBusiness className="h-6 w-6" />}
                         />
                     </div>
@@ -188,12 +193,18 @@ export function CompanyJobsPage() {
                                             <StatusBadge status={job.status} kind="job" />
                                         </div>
                                         <p className="text-sm text-gray-500">
-                                            {job.location || 'Chưa cập nhật địa điểm'}
+                                            {job.location || t('jobs.noLocation')}
                                         </p>
                                         <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                            <span>Lượt xem: {formatNumber(job.viewCount)}</span>
-                                            <span>Ứng viên: {formatNumber(job.applicationCount)}</span>
-                                            <span>Tạo ngày: {formatDate(job.createdAt)}</span>
+                                            <span>
+                                                {t('jobs.views')}: {formatNumber(job.viewCount)}
+                                            </span>
+                                            <span>
+                                                {t('jobs.candidates')}: {formatNumber(job.applicationCount)}
+                                            </span>
+                                            <span>
+                                                {t('jobs.createdAt')}: {formatDate(job.createdAt)}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -201,13 +212,13 @@ export function CompanyJobsPage() {
                                         <Link to={`/jobs/${job.id}`}>
                                             <Button variant="outline" size="sm">
                                                 <Eye className="h-4 w-4" />
-                                                Xem trang công khai
+                                                {t('jobs.btnViewPublic')}
                                             </Button>
                                         </Link>
                                         <Link to={`/company/jobs/${job.id}/edit`}>
                                             <Button variant="outline" size="sm">
                                                 <FilePenLine className="h-4 w-4" />
-                                                Chỉnh sửa
+                                                {t('jobs.btnEdit')}
                                             </Button>
                                         </Link>
                                         {job.status === 'Closed' ? (
@@ -220,7 +231,7 @@ export function CompanyJobsPage() {
                                                 isLoading={statusMutation.isPending && processingJobId === job.id}
                                             >
                                                 <RefreshCcw className="h-4 w-4" />
-                                                Mở lại
+                                                {t('jobs.btnReopen')}
                                             </Button>
                                         ) : (
                                             <Button
@@ -232,7 +243,7 @@ export function CompanyJobsPage() {
                                                 }}
                                                 isLoading={statusMutation.isPending && processingJobId === job.id}
                                             >
-                                                Đóng tin
+                                                {t('jobs.btnClose')}
                                             </Button>
                                         )}
                                     </div>

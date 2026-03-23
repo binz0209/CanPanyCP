@@ -1,5 +1,6 @@
 import { Building2 } from 'lucide-react';
 import { Card } from '../../ui';
+import { useTranslation } from 'react-i18next';
 
 interface CompanyProfilePreviewCardProps {
     logoUrl?: string;
@@ -14,14 +15,16 @@ export function CompanyProfilePreviewCard({
     address,
     description,
 }: CompanyProfilePreviewCardProps) {
+    const { t } = useTranslation('company');
+
     return (
         <Card className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900">Xem trước hồ sơ</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('profile.previewCardTitle')}</h2>
             <div className="mt-5 flex items-start gap-4">
                 {logoUrl ? (
                     <img
                         src={logoUrl}
-                        alt="Logo preview"
+                        alt={t('profile.logoPreviewAlt')}
                         className="h-16 w-16 rounded-xl border border-gray-200 object-cover"
                     />
                 ) : (
@@ -31,12 +34,12 @@ export function CompanyProfilePreviewCard({
                 )}
 
                 <div className="min-w-0">
-                    <p className="truncate font-semibold text-gray-900">{name || 'Tên công ty'}</p>
+                    <p className="truncate font-semibold text-gray-900">{name || t('profile.previewNameFallback')}</p>
                     <p className="mt-1 text-sm text-gray-500">
-                        {address || 'Địa chỉ sẽ hiển thị ở đây'}
+                        {address || t('profile.previewAddressFallback')}
                     </p>
                     <p className="mt-2 line-clamp-4 text-sm leading-6 text-gray-600">
-                        {description || 'Mô tả công ty sẽ hiển thị ở đây'}
+                        {description || t('profile.previewDescriptionFallback')}
                     </p>
                 </div>
             </div>

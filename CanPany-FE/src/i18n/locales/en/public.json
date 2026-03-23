@@ -1,0 +1,74 @@
+{
+  "home": {
+    "heroTitleLine1": "Find jobs",
+    "heroTitleHighlight": "fast & easy",
+    "heroSubtitlePrefix": "Access",
+    "heroSubtitleSuffix": "job postings every day from trusted employers in Vietnam",
+    "searchPlaceholder": "Job title, company name...",
+    "locationPlaceholder": "Location...",
+    "searchButton": "Search",
+    "allLocations": "All locations",
+    "popularLabel": "Popular:",
+    "whyChooseTitle": "Why choose CanPany?",
+    "statsJobs": "Open job postings",
+    "statsCompanies": "Hiring companies",
+    "statsCandidates": "Active candidates",
+    "statsSatisfaction": "Customer satisfaction",
+    "categoriesTitle": "Top featured categories",
+    "categoriesSubtitle": "Explore thousands of great job opportunities",
+    "categoriesViewAll": "View all",
+    "categoriesViewAllMobile": "View all categories",
+    "categories": {
+      "it": "Information Technology",
+      "marketing": "Marketing",
+      "finance": "Finance & Banking",
+      "design": "Design & Creative",
+      "sales": "Business & Sales",
+      "hr": "Human Resources & Admin"
+    },
+    "featuresTitle": "Why choose CanPany?",
+    "featuresSubtitle": "A smart recruitment platform powered by advanced AI technology",
+    "features": {
+      "aiTitle": "Smart AI Matching",
+      "aiDescription": "AI analyzes your CV and suggests the most suitable jobs",
+      "securityTitle": "Enterprise-grade security",
+      "securityDescription": "Data is encrypted with AES-256 to keep everything safe",
+      "cvTitle": "CV optimization",
+      "cvDescription": "Analyze ATS score and suggest improvements to boost your chances"
+    },
+    "ctaTitle": "Ready for your next opportunity?",
+    "ctaSubtitle": "Sign up now to receive relevant job alerts and connect with top employers.",
+    "ctaFindJob": "Find jobs now",
+    "ctaPostJob": "Post a job",
+    "trustedBy": "Trusted by:",
+    "jobsUnit": "jobs"
+  },
+  "jobs": {
+    "pageTitle": "Find jobs",
+    "filters": {
+      "keyword": "Keyword",
+      "location": "Location",
+      "level": "Level",
+      "budgetType": "Budget type",
+      "isRemote": "Remote only",
+      "clearAll": "Clear all filters"
+    },
+    "empty": {
+      "title": "No suitable jobs found",
+      "description": "Try adjusting your filters or search keywords."
+    }
+  },
+  "jobDetail": {
+    "applyNow": "Apply now",
+    "saved": "Saved",
+    "save": "Save",
+    "salary": "Salary",
+    "location": "Location",
+    "deadline": "Application deadline",
+    "description": "Job description",
+    "requirements": "Requirements",
+    "benefits": "Benefits",
+    "applySuccess": "Application submitted successfully!"
+  }
+}
+

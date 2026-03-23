@@ -1,0 +1,16 @@
+{
+  "dashboard": {
+    "title": "Your job search overview",
+    "applications": "Applications",
+    "savedJobs": "Saved jobs",
+    "skillGap": "Skill gaps"
+  },
+  "savedJobs": {
+    "title": "Saved jobs",
+    "emptyTitle": "You haven't saved any jobs yet",
+    "emptyDescription": "Click the save button on job postings to keep track of them.",
+    "removeSuccess": "Job removed from saved list.",
+    "addSuccess": "Job saved."
+  }
+}
+

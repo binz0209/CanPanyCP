@@ -1,0 +1,16 @@
+{
+  "dashboard": {
+    "title": "Tổng quan hành trình tìm việc",
+    "applications": "Lượt ứng tuyển",
+    "savedJobs": "Việc làm đã lưu",
+    "skillGap": "Khoảng trống kỹ năng"
+  },
+  "savedJobs": {
+    "title": "Việc làm đã lưu",
+    "emptyTitle": "Bạn chưa lưu job nào",
+    "emptyDescription": "Hãy bấm nút lưu tại các tin tuyển dụng để theo dõi sau.",
+    "removeSuccess": "Đã bỏ lưu job.",
+    "addSuccess": "Đã lưu job."
+  }
+}
+
