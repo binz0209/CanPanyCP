@@ -346,8 +346,8 @@
   },
   "applicationNotes": {
     "title": "Internal notes",
-    "sessionNote": "Session note",
-    "hint": "Internal notes are only saved temporarily for the current session. For long-term storage, use your company's internal management system.",
+    "sessionNote": "Internal note",
+    "hint": "Internal notes are saved to the application record for review. For long-term tracking under your internal process, add notes in your company management system.",
     "placeholder": "Enter an internal note for this application",
     "saveButton": "Save note"
   },

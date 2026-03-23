@@ -346,8 +346,8 @@
   },
   "applicationNotes": {
     "title": "Ghi chú nội bộ",
-    "sessionNote": "Ghi chú phiên làm việc",
-    "hint": "Ghi chú nội bộ chỉ được lưu tạm thời trong phiên làm việc hiện tại để phục vụ việc xem xét. Nếu cần lưu trữ dài hạn, hãy ghi chú thêm ở hệ thống quản lý nội bộ của công ty.",
+    "sessionNote": "Ghi chú nội bộ",
+    "hint": "Ghi chú nội bộ được lưu vào hồ sơ ứng tuyển để phục vụ việc xem xét. Nếu cần lưu trữ dài hạn theo quy trình nội bộ, hãy ghi chú thêm ở hệ thống quản lý của công ty.",
     "placeholder": "Nhập ghi chú nội bộ cho hồ sơ ứng tuyển này",
     "saveButton": "Lưu ghi chú"
   },

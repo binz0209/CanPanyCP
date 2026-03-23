@@ -1,6 +1,6 @@
 import { MessageSquareText } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../ui';
+import { useTranslation } from 'react-i18next';
 
 interface ApplicationNotesCardProps {
     noteDraft: string;
@@ -18,7 +18,6 @@ export function ApplicationNotesCard({
     sessionNotes,
 }: ApplicationNotesCardProps) {
     const { t } = useTranslation('company');
-
     return (
         <Card className="p-6">
             <div className="flex items-center gap-2 text-gray-900">
@@ -39,7 +38,11 @@ export function ApplicationNotesCard({
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                 />
                 <div className="mt-3">
-                    <Button variant="outline" isLoading={isSubmitting} onClick={onSubmit}>
+                    <Button
+                        variant="outline"
+                        isLoading={isSubmitting}
+                        onClick={onSubmit}
+                    >
                         {t('applicationNotes.saveButton')}
                     </Button>
                 </div>
