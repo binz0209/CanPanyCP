@@ -12,6 +12,7 @@ public interface IMessageService
     Task<Message> SendAsync(string conversationId, string senderId, string text);
     Task<bool> MarkAsReadAsync(string messageId);
     Task<long> MarkConversationAsReadAsync(string conversationId, string readByUserId);
+    Task<long> GetTotalUnreadCountAsync(string userId);
 }
 
 

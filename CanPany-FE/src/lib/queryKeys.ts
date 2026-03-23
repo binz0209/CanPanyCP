@@ -54,3 +54,10 @@ export const notificationKeys = {
     list: (params?: unknown) => [...notificationKeys.all, 'list', params ?? {}] as const,
     detail: (id: string) => [...notificationKeys.all, 'detail', id] as const,
 };
+
+export const conversationKeys = {
+    all: ['conversations'] as const,
+    list: () => [...conversationKeys.all, 'list'] as const,
+    unreadCount: () => [...conversationKeys.all, 'unread-count'] as const,
+    detail: (id: string) => [...conversationKeys.all, 'detail', id] as const,
+};

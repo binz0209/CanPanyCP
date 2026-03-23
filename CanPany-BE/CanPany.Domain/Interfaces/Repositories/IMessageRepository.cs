@@ -15,6 +15,7 @@ public interface IMessageRepository
     Task MarkAsReadAsync(string messageId);
     Task<long> MarkConversationAsReadAsync(string conversationId, string readByUserId);
     Task<long> GetUnreadCountAsync(string conversationId, string userId);
+    Task<long> GetTotalUnreadCountAsync(string userId);
 }
 
 
