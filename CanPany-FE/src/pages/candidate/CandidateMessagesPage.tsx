@@ -11,16 +11,11 @@ import type { Message } from '../../api/messages.api';
 import type { Conversation } from '../../api/conversations.api';
 import { useSignalR } from '../../hooks/useSignalR';
 import type { ReceivedMessage } from '../../hooks/useSignalR';
-import {
-    CompanyWorkspaceErrorState,
-    CompanyWorkspaceLoader,
-} from '../../components/features/companies';
-import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { conversationKeys, messageKeys } from '../../lib/queryKeys';
 import { useAuthStore } from '../../stores/auth.store';
 import { formatRelativeTime } from '../../utils';
 
-export function CompanyMessagesPage() {
+export function CandidateMessagesPage() {
     const { conversationId } = useParams<{ conversationId: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -31,26 +26,28 @@ export function CompanyMessagesPage() {
     const bottomAnchorRef = useRef<HTMLDivElement>(null);
     const lastTypingSentRef = useRef(0);
 
-    const { isLoading: isWorkspaceLoading, hasFatalError } = useCompanyWorkspace();
-
     // ── SignalR ────────────────────────────────────────────────────────────────
     const signalR = useSignalR({
         onReceiveMessage: (msg: ReceivedMessage) => {
+            // Append real-time message into the cache
             queryClient.setQueryData<Message[]>(
                 messageKeys.byConversation(msg.conversationId),
                 (current = []) => {
+                    // Deduplicate: skip if we already have this message (or it replaces an optimistic one)
                     const filtered = current.filter(
                         (m) => !m.id.startsWith('optimistic-') && m.id !== msg.id
                     );
                     return [...filtered, msg as Message];
                 }
             );
+            // Refresh conversation list for last message preview
             queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
         },
         onConversationUpdated: () => {
             queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
         },
         onMessageRead: (event) => {
+            // Update messages in cache to reflect read status
             queryClient.setQueryData<Message[]>(
                 messageKeys.byConversation(event.conversationId),
                 (current = []) =>
@@ -104,6 +101,7 @@ export function CompanyMessagesPage() {
         const text = draft.trim();
         if (!text || !conversationId) return;
 
+        // Optimistic update
         const optimisticMsg: Message = {
             id: `optimistic-${Date.now()}`,
             conversationId,
@@ -122,6 +120,7 @@ export function CompanyMessagesPage() {
         try {
             await signalR.sendMessage(conversationId, text);
         } catch {
+            // Rollback optimistic message
             queryClient.setQueryData<Message[]>(
                 messageKeys.byConversation(conversationId),
                 (current = []) => current.filter((m) => m.id !== optimisticMsg.id)
@@ -134,6 +133,7 @@ export function CompanyMessagesPage() {
     const handleTyping = useCallback(() => {
         if (!conversationId) return;
         const now = Date.now();
+        // Throttle: send at most once every 2 seconds
         if (now - lastTypingSentRef.current > 2000) {
             lastTypingSentRef.current = now;
             signalR.sendTyping(conversationId);
@@ -147,24 +147,13 @@ export function CompanyMessagesPage() {
         }
     };
 
-    // ── Guards ─────────────────────────────────────────────────────────────────
-    if (isWorkspaceLoading) return <CompanyWorkspaceLoader />;
-    if (hasFatalError) {
-        return (
-            <CompanyWorkspaceErrorState
-                title="Không thể tải trang nhắn tin"
-                description="Đã xảy ra lỗi khi kết nối. Vui lòng thử lại sau."
-                icon={<MessageSquare className="h-6 w-6" />}
-            />
-        );
-    }
-
+    // ── Render ─────────────────────────────────────────────────────────────────
     const conversations = conversationsQuery.data ?? [];
     const messages = messagesQuery.data ?? [];
 
     return (
         <div className="flex h-[calc(100vh-10rem)] gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            {/* ── Sidebar ──────────────────────────────────────────────────── */}
+            {/* ── Sidebar: conversation list ──────────────────────────────── */}
             <div
                 className={[
                     'flex w-full flex-col border-r border-gray-100 md:w-[340px] md:min-w-[340px]',
@@ -172,14 +161,15 @@ export function CompanyMessagesPage() {
                 ].join(' ')}
             >
                 <div className="border-b border-gray-100 px-5 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Nhắn tin</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Tin nhắn</h2>
                     <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
                         <Circle
                             className={`h-2 w-2 fill-current ${signalR.isConnected ? 'text-emerald-500' : 'text-gray-300'}`}
                         />
-                        {signalR.isConnected ? 'Kết nối trực tiếp' : 'Đang kết nối…'}
+                        {signalR.isConnected ? 'Đã kết nối' : 'Đang kết nối…'}
                     </div>
                 </div>
+
                 <div className="flex-1 overflow-y-auto">
                     {conversationsQuery.isLoading ? (
                         <div className="flex items-center justify-center py-12">
@@ -195,7 +185,7 @@ export function CompanyMessagesPage() {
                                 key={conv.id}
                                 conversation={conv}
                                 isActive={conv.id === conversationId}
-                                onClick={() => navigate(`/company/messages/${conv.id}`)}
+                                onClick={() => navigate(`/candidate/messages/${conv.id}`)}
                             />
                         ))
                     )}
@@ -221,32 +211,10 @@ export function CompanyMessagesPage() {
                 ) : (
                     <>
                         {/* Chat header */}
-                        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-3">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/company/messages')}
-                                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 md:hidden"
-                                aria-label="Quay lại"
-                            >
-                                <ArrowLeft className="h-5 w-5" />
-                            </button>
-                            {(() => {
-                                const conv = conversations.find((c) => c.id === conversationId);
-                                if (!conv) return null;
-                                return (
-                                    <>
-                                        {conv.otherUserAvatar ? (
-                                            <img src={conv.otherUserAvatar} alt="" className="h-9 w-9 rounded-full object-cover" />
-                                        ) : (
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#00b14f] to-emerald-600 text-sm font-semibold text-white">
-                                                {conv.otherUserName?.charAt(0)?.toUpperCase() ?? '?'}
-                                            </div>
-                                        )}
-                                        <p className="text-sm font-semibold text-gray-900">{conv.otherUserName}</p>
-                                    </>
-                                );
-                            })()}
-                        </div>
+                        <ChatHeader
+                            conversation={conversations.find((c) => c.id === conversationId)}
+                            onBack={() => navigate('/candidate/messages')}
+                        />
 
                         {/* Message list */}
                         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -257,7 +225,7 @@ export function CompanyMessagesPage() {
                             ) : messages.length === 0 ? (
                                 <div className="flex h-full items-center justify-center">
                                     <p className="text-sm text-gray-400">
-                                        Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện.
+                                        Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!
                                     </p>
                                 </div>
                             ) : (
@@ -293,8 +261,13 @@ export function CompanyMessagesPage() {
                                     placeholder="Nhập tin nhắn…"
                                     className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                                 />
-                                <Button onClick={handleSend} disabled={!draft.trim()} aria-label="Gửi tin nhắn">
-                                    <Send className="h-4 w-4" /> Gửi
+                                <Button
+                                    onClick={handleSend}
+                                    disabled={!draft.trim()}
+                                    aria-label="Gửi tin nhắn"
+                                >
+                                    <Send className="h-4 w-4" />
+                                    Gửi
                                 </Button>
                             </div>
                             <p className="mt-1.5 text-[11px] text-gray-400">
@@ -310,7 +283,11 @@ export function CompanyMessagesPage() {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function ConversationItem({ conversation, isActive, onClick }: {
+function ConversationItem({
+    conversation,
+    isActive,
+    onClick,
+}: {
     conversation: Conversation;
     isActive: boolean;
     onClick: () => void;
@@ -321,12 +298,18 @@ function ConversationItem({ conversation, isActive, onClick }: {
             onClick={onClick}
             className={[
                 'flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors',
-                isActive ? 'bg-[#00b14f]/5 border-r-2 border-[#00b14f]' : 'hover:bg-gray-50',
+                isActive
+                    ? 'bg-[#00b14f]/5 border-r-2 border-[#00b14f]'
+                    : 'hover:bg-gray-50',
             ].join(' ')}
         >
             <div className="relative h-10 w-10 flex-shrink-0">
                 {conversation.otherUserAvatar ? (
-                    <img src={conversation.otherUserAvatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                    <img
+                        src={conversation.otherUserAvatar}
+                        alt=""
+                        className="h-10 w-10 rounded-full object-cover"
+                    />
                 ) : (
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#00b14f] to-emerald-600 text-sm font-semibold text-white">
                         {conversation.otherUserName?.charAt(0)?.toUpperCase() ?? '?'}
@@ -338,9 +321,14 @@ function ConversationItem({ conversation, isActive, onClick }: {
                     </span>
                 )}
             </div>
+
             <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
-                    <p className={`truncate text-sm ${conversation.unreadCount > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                    <p
+                        className={`truncate text-sm ${
+                            conversation.unreadCount > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'
+                        }`}
+                    >
                         {conversation.otherUserName}
                     </p>
                     {conversation.lastMessageAt && (
@@ -350,12 +338,55 @@ function ConversationItem({ conversation, isActive, onClick }: {
                     )}
                 </div>
                 {conversation.lastMessagePreview && (
-                    <p className={`mt-0.5 truncate text-xs ${conversation.unreadCount > 0 ? 'font-medium text-gray-700' : 'text-gray-400'}`}>
+                    <p
+                        className={`mt-0.5 truncate text-xs ${
+                            conversation.unreadCount > 0 ? 'font-medium text-gray-700' : 'text-gray-400'
+                        }`}
+                    >
                         {conversation.lastMessagePreview}
                     </p>
                 )}
             </div>
         </button>
+    );
+}
+
+function ChatHeader({
+    conversation,
+    onBack,
+}: {
+    conversation?: Conversation;
+    onBack: () => void;
+}) {
+    return (
+        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-3">
+            <button
+                type="button"
+                onClick={onBack}
+                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 md:hidden"
+                aria-label="Quay lại"
+            >
+                <ArrowLeft className="h-5 w-5" />
+            </button>
+            {conversation && (
+                <>
+                    {conversation.otherUserAvatar ? (
+                        <img
+                            src={conversation.otherUserAvatar}
+                            alt=""
+                            className="h-9 w-9 rounded-full object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#00b14f] to-emerald-600 text-sm font-semibold text-white">
+                            {conversation.otherUserName?.charAt(0)?.toUpperCase() ?? '?'}
+                        </div>
+                    )}
+                    <p className="text-sm font-semibold text-gray-900">
+                        {conversation.otherUserName}
+                    </p>
+                </>
+            )}
+        </div>
     );
 }
 
@@ -371,7 +402,11 @@ function MessageBubble({ message, isSelf }: { message: Message; isSelf: boolean 
                 ].join(' ')}
             >
                 <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
-                <p className={`mt-1 text-right text-[10px] ${isSelf ? 'text-white/70' : 'text-gray-400'}`}>
+                <p
+                    className={`mt-1 text-right text-[10px] ${
+                        isSelf ? 'text-white/70' : 'text-gray-400'
+                    }`}
+                >
                     {isOptimistic ? 'Đang gửi…' : formatRelativeTime(message.createdAt)}
                     {isSelf && !isOptimistic && message.isRead && ' · Đã đọc'}
                 </p>

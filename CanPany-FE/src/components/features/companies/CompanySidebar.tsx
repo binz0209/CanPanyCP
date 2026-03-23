@@ -9,12 +9,12 @@ import { companyNavigationItems } from '../../../lib/companyNavigation';
 
 interface NavItem {
     labelKey: string;
+    label: string;
     icon: ReactNode;
     path?: string;
-    items?: { labelKey: string; path: string }[];
+    items?: { labelKey: string; label: string; path: string }[];
 }
 
-// Icons keyed by stable labelKey (not translated label)
 const navIcons: Record<string, ReactNode> = {
     'sidebar.dashboard': <LayoutDashboard className="h-5 w-5" />,
     'sidebar.companyProfile': <Building2 className="h-5 w-5" />,
@@ -22,11 +22,6 @@ const navIcons: Record<string, ReactNode> = {
     'sidebar.candidateSearch': <Search className="h-5 w-5" />,
     'sidebar.messages': <MessageSquare className="h-5 w-5" />,
 };
-
-const navItems: NavItem[] = companyNavigationItems.map((item) => ({
-    ...item,
-    icon: navIcons[item.labelKey] ?? <LayoutDashboard className="h-5 w-5" />,
-}));
 
 interface CompanySidebarProps {
     isOpen: boolean;
@@ -36,6 +31,19 @@ interface CompanySidebarProps {
 export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
     const { t } = useTranslation('company');
     const location = useLocation();
+
+    const navItems: NavItem[] = companyNavigationItems.map((item) => ({
+        labelKey: item.labelKey,
+        label: t(item.labelKey as any),
+        icon: navIcons[item.labelKey],
+        path: item.path,
+        items: item.items?.map(subItem => ({
+            labelKey: subItem.labelKey,
+            label: t(subItem.labelKey as any),
+            path: subItem.path
+        }))
+    }));
+
     const [expandedItems, setExpandedItems] = useState<Set<string>>(
         new Set(['sidebar.companyProfile', 'sidebar.jobManagement'])
     );
@@ -53,13 +61,13 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
         return false;
     };
 
-    const toggleExpand = (key: string) => {
+    const toggleExpand = (labelKey: string) => {
         setExpandedItems((previous) => {
             const next = new Set(previous);
-            if (next.has(key)) {
-                next.delete(key);
+            if (next.has(labelKey)) {
+                next.delete(labelKey);
             } else {
-                next.add(key);
+                next.add(labelKey);
             }
             return next;
         });
@@ -96,7 +104,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                         <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                                             {item.icon}
                                         </div>
-                                        <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
+                                        <span className="flex-1 text-left">{item.label}</span>
                                     </Button>
                                 </Link>
                             ) : (
@@ -111,7 +119,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                     <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                                         {item.icon}
                                     </div>
-                                    <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
+                                    <span className="flex-1 text-left">{item.label}</span>
                                     <ChevronDown
                                         className={cn(
                                             'h-4 w-4 transition-transform duration-200',
@@ -132,7 +140,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                                     isActive(subItem.path) && 'bg-[#00b14f]/10 text-[#00b14f]'
                                                 )}
                                             >
-                                                {t(subItem.labelKey as any)}
+                                                {subItem.label}
                                             </Button>
                                         </Link>
                                     ))}

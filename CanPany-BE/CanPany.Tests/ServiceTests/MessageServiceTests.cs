@@ -12,6 +12,7 @@ namespace CanPany.Tests.ServiceTests;
 public class MessageServiceTests
 {
     private readonly Mock<IMessageRepository> _repositoryMock = new();
+    private readonly Mock<IConversationRepository> _conversationRepoMock = new();
     private readonly Mock<IEncryptionService> _encryptionServiceMock = new();
     private readonly Mock<ILogger<MessageService>> _loggerMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -30,6 +31,7 @@ public class MessageServiceTests
 
         _service = new MessageService(
             _repositoryMock.Object,
+            _conversationRepoMock.Object,
             _encryptionServiceMock.Object,
             _configurationMock.Object,
             _loggerMock.Object);

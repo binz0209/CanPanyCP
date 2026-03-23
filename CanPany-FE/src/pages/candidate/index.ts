@@ -9,3 +9,4 @@ export { JobAlertsPage } from './JobAlertsPage';
 export { NotificationCenterPage } from './NotificationCenterPage';
 export { BackgroundJobsPage } from './BackgroundJobsPage';
 export { RecommendedJobsPage } from './RecommendedJobsPage';
+export { CandidateMessagesPage } from './CandidateMessagesPage';
