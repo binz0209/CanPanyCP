@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 export function Footer() {
     const { t } = useTranslation('public');
+    const tp = (key: string, options?: any) => t(key as any, options as any);
 
     return (
         <footer className="border-t border-gray-100 bg-gray-50">
@@ -20,7 +21,7 @@ export function Footer() {
                             </span>
                         </Link>
                         <p className="mt-4 max-w-md text-sm leading-relaxed text-gray-600">
-                            {t('footer.brandDesc')}
+                            {tp('footer.brandDesc', { defaultValue: 'Nền tảng kết nối ứng viên và nhà tuyển dụng thông minh, nhanh chóng và hiệu quả.' })}
                         </p>
                         <div className="mt-6 flex gap-3">
                             <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
@@ -34,26 +35,26 @@ export function Footer() {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">{t('footer.candidatesTitle')}</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">{tp('footer.candidatesTitle', { defaultValue: 'Dành cho ứng viên' })}</h3>
                         <ul className="mt-4 space-y-3">
                             <li>
                                 <Link to="/jobs" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    {t('footer.findJobs')}
+                                    {tp('footer.findJobs', { defaultValue: 'Tìm việc làm' })}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/companies" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    {t('footer.companies')}
+                                    {tp('footer.companies', { defaultValue: 'Công ty' })}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/auth/register" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    {t('footer.createCV')}
+                                    {tp('footer.createCV', { defaultValue: 'Tạo CV' })}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/auth/register" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    {t('footer.careerGuide')}
+                                    {tp('footer.careerGuide', { defaultValue: 'Cẩm nang nghề nghiệp' })}
                                 </Link>
                             </li>
                         </ul>
@@ -61,7 +62,7 @@ export function Footer() {
 
                     {/* Contact */}
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">{t('footer.contactTitle')}</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">{tp('footer.contactTitle', { defaultValue: 'Liên hệ' })}</h3>
                         <ul className="mt-4 space-y-3">
                             <li className="flex items-center gap-2 text-sm text-gray-600">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00b14f]/10">
@@ -88,12 +89,12 @@ export function Footer() {
                 <div className="mt-12 border-t border-gray-200 pt-8">
                     <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
                         <p className="text-sm text-gray-500">
-                            {t('footer.copyright', { year: new Date().getFullYear() })}
+                            {tp('footer.copyright', { year: new Date().getFullYear(), defaultValue: '© {{year}} CanPany. All rights reserved.' })}
                         </p>
                         <div className="flex gap-6">
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{t('footer.terms')}</a>
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{t('footer.privacy')}</a>
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{t('footer.help')}</a>
+                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.terms', { defaultValue: 'Điều khoản' })}</a>
+                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.privacy', { defaultValue: 'Chính sách riêng tư' })}</a>
+                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.help', { defaultValue: 'Trợ giúp' })}</a>
                         </div>
                     </div>
                 </div>

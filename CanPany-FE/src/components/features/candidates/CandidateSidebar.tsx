@@ -15,6 +15,7 @@ import {
   BellRing,
   Activity,
   MessageSquare,
+  Wallet as WalletIcon,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useNotifications } from '../../../hooks/useNotifications';
@@ -80,6 +81,12 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       labelKey: 'sidebar.messages',
       icon: <MessageSquare className="h-5 w-5" />,
       path: '/candidate/messages',
+    },
+    {
+      id: 'wallet',
+      labelKey: 'sidebar.wallet',
+      icon: <WalletIcon className="h-5 w-5" />,
+      path: '/candidate/wallet',
     },
     {
       id: 'alerts',
@@ -217,7 +224,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                       <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                         {item.icon}
                       </div>
-                      <span className="flex-1 text-left">{t(item.labelKey)}</span>
+                      <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
                       {badge && (
                         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
                           {badge > 99 ? '99+' : badge}
@@ -238,7 +245,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                     <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
                       {item.icon}
                     </div>
-                    <span className="flex-1 text-left">{t(item.labelKey)}</span>
+                    <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
                     {item.items && (
                       <ChevronDown
                         className={cn(
@@ -266,7 +273,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                           <div className={cn('text-gray-400', isActive(subItem.path) && 'text-[#00b14f]')}>
                             {subItem.icon}
                           </div>
-                          <span>{t(subItem.labelKey)}</span>
+                          <span>{t(subItem.labelKey as any)}</span>
                         </Button>
                       </Link>
                     ))}

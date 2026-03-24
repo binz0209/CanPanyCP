@@ -8,3 +8,4 @@ export { applicationsApi } from './applications.api';
 export { messagesApi } from './messages.api';
 export { notificationsApi } from './notifications.api';
 export { walletApi } from './wallet.api';
+export { paymentsApi } from './payments.api';

@@ -8,7 +8,7 @@ import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout } from '@/components/layout';
 import { HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, CVEditorPage, ApplicationHistoryPage, SavedJobsPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, RecommendedJobsPage, CandidateMessagesPage, WalletPage } from '@/pages/candidate';
+import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, RecommendedJobsPage, CandidateMessagesPage, WalletPage } from '@/pages/candidate';
 
 
 const CompanyDashboardPage = lazy(() =>

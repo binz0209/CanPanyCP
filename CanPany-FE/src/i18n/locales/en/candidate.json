@@ -138,7 +138,8 @@
     "settingsAccount": "Account",
     "settingsNotifications": "Notifications",
     "settingsPrivacy": "Privacy",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "wallet": "My wallet"
   },
   "profile": {
     "hero": {
@@ -429,9 +430,18 @@
       "howItWorks": {
         "title": "How it works",
         "steps": {
-          "1": { "label": "Read profile", "desc": "AI analyzes all information from your profile" },
-          "2": { "label": "Design CV", "desc": "Gemini crafts professional, polished CV content" },
-          "3": { "label": "Save & Download", "desc": "CV is automatically saved to your account" }
+          "1": {
+            "label": "Read profile",
+            "desc": "AI analyzes all information from your profile"
+          },
+          "2": {
+            "label": "Design CV",
+            "desc": "Gemini crafts professional, polished CV content"
+          },
+          "3": {
+            "label": "Save & Download",
+            "desc": "CV is automatically saved to your account"
+          }
         }
       },
       "tip": {
@@ -440,6 +450,43 @@
         "cta": "Update now →"
       }
     }
+  },
+  "wallet": {
+    "title": "My wallet",
+    "subtitle": "Manage your balance and transaction history.",
+    "refresh": "Refresh",
+    "balanceCard": {
+      "title": "Current balance",
+      "label": "Total balance",
+      "note": "Balance is updated by the payment system."
+    },
+    "transactionsCard": {
+      "title": "Transaction history",
+      "empty": "No transactions yet.",
+      "loadMore": "Load more",
+      "balanceAfter": "Balance after"
+    },
+    "transactionTypes": {
+      "topUp": "Top up",
+      "withdraw": "Withdraw",
+      "hold": "Hold",
+      "release": "Release"
+    },
+    "paymentSection": {
+      "title": "Top-up & payments",
+      "amountLabel": "Top-up amount (VND)",
+      "amountPlaceholder": "Example: 100000",
+      "createButton": "Create top-up request",
+      "createSuccess": "Top-up request created.",
+      "createError": "Could not create top-up request.",
+      "invalidAmount": "Please enter a valid amount.",
+      "historyTitle": "Payment request history",
+      "historyEmpty": "No payment requests yet.",
+      "status": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "failed": "Failed"
+      }
+    }
   }
 }
-
