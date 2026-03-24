@@ -10,6 +10,7 @@ export const companyPaths = {
     applications: '/company/applications',
     applicationDetail: (applicationId: string) => `/company/applications/${applicationId}`,
     messages: '/company/messages',
+    notifications: '/company/notifications',
     messageThread: (conversationId: string) => `/company/messages/${conversationId}`,
 } as const;
 
@@ -47,5 +48,9 @@ export const companyNavigationItems: CompanyNavItem[] = [
     {
         labelKey: 'sidebar.messages',
         path: companyPaths.messages,
+    },
+    {
+        labelKey: 'sidebar.notifications',
+        path: companyPaths.notifications,
     },
 ] as const;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, MessageSquare, Search } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, MessageSquare, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui';
 import { cn } from '../../../utils';
@@ -21,6 +21,7 @@ const navIcons: Record<string, ReactNode> = {
     'sidebar.jobManagement': <BriefcaseBusiness className="h-5 w-5" />,
     'sidebar.candidateSearch': <Search className="h-5 w-5" />,
     'sidebar.messages': <MessageSquare className="h-5 w-5" />,
+    'sidebar.notifications': <Bell className="h-5 w-5" />,
 };
 
 interface CompanySidebarProps {

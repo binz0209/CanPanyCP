@@ -56,6 +56,11 @@ const CompanyMessagesPage = lazy(() =>
     default: module.CompanyMessagesPage,
   }))
 );
+const CompanyNotificationsPage = lazy(() =>
+  import('@/pages/company/CompanyNotificationsPage').then((module) => ({
+    default: module.CompanyNotificationsPage,
+  }))
+);
 
 function RouteLoader() {
   return (
@@ -125,6 +130,7 @@ function App() {
             {/* No conversationId → landing page; with conversationId → chat thread */}
             <Route path={companyPaths.messages} element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
             <Route path="/company/messages/:conversationId" element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
+            <Route path={companyPaths.notifications} element={<LazyRoute><CompanyNotificationsPage /></LazyRoute>} />
           </Route>
 
           {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}
