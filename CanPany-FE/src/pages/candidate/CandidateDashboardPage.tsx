@@ -9,35 +9,39 @@ import { jobsApi } from '../../api/jobs.api';
 import { useAuthStore } from '../../stores/auth.store';
 import type { Application } from '../../types';
 import type { RecommendedJob, Job } from '../../types/job.types';
+import { useTranslation } from 'react-i18next';
 
 type ApplicationStatus = 'Pending' | 'Shortlisted' | 'Accepted' | 'Rejected' | 'Withdrawn';
 
-const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string }> = {
-  Pending:     { label: 'Đang chờ',      className: 'bg-blue-100 text-blue-700' },
-  Shortlisted: { label: 'Được xem xét',  className: 'bg-yellow-100 text-yellow-700' },
-  Accepted:    { label: 'Đã nhận',       className: 'bg-green-100 text-green-700' },
-  Rejected:    { label: 'Từ chối',       className: 'bg-red-100 text-red-700' },
-  Withdrawn:   { label: 'Đã rút',        className: 'bg-gray-100 text-gray-700' },
-};
-
-function formatRelativeDate(date: string | Date): string {
-  const diffDays = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000);
-  if (diffDays === 0) return 'Hôm nay';
-  if (diffDays === 1) return '1 ngày trước';
-  if (diffDays < 7) return `${diffDays} ngày trước`;
-  if (diffDays < 14) return '1 tuần trước';
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-  return `${Math.floor(diffDays / 30)} tháng trước`;
-}
-
-function formatBudget(job: Job): string {
-  if (!job.budgetAmount) return 'Thương lượng';
-  const amount = job.budgetAmount.toLocaleString('en-US');
-  return job.budgetType === 'Hourly' ? `$${amount}/giờ` : `$${amount}`;
-}
-
 export function CandidateDashboardPage() {
+  const { t } = useTranslation('candidate');
   const { user } = useAuthStore();
+    const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string }> = {
+      Pending:     { label: t('dashboard.status.pending'),     className: 'bg-blue-100 text-blue-700' },
+      Shortlisted: { label: t('dashboard.status.shortlisted'), className: 'bg-yellow-100 text-yellow-700' },
+      Accepted:    { label: t('dashboard.status.accepted'),    className: 'bg-green-100 text-green-700' },
+      Rejected:    { label: t('dashboard.status.rejected'),    className: 'bg-red-100 text-red-700' },
+      Withdrawn:   { label: t('dashboard.status.withdrawn'),   className: 'bg-gray-100 text-gray-700' },
+    };
+
+    const formatRelativeDate = (date: string | Date): string => {
+      const diffDays = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000);
+      if (diffDays === 0) return t('dashboard.relative.today');
+      if (diffDays === 1) return t('dashboard.relative.yesterday');
+      if (diffDays < 7) return t('dashboard.relative.days', { count: diffDays });
+      if (diffDays < 14) return t('dashboard.relative.oneWeek');
+      if (diffDays < 30) return t('dashboard.relative.weeks', { count: Math.floor(diffDays / 7) });
+      return t('dashboard.relative.months', { count: Math.floor(diffDays / 30) });
+    };
+
+    const formatBudget = (job: Job): string => {
+      if (!job.budgetAmount) return t('dashboard.budget.negotiable');
+      const amount = job.budgetAmount.toLocaleString('en-US');
+      return job.budgetType === 'Hourly'
+        ? `${t('dashboard.budget.prefix', { amount })}${t('dashboard.budget.perHour')}`
+        : t('dashboard.budget.prefix', { amount });
+    };
+
   const [statistics, setStatistics] = useState<CandidateStatistics | null>(null);
   const [recentApplications, setRecentApplications] = useState<Application[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<RecommendedJob[]>([]);
@@ -103,15 +107,15 @@ export function CandidateDashboardPage() {
     <div className="min-h-screen">
       {/* Breadcrumb */}
       <div className="mb-8 flex items-center gap-2 text-sm text-gray-600">
-        <span>Dashboard</span>
+        <span>{t('dashboard.breadcrumb.dashboard')}</span>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-gray-900 font-medium">Tổng quan</span>
+        <span className="text-gray-900 font-medium">{t('dashboard.breadcrumb.overview')}</span>
       </div>
 
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Chào mừng trở lại!</h1>
-        <p className="text-gray-600">Đây là những gì đang diễn ra với quá trình tìm việc của bạn hôm nay</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('dashboard.header.title')}</h1>
+        <p className="text-gray-600">{t('dashboard.header.subtitle')}</p>
       </div>
 
       {/* Stats Grid */}
@@ -121,7 +125,7 @@ export function CandidateDashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-[#00b14f]" />
-              Tổng ứng tuyển
+              {t('dashboard.stats.totalApplications.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -133,7 +137,10 @@ export function CandidateDashboardPage() {
               <>
                 <div className="text-3xl font-bold text-gray-900">{statistics?.totalApplications ?? '-'}</div>
                 <p className="text-xs text-gray-600 mt-1">
-                  {statistics?.pendingApplications ?? 0} đang chờ · {statistics?.acceptedApplications ?? 0} đã nhận
+                  {t('dashboard.stats.totalApplications.meta', {
+                    pending: statistics?.pendingApplications ?? 0,
+                    accepted: statistics?.acceptedApplications ?? 0,
+                  })}
                 </p>
               </>
             )}
@@ -145,7 +152,7 @@ export function CandidateDashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
               <Bookmark className="h-4 w-4 text-[#00b14f]" />
-              Việc đã lưu
+              {t('dashboard.stats.bookmarked.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -156,7 +163,7 @@ export function CandidateDashboardPage() {
             ) : (
               <>
                 <div className="text-3xl font-bold text-gray-900">{bookmarkCount}</div>
-                <p className="text-xs text-gray-600 mt-1">Việc làm đang theo dõi</p>
+                <p className="text-xs text-gray-600 mt-1">{t('dashboard.stats.bookmarked.meta')}</p>
               </>
             )}
           </CardContent>
@@ -167,7 +174,7 @@ export function CandidateDashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
               <Star className="h-4 w-4 text-[#00b14f]" />
-              Kỹ năng
+              {t('dashboard.stats.skills.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -178,7 +185,7 @@ export function CandidateDashboardPage() {
             ) : (
               <>
                 <div className="text-3xl font-bold text-gray-900">{statistics?.skillsCount ?? 0}</div>
-                <p className="text-xs text-gray-600 mt-1">Kỹ năng trong hồ sơ</p>
+                <p className="text-xs text-gray-600 mt-1">{t('dashboard.stats.skills.meta')}</p>
               </>
             )}
           </CardContent>
@@ -189,7 +196,7 @@ export function CandidateDashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
               <FileText className="h-4 w-4 text-[#00b14f]" />
-              CV đã tạo
+              {t('dashboard.stats.cvs.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -201,7 +208,9 @@ export function CandidateDashboardPage() {
               <>
                 <div className="text-3xl font-bold text-gray-900">{statistics?.totalCVs ?? '-'}</div>
                 <p className="text-xs text-gray-600 mt-1">
-                  {statistics?.defaultCV?.fileName ? `Mặc định: ${statistics.defaultCV.fileName}` : 'Chưa có CV mặc định'}
+                  {statistics?.defaultCV?.fileName
+                    ? t('dashboard.stats.cvs.metaDefault', { fileName: statistics.defaultCV.fileName })
+                    : t('dashboard.stats.cvs.metaEmpty')}
                 </p>
               </>
             )}
@@ -218,7 +227,7 @@ export function CandidateDashboardPage() {
                 <Clock className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Đang chờ</p>
+                <p className="text-sm text-gray-600">{t('dashboard.status.pending')}</p>
                 <p className="text-2xl font-bold text-gray-900">{loading ? '-' : statistics?.pendingApplications ?? 0}</p>
               </div>
             </div>
@@ -232,7 +241,7 @@ export function CandidateDashboardPage() {
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Đã nhận</p>
+                <p className="text-sm text-gray-600">{t('dashboard.status.accepted')}</p>
                 <p className="text-2xl font-bold text-gray-900">{loading ? '-' : statistics?.acceptedApplications ?? 0}</p>
               </div>
             </div>
@@ -246,7 +255,7 @@ export function CandidateDashboardPage() {
                 <XCircle className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Đã từ chối</p>
+                <p className="text-sm text-gray-600">{t('dashboard.status.rejected')}</p>
                 <p className="text-2xl font-bold text-gray-900">{loading ? '-' : statistics?.rejectedApplications ?? 0}</p>
               </div>
             </div>
@@ -257,8 +266,8 @@ export function CandidateDashboardPage() {
       {/* Profile Completeness */}
       <Card className="mb-8 border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-300" style={{ ...cardAnimation, animationDelay: '0.8s' }}>
         <CardHeader>
-          <CardTitle className="text-lg">Hoàn thiện hồ sơ</CardTitle>
-          <CardDescription>Cập nhật thông tin để tăng cơ hội được nhà tuyển dụng chú ý</CardDescription>
+          <CardTitle className="text-lg">{t('dashboard.profile.title')}</CardTitle>
+          <CardDescription>{t('dashboard.profile.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -269,9 +278,9 @@ export function CandidateDashboardPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
-                  Mức độ hoàn thiện: {statistics?.profileCompleteness ?? 0}%
+                  {t('dashboard.profile.level', { percent: statistics?.profileCompleteness ?? 0 })}
                 </span>
-                <span className="text-sm text-gray-500">{statistics?.skillsCount ?? 0} kỹ năng</span>
+                <span className="text-sm text-gray-500">{t('dashboard.profile.skills', { count: statistics?.skillsCount ?? 0 })}</span>
               </div>
               <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                 <div
@@ -280,7 +289,7 @@ export function CandidateDashboardPage() {
                 />
               </div>
               {(statistics?.profileCompleteness ?? 0) < 100 && (
-                <p className="text-xs text-gray-500">Hoàn thiện thêm thông tin để đạt 100%</p>
+                <p className="text-xs text-gray-500">{t('dashboard.profile.cta')}</p>
               )}
             </div>
           )}
@@ -292,8 +301,8 @@ export function CandidateDashboardPage() {
         {/* Recent Applications */}
         <Card className="lg:col-span-2 border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-300" style={{ ...cardAnimation, animationDelay: '0.9s' }}>
           <CardHeader>
-            <CardTitle>Ứng tuyển gần đây</CardTitle>
-            <CardDescription>Các ứng tuyển việc làm gần đây của bạn</CardDescription>
+            <CardTitle>{t('dashboard.recent.title')}</CardTitle>
+            <CardDescription>{t('dashboard.recent.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -301,7 +310,7 @@ export function CandidateDashboardPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-[#00b14f]" />
               </div>
             ) : recentApplications.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-6">Bạn chưa có ứng tuyển nào.</p>
+              <p className="text-sm text-gray-500 text-center py-6">{t('dashboard.recent.empty')}</p>
             ) : (
               <div className="space-y-4">
                 {recentApplications.map((app) => {
@@ -310,10 +319,10 @@ export function CandidateDashboardPage() {
                     <div key={app.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-300">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 text-sm truncate">
-                          {app.job?.title ?? 'Vị trí không xác định'}
+                          {app.job?.title ?? t('dashboard.recent.unknownPosition')}
                         </p>
                         <p className="text-xs text-gray-600">
-                          {app.job?.company?.name ?? 'Công ty không xác định'} · {formatRelativeDate(app.createdAt)}
+                          {app.job?.company?.name ?? t('dashboard.recent.unknownCompany')} · {formatRelativeDate(app.createdAt)}
                         </p>
                       </div>
                       <span className={`ml-3 shrink-0 text-xs font-semibold px-2 py-1 rounded-full ${statusCfg.className}`}>
@@ -330,24 +339,24 @@ export function CandidateDashboardPage() {
         {/* Quick Actions */}
         <Card className="border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-300" style={{ ...cardAnimation, animationDelay: '1.0s' }}>
           <CardHeader>
-            <CardTitle>Hành động nhanh</CardTitle>
-            <CardDescription>Bắt đầu ngay lập tức</CardDescription>
+            <CardTitle>{t('dashboard.quick.title')}</CardTitle>
+            <CardDescription>{t('dashboard.quick.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button className="w-full justify-between bg-[#00b14f] hover:bg-[#00a045] text-white">
-              <span>Tìm việc làm</span>
+              <span>{t('dashboard.quick.findJobs')}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button variant="outline" className="w-full justify-between border-gray-300 bg-transparent hover:bg-[#00b14f] hover:text-white">
-              <span>Tải lên CV</span>
+              <span>{t('dashboard.quick.uploadCv')}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button variant="outline" className="w-full justify-between border-gray-300 bg-transparent hover:bg-[#00b14f] hover:text-white">
-              <span>Hỏi AI Advisor</span>
+              <span>{t('dashboard.quick.askAi')}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button variant="outline" className="w-full justify-between border-gray-300 bg-transparent hover:bg-[#00b14f] hover:text-white">
-              <span>Xem đề xuất</span>
+              <span>{t('dashboard.quick.seeRecommendations')}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>
@@ -357,17 +366,17 @@ export function CandidateDashboardPage() {
       {/* Recommended Jobs */}
       <Card className="mt-6 border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-300" style={{ ...cardAnimation, animationDelay: '1.1s' }}>
         <CardHeader>
-          <CardTitle>Việc làm được đề xuất cho bạn</CardTitle>
-          <CardDescription>Dựa trên hồ sơ và sở thích của bạn</CardDescription>
+          <CardTitle>{t('dashboard.recommended.title')}</CardTitle>
+          <CardDescription>{t('dashboard.recommended.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center h-24">
               <Loader2 className="h-6 w-6 animate-spin text-[#00b14f]" />
             </div>
-          ) : recommendedJobs.length === 0 ? (
+            ) : recommendedJobs.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-6">
-              Chưa có đề xuất. Hãy cập nhật hồ sơ để nhận gợi ý phù hợp.
+              {t('dashboard.recommended.empty')}
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -380,16 +389,16 @@ export function CandidateDashboardPage() {
                     <p className="font-semibold text-gray-900 text-sm group-hover:text-[#00b14f] transition-colors truncate">
                       {job.title}
                     </p>
-                    <p className="text-xs text-gray-600 truncate">{job.company?.name ?? 'Công ty không xác định'}</p>
+                    <p className="text-xs text-gray-600 truncate">{job.company?.name ?? t('dashboard.recent.unknownCompany')}</p>
                   </div>
                   <div className="space-y-1 text-xs text-gray-600">
                     {(job.location || job.isRemote) && (
-                      <p>📍 {job.isRemote ? 'Remote' : job.location}</p>
+                      <p>📍 {job.isRemote ? t('dashboard.recommended.remote') : job.location}</p>
                     )}
                     <p>💰 {formatBudget(job)}</p>
                   </div>
                   <Button size="sm" variant="outline" className="w-full text-xs border-gray-300 hover:border-[#00b14f] bg-transparent">
-                    Xem chi tiết
+                    {t('dashboard.recommended.viewDetail')}
                   </Button>
                 </div>
               ))}

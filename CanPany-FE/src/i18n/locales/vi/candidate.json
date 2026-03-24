@@ -3,14 +3,443 @@
     "title": "Tổng quan hành trình tìm việc",
     "applications": "Lượt ứng tuyển",
     "savedJobs": "Việc làm đã lưu",
-    "skillGap": "Khoảng trống kỹ năng"
+    "skillGap": "Khoảng trống kỹ năng",
+    "breadcrumb": {
+      "dashboard": "Dashboard",
+      "overview": "Tổng quan"
+    },
+    "header": {
+      "title": "Chào mừng trở lại!",
+      "subtitle": "Đây là những gì đang diễn ra với quá trình tìm việc của bạn hôm nay"
+    },
+    "stats": {
+      "totalApplications": {
+        "title": "Tổng ứng tuyển",
+        "meta": "{{pending}} đang chờ · {{accepted}} đã nhận"
+      },
+      "bookmarked": {
+        "title": "Việc đã lưu",
+        "meta": "Việc làm đang theo dõi"
+      },
+      "skills": {
+        "title": "Kỹ năng",
+        "meta": "Kỹ năng trong hồ sơ"
+      },
+      "cvs": {
+        "title": "CV đã tạo",
+        "metaDefault": "Mặc định: {{fileName}}",
+        "metaEmpty": "Chưa có CV mặc định"
+      }
+    },
+    "status": {
+      "pending": "Đang chờ",
+      "shortlisted": "Được xem xét",
+      "accepted": "Đã nhận",
+      "rejected": "Từ chối",
+      "withdrawn": "Đã rút"
+    },
+    "profile": {
+      "title": "Hoàn thiện hồ sơ",
+      "description": "Cập nhật thông tin để tăng cơ hội được nhà tuyển dụng chú ý",
+      "level": "Mức độ hoàn thiện: {{percent}}%",
+      "skills": "{{count}} kỹ năng",
+      "cta": "Hoàn thiện thêm thông tin để đạt 100%"
+    },
+    "recent": {
+      "title": "Ứng tuyển gần đây",
+      "description": "Các ứng tuyển việc làm gần đây của bạn",
+      "empty": "Bạn chưa có ứng tuyển nào.",
+      "unknownPosition": "Vị trí không xác định",
+      "unknownCompany": "Công ty không xác định"
+    },
+    "quick": {
+      "title": "Hành động nhanh",
+      "description": "Bắt đầu ngay lập tức",
+      "findJobs": "Tìm việc làm",
+      "uploadCv": "Tải lên CV",
+      "askAi": "Hỏi AI Advisor",
+      "seeRecommendations": "Xem đề xuất"
+    },
+    "recommended": {
+      "title": "Việc làm được đề xuất cho bạn",
+      "description": "Dựa trên hồ sơ và sở thích của bạn",
+      "empty": "Chưa có đề xuất. Hãy cập nhật hồ sơ để nhận gợi ý phù hợp.",
+      "remote": "Remote",
+      "viewDetail": "Xem chi tiết"
+    },
+    "relative": {
+      "today": "Hôm nay",
+      "yesterday": "1 ngày trước",
+      "days": "{{count}} ngày trước",
+      "oneWeek": "1 tuần trước",
+      "weeks": "{{count}} tuần trước",
+      "months": "{{count}} tháng trước"
+    },
+    "budget": {
+      "negotiable": "Thương lượng",
+      "prefix": "${{amount}}",
+      "perHour": "/giờ"
+    }
+  },
+  "nav": {
+    "searchPlaceholder": "Tìm kiếm...",
+    "aiAdvisor": "AI Advisor",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng",
+    "dashboard": "Bảng điều khiển",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "notificationsPanel": {
+    "title": "Thông báo",
+    "markAllRead": "Đánh dấu đã đọc",
+    "empty": "Chưa có thông báo mới",
+    "markAsRead": "Đánh dấu đã đọc",
+    "viewAll": "Xem tất cả",
+    "timeAgoJustNow": "Vừa xong",
+    "timeAgoMinutes": "{{count}} phút trước",
+    "timeAgoHours": "{{count}} giờ trước",
+    "timeAgoDays": "{{count}} ngày trước"
   },
   "savedJobs": {
     "title": "Việc làm đã lưu",
+    "count": "Bạn đã lưu {{count}} việc làm",
+    "subtitle": "Theo dõi các việc đã lưu để ứng tuyển sau.",
+    "findMore": "Tìm thêm việc làm",
     "emptyTitle": "Bạn chưa lưu job nào",
     "emptyDescription": "Hãy bấm nút lưu tại các tin tuyển dụng để theo dõi sau.",
+    "emptyDesc": "Hãy bấm nút lưu tại các tin tuyển dụng để theo dõi sau.",
     "removeSuccess": "Đã bỏ lưu job.",
-    "addSuccess": "Đã lưu job."
+    "addSuccess": "Đã lưu job.",
+    "exploreJobs": "Khám phá việc làm",
+    "countLabel": "{{count}} việc đang theo dõi"
+  },
+  "sidebar": {
+    "overview": "Tổng quan",
+    "profile": "Hồ sơ",
+    "cv": "CV",
+    "cvBuilder": "Tạo CV AI",
+    "cvList": "CV của tôi",
+    "cvAi": "CV AI",
+    "jobs": "Việc làm",
+    "jobsSearch": "Tìm kiếm",
+    "jobsSaved": "Đã lưu",
+    "jobsRecommended": "Gợi ý",
+    "applications": "Ứng tuyển",
+    "messages": "Tin nhắn",
+    "jobAlerts": "Cảnh báo việc làm",
+    "backgroundJobs": "Tiến trình AI",
+    "aiCareer": "Lộ trình AI",
+    "aiChat": "Chat với AI",
+    "aiSkills": "Đánh giá kỹ năng AI",
+    "aiGuidance": "Tư vấn nghề nghiệp",
+    "premium": "Nâng cấp tài khoản",
+    "settings": "Cài đặt",
+    "settingsAccount": "Tài khoản",
+    "settingsNotifications": "Thông báo",
+    "settingsPrivacy": "Quyền riêng tư",
+    "notifications": "Thông báo"
+  },
+  "profile": {
+    "hero": {
+      "title": "Hồ sơ cá nhân",
+      "subtitle": "Quản lý thông tin cá nhân của bạn để tăng cơ hội việc làm"
+    },
+    "auth": {
+      "required": "Vui lòng đăng nhập để xem profile",
+      "login": "Đăng nhập"
+    },
+    "errors": {
+      "notFound": "Không tìm thấy profile"
+    },
+    "form": {
+      "titlePlaceholder": "Chuyên ngành",
+      "addressPlaceholder": "Địa chỉ",
+      "phonePlaceholder": "Số điện thoại",
+      "linkedinPlaceholder": "LinkedIn URL",
+      "githubPlaceholder": "GitHub URL"
+    },
+    "labels": {
+      "notUpdated": "Chưa cập nhật",
+      "notLinked": "Chưa liên kết"
+    },
+    "actions": {
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "edit": "Chỉnh sửa",
+      "sync": "Đồng bộ",
+      "syncing": "Đang đồng bộ...",
+      "syncLinkedin": "Đồng bộ LinkedIn",
+      "viewProgress": "Xem tiến trình"
+    },
+    "completion": {
+      "title": "Hoàn thiện hồ sơ",
+      "subtitle": "Hồ sơ hoàn thiện giúp tăng cơ hội được nhà tuyển dụng chú ý"
+    },
+    "contact": {
+      "title": "Thông tin liên hệ"
+    },
+    "social": {
+      "title": "Liên kết mạng xã hội"
+    },
+    "linkedin": {
+      "modal": {
+        "title": "Đồng bộ LinkedIn",
+        "subtitle": "Nhập dữ liệu LinkedIn của bạn để đồng bộ hồ sơ",
+        "placeholder": "Dán dữ liệu LinkedIn tại đây (JSON format hoặc profile URL)"
+      }
+    },
+    "github": {
+      "linked": "Đã liên kết GitHub",
+      "analyzeRepos": "Chọn repos & Trích xuất skills",
+      "analyzing": "Đang phân tích...",
+      "connect": "Kết nối GitHub",
+      "modal": {
+        "title": "Chọn repositories để phân tích",
+        "subtitle": "Gemini AI sẽ phân tích code và tự động cập nhật kỹ năng vào hồ sơ",
+        "loading": "Đang tải repositories...",
+        "repoCount": "{{count}} repositories",
+        "selectAll": "Chọn tất cả",
+        "deselectAll": "Bỏ chọn tất cả",
+        "empty": "Không tìm thấy repositories",
+        "analyze": "Phân tích {{count, number}} repos"
+      }
+    },
+    "about": {
+      "title": "Giới thiệu",
+      "placeholder": "Hãy giới thiệu về bản thân bạn..."
+    },
+    "skills": {
+      "title": "Kỹ năng",
+      "placeholder": "Nhập kỹ năng, cách nhau bằng dấu phẩy",
+      "syncRecommendations": "Sync kỹ năng cho gợi ý việc làm",
+      "jobRunning": "Job đang chạy"
+    },
+    "experience": {
+      "title": "Kinh nghiệm làm việc",
+      "placeholder": "Mô tả kinh nghiệm làm việc của bạn..."
+    },
+    "education": {
+      "title": "Học vấn",
+      "placeholder": "Mô tả học vấn của bạn..."
+    },
+    "toast": {
+      "githubLinked": "Đã liên kết GitHub thành công! (@{{username}})",
+      "githubLinkFailed": "Liên kết GitHub thất bại: {{error}}",
+      "unknownError": "Lỗi không xác định",
+      "linkedinSynced": "Đồng bộ LinkedIn thành công!",
+      "linkedinSyncFailed": "Đồng bộ LinkedIn thất bại",
+      "repoAnalysisStarted": "Đang phân tích repositories và trích xuất skills...",
+      "repoAnalysisFailed": "Không thể bắt đầu phân tích. Vui lòng thử lại.",
+      "recommendationSyncStarted": "Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm.",
+      "recommendationSyncFailed": "Không thể bắt đầu đồng bộ kỹ năng gợi ý việc làm.",
+      "skillsExtracted": "Trích xuất skills hoàn thành! Hồ sơ đã được cập nhật.",
+      "analysisFailed": "Phân tích thất bại. Vui lòng thử lại.",
+      "oauthFailed": "Không thể tạo GitHub OAuth URL. Vui lòng thử lại."
+    }
+  },
+  "cv": {
+    "list": {
+      "header": {
+        "title": "Quản lý CV",
+        "subtitle": "Quản lý tất cả CV của bạn tại một nơi",
+        "upload": "Tải lên CV mới",
+        "uploading": "Đang tải lên..."
+      },
+      "drop": {
+        "title": "Kéo và thả file CV vào đây",
+        "subtitle": "Hoặc",
+        "browse": "chọn file từ máy tính",
+        "hint": "Hỗ trợ PDF, DOC, DOCX (Tối đa 10MB)"
+      },
+      "stats": {
+        "total": "Tổng số CV",
+        "default": "CV mặc định",
+        "latest": "CV mới nhất",
+        "latestEmpty": "—"
+      },
+      "empty": {
+        "title": "Chưa có CV nào",
+        "description": "Tải lên CV đầu tiên của bạn để bắt đầu ứng tuyển các cơ hội việc làm hấp dẫn",
+        "action": "Tải lên CV ngay"
+      },
+      "card": {
+        "defaultBadge": "Mặc định",
+        "aiBadge": "AI CV",
+        "size": "Kích thước:",
+        "format": "Định dạng:",
+        "formatAi": "AI CV",
+        "formatPdf": "PDF",
+        "formatWord": "Word",
+        "uploaded": "Tải lên:",
+        "view": "Chi tiết",
+        "edit": "Chỉnh sửa",
+        "downloadPdf": "Tải PDF",
+        "analyze": "Phân tích",
+        "downloadFile": "Tải về",
+        "setDefault": "Mặc định"
+      },
+      "modal": {
+        "deleteConfirm": "Bạn có chắc chắn muốn xóa CV này?",
+        "uploaded": "Ngày tải lên",
+        "updated": "Cập nhật lần cuối",
+        "analysis": {
+          "title": "Tiến trình phân tích AI (CV: {{name}})",
+          "pending": "Đang chờ...",
+          "completed": "Hoàn tất! Hãy cập nhật lại trang để xem kết quả.",
+          "failed": "Lỗi phân tích: {{error}}",
+          "errorUnknown": "Unknown error"
+        },
+        "extractedSkills": "Kỹ năng được trích xuất",
+        "actions": {
+          "editContent": "Chỉnh sửa nội dung CV",
+          "analyze": "Phân tích CV bằng AI",
+          "viewFile": "Xem file",
+          "downloadFile": "Tải xuống",
+          "editName": "Chỉnh sửa tên",
+          "setDefault": "Đặt làm mặc định",
+          "delete": "Xóa CV"
+        }
+      },
+      "toast": {
+        "uploadSuccess": "Tải lên CV thành công!",
+        "uploadFail": "Tải lên CV thất bại. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật tên CV thành công!",
+        "updateFail": "Cập nhật thất bại. Vui lòng thử lại.",
+        "deleteSuccess": "Xóa CV thành công!",
+        "deleteFail": "Xóa CV thất bại. Vui lòng thử lại.",
+        "setDefaultSuccess": "Đặt CV mặc định thành công!",
+        "setDefaultFail": "Thao tác thất bại. Vui lòng thử lại.",
+        "analyzeQueued": "Đã xếp hàng yêu cầu phân tích CV! Bắt đầu tiến trình...",
+        "analyzeFail": "Thao tác thất bại. Vui lòng thử lại.",
+        "fileTypeError": "Vui lòng chọn file PDF hoặc Word (.doc, .docx)",
+        "fileSizeError": "Kích thước file không được vượt quá 10MB"
+      }
+    },
+    "editor": {
+      "toolbar": {
+        "back": "Danh sách CV",
+        "saved": "Đã lưu",
+        "save": "Lưu",
+        "download": "Tải PDF",
+        "downloading": "Đang tải..."
+      },
+      "toast": {
+        "saveFail": "Lưu thất bại. Vui lòng thử lại.",
+        "downloadSuccess": "Đã tải PDF thành công!",
+        "downloadFail": "Tải PDF thất bại. Vui lòng thử lại."
+      },
+      "error": {
+        "title": "Không thể tải dữ liệu CV.",
+        "back": "Quay lại"
+      },
+      "target": "✨ CV được tối ưu cho: {{job}}",
+      "sections": {
+        "summary": "Tóm tắt chuyên môn",
+        "experience": "Kinh nghiệm làm việc",
+        "education": "Học vấn",
+        "skills": "Kỹ năng",
+        "languages": "Ngôn ngữ",
+        "certifications": "Chứng chỉ"
+      },
+      "placeholders": {
+        "fullName": "Họ và tên",
+        "title": "Chức danh / Vị trí",
+        "email": "email@example.com",
+        "phone": "Số điện thoại",
+        "location": "Địa điểm",
+        "linkedIn": "LinkedIn",
+        "gitHub": "GitHub",
+        "portfolio": "Portfolio",
+        "summary": "Tóm tắt chuyên nghiệp của bạn...",
+        "expRole": "Chức danh",
+        "expCompany": "Công ty",
+        "expPeriod": "Thg 1 2022 – Hiện tại",
+        "expBullet": "Action verb + what you did + measurable result...",
+        "addBullet": "Thêm bullet",
+        "addExperience": "Thêm kinh nghiệm",
+        "eduDegree": "Bằng cấp / Chuyên ngành",
+        "eduInstitution": "Trường đại học",
+        "eduPeriod": "2018 – 2022",
+        "eduNotes": "Ghi chú (tùy chọn)",
+        "addEducation": "Thêm giáo dục",
+        "skills": "Thêm kỹ năng...",
+        "languages": "Thêm ngôn ngữ...",
+        "certifications": "Thêm chứng chỉ..."
+      }
+    },
+    "ai": {
+      "toast": {
+        "completed": "🎉 CV đã được tạo thành công!",
+        "started": "Đã bắt đầu tạo CV bằng AI!",
+        "error": "Không thể bắt đầu quá trình tạo CV. Vui lòng thử lại."
+      },
+      "back": "Quản lý CV",
+      "title": "AI CV Generator",
+      "subtitle": "Tự động tạo CV chuyên nghiệp từ hồ sơ của bạn",
+      "badge": "Powered by Gemini AI",
+      "warning": {
+        "title": "Hồ sơ chưa đầy đủ",
+        "description": "Kết quả CV sẽ tốt hơn nếu bạn cập nhật tiêu đề, kinh nghiệm và kỹ năng trước.",
+        "cta": "Cập nhật hồ sơ →"
+      },
+      "profile": {
+        "title": "Thông tin sẽ được dùng để tạo CV",
+        "subtitle": "AI sẽ sử dụng toàn bộ thông tin trong hồ sơ của bạn.",
+        "editProfile": "Chỉnh sửa hồ sơ"
+      },
+      "sections": {
+        "personal": "Thông tin cá nhân",
+        "experience": "Kinh nghiệm làm việc",
+        "education": "Học vấn",
+        "skills": "Kỹ năng",
+        "languages": "Ngôn ngữ",
+        "certifications": "Chứng chỉ",
+        "links": "Liên kết"
+      },
+      "fields": {
+        "name": "Họ tên",
+        "email": "Email",
+        "phone": "Điện thoại",
+        "address": "Địa chỉ",
+        "title": "Chức danh",
+        "bio": "Giới thiệu",
+        "portfolio": "Portfolio"
+      },
+      "empty": "Chưa có thông tin",
+      "emptySkills": "Chưa có kỹ năng nào",
+      "generate": {
+        "title": "Tạo CV ngay",
+        "subtitle": "Gemini AI sẽ phân tích hồ sơ của bạn và tạo một CV chuyên nghiệp, ATS-friendly chỉ trong vài giây.",
+        "generating": "Đang tạo CV...",
+        "cta": "✨ Tạo CV bằng AI"
+      },
+      "progress": {
+        "pending": "Đang xử lý...",
+        "wait": "AI đang tạo CV cho bạn, vui lòng chờ...",
+        "failed": "Tạo CV thất bại",
+        "unknown": "Đã xảy ra lỗi không xác định.",
+        "success": "CV đã tạo thành công!",
+        "saved": "CV của bạn đã được lưu vào danh sách CV.",
+        "openEditor": "Mở CV Editor",
+        "downloadPdf": "Tải PDF",
+        "viewList": "Xem danh sách CV",
+        "retry": "Tạo CV mới lại"
+      },
+      "howItWorks": {
+        "title": "Quy trình hoạt động",
+        "steps": {
+          "1": { "label": "Đọc hồ sơ", "desc": "AI phân tích toàn bộ thông tin hồ sơ của bạn" },
+          "2": { "label": "Thiết kế CV", "desc": "Gemini tạo nội dung CV chuyên nghiệp & đẹp mắt" },
+          "3": { "label": "Lưu & Tải", "desc": "CV được lưu tự động vào tài khoản của bạn" }
+        }
+      },
+      "tip": {
+        "title": "💡 Mẹo",
+        "description": "Kết quả CV tốt nhất khi hồ sơ của bạn có đầy đủ kinh nghiệm, học vấn và kỹ năng.",
+        "cta": "Cập nhật ngay →"
+      }
+    }
   }
 }
 

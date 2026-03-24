@@ -7,8 +7,10 @@ import { candidateApi, authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
 import type { UserProfile } from '../../types';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 export function CandidateProfilePage() {
+    const { t, i18n } = useTranslation('candidate');
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<Partial<UserProfile>>({});
     const [showRepoModal, setShowRepoModal] = useState(false);
@@ -31,11 +33,11 @@ export function CandidateProfilePage() {
         const githubUsername = searchParams.get('github_username');
         const error = searchParams.get('error');
         if (githubLinked === 'true') {
-            toast.success(`Đã liên kết GitHub thành công! (@${githubUsername})`);
+            toast.success(t('profile.toast.githubLinked', { username: githubUsername }));
             queryClient.invalidateQueries({ queryKey: ['candidate-profile'] });
             setSearchParams({}, { replace: true });
         } else if (githubLinked === 'false') {
-            toast.error(`Liên kết GitHub thất bại: ${error || 'Unknown error'}`);
+            toast.error(t('profile.toast.githubLinkFailed', { error: error || t('profile.toast.unknownError') }));
             setSearchParams({}, { replace: true });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -46,8 +48,8 @@ export function CandidateProfilePage() {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-lg text-gray-600 mb-4">Vui lòng đăng nhập để xem profile</p>
-                    <a href="/auth/login" className="text-blue-600 hover:underline">Đăng nhập</a>
+                    <p className="text-lg text-gray-600 mb-4">{t('profile.auth.required')}</p>
+                    <a href="/auth/login" className="text-blue-600 hover:underline">{t('profile.auth.login')}</a>
                 </div>
             </div>
         );
@@ -70,13 +72,13 @@ export function CandidateProfilePage() {
     const syncLinkedInMutation = useMutation({
         mutationFn: (data: string) => candidateApi.syncLinkedInProfile(data),
         onSuccess: () => {
-            toast.success('LinkedIn profile synced successfully!');
+            toast.success(t('profile.toast.linkedinSynced'));
             queryClient.invalidateQueries({ queryKey: ['candidate-profile', userId] });
             setShowLinkedInSync(false);
             setLinkedInData('');
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to sync LinkedIn profile');
+            toast.error(error.response?.data?.message || t('profile.toast.linkedinSyncFailed'));
         },
     });
 
@@ -93,10 +95,10 @@ export function CandidateProfilePage() {
             setSyncJobId(data.jobId);
             setShowRepoModal(false);
             setSelectedRepos([]);
-            toast.success('Đang phân tích repositories và trích xuất skills...');
+            toast.success(t('profile.toast.repoAnalysisStarted'));
         },
         onError: () => {
-            toast.error('Không thể bắt đầu phân tích. Vui lòng thử lại.');
+            toast.error(t('profile.toast.repoAnalysisFailed'));
         },
     });
 
@@ -104,10 +106,10 @@ export function CandidateProfilePage() {
         mutationFn: () => candidateApi.syncRecommendationSkills(20),
         onSuccess: (data) => {
             setRecommendationSyncJobId(data.jobId);
-            toast.success('Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm.');
+            toast.success(t('profile.toast.recommendationSyncStarted'));
         },
         onError: () => {
-            toast.error('Không thể bắt đầu đồng bộ kỹ năng gợi ý việc làm.');
+            toast.error(t('profile.toast.recommendationSyncFailed'));
         },
     });
 
@@ -124,11 +126,11 @@ export function CandidateProfilePage() {
 
     useEffect(() => {
         if (jobStatus?.status === 'Completed') {
-            toast.success('Trích xuất skills hoàn thành! Hồ sơ đã được cập nhật.');
+            toast.success(t('profile.toast.skillsExtracted'));
             queryClient.invalidateQueries({ queryKey: ['candidate-profile', userId] });
             setSyncJobId(null);
         } else if (jobStatus?.status === 'Failed') {
-            toast.error('Phân tích thất bại. Vui lòng thử lại.');
+            toast.error(t('profile.toast.analysisFailed'));
             setSyncJobId(null);
         }
     }, [jobStatus?.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -139,7 +141,7 @@ export function CandidateProfilePage() {
             const { oauthUrl } = await authApi.getGitHubLinkUrl();
             window.location.href = oauthUrl;
         } catch {
-            toast.error('Không thể tạo GitHub OAuth URL. Vui lòng thử lại.');
+            toast.error(t('profile.toast.oauthFailed'));
             setIsOAuthLoading(false);
         }
     };
@@ -155,7 +157,7 @@ export function CandidateProfilePage() {
     if (!profileData || !profileData.user) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p>Không tìm thấy profile</p>
+                <p>{t('profile.errors.notFound')}</p>
             </div>
         );
     }
@@ -212,10 +214,10 @@ export function CandidateProfilePage() {
                 <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
                     <div className="text-center">
                         <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                            Hồ sơ cá nhân
+                            {t('profile.hero.title')}
                         </h2>
                         <p className="mt-6 max-w-xl mx-auto text-lg text-white/90">
-                            Quản lý thông tin cá nhân của bạn để tăng cơ hội việc làm
+                            {t('profile.hero.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -249,7 +251,7 @@ export function CandidateProfilePage() {
                                                 value={formData.title || ''}
                                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('title', e.target.value)}
                                                 className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                                placeholder="Chuyên ngành"
+                                                placeholder={t('profile.form.titlePlaceholder')}
                                             />
                                         </div>
                                     ) : (
@@ -258,7 +260,7 @@ export function CandidateProfilePage() {
                                                 {user.fullName}
                                             </h1>
                                             <p className="mb-4 text-pretty text-lg text-[#00b14f] md:text-xl">
-                                                {profile?.title || 'Chưa cập nhật'}
+                                                {profile?.title || t('profile.labels.notUpdated')}
                                             </p>
                                         </>
                                     )}
@@ -272,10 +274,10 @@ export function CandidateProfilePage() {
                                                     value={formData.address || ''}
                                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('address', e.target.value)}
                                                     className="h-8 w-48 border border-gray-300 rounded px-2 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                                    placeholder="Địa chỉ"
+                                                    placeholder={t('profile.form.addressPlaceholder')}
                                                 />
                                             ) : (
-                                                <span>{profile?.address || 'Chưa cập nhật'}</span>
+                                                <span>{profile?.address || t('profile.labels.notUpdated')}</span>
                                             )}
                                         </div>
                                     </div>
@@ -287,17 +289,17 @@ export function CandidateProfilePage() {
                                     <>
                                         <Button onClick={handleSave} disabled={updateMutation.isPending} className="bg-[#00b14f] hover:bg-[#00a047] text-white">
                                             <Save className="h-4 w-4 mr-2" />
-                                            Lưu
+                                            {t('profile.actions.save')}
                                         </Button>
                                         <Button variant="outline" onClick={handleCancel} className="border-gray-300">
                                             <X className="h-4 w-4 mr-2" />
-                                            Hủy
+                                            {t('profile.actions.cancel')}
                                         </Button>
                                     </>
                                 ) : (
                                     <Button onClick={handleEdit} className="bg-[#00b14f] hover:bg-[#00a047] text-white">
                                         <Edit className="h-4 w-4 mr-2" />
-                                        Chỉnh sửa
+                                        {t('profile.actions.edit')}
                                     </Button>
                                 )}
                             </div>
@@ -309,7 +311,7 @@ export function CandidateProfilePage() {
                 <Card className="mb-6 bg-white border border-gray-100 rounded-xl shadow-lg">
                     <div className="p-6">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">Hoàn thiện hồ sơ</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">{t('profile.completion.title')}</h3>
                             <span className="text-sm font-medium text-[#00b14f]">{calculateProfileCompletion()}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -319,7 +321,7 @@ export function CandidateProfilePage() {
                             ></div>
                         </div>
                         <p className="text-sm text-gray-600 mt-2">
-                            Hồ sơ hoàn thiện giúp tăng cơ hội được nhà tuyển dụng chú ý
+                            {t('profile.completion.subtitle')}
                         </p>
                     </div>
                 </Card>
@@ -330,7 +332,7 @@ export function CandidateProfilePage() {
                         <div className="p-6">
                             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
                                 <Phone className="h-5 w-5 text-[#00b14f]" />
-                                Thông tin liên hệ
+                                {t('profile.contact.title')}
                             </h3>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
@@ -345,10 +347,10 @@ export function CandidateProfilePage() {
                                             value={formData.phone || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('phone', e.target.value)}
                                             className="flex-1 border border-gray-300 rounded px-3 py-1 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                            placeholder="Số điện thoại"
+                                            placeholder={t('profile.form.phonePlaceholder')}
                                         />
                                     ) : (
-                                        <span className="text-sm text-gray-700">{profile?.phone || 'Chưa cập nhật'}</span>
+                                        <span className="text-sm text-gray-700">{profile?.phone || t('profile.labels.notUpdated')}</span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3">
@@ -362,7 +364,9 @@ export function CandidateProfilePage() {
                                         />
                                     ) : (
                                         <span className="text-sm text-gray-700">
-                                            {profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                                            {profile?.dateOfBirth
+                                                ? new Date(profile.dateOfBirth).toLocaleDateString(i18n.language)
+                                                : t('profile.labels.notUpdated')}
                                         </span>
                                     )}
                                 </div>
@@ -374,7 +378,7 @@ export function CandidateProfilePage() {
                         <div className="p-6">
                             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
                                 <LinkIcon className="h-5 w-5 text-[#00b14f]" />
-                                Liên kết mạng xã hội
+                                {t('profile.social.title')}
                             </h3>
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
@@ -385,7 +389,7 @@ export function CandidateProfilePage() {
                                             value={formData.linkedInUrl || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('linkedInUrl', e.target.value)}
                                             className="flex-1 border border-gray-300 rounded px-3 py-1 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                            placeholder="LinkedIn URL"
+                                            placeholder={t('profile.form.linkedinPlaceholder')}
                                         />
                                     ) : profile?.linkedInUrl ? (
                                         <div className="flex flex-1 items-center justify-between">
@@ -395,7 +399,7 @@ export function CandidateProfilePage() {
                                             </a>
                                         </div>
                                     ) : (
-                                        <span className="text-sm text-gray-400">Chưa cập nhật</span>
+                                        <span className="text-sm text-gray-400">{t('profile.labels.notUpdated')}</span>
                                     )}
                                 </div>
                                 {!isEditing && (
@@ -405,7 +409,7 @@ export function CandidateProfilePage() {
                                         className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                     >
                                         <Linkedin className="h-4 w-4 mr-2" />
-                                        {syncLinkedInMutation.isPending ? 'Đang đồng bộ...' : 'Đồng bộ LinkedIn'}
+                                        {syncLinkedInMutation.isPending ? t('profile.actions.syncing') : t('profile.actions.syncLinkedin')}
                                     </Button>
                                 )}
                                 <div className="pt-3 border-t border-gray-200">
@@ -417,7 +421,7 @@ export function CandidateProfilePage() {
                                                 value={formData.gitHubUrl || ''}
                                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('gitHubUrl', e.target.value)}
                                                 className="flex-1 border border-gray-300 rounded px-3 py-1 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                                placeholder="GitHub URL"
+                                                placeholder={t('profile.form.githubPlaceholder')}
                                             />
                                         ) : profile?.gitHubUrl ? (
                                             <a href={profile.gitHubUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-[#00b14f] hover:underline flex items-center gap-1">
@@ -425,7 +429,7 @@ export function CandidateProfilePage() {
                                                 <ExternalLink className="h-3 w-3" />
                                             </a>
                                         ) : (
-                                            <span className="text-sm text-gray-400">Chưa liên kết</span>
+                                            <span className="text-sm text-gray-400">{t('profile.labels.notLinked')}</span>
                                         )}
                                     </div>
 
@@ -434,7 +438,7 @@ export function CandidateProfilePage() {
                                             <div className="space-y-2">
                                                 <div className="flex items-center gap-2 text-xs text-green-600 font-medium mb-2">
                                                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-                                                    Đã liên kết GitHub
+                                                    {t('profile.github.linked')}
                                                 </div>
                                                 <Button
                                                     onClick={() => setShowRepoModal(true)}
@@ -442,21 +446,21 @@ export function CandidateProfilePage() {
                                                     className="w-full bg-gray-800 hover:bg-gray-900 text-white text-sm"
                                                 >
                                                     <Github className="h-4 w-4 mr-2" />
-                                                    Chọn repos &amp; Trích xuất skills
+                                                    {t('profile.github.analyzeRepos')}
                                                 </Button>
                                                 <Link 
                                                     to="/candidate/background-jobs" 
                                                     className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors mt-2"
                                                 >
                                                     <Activity className="h-4 w-4" />
-                                                    Xem tiến trình
+                                                    {t('profile.actions.viewProgress')}
                                                 </Link>
                                                 {syncJobId && jobStatus && (
                                                     <div className="mt-2 space-y-1">
                                                         <div className="flex items-center justify-between text-xs text-gray-600">
                                                             <span className="flex items-center gap-1">
                                                                 <RefreshCw className="h-3 w-3 animate-spin" />
-                                                                {jobStatus.currentStep || 'Đang phân tích...'}
+                                                                {jobStatus.currentStep || t('profile.github.analyzing')}
                                                             </span>
                                                             <span>{jobStatus.percentComplete}%</span>
                                                         </div>
@@ -477,7 +481,7 @@ export function CandidateProfilePage() {
                                                 className="w-full bg-gray-800 hover:bg-gray-900 text-white text-sm"
                                             >
                                                 <Github className="h-4 w-4 mr-2" />
-                                                Kết nối GitHub
+                                                {t('profile.github.connect')}
                                             </Button>
                                         )
                                     )}
@@ -490,17 +494,17 @@ export function CandidateProfilePage() {
                 {/* About Section */}
                 <Card className="mb-6 bg-white border border-gray-100 rounded-xl shadow-lg hover:shadow-xl transition">
                     <div className="p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Giới thiệu</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.about.title')}</h3>
                         {isEditing ? (
                             <textarea
                                 value={formData.bio || ''}
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('bio', e.target.value)}
                                 className="w-full min-h-24 border border-gray-300 rounded-lg py-3 px-4 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
                                 rows={4}
-                                placeholder="Hãy giới thiệu về bản thân bạn..."
+                                placeholder={t('profile.about.placeholder')}
                             />
                         ) : (
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{profile?.bio || 'Chưa cập nhật'}</p>
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{profile?.bio || t('profile.labels.notUpdated')}</p>
                         )}
                     </div>
                 </Card>
@@ -508,14 +512,14 @@ export function CandidateProfilePage() {
                 {/* Skills Section */}
                 <Card className="mb-6 bg-white border border-gray-100 rounded-xl shadow-lg hover:shadow-xl transition">
                     <div className="p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Kỹ năng</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.skills.title')}</h3>
                         {isEditing ? (
                             <input
                                 type="text"
                                 value={formData.skillIds?.join(', ') || ''}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('skillIds', e.target.value.split(',').map((s: string) => s.trim()))}
                                 className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                placeholder="Nhập kỹ năng, cách nhau bằng dấu phẩy"
+                                placeholder={t('profile.skills.placeholder')}
                             />
                         ) : (
                             <div className="space-y-4">
@@ -527,7 +531,7 @@ export function CandidateProfilePage() {
                                             </span>
                                         ))
                                     ) : (
-                                        <p className="text-gray-500">Chưa cập nhật</p>
+                                        <p className="text-gray-500">{t('profile.labels.notUpdated')}</p>
                                     )}
                                 </div>
 
@@ -539,7 +543,7 @@ export function CandidateProfilePage() {
                                         className="bg-[#00b14f] hover:bg-[#00a047] text-white text-sm"
                                     >
                                         <RefreshCw className="h-4 w-4 mr-2" />
-                                        Sync kỹ năng cho gợi ý việc làm
+                                        {t('profile.skills.syncRecommendations')}
                                     </Button>
 
                                     <Link
@@ -547,13 +551,13 @@ export function CandidateProfilePage() {
                                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                     >
                                         <Activity className="h-4 w-4" />
-                                        Xem tiến trình
+                                        {t('profile.actions.viewProgress')}
                                     </Link>
                                 </div>
 
                                 {recommendationSyncJobId && (
                                     <p className="text-xs text-gray-500">
-                                        Job đang chạy: <span className="font-medium">{recommendationSyncJobId}</span>
+                                        {t('profile.skills.jobRunning')}: <span className="font-medium">{recommendationSyncJobId}</span>
                                     </p>
                                 )}
                             </div>
@@ -566,7 +570,7 @@ export function CandidateProfilePage() {
                     <div className="p-6">
                         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
                             <Briefcase className="h-5 w-5 text-[#00b14f]" />
-                            Kinh nghiệm làm việc
+                            {t('profile.experience.title')}
                         </h3>
                         {isEditing ? (
                             <textarea
@@ -574,10 +578,10 @@ export function CandidateProfilePage() {
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('experience', e.target.value)}
                                 className="w-full min-h-24 border border-gray-300 rounded-lg py-3 px-4 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
                                 rows={4}
-                                placeholder="Mô tả kinh nghiệm làm việc của bạn..."
+                                placeholder={t('profile.experience.placeholder')}
                             />
                         ) : (
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{profile?.experience || 'Chưa cập nhật'}</p>
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{profile?.experience || t('profile.labels.notUpdated')}</p>
                         )}
                     </div>
                 </Card>
@@ -587,7 +591,7 @@ export function CandidateProfilePage() {
                     <div className="p-6">
                         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
                             <GraduationCap className="h-5 w-5 text-[#00b14f]" />
-                            Học vấn
+                            {t('profile.education.title')}
                         </h3>
                         {isEditing ? (
                             <textarea
@@ -595,10 +599,10 @@ export function CandidateProfilePage() {
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('education', e.target.value)}
                                 className="w-full min-h-24 border border-gray-300 rounded-lg py-3 px-4 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
                                 rows={4}
-                                placeholder="Mô tả học vấn của bạn..."
+                                placeholder={t('profile.education.placeholder')}
                             />
                         ) : (
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{profile?.education || 'Chưa cập nhật'}</p>
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{profile?.education || t('profile.labels.notUpdated')}</p>
                         )}
                     </div>
                 </Card>
@@ -612,7 +616,7 @@ export function CandidateProfilePage() {
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                     <Github className="h-5 w-5 text-gray-800" />
-                                    Chọn repositories để phân tích
+                                    {t('profile.github.modal.title')}
                                 </h3>
                                 <button
                                     onClick={() => { setShowRepoModal(false); setSelectedRepos([]); }}
@@ -622,7 +626,7 @@ export function CandidateProfilePage() {
                                 </button>
                             </div>
                             <p className="text-sm text-gray-500 mt-1">
-                                Gemini AI sẽ phân tích code và tự động cập nhật kỹ năng vào hồ sơ
+                                {t('profile.github.modal.subtitle')}
                             </p>
                         </div>
 
@@ -630,12 +634,12 @@ export function CandidateProfilePage() {
                             {isLoadingRepos ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
-                                    <span className="ml-3 text-sm text-gray-600">Đang tải repositories...</span>
+                                    <span className="ml-3 text-sm text-gray-600">{t('profile.github.modal.loading')}</span>
                                 </div>
                             ) : reposData?.repositories.length ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="text-xs text-gray-500">{reposData.totalCount} repositories</span>
+                                        <span className="text-xs text-gray-500">{t('profile.github.modal.repoCount', { count: reposData.totalCount })}</span>
                                         <button
                                             onClick={() => {
                                                 if (selectedRepos.length === reposData.repositories.length) {
@@ -646,7 +650,7 @@ export function CandidateProfilePage() {
                                             }}
                                             className="text-xs text-gray-800 hover:underline font-medium"
                                         >
-                                            {selectedRepos.length === reposData.repositories.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                                            {selectedRepos.length === reposData.repositories.length ? t('profile.github.modal.deselectAll') : t('profile.github.modal.selectAll')}
                                         </button>
                                     </div>
                                     {reposData.repositories.map((repo) => (
@@ -693,7 +697,7 @@ export function CandidateProfilePage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-8 text-gray-500 text-sm">
-                                    Không tìm thấy repositories
+                                    {t('profile.github.modal.empty')}
                                 </div>
                             )}
                         </div>
@@ -705,14 +709,14 @@ export function CandidateProfilePage() {
                                 isLoading={syncSkillsMutation.isPending}
                                 className="flex-1 bg-gray-800 hover:bg-gray-900 text-white"
                             >
-                                Phân tích {selectedRepos.length > 0 ? `(${selectedRepos.length})` : ''} repos
+                                {t('profile.github.modal.analyze', { count: selectedRepos.length })}
                             </Button>
                             <Button
                                 onClick={() => { setShowRepoModal(false); setSelectedRepos([]); }}
                                 variant="outline"
                                 className="flex-1"
                             >
-                                Hủy
+                                {t('profile.actions.cancel')}
                             </Button>
                         </div>
                     </Card>
@@ -727,7 +731,7 @@ export function CandidateProfilePage() {
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                     <Linkedin className="h-5 w-5 text-blue-600" />
-                                    Đồng bộ LinkedIn
+                                    {t('profile.linkedin.modal.title')}
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -740,12 +744,12 @@ export function CandidateProfilePage() {
                                 </button>
                             </div>
                             <p className="text-sm text-gray-600 mb-4">
-                                Nhập dữ liệu LinkedIn của bạn để đồng bộ hồ sơ
+                                {t('profile.linkedin.modal.subtitle')}
                             </p>
                             <textarea
                                 value={linkedInData}
                                 onChange={(e) => setLinkedInData(e.target.value)}
-                                placeholder="Dán dữ liệu LinkedIn tại đây (JSON format hoặc profile URL)"
+                                placeholder={t('profile.linkedin.modal.placeholder')}
                                 className="w-full h-24 border border-gray-300 rounded-lg p-3 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 text-sm"
                             />
                             <div className="flex gap-2 mt-4">
@@ -754,7 +758,7 @@ export function CandidateProfilePage() {
                                     disabled={!linkedInData.trim() || syncLinkedInMutation.isPending}
                                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                                 >
-                                    {syncLinkedInMutation.isPending ? 'Đang đồng bộ...' : 'Đồng bộ'}
+                                    {syncLinkedInMutation.isPending ? t('profile.actions.syncing') : t('profile.actions.sync')}
                                 </Button>
                                 <Button
                                     onClick={() => {
@@ -764,7 +768,7 @@ export function CandidateProfilePage() {
                                     variant="outline"
                                     className="flex-1 border-gray-300"
                                 >
-                                    Hủy
+                                    {t('profile.actions.cancel')}
                                 </Button>
                             </div>
                         </div>
