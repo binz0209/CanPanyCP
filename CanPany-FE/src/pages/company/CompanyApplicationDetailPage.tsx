@@ -21,6 +21,20 @@ import type { Application } from '../../types';
 import { applicationKeys, candidateKeys, companyKeys, conversationKeys } from '../../lib/queryKeys';
 import { formatCurrency, formatDateTime } from '../../utils';
 
+
+function getPersistedPrivateNotes(application: unknown): string[] {
+    const source = application as { privateNotes?: string; PrivateNotes?: string } | null | undefined;
+    const raw = source?.privateNotes ?? source?.PrivateNotes;
+    if (!raw || !raw.trim()) return [];
+
+    // BE appends notes by newline; show newest first for reviewer convenience.
+    return raw
+        .split('\n')
+        .map((note) => note.trim())
+        .filter(Boolean)
+        .reverse();
+}
+
 export function CompanyApplicationDetailPage() {
     const { applicationId } = useParams<{ applicationId: string }>();
     const navigate = useNavigate();
@@ -154,9 +168,10 @@ export function CompanyApplicationDetailPage() {
 
     const noteMutation = useMutation({
         mutationFn: () => applicationsApi.addNote(applicationId!, noteDraft.trim()),
-        onSuccess: () => {
+        onSuccess: async () => {
             setSessionNotes((previous) => [noteDraft.trim(), ...previous]);
             setNoteDraft('');
+            await queryClient.invalidateQueries({ queryKey: applicationKeys.detail(applicationId!), exact: true });
             toast.success('Đã gửi private note');
         },
         onError: (error) => {
@@ -230,6 +245,8 @@ export function CompanyApplicationDetailPage() {
     const candidate = candidateProfileQuery.data;
     const job = jobQuery.data?.job;
     const canReviewStatus = application.status === 'Pending';
+    const persistedNotes = getPersistedPrivateNotes(application);
+    const notesForDisplay = Array.from(new Set([...sessionNotes, ...persistedNotes]));
 
     return (
         <div className="space-y-6">
@@ -368,7 +385,7 @@ export function CompanyApplicationDetailPage() {
                             noteMutation.mutate();
                         }}
                         isSubmitting={noteMutation.isPending}
-                        sessionNotes={sessionNotes}
+                        sessionNotes={notesForDisplay}
                     />
 
                     <CandidateCVsCard
