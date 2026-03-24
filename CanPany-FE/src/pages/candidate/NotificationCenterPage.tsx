@@ -99,9 +99,10 @@ export function NotificationCenterPage() {
     const unreadCount = notifications.filter((n) => !n.isRead).length;
 
     return (
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-5xl space-y-5">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Thông báo</h1>
                     {unreadCount > 0 && (
@@ -127,17 +128,18 @@ export function NotificationCenterPage() {
                     </Button>
                 )}
             </div>
+        </div>
 
             {/* Filters */}
-            <div className="mb-5 flex flex-wrap gap-2">
-                <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
-                    <Filter className="h-3.5 w-3.5 text-gray-400 ml-2" />
+            <div className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Filter className="ml-1 h-4 w-4 text-gray-400" />
                     {TYPE_FILTERS.map((f) => (
                         <button
                             key={f.value}
                             onClick={() => setTypeFilter(f.value)}
                             className={cn(
-                                'rounded-md px-3 py-1 text-xs font-medium transition-colors',
+                                'rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
                                 typeFilter === f.value
                                     ? 'bg-[#00b14f] text-white'
                                     : 'text-gray-600 hover:bg-gray-100'
@@ -147,13 +149,13 @@ export function NotificationCenterPage() {
                         </button>
                     ))}
                 </div>
-                <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+                <div className="flex flex-wrap items-center gap-2">
                     {READ_FILTERS.map((f, i) => (
                         <button
                             key={i}
                             onClick={() => setReadFilter(f.value)}
                             className={cn(
-                                'rounded-md px-3 py-1 text-xs font-medium transition-colors',
+                                'rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
                                 readFilter === f.value
                                     ? 'bg-[#00b14f] text-white'
                                     : 'text-gray-600 hover:bg-gray-100'
@@ -184,7 +186,7 @@ export function NotificationCenterPage() {
                     </p>
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
                     {notifications.map((notification) => (
                         <div
                             key={notification.id}
@@ -211,7 +213,7 @@ export function NotificationCenterPage() {
                                 <div className="flex items-start justify-between gap-2">
                                     <p
                                         className={cn(
-                                            'text-sm',
+                                            'text-sm truncate',
                                             !notification.isRead
                                                 ? 'font-semibold text-gray-900'
                                                 : 'font-medium text-gray-700'

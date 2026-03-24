@@ -16,7 +16,8 @@
     "createJob": "Create job posting",
     "reviewApplications": "Review applications",
     "candidateSearch": "Candidate search",
-    "messages": "Messages"
+    "messages": "Messages",
+    "notifications": "Notifications"
   },
   "dashboard": {
     "title": "Hiring overview",

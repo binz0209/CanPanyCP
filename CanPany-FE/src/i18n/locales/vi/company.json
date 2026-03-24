@@ -16,7 +16,8 @@
     "createJob": "Tạo tin tuyển dụng",
     "reviewApplications": "Xem hồ sơ ứng tuyển",
     "candidateSearch": "Tìm kiếm ứng viên",
-    "messages": "Nhắn tin"
+    "messages": "Nhắn tin",
+    "notifications": "Thông báo"
   },
   "dashboard": {
     "title": "Tổng quan tuyển dụng",
