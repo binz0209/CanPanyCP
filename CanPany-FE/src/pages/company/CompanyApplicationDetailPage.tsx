@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, MessageSquare, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { applicationsApi, candidateApi, jobsApi } from '../../api';
+import { conversationsApi } from '../../api/conversations.api';
 import { Button, Card } from '../../components/ui';
 import { companyPaths } from '../../lib/companyNavigation';
 import {
@@ -17,11 +18,12 @@ import {
     StatusBadge,
 } from '../../components/features/companies';
 import type { Application } from '../../types';
-import { applicationKeys, candidateKeys, companyKeys } from '../../lib/queryKeys';
+import { applicationKeys, candidateKeys, companyKeys, conversationKeys } from '../../lib/queryKeys';
 import { formatCurrency, formatDateTime } from '../../utils';
 
 export function CompanyApplicationDetailPage() {
     const { applicationId } = useParams<{ applicationId: string }>();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [rejectReason, setRejectReason] = useState('');
     const [noteDraft, setNoteDraft] = useState('');
@@ -51,6 +53,34 @@ export function CompanyApplicationDetailPage() {
         queryKey: companyKeys.workspaceJobDetail(applicationQuery.data?.jobId || ''),
         queryFn: () => jobsApi.getById(applicationQuery.data!.jobId),
         enabled: !!applicationQuery.data?.jobId,
+    });
+
+    // ── Start conversation with the candidate ─────────────────────────────────
+    const startConversationMutation = useMutation({
+        mutationFn: async () => {
+            const candidateId = applicationQuery.data?.candidateId;
+            const jobId = applicationQuery.data?.jobId;
+            if (!candidateId) throw new Error('Missing candidateId');
+            return conversationsApi.getOrCreateConversation(candidateId, jobId);
+        },
+        onSuccess: (conversation) => {
+            // Add the new conversation to the cache so it shows up immediately in the messages list
+            queryClient.setQueryData<unknown[]>(conversationKeys.list(), (old) => {
+                if (!old) return [conversation];
+                // Avoid duplicates
+                if (old.some((c: unknown) => (c as { id: string }).id === conversation.id)) {
+                    return old;
+                }
+                return [conversation, ...old];
+            });
+            navigate(companyPaths.messageThread(conversation.id));
+        },
+        onError: (error) => {
+            const message = isAxiosError(error)
+                ? error.response?.data?.message || 'Không thể tạo cuộc trò chuyện'
+                : 'Không thể tạo cuộc trò chuyện';
+            toast.error(message);
+        },
     });
 
     useEffect(() => {
@@ -201,12 +231,6 @@ export function CompanyApplicationDetailPage() {
     const job = jobQuery.data?.job;
     const canReviewStatus = application.status === 'Pending';
 
-    // Build the messaging URL using the application's candidateId as a conversation
-    // routing key.  The full conversationId comes from the server; for now we
-    // navigate to the messages page with an identifier the company can use.
-    // Replace with a real conversationId once the BE exposes a conversations endpoint.
-    const messagingPath = companyPaths.messageThread(application.candidateId);
-
     return (
         <div className="space-y-6">
             <SectionHeader
@@ -214,12 +238,15 @@ export function CompanyApplicationDetailPage() {
                 description="Xem đầy đủ thông tin ứng viên, job liên quan, cover letter và lịch sử xử lý; cập nhật trạng thái hồ sơ và ghi lại private note cho phiên review hiện tại."
                 backLink="/company/applications"
                 actions={
-                    <Link to={messagingPath}>
-                        <Button variant="outline">
-                            <MessageSquare className="h-4 w-4" />
-                            Nhắn tin với ứng viên
-                        </Button>
-                    </Link>
+                    <Button
+                        variant="outline"
+                        onClick={() => startConversationMutation.mutate()}
+                        isLoading={startConversationMutation.isPending}
+                        disabled={startConversationMutation.isPending}
+                    >
+                        <MessageSquare className="h-4 w-4" />
+                        Nhắn tin với ứng viên
+                    </Button>
                 }
             />
 

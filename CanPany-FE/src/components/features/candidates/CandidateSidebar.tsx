@@ -14,6 +14,7 @@ import {
   Bell,
   BellRing,
   Activity,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useNotifications } from '../../../hooks/useNotifications';
@@ -58,6 +59,11 @@ const navItems: NavItem[] = [
     label: 'Đơn ứng tuyển',
     icon: <Send className="h-5 w-5" />,
     path: '/candidate/applications/history',
+  },
+  {
+    label: 'Nhắn tin',
+    icon: <MessageSquare className="h-5 w-5" />,
+    path: '/candidate/messages',
   },
   {
     label: 'Job Alerts',

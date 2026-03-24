@@ -18,6 +18,7 @@ import {
 import { useCandidateProfilesMap } from '../../hooks/company/useCandidateProfilesMap';
 import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { candidateKeys, companyKeys } from '../../lib/queryKeys';
+import { useTranslation } from 'react-i18next';
 
 type SearchMode = 'job' | 'filters' | 'semantic';
 
@@ -61,6 +62,7 @@ export function CompanyCandidateSearchPage() {
     const [unlockingCandidateId, setUnlockingCandidateId] = useState<string | null>(null);
 
     const queryClient = useQueryClient();
+    const { t } = useTranslation('company');
     const { companyId, isLoading: isWorkspaceLoading, isMissingProfile, hasFatalError } = useCompanyWorkspace();
 
     const jobsQuery = useQuery({
@@ -138,7 +140,7 @@ export function CompanyCandidateSearchPage() {
                 const candidateProfile = candidateProfilesMap[result.profile.userId];
                 return {
                     userId: result.profile.userId,
-                    fullName: candidateProfile?.user.fullName || 'Đang tải thông tin ứng viên',
+                    fullName: candidateProfile?.user.fullName || t('candidateSearch.loadingCandidate'),
                     email: candidateProfile?.user.email,
                     avatarUrl: candidateProfile?.user.avatarUrl,
                     profile: candidateProfile?.profile || result.profile,
@@ -154,12 +156,12 @@ export function CompanyCandidateSearchPage() {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: candidateKeys.unlocked(), exact: true });
-            toast.success('Đã mở khóa liên hệ ứng viên');
+            toast.success(t('candidateSearch.toastUnlocked'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể mở khóa liên hệ ứng viên'
-                : 'Không thể mở khóa liên hệ ứng viên';
+                ? error.response?.data?.message || t('candidateSearch.toastUnlockFailed')
+                : t('candidateSearch.toastUnlockFailed');
             toast.error(message);
         },
         onSettled: () => {
@@ -175,7 +177,7 @@ export function CompanyCandidateSearchPage() {
     const handleSearch = () => {
         if (searchMode === 'job') {
             if (!selectedJobId) {
-                toast.error('Vui lòng chọn job để tìm ứng viên');
+                toast.error(t('candidateSearch.toastSelectJob'));
                 return;
             }
 
@@ -183,8 +185,8 @@ export function CompanyCandidateSearchPage() {
                 mode: 'job',
                 selectedJobId,
                 summary: selectedJobTitle
-                    ? `Kết quả matching theo job: ${selectedJobTitle}`
-                    : 'Kết quả matching theo job đang chọn',
+                    ? t('candidateSearch.resultsByJob', { title: selectedJobTitle })
+                    : t('candidateSearch.resultsByCurrentJob'),
             });
             return;
         }
@@ -192,7 +194,7 @@ export function CompanyCandidateSearchPage() {
         if (searchMode === 'filters') {
             setSubmittedSearch({
                 mode: 'filters',
-                summary: 'Kết quả tìm kiếm theo bộ lọc',
+                summary: t('candidateSearch.resultsByFilter'),
                 params: {
                     keyword: keyword.trim() || undefined,
                     skillIds: skillIdsText
@@ -218,13 +220,13 @@ export function CompanyCandidateSearchPage() {
         };
 
         if (!payload.jobDescription) {
-            toast.error('Vui lòng nhập mô tả công việc để semantic search');
+            toast.error(t('candidateSearch.toastEnterDesc'));
             return;
         }
 
         setSubmittedSearch({
             mode: 'semantic',
-            summary: 'Kết quả semantic search theo mô tả công việc',
+            summary: t('candidateSearch.resultsBySemantic'),
             payload,
         });
     };
@@ -247,8 +249,8 @@ export function CompanyCandidateSearchPage() {
     if (isMissingProfile) {
         return (
             <CompanyProfileRequiredState
-                title="Bạn chưa có hồ sơ công ty"
-                description="Hãy hoàn thiện hồ sơ công ty trước khi bắt đầu tìm kiếm ứng viên."
+                title={t('candidateSearch.profileRequired')}
+                description={t('candidateSearch.profileRequiredDesc')}
                 icon={<Users className="h-6 w-6" />}
             />
         );
@@ -257,8 +259,8 @@ export function CompanyCandidateSearchPage() {
     if (hasFatalError || jobsQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải dữ liệu tìm kiếm ứng viên"
-                description="Đã xảy ra lỗi khi tải dữ liệu tìm kiếm. Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu vấn đề tiếp diễn."
+                title={t('candidateSearch.errorTitle')}
+                description={t('candidateSearch.errorDesc')}
                 icon={<Users className="h-6 w-6" />}
             />
         );
@@ -266,17 +268,17 @@ export function CompanyCandidateSearchPage() {
 
     if (searchQuery.error) {
         const message = isAxiosError(searchQuery.error)
-            ? searchQuery.error.response?.data?.message || 'Không thể tìm ứng viên'
-            : 'Không thể tìm ứng viên';
+            ? searchQuery.error.response?.data?.message || t('candidateSearch.searchFailed')
+            : t('candidateSearch.searchFailed');
 
         return (
             <div className="space-y-6">
                 <SectionHeader
-                    title="Tìm kiếm ứng viên"
-                    description="Tìm ứng viên theo job đang tuyển, theo bộ lọc hoặc bằng semantic search dựa trên mô tả công việc. Kết quả hiển thị match score để bạn shortlist nhanh hơn."
+                    title={t('candidateSearch.title')}
+                    description={t('candidateSearch.description')}
                 />
                 <CompanyWorkspaceErrorState
-                    title="Tìm kiếm ứng viên thất bại"
+                    title={t('candidateSearch.errorTitle')}
                     description={message}
                     icon={<Users className="h-6 w-6" />}
                 />
@@ -287,18 +289,18 @@ export function CompanyCandidateSearchPage() {
     return (
         <div className="space-y-6">
             <SectionHeader
-                title="Tìm kiếm ứng viên"
-                description="Khai thác nhiều cách tìm kiếm (theo job, theo bộ lọc, semantic search) để nhanh chóng tìm được hồ sơ phù hợp nhất với nhu cầu tuyển dụng."
+                title={t('candidateSearch.title')}
+                description={t('candidateSearch.description')}
             />
 
             <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
                 <Card className="p-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Bộ lọc tìm kiếm</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('candidateSearch.filterTitle')}</h2>
                     <div className="mt-4 flex flex-wrap gap-2">
                         {([
-                            { key: 'job', label: 'Theo job', icon: <BriefcaseBusiness className="h-4 w-4" /> },
-                            { key: 'filters', label: 'Theo bộ lọc', icon: <Search className="h-4 w-4" /> },
-                            { key: 'semantic', label: 'Semantic', icon: <Sparkles className="h-4 w-4" /> },
+                            { key: 'job', label: t('candidateSearch.modeByJob'), icon: <BriefcaseBusiness className="h-4 w-4" /> },
+                            { key: 'filters', label: t('candidateSearch.modeByFilter'), icon: <Search className="h-4 w-4" /> },
+                            { key: 'semantic', label: t('candidateSearch.modeSemantic'), icon: <Sparkles className="h-4 w-4" /> },
                         ] as const).map((mode) => (
                             <Button
                                 key={mode.key}
@@ -315,13 +317,13 @@ export function CompanyCandidateSearchPage() {
                     <div className="mt-6 space-y-5">
                         {searchMode === 'job' && (
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-gray-700">Chọn job để matching</label>
+                                <label className="mb-2 block text-sm font-medium text-gray-700">{t('candidateSearch.selectJobLabel')}</label>
                                 <select
                                     value={selectedJobId}
                                     onChange={(event) => setSelectedJobId(event.target.value)}
                                     className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                                 >
-                                    <option value="">Chọn tin tuyển dụng</option>
+                                    <option value="">{t('candidateSearch.selectJobPlaceholder')}</option>
                                     {(jobsQuery.data || []).map((job) => (
                                         <option key={job.id} value={job.id}>
                                             {job.title}
@@ -334,14 +336,14 @@ export function CompanyCandidateSearchPage() {
                         {searchMode === 'filters' && (
                             <>
                                 <Input
-                                    label="Từ khóa"
-                                    placeholder="React, .NET, Designer..."
+                                    label={t('candidateSearch.keywordLabel')}
+                                    placeholder={t('candidateSearch.keywordsPlaceholder')}
                                     value={keyword}
                                     onChange={(event) => setKeyword(event.target.value)}
                                 />
                                 <Input
-                                    label="Kỹ năng"
-                                    placeholder="React, TypeScript, Tailwind"
+                                    label={t('candidateSearch.skillsLabel')}
+                                    placeholder={t('candidateSearch.skillsPlaceholder')}
                                     value={skillIdsText}
                                     onChange={(event) => setSkillIdsText(event.target.value)}
                                 />
@@ -350,27 +352,27 @@ export function CompanyCandidateSearchPage() {
 
                         {searchMode === 'semantic' && (
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-gray-700">Mô tả công việc</label>
+                                <label className="mb-2 block text-sm font-medium text-gray-700">{t('candidateSearch.descriptionLabel')}</label>
                                 <textarea
                                     rows={8}
                                     value={jobDescription}
                                     onChange={(event) => setJobDescription(event.target.value)}
-                                    placeholder="Mô tả chân dung ứng viên bạn đang tìm, kỹ năng chính, level, domain..."
+                                    placeholder={t('candidateSearch.descriptionPlaceholder')}
                                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                                 />
                             </div>
                         )}
 
                         <Input
-                            label="Địa điểm"
-                            placeholder="Hồ Chí Minh, Hà Nội..."
+                            label={t('candidateSearch.locationLabel')}
+                            placeholder={t('candidateSearch.locationPlaceholder')}
                             value={location}
                             onChange={(event) => setLocation(event.target.value)}
                         />
 
                         <Input
-                            label="Kinh nghiệm / Cấp độ"
-                            placeholder="Junior, Mid, Senior..."
+                            label={t('candidateSearch.levelLabel')}
+                            placeholder={t('candidateSearch.levelPlaceholder')}
                             value={experience}
                             onChange={(event) => setExperience(event.target.value)}
                         />
@@ -378,14 +380,14 @@ export function CompanyCandidateSearchPage() {
                         {searchMode === 'filters' && (
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Input
-                                    label="Lương thấp nhất (giờ)"
+                                    label={t('candidateSearch.minSalaryLabel')}
                                     type="number"
                                     placeholder="100000"
                                     value={minHourlyRate}
                                     onChange={(event) => setMinHourlyRate(event.target.value)}
                                 />
                                 <Input
-                                    label="Lương cao nhất (giờ)"
+                                    label={t('candidateSearch.maxSalaryLabel')}
                                     type="number"
                                     placeholder="500000"
                                     value={maxHourlyRate}
@@ -396,10 +398,10 @@ export function CompanyCandidateSearchPage() {
 
                         <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-4">
                             <Button onClick={handleSearch} isLoading={searchQuery.isFetching}>
-                                Tìm ứng viên
+                                {t('candidateSearch.btnSearch')}
                             </Button>
                             <Button variant="outline" onClick={handleReset}>
-                                Làm mới
+                                {t('candidateSearch.btnReset')}
                             </Button>
                         </div>
                     </div>
@@ -408,13 +410,13 @@ export function CompanyCandidateSearchPage() {
                 <Card className="p-6">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Kết quả tìm kiếm</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('candidateSearch.resultsTitle')}</h2>
                             <p className="mt-1 text-sm text-gray-500">
-                                {submittedSearch?.summary || selectedJobTitle || 'Chưa thực hiện tìm kiếm'}
+                                {submittedSearch?.summary || t('candidateSearch.notSearched')}
                             </p>
                         </div>
                         <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
-                            {results.length} ứng viên
+                            {t('candidateSearch.resultCount', { count: results.length })}
                         </span>
                     </div>
 
@@ -427,16 +429,16 @@ export function CompanyCandidateSearchPage() {
                     ) : !submittedSearch ? (
                         <div className="mt-6">
                             <EmptyState
-                                title="Chưa có kết quả"
-                                description="Thực hiện một truy vấn tìm kiếm để xem danh sách ứng viên phù hợp."
+                                title={t('candidateSearch.emptyTitle')}
+                                description={t('candidateSearch.emptyDesc')}
                                 icon={<Users className="h-6 w-6" />}
                             />
                         </div>
                     ) : results.length === 0 ? (
                         <div className="mt-6">
                             <EmptyState
-                                title="Không có ứng viên phù hợp"
-                                description="Hãy thử nới lỏng bộ lọc hoặc đổi mô tả tìm kiếm để nhận thêm kết quả."
+                                title={t('candidateSearch.emptyNoMatch')}
+                                description={t('candidateSearch.emptyNoMatchDesc')}
                                 icon={<Users className="h-6 w-6" />}
                             />
                         </div>

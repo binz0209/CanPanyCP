@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, BriefcaseBusiness, Building2, ShieldCheck, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../components/ui';
 import { companiesApi, jobsApi } from '../../api';
 import { formatNumber } from '../../utils';
@@ -16,6 +17,7 @@ import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
 import { companyKeys } from '../../lib/queryKeys';
 
 export function CompanyDashboardPage() {
+    const { t } = useTranslation('company');
     const { company, companyId, isLoading: isWorkspaceLoading, hasFatalError } = useCompanyWorkspace();
 
     const statisticsQuery = useQuery({
@@ -37,8 +39,8 @@ export function CompanyDashboardPage() {
     if (hasFatalError || statisticsQuery.error || jobsQuery.error) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải dashboard công ty"
-                description="Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử tải lại trang hoặc liên hệ quản trị viên nếu vấn đề tiếp diễn."
+                title={t('dashboard.errorTitle')}
+                description={t('dashboard.errorDesc')}
                 icon={<BriefcaseBusiness className="h-6 w-6" />}
             />
         );
@@ -51,21 +53,21 @@ export function CompanyDashboardPage() {
         <div className="space-y-6">
             <SectionHeader
                 tone="hero"
-                eyebrow="Không gian tuyển dụng"
-                title={company?.name || 'Hoàn thiện hồ sơ công ty để bắt đầu'}
-                description="Xem nhanh hồ sơ công ty, hiệu quả tin tuyển dụng và các chỉ số ứng tuyển để điều chỉnh chiến lược tuyển dụng kịp thời."
+                eyebrow={t('dashboard.eyebrow')}
+                title={company?.name || t('dashboard.missingProfileTitle')}
+                description={t('dashboard.description')}
                 actions={
                     <>
                         <Link to="/company/profile">
                             <Button className="bg-white text-[#00b14f] hover:bg-white/90">
                                 <Building2 className="h-4 w-4" />
-                                Hồ sơ công ty
+                                {t('dashboard.btnProfile')}
                             </Button>
                         </Link>
                         <Link to="/company/jobs/new">
                             <Button className="border border-white/30 bg-white/10 text-white hover:bg-white/20">
                                 <BriefcaseBusiness className="h-4 w-4" />
-                                Tạo tin tuyển dụng
+                                {t('dashboard.btnCreateJob')}
                             </Button>
                         </Link>
                     </>
@@ -74,28 +76,20 @@ export function CompanyDashboardPage() {
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Tổng số job</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900">
-                        {formatNumber(statistics?.totalJobs || 0)}
-                    </p>
+                    <p className="text-sm text-gray-500">{t('dashboard.statTotalJobs')}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics?.totalJobs || 0)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Job đang mở</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900">
-                        {formatNumber(statistics?.activeJobs || 0)}
-                    </p>
+                    <p className="text-sm text-gray-500">{t('dashboard.statOpenJobs')}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics?.activeJobs || 0)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Tổng ứng tuyển</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900">
-                        {formatNumber(statistics?.totalApplications || 0)}
-                    </p>
+                    <p className="text-sm text-gray-500">{t('dashboard.statApplications')}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics?.totalApplications || 0)}</p>
                 </Card>
                 <Card className="p-5">
-                    <p className="text-sm text-gray-500">Lượt xem job</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900">
-                        {formatNumber(statistics?.totalViews || 0)}
-                    </p>
+                    <p className="text-sm text-gray-500">{t('dashboard.statJobViews')}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{formatNumber(statistics?.totalViews || 0)}</p>
                 </Card>
             </section>
 
@@ -103,14 +97,11 @@ export function CompanyDashboardPage() {
                 <Card className="p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Tin tuyển dụng gần đây</h2>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Từ đây bạn có thể đi vào UC-31 và UC-32 nhanh nhất.
-                            </p>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentJobs')}</h2>
                         </div>
                         <Link to="/company/jobs">
                             <Button variant="outline">
-                                Xem tất cả
+                                {t('dashboard.viewAll')}
                                 <ArrowRight className="h-4 w-4" />
                             </Button>
                         </Link>
@@ -125,8 +116,8 @@ export function CompanyDashboardPage() {
                     ) : recentJobs.length === 0 ? (
                         <div className="mt-6">
                             <EmptyState
-                                title="Chưa có tin tuyển dụng"
-                                description="Bạn chưa có tin tuyển dụng nào. Hãy tạo job đầu tiên để bắt đầu luồng tuyển dụng."
+                                title={t('dashboard.emptyJobsTitle')}
+                                description={t('dashboard.emptyJobsDesc')}
                                 icon={<BriefcaseBusiness className="h-6 w-6" />}
                             />
                         </div>
@@ -141,13 +132,13 @@ export function CompanyDashboardPage() {
                                         <div>
                                             <p className="font-semibold text-gray-900">{job.title}</p>
                                             <p className="mt-1 text-sm text-gray-500">
-                                                {job.location || 'Chưa cập nhật địa điểm'}
+                                                {job.location || t('dashboard.noLocation')}
                                             </p>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2">
                                             <StatusBadge status={job.status} kind="job" />
                                             <Link to={`/company/jobs/${job.id}/edit`}>
-                                                <Button variant="outline" size="sm">Chỉnh sửa</Button>
+                                                <Button variant="outline" size="sm">{t('dashboard.editButton')}</Button>
                                             </Link>
                                         </div>
                                     </div>
@@ -158,7 +149,7 @@ export function CompanyDashboardPage() {
                 </Card>
 
                 <Card className="p-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Trạng thái công ty</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.companyStatus')}</h2>
                     <div className="mt-6 space-y-4">
                         <div className="rounded-xl bg-gray-50 p-4">
                             <div className="flex items-center gap-3">
@@ -166,7 +157,7 @@ export function CompanyDashboardPage() {
                                     <ShieldCheck className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Xác minh công ty</p>
+                                    <p className="text-sm text-gray-500">{t('dashboard.verificationStatus')}</p>
                                     <div className="mt-1">
                                         <StatusBadge
                                             status={statistics?.verificationStatus || company?.verificationStatus || 'Pending'}
@@ -183,16 +174,16 @@ export function CompanyDashboardPage() {
                                     <Users className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Tỷ lệ xử lý ứng tuyển</p>
+                                    <p className="text-sm text-gray-500">{t('dashboard.applicationRate')}</p>
                                     <p className="mt-1 text-sm font-semibold text-gray-900">
-                                        Pending: {formatNumber(statistics?.pendingApplications || 0)} / Accepted: {formatNumber(statistics?.acceptedApplications || 0)}
+                                        {formatNumber(statistics?.pendingApplications || 0)} / {formatNumber(statistics?.acceptedApplications || 0)}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-600">
-                            Hãy đảm bảo hồ sơ công ty đầy đủ và tin tuyển dụng luôn được cập nhật để tăng tỷ lệ ứng tuyển phù hợp.
+                            {t('dashboard.applicationRateHint')}
                         </div>
                     </div>
                 </Card>

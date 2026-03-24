@@ -234,9 +234,25 @@ public class ApplicationsController : ControllerBase
     {
         try
         {
-            // TODO: Implement private notes feature
-            // This might require a separate Notes entity or field in Application
-            await Task.CompletedTask;
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest(ApiResponse.CreateError("Application id is required", "InvalidApplicationId"));
+
+            if (request == null || string.IsNullOrWhiteSpace(request.Note))
+                return BadRequest(ApiResponse.CreateError("Note is required", "InvalidNote"));
+
+            var application = await _applicationService.GetByIdAsync(id);
+            if (application == null)
+                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+
+            var trimmedNote = request.Note.Trim();
+            application.PrivateNotes = string.IsNullOrWhiteSpace(application.PrivateNotes)
+                ? trimmedNote
+                : $"{application.PrivateNotes}\n{trimmedNote}";
+
+            var updated = await _applicationService.UpdateAsync(id, application);
+            if (!updated)
+                return StatusCode(500, ApiResponse.CreateError("Failed to add note", "AddNoteFailed"));
+
             return Ok(ApiResponse.CreateSuccess("Note added successfully"));
         }
         catch (Exception ex)

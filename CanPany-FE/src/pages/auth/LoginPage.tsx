@@ -3,20 +3,24 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { Mail, Lock, Briefcase, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
 import { authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
 import toast from 'react-hot-toast';
 
-const loginSchema = z.object({
-    email: z.string().email('Email không hợp lệ'),
-    password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
-});
+const createLoginSchema = (t: (key: string) => string) =>
+    z.object({
+        email: z.string().email(t('login.emailInvalid')),
+        password: z.string().min(6, t('login.passwordMin')),
+    });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = z.infer<ReturnType<typeof createLoginSchema>>;
 
 export function LoginPage() {
+    const { t } = useTranslation('auth');
+    const loginSchema = createLoginSchema(t as unknown as (key: string) => string);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
@@ -40,7 +44,7 @@ export function LoginPage() {
 
     // Persist email to localStorage
     useEffect(() => {
-        const subscription = watch((value) => {
+        const subscription = watch((value: Partial<LoginForm>) => {
             if (value.email !== undefined) {
                 localStorage.setItem('loginEmail', value.email);
             }
@@ -63,7 +67,7 @@ export function LoginPage() {
             const response = await authApi.login(data);
             localStorage.removeItem('loginError'); // Clear any previous error
             setAuth(response.user, response.accessToken);
-            toast.success('Đăng nhập thành công!');
+            toast.success(t('login.success'));
 
             const redirectPath = response.user.role === 'Candidate'
                 ? '/candidate/dashboard'
@@ -77,7 +81,7 @@ export function LoginPage() {
             navigate(redirectPath, { replace: true });
         } catch (error: any) {
             setIsLoading(false);
-            localStorage.setItem('loginError', error.response?.data?.message || 'Đăng nhập thất bại');
+            localStorage.setItem('loginError', error.response?.data?.message || t('login.failed'));
             // Toast will be shown on next mount due to page refresh
         }
     };
@@ -99,16 +103,16 @@ export function LoginPage() {
                         </Link>
                     </div>
 
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Chào mừng trở lại!</h1>
-                        <p className="mt-2 text-gray-600">Đăng nhập để tiếp tục tìm kiếm cơ hội việc làm</p>
-                    </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">{t('login.title')}</h1>
+                            <p className="mt-2 text-gray-600">{t('login.description')}</p>
+                        </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
-                        <Input
-                            label="Email"
+                            <Input
+                            label={t('login.emailLabel')}
                             type="email"
-                            placeholder="you@example.com"
+                            placeholder={t('login.emailPlaceholder')}
                             icon={<Mail className="h-5 w-5" />}
                             error={errors.email?.message}
                             {...register('email')}
@@ -116,9 +120,9 @@ export function LoginPage() {
 
                         <div className="relative">
                             <Input
-                                label="Mật khẩu"
+                            label={t('login.passwordLabel')}
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                            placeholder={t('login.passwordPlaceholder')}
                                 icon={<Lock className="h-5 w-5" />}
                                 error={errors.password?.message}
                                 {...register('password')}
@@ -135,18 +139,18 @@ export function LoginPage() {
                         <div className="flex items-center justify-between">
                             <label className="flex items-center gap-2">
                                 <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-[#00b14f] focus:ring-[#00b14f]" />
-                                <span className="text-sm text-gray-600">Ghi nhớ đăng nhập</span>
+                                <span className="text-sm text-gray-600">{t('login.rememberMe')}</span>
                             </label>
                             <Link
                                 to="/auth/forgot-password"
                                 className="text-sm font-medium text-[#00b14f] hover:text-[#008f3c]"
                             >
-                                Quên mật khẩu?
+                                {t('login.forgotPassword')}
                             </Link>
                         </div>
 
                         <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-                            Đăng nhập
+                            {t('login.submit')}
                             <ArrowRight className="h-4 w-4" />
                         </Button>
                     </form>
@@ -157,7 +161,7 @@ export function LoginPage() {
                                 <div className="w-full border-t border-gray-200" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="bg-white px-4 text-gray-500">Hoặc đăng nhập với</span>
+                                <span className="bg-white px-4 text-gray-500">{t('login.orLoginWith')}</span>
                             </div>
                         </div>
 
@@ -174,9 +178,9 @@ export function LoginPage() {
                     </div>
 
                     <p className="mt-8 text-center text-sm text-gray-600">
-                        Chưa có tài khoản?{' '}
+                        {t('login.noAccount')}{' '}
                         <Link to="/auth/register" className="font-semibold text-[#00b14f] hover:text-[#008f3c]">
-                            Đăng ký ngay
+                            {t('login.registerNow')}
                         </Link>
                     </p>
                 </div>
@@ -185,26 +189,26 @@ export function LoginPage() {
             {/* Right Side - Image/Promo */}
             <div className="hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c] lg:flex lg:w-1/2 lg:items-center lg:justify-center lg:p-12">
                 <div className="max-w-lg text-center text-white">
-                    <h2 className="text-3xl font-bold">Tìm việc làm phù hợp với bạn</h2>
+                    <h2 className="text-3xl font-bold">{t('login.promoTitle')}</h2>
                     <p className="mt-4 text-lg text-white/90">
-                        Tiếp cận hàng nghìn cơ hội việc làm từ các công ty hàng đầu Việt Nam
+                        {t('login.promoDescription')}
                     </p>
                     <div className="mt-8 grid grid-cols-2 gap-4 text-left">
                         <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
                             <div className="text-2xl font-bold">50,000+</div>
-                            <div className="text-sm text-white/80">Việc làm</div>
+                            <div className="text-sm text-white/80">{t('login.statJobs')}</div>
                         </div>
                         <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
                             <div className="text-2xl font-bold">10,000+</div>
-                            <div className="text-sm text-white/80">Công ty</div>
+                            <div className="text-sm text-white/80">{t('login.statCompanies')}</div>
                         </div>
                         <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
                             <div className="text-2xl font-bold">100,000+</div>
-                            <div className="text-sm text-white/80">Ứng viên</div>
+                            <div className="text-sm text-white/80">{t('login.statCandidates')}</div>
                         </div>
                         <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
                             <div className="text-2xl font-bold">95%</div>
-                            <div className="text-sm text-white/80">Hài lòng</div>
+                            <div className="text-sm text-white/80">{t('login.statSatisfaction')}</div>
                         </div>
                     </div>
                 </div>

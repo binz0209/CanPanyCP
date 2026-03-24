@@ -7,22 +7,26 @@ using Microsoft.Extensions.Configuration;
 namespace CanPany.Application.Services;
 
 /// <summary>
-/// Message service implementation with AES-256 encryption for message text
+/// Message service implementation with AES-256 encryption for message text.
+/// Automatically updates conversation metadata (lastMessageAt, lastMessagePreview) on send.
 /// </summary>
 public class MessageService : IMessageService
 {
     private readonly IMessageRepository _repo;
+    private readonly IConversationRepository _conversationRepo;
     private readonly IEncryptionService _encryptionService;
     private readonly ILogger<MessageService> _logger;
     private readonly string _encryptionKey;
 
     public MessageService(
         IMessageRepository repo,
+        IConversationRepository conversationRepo,
         IEncryptionService encryptionService,
         IConfiguration configuration,
         ILogger<MessageService> logger)
     {
         _repo = repo;
+        _conversationRepo = conversationRepo;
         _encryptionService = encryptionService;
         _logger = logger;
         _encryptionKey = configuration["Encryption:Key"] ?? throw new InvalidOperationException("Encryption key not configured");
@@ -90,6 +94,25 @@ public class MessageService : IMessageService
             };
 
             var saved = await _repo.AddAsync(message);
+
+            // Update conversation metadata
+            try
+            {
+                var conversation = await _conversationRepo.GetByIdAsync(conversationId);
+                if (conversation != null)
+                {
+                    conversation.LastMessageAt = saved.CreatedAt;
+                    conversation.LastMessagePreview = text.Length > 100 ? text[..100] + "…" : text;
+                    conversation.UpdatedAt = DateTime.UtcNow;
+                    await _conversationRepo.UpdateAsync(conversation);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Non-critical: log but don't fail the message send
+                _logger.LogWarning(ex, "Failed to update conversation metadata for {ConversationId}", conversationId);
+            }
+
             // Return with decrypted text for the caller
             saved.Text = text;
             return saved;
@@ -132,6 +155,22 @@ public class MessageService : IMessageService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error marking conversation as read: {ConversationId}, {UserId}", conversationId, readByUserId);
+            throw;
+        }
+    }
+
+    public async Task<long> GetTotalUnreadCountAsync(string userId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+
+            return await _repo.GetTotalUnreadCountAsync(userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting total unread count for user: {UserId}", userId);
             throw;
         }
     }

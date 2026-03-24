@@ -1,0 +1,74 @@
+{
+  "home": {
+    "heroTitleLine1": "Tìm việc làm",
+    "heroTitleHighlight": "nhanh chóng",
+    "heroSubtitlePrefix": "Tiếp cận",
+    "heroSubtitleSuffix": "tin tuyển dụng việc làm mỗi ngày từ hàng nghìn doanh nghiệp uy tín tại Việt Nam",
+    "searchPlaceholder": "Vị trí tuyển dụng, tên công ty...",
+    "locationPlaceholder": "Địa điểm...",
+    "searchButton": "Tìm kiếm",
+    "allLocations": "Tất cả địa điểm",
+    "popularLabel": "Phổ biến:",
+    "whyChooseTitle": "Tại sao chọn CanPany?",
+    "statsJobs": "Việc làm đang tuyển",
+    "statsCompanies": "Doanh nghiệp tin dùng",
+    "statsCandidates": "Ứng viên đăng ký",
+    "statsSatisfaction": "Hài lòng dịch vụ",
+    "categoriesTitle": "Top ngành nghề nổi bật",
+    "categoriesSubtitle": "Khám phá hàng nghìn cơ hội việc làm hấp dẫn",
+    "categoriesViewAll": "Xem tất cả",
+    "categoriesViewAllMobile": "Xem tất cả ngành nghề",
+    "categories": {
+      "it": "Công nghệ thông tin",
+      "marketing": "Marketing",
+      "finance": "Tài chính - Ngân hàng",
+      "design": "Thiết kế - Đồ họa",
+      "sales": "Kinh doanh - Bán hàng",
+      "hr": "Nhân sự - Hành chính"
+    },
+    "featuresTitle": "Tại sao chọn CanPany?",
+    "featuresSubtitle": "Nền tảng tuyển dụng thông minh với công nghệ AI tiên tiến nhất",
+    "features": {
+      "aiTitle": "AI Matching thông minh",
+      "aiDescription": "Công nghệ AI phân tích CV và đề xuất công việc phù hợp nhất với bạn",
+      "securityTitle": "Bảo mật tuyệt đối",
+      "securityDescription": "Thông tin được mã hóa AES-256, đảm bảo an toàn cho mọi dữ liệu",
+      "cvTitle": "Tối ưu hóa CV",
+      "cvDescription": "Phân tích ATS score và đề xuất cải thiện CV để tăng cơ hội"
+    },
+    "ctaTitle": "Sẵn sàng cho cơ hội mới?",
+    "ctaSubtitle": "Đăng ký ngay để nhận tin việc làm phù hợp và kết nối với nhà tuyển dụng hàng đầu",
+    "ctaFindJob": "Tìm việc ngay",
+    "ctaPostJob": "Đăng tin tuyển dụng",
+    "trustedBy": "Được tin dùng bởi:",
+    "jobsUnit": "việc làm"
+  },
+  "jobs": {
+    "pageTitle": "Tìm việc làm",
+    "filters": {
+      "keyword": "Từ khóa",
+      "location": "Địa điểm",
+      "level": "Cấp bậc",
+      "budgetType": "Hình thức lương",
+      "isRemote": "Chỉ hiển thị job remote",
+      "clearAll": "Xóa tất cả bộ lọc"
+    },
+    "empty": {
+      "title": "Chưa có job phù hợp",
+      "description": "Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
+    }
+  },
+  "jobDetail": {
+    "applyNow": "Ứng tuyển ngay",
+    "saved": "Đã lưu",
+    "save": "Lưu",
+    "salary": "Mức lương",
+    "location": "Địa điểm",
+    "deadline": "Hạn nộp hồ sơ",
+    "description": "Mô tả công việc",
+    "requirements": "Yêu cầu",
+    "benefits": "Quyền lợi",
+    "applySuccess": "Ứng tuyển thành công!"
+  }
+}
+

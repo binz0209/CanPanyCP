@@ -1,49 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Search, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Carousel } from '../../components/ui';
-
-const features = [
-    {
-        icon: Zap,
-        title: 'AI Matching thông minh',
-        description: 'Công nghệ AI phân tích CV và đề xuất công việc phù hợp nhất với bạn',
-    },
-    {
-        icon: Shield,
-        title: 'Bảo mật tuyệt đối',
-        description: 'Thông tin được mã hóa AES-256, đảm bảo an toàn cho mọi dữ liệu',
-    },
-    {
-        icon: TrendingUp,
-        title: 'Tối ưu hóa CV',
-        description: 'Phân tích ATS score và đề xuất cải thiện CV để tăng cơ hội',
-    },
-];
-
-const stats = [
-    { value: '50,000+', label: 'Việc làm đang tuyển' },
-    { value: '10,000+', label: 'Doanh nghiệp tin dùng' },
-    { value: '100,000+', label: 'Ứng viên đăng ký' },
-    { value: '95%', label: 'Hài lòng dịch vụ' },
-];
-
-const categories = [
-    { name: 'Công nghệ thông tin', count: 5420, icon: '💻', color: 'bg-blue-50 text-blue-600' },
-    { name: 'Marketing', count: 2350, icon: '📈', color: 'bg-purple-50 text-purple-600' },
-    { name: 'Tài chính - Ngân hàng', count: 1890, icon: '💰', color: 'bg-amber-50 text-amber-600' },
-    { name: 'Thiết kế - Đồ họa', count: 1560, icon: '🎨', color: 'bg-pink-50 text-pink-600' },
-    { name: 'Kinh doanh - Bán hàng', count: 3200, icon: '💼', color: 'bg-green-50 text-green-600' },
-    { name: 'Nhân sự - Hành chính', count: 980, icon: '👥', color: 'bg-cyan-50 text-cyan-600' },
-];
-
-const topCompanies = [
-    { name: 'FPT Software', logo: '🏢' },
-    { name: 'VNG Corporation', logo: '🎮' },
-    { name: 'Viettel', logo: '📱' },
-    { name: 'Vingroup', logo: '🏗️' },
-    { name: 'VNPAY', logo: '💳' },
-    { name: 'Momo', logo: '💜' },
-];
 
 const jobBanners = [
     {
@@ -73,6 +31,50 @@ const jobBanners = [
 ];
 
 export function HomePage() {
+    const { t } = useTranslation('public');
+
+    const features = [
+        {
+            icon: Zap,
+            title: t('home.features.aiTitle'),
+            description: t('home.features.aiDescription'),
+        },
+        {
+            icon: Shield,
+            title: t('home.features.securityTitle'),
+            description: t('home.features.securityDescription'),
+        },
+        {
+            icon: TrendingUp,
+            title: t('home.features.cvTitle'),
+            description: t('home.features.cvDescription'),
+        },
+    ];
+
+    const stats = [
+        { value: '50,000+', label: t('home.statsJobs') },
+        { value: '10,000+', label: t('home.statsCompanies') },
+        { value: '100,000+', label: t('home.statsCandidates') },
+        { value: '95%', label: t('home.statsSatisfaction') },
+    ];
+
+    const categories = [
+        { name: t('home.categories.it'), count: 5420, icon: '💻', color: 'bg-blue-50 text-blue-600' },
+        { name: t('home.categories.marketing'), count: 2350, icon: '📈', color: 'bg-purple-50 text-purple-600' },
+        { name: t('home.categories.finance'), count: 1890, icon: '💰', color: 'bg-amber-50 text-amber-600' },
+        { name: t('home.categories.design'), count: 1560, icon: '🎨', color: 'bg-pink-50 text-pink-600' },
+        { name: t('home.categories.sales'), count: 3200, icon: '💼', color: 'bg-green-50 text-green-600' },
+        { name: t('home.categories.hr'), count: 980, icon: '👥', color: 'bg-cyan-50 text-cyan-600' },
+    ];
+
+    const topCompanies = [
+        { name: 'FPT Software', logo: '🏢' },
+        { name: 'VNG Corporation', logo: '🎮' },
+        { name: 'Viettel', logo: '📱' },
+        { name: 'Vingroup', logo: '🏗️' },
+        { name: 'VNPAY', logo: '💳' },
+        { name: 'Momo', logo: '💜' },
+    ];
 
     return (
         <div>
@@ -90,12 +92,14 @@ export function HomePage() {
                     <div className="grid items-center gap-12 lg:grid-cols-2">
                         <div>
                             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                                Tìm việc làm
+                                {t('home.heroTitleLine1')}
                                 <br />
-                                <span className="text-yellow-300">nhanh chóng</span>
+                                <span className="text-yellow-300">{t('home.heroTitleHighlight')}</span>
                             </h1>
                             <p className="mt-6 max-w-xl text-lg text-white/90">
-                                Tiếp cận <span className="font-semibold">50,000+</span> tin tuyển dụng việc làm mỗi ngày từ hàng nghìn doanh nghiệp uy tín tại Việt Nam
+                                {t('home.heroSubtitlePrefix')}{' '}
+                                <span className="font-semibold">50,000+</span>{' '}
+                                {t('home.heroSubtitleSuffix')}
                             </p>
 
                             {/* Search Box */}
@@ -105,14 +109,14 @@ export function HomePage() {
                                         <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                         <input
                                             type="text"
-                                            placeholder="Vị trí tuyển dụng, tên công ty..."
+                                            placeholder={t('home.searchPlaceholder')}
                                             className="w-full rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
                                         />
                                     </div>
                                     <div className="relative flex-1">
                                         <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                         <select className="w-full appearance-none rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20">
-                                            <option>Tất cả địa điểm</option>
+                                            <option>{t('home.allLocations')}</option>
                                             <option>Hà Nội</option>
                                             <option>TP. Hồ Chí Minh</option>
                                             <option>Đà Nẵng</option>
@@ -121,7 +125,7 @@ export function HomePage() {
                                     <Link to="/jobs">
                                         <Button size="lg" className="w-full sm:w-auto sm:px-8">
                                             <Search className="h-4 w-4" />
-                                            Tìm kiếm
+                                            {t('home.searchButton')}
                                         </Button>
                                     </Link>
                                 </div>
@@ -129,7 +133,7 @@ export function HomePage() {
 
                             {/* Popular searches */}
                             <div className="mt-6 flex flex-wrap items-center gap-2">
-                                <span className="text-sm text-white/80">Phổ biến:</span>
+                                <span className="text-sm text-white/80">{t('home.popularLabel')}</span>
                                 {['Frontend Developer', 'UI/UX Designer', 'Data Analyst', 'Marketing'].map((term) => (
                                     <Link
                                         key={term}
@@ -180,7 +184,7 @@ export function HomePage() {
             <section className="border-b border-gray-100 bg-gray-50 py-8">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-center gap-3 text-sm text-gray-500">
-                        <span>Được tin dùng bởi:</span>
+                        <span>{t('home.trustedBy')}</span>
                         <div className="flex gap-6">
                             {topCompanies.map((company) => (
                                 <div key={company.name} className="flex items-center gap-2">
@@ -198,12 +202,12 @@ export function HomePage() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Top ngành nghề nổi bật</h2>
-                            <p className="mt-2 text-gray-600">Khám phá hàng nghìn cơ hội việc làm hấp dẫn</p>
+                            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">{t('home.categoriesTitle')}</h2>
+                            <p className="mt-2 text-gray-600">{t('home.categoriesSubtitle')}</p>
                         </div>
                         <Link to="/jobs" className="hidden sm:block">
                             <Button variant="outline">
-                                Xem tất cả
+                                {t('home.categoriesViewAll')}
                                 <ArrowRight className="h-4 w-4" />
                             </Button>
                         </Link>
@@ -221,7 +225,7 @@ export function HomePage() {
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="font-semibold text-gray-900 group-hover:text-[#00b14f]">{cat.name}</h3>
-                                    <p className="text-sm text-gray-500">{cat.count.toLocaleString()} việc làm</p>
+                                    <p className="text-sm text-gray-500">{cat.count.toLocaleString()} {t('home.jobsUnit')}</p>
                                 </div>
                                 <ArrowRight className="h-5 w-5 text-gray-300 transition group-hover:translate-x-1 group-hover:text-[#00b14f]" />
                             </Link>
@@ -231,7 +235,7 @@ export function HomePage() {
                     <div className="mt-6 text-center sm:hidden">
                         <Link to="/jobs">
                             <Button variant="outline">
-                                Xem tất cả ngành nghề
+                                {t('home.categoriesViewAllMobile')}
                                 <ArrowRight className="h-4 w-4" />
                             </Button>
                         </Link>
@@ -243,9 +247,9 @@ export function HomePage() {
             <section className="bg-gray-50 py-16">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Tại sao chọn CanPany?</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">{t('home.featuresTitle')}</h2>
                         <p className="mx-auto mt-3 max-w-2xl text-gray-600">
-                            Nền tảng tuyển dụng thông minh với công nghệ AI tiên tiến nhất
+                            {t('home.featuresSubtitle')}
                         </p>
                     </div>
 
@@ -270,22 +274,22 @@ export function HomePage() {
             <section className="bg-gradient-to-br from-[#00b14f] to-[#008f3c] py-16">
                 <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
                     <h2 className="text-3xl font-bold text-white sm:text-4xl">
-                        Sẵn sàng cho cơ hội mới?
+                        {t('home.ctaTitle')}
                     </h2>
                     <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90">
-                        Đăng ký ngay để nhận tin việc làm phù hợp và kết nối với nhà tuyển dụng hàng đầu
+                        {t('home.ctaSubtitle')}
                     </p>
                     <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                         <Link to="/auth/register">
                             <Button size="lg" className="bg-white text-[#00b14f] hover:bg-gray-100">
                                 <Users className="h-5 w-5" />
-                                Tìm việc ngay
+                                {t('home.ctaFindJob')}
                             </Button>
                         </Link>
                         <Link to="/auth/register">
                             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                                 <Building2 className="h-5 w-5" />
-                                Đăng tin tuyển dụng
+                                {t('home.ctaPostJob')}
                             </Button>
                         </Link>
                     </div>

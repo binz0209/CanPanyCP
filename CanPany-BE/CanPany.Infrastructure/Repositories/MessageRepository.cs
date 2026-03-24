@@ -68,6 +68,12 @@ public class MessageRepository : IMessageRepository
         return await _collection.CountDocumentsAsync(
             m => m.ConversationId == conversationId && m.SenderId != userId && !m.IsRead);
     }
+
+    public async Task<long> GetTotalUnreadCountAsync(string userId)
+    {
+        return await _collection.CountDocumentsAsync(
+            m => m.SenderId != userId && !m.IsRead);
+    }
 }
 
 

@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "CanPany",
+    "loading": "Đang tải trang...",
+    "notFoundTitle": "Trang không tồn tại",
+    "notFoundDescription": "Đường dẫn bạn truy cập không tồn tại hoặc đã bị thay đổi.",
+    "backToHome": "Về trang chủ"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "jobs": "Việc làm",
+    "companies": "Công ty",
+    "cvProfile": "Hồ sơ & CV",
+    "candidateDashboard": "Bảng điều khiển",
+    "candidateSavedJobs": "Việc làm đã lưu",
+    "companyWorkspace": "Dành cho nhà tuyển dụng",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng"
+  },
+  "userMenu": {
+    "profile": "Hồ sơ cá nhân",
+    "candidateArea": "Khu vực ứng viên",
+    "companyArea": "Khu vực nhà tuyển dụng"
+  },
+  "status": {
+    "success": "Thành công",
+    "error": "Lỗi",
+    "warning": "Cảnh báo",
+    "info": "Thông tin"
+  },
+  "buttons": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "loadMore": "Xem thêm",
+    "viewAll": "Xem tất cả",
+    "applyNow": "Ứng tuyển ngay"
+  }
+}

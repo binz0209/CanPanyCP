@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { Mail, Lock, User, Briefcase, Eye, EyeOff, Building2, UserCircle, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
 import { authApi } from '../../api';
@@ -10,31 +11,37 @@ import { useAuthStore } from '../../stores/auth.store';
 import { cn } from '../../utils';
 import toast from 'react-hot-toast';
 
-const registerSchema = z.object({
-    fullName: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),
-    email: z.string().email('Email không hợp lệ'),
-    password: z.string()
-        .min(8, 'Mật khẩu tối thiểu 8 ký tự')
-        .regex(/[A-Z]/, 'Mật khẩu phải chứa ít nhất 1 chữ hoa')
-        .regex(/[a-z]/, 'Mật khẩu phải chứa ít nhất 1 chữ thường')
-        .regex(/[0-9]/, 'Mật khẩu phải chứa ít nhất 1 số'),
-    confirmPassword: z.string(),
-    role: z.enum(['Candidate', 'Company']),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: 'Mật khẩu không khớp',
-    path: ['confirmPassword'],
-});
+const createRegisterSchema = (t: (key: string) => string) =>
+    z
+        .object({
+            fullName: z.string().min(2, t('register.fullNameMin')),
+            email: z.string().email(t('register.emailInvalid')),
+            password: z
+                .string()
+                .min(8, t('register.passwordMin'))
+                .regex(/[A-Z]/, t('register.passwordUppercase'))
+                .regex(/[a-z]/, t('register.passwordLowercase'))
+                .regex(/[0-9]/, t('register.passwordNumber')),
+            confirmPassword: z.string(),
+            role: z.enum(['Candidate', 'Company']),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+            message: t('register.passwordMismatch'),
+            path: ['confirmPassword'],
+        });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+type RegisterForm = z.infer<ReturnType<typeof createRegisterSchema>>;
 
-const benefits = [
-    'Tiếp cận 50,000+ việc làm mới mỗi ngày',
-    'Nhận gợi ý việc làm phù hợp qua AI',
-    'Tạo CV chuyên nghiệp miễn phí',
-    'Theo dõi trạng thái ứng tuyển',
+const benefitsKey = [
+    'register.benefit1',
+    'register.benefit2',
+    'register.benefit3',
+    'register.benefit4',
 ];
 
 export function RegisterPage() {
+    const { t } = useTranslation('auth');
+    const registerSchema = createRegisterSchema(t as unknown as (key: string) => string);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
@@ -66,7 +73,7 @@ export function RegisterPage() {
                 role: data.role,
             });
             setAuth(response.user, response.accessToken);
-            toast.success('Đăng ký thành công!');
+            toast.success(t('register.success'));
 
             const redirectPath = data.role === 'Candidate'
                 ? '/candidate/dashboard'
@@ -74,7 +81,7 @@ export function RegisterPage() {
 
             navigate(redirectPath, { replace: true });
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Đăng ký thất bại');
+            toast.error(error.response?.data?.message || t('register.failed'));
         } finally {
             setIsLoading(false);
         }
@@ -85,29 +92,29 @@ export function RegisterPage() {
             {/* Left Side - Promo */}
             <div className="hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c] lg:flex lg:w-1/2 lg:flex-col lg:justify-center lg:p-12">
                 <div className="max-w-lg text-white">
-                    <h2 className="text-3xl font-bold">Bắt đầu hành trình sự nghiệp của bạn</h2>
+                    <h2 className="text-3xl font-bold">{t('register.promoTitle')}</h2>
                     <p className="mt-4 text-lg text-white/90">
-                        Đăng ký ngay để khám phá hàng nghìn cơ hội việc làm hấp dẫn
+                        {t('register.promoDescription')}
                     </p>
 
                     <div className="mt-8 space-y-4">
-                        {benefits.map((benefit) => (
-                            <div key={benefit} className="flex items-center gap-3">
+                        {benefitsKey.map((key) => (
+                            <div key={key} className="flex items-center gap-3">
                                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
                                     <CheckCircle className="h-4 w-4" />
                                 </div>
-                                <span className="text-white/90">{benefit}</span>
+                                <span className="text-white/90">{t(key as any)}</span>
                             </div>
                         ))}
                     </div>
 
                     <div className="mt-12 rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
-                        <p className="text-lg font-medium">"CanPany đã giúp tôi tìm được công việc mơ ước chỉ trong 2 tuần!"</p>
+                        <p className="text-lg font-medium">{t('register.testimonialQuote')}</p>
                         <div className="mt-4 flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-white/20" />
                             <div>
-                                <p className="font-medium">Nguyễn Văn A</p>
-                                <p className="text-sm text-white/70">Frontend Developer tại FPT</p>
+                                <p className="font-medium">{t('register.testimonialName')}</p>
+                                <p className="text-sm text-white/70">{t('register.testimonialTitle')}</p>
                             </div>
                         </div>
                     </div>
@@ -129,10 +136,10 @@ export function RegisterPage() {
                         </Link>
                     </div>
 
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Tạo tài khoản mới</h1>
-                        <p className="mt-2 text-gray-600">Điền thông tin để bắt đầu</p>
-                    </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">{t('register.title')}</h1>
+                            <p className="mt-2 text-gray-600">{t('register.description')}</p>
+                        </div>
 
                     {/* Role Selection */}
                     <div className="mt-6">
@@ -156,7 +163,7 @@ export function RegisterPage() {
                                 <span className={cn(
                                     'text-sm font-medium',
                                     selectedRole === 'Candidate' ? 'text-[#00b14f]' : 'text-gray-700'
-                                )}>Ứng viên</span>
+                                )}>{t('register.roleCandidate')}</span>
                             </button>
                             <button
                                 type="button"
@@ -177,7 +184,7 @@ export function RegisterPage() {
                                 <span className={cn(
                                     'text-sm font-medium',
                                     selectedRole === 'Company' ? 'text-[#00b14f]' : 'text-gray-700'
-                                )}>Nhà tuyển dụng</span>
+                                )}>{t('register.roleCompany')}</span>
                             </button>
                         </div>
                         <input type="hidden" {...register('role')} />
@@ -185,16 +192,16 @@ export function RegisterPage() {
 
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
                         <Input
-                            label="Họ và tên"
+                            label={t('register.fullNameLabel')}
                             type="text"
-                            placeholder="Nguyễn Văn A"
+                            placeholder={t('register.fullNamePlaceholder')}
                             icon={<User className="h-5 w-5" />}
                             error={errors.fullName?.message}
                             {...register('fullName')}
                         />
 
                         <Input
-                            label="Email"
+                            label={t('register.emailLabel')}
                             type="email"
                             placeholder="you@example.com"
                             icon={<Mail className="h-5 w-5" />}
@@ -204,7 +211,7 @@ export function RegisterPage() {
 
                         <div className="relative">
                             <Input
-                                label="Mật khẩu"
+                                label={t('register.passwordLabel')}
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="••••••••"
                                 icon={<Lock className="h-5 w-5" />}
@@ -221,9 +228,9 @@ export function RegisterPage() {
                         </div>
 
                         <Input
-                            label="Xác nhận mật khẩu"
+                            label={t('register.passwordConfirmLabel')}
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
+                                placeholder="••••••••"
                             icon={<Lock className="h-5 w-5" />}
                             error={errors.confirmPassword?.message}
                             {...register('confirmPassword')}
@@ -231,23 +238,23 @@ export function RegisterPage() {
 
                         <div className="pt-2">
                             <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-                                Đăng ký
+                                {t('register.submit')}
                                 <ArrowRight className="h-4 w-4" />
                             </Button>
                         </div>
                     </form>
 
                     <p className="mt-6 text-center text-sm text-gray-600">
-                        Bằng việc đăng ký, bạn đồng ý với{' '}
-                        <a href="#" className="font-medium text-[#00b14f] hover:underline">Điều khoản</a>
-                        {' '}và{' '}
-                        <a href="#" className="font-medium text-[#00b14f] hover:underline">Chính sách bảo mật</a>
+                        {t('register.termsPrefix')}{' '}
+                        <a href="#" className="font-medium text-[#00b14f] hover:underline">{t('register.termsLink')}</a>
+                        {' '}{t('register.and')}{' '}
+                        <a href="#" className="font-medium text-[#00b14f] hover:underline">{t('register.privacyLink')}</a>
                     </p>
 
                     <p className="mt-6 text-center text-sm text-gray-600">
-                        Đã có tài khoản?{' '}
+                        {t('register.haveAccount')}{' '}
                         <Link to="/auth/login" className="font-semibold text-[#00b14f] hover:text-[#008f3c]">
-                            Đăng nhập
+                            {t('login.title')}
                         </Link>
                     </p>
                 </div>

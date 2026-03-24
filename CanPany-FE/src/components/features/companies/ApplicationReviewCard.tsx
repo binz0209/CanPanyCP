@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { UserRound } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Application, ApplicationStatus } from '../../../types';
 import type { CandidateFullProfile } from '../../../api/candidate.api';
 import { formatDateTime } from '../../../utils';
@@ -26,6 +27,8 @@ export function ApplicationReviewCard({
     isAccepting = false,
     onPrefetch,
 }: ApplicationReviewCardProps) {
+    const { t } = useTranslation('company');
+
     return (
         <div className="rounded-xl border border-gray-100 p-5 transition hover:border-[#00b14f]/30 hover:shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -39,35 +42,31 @@ export function ApplicationReviewCard({
                                 {application.candidateUser?.fullName || application.candidateId}
                             </p>
                             <p className="text-sm text-gray-500">
-                                {application.candidateProfile?.title || 'Đang tải hồ sơ ứng viên...'}
+                                {application.candidateProfile?.title || t('applicationReview.loadingCandidate')}
                             </p>
                         </div>
                         <StatusBadge status={application.status as ApplicationStatus} kind="application" />
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
-                        <span>Ứng tuyển lúc: {formatDateTime(application.createdAt)}</span>
-                        <span>Mức phù hợp: {Math.round(Number(application.matchScore || 0))}%</span>
+                        <span>{t('applicationReview.appliedAt', { datetime: formatDateTime(application.createdAt) })}</span>
+                        <span>{t('applicationReview.matchScore', { score: Math.round(Number(application.matchScore || 0)) })}</span>
                     </div>
 
                     <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">
-                        {application.coverLetter || 'Ứng viên chưa nhập cover letter.'}
+                        {application.coverLetter || t('applicationReview.noCoverLetter')}
                     </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                     {application.status === 'Pending' && onAccept && (
                         <Button size="sm" onClick={onAccept} isLoading={isAccepting}>
-                            Chấp nhận
+                            {t('applicationReview.btnAccept')}
                         </Button>
                     )}
-                    <Link
-                        to={applicationDetailPath}
-                        onMouseEnter={onPrefetch}
-                        onFocus={onPrefetch}
-                    >
+                    <Link to={applicationDetailPath} onMouseEnter={onPrefetch} onFocus={onPrefetch}>
                         <Button size="sm" variant="outline">
-                            Review chi tiết
+                            {t('applicationReview.btnReviewDetail')}
                         </Button>
                     </Link>
                 </div>
