@@ -21,8 +21,10 @@ import toast from 'react-hot-toast';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Input } from '../../components/ui';
 import { cvApi } from '../../api';
 import type { CV } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 export function CVListPage() {
+    const { t, i18n } = useTranslation('candidate');
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,11 +46,11 @@ export function CVListPage() {
         mutationFn: (file: File) => cvApi.uploadCV({ file }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['candidate-cvs'] });
-            toast.success('Tải lên CV thành công!');
+            toast.success(t('cv.list.toast.uploadSuccess'));
             setIsUploading(false);
         },
         onError: () => {
-            toast.error('Tải lên CV thất bại. Vui lòng thử lại.');
+            toast.error(t('cv.list.toast.uploadFail'));
             setIsUploading(false);
         },
     });
@@ -59,14 +61,14 @@ export function CVListPage() {
             cvApi.updateCV(id, { fileName }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['candidate-cvs'] });
-            toast.success('Cập nhật tên CV thành công!');
+            toast.success(t('cv.list.toast.updateSuccess'));
             setIsEditingName(false);
             if (selectedCV) {
                 setSelectedCV({ ...selectedCV, fileName: editName });
             }
         },
         onError: () => {
-            toast.error('Cập nhật thất bại. Vui lòng thử lại.');
+            toast.error(t('cv.list.toast.updateFail'));
         },
     });
 
@@ -75,12 +77,12 @@ export function CVListPage() {
         mutationFn: (id: string) => cvApi.deleteCV(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['candidate-cvs'] });
-            toast.success('Xóa CV thành công!');
+            toast.success(t('cv.list.toast.deleteSuccess'));
             setIsDetailOpen(false);
             setSelectedCV(null);
         },
         onError: () => {
-            toast.error('Xóa CV thất bại. Vui lòng thử lại.');
+            toast.error(t('cv.list.toast.deleteFail'));
         },
     });
 
@@ -89,10 +91,10 @@ export function CVListPage() {
         mutationFn: (id: string) => cvApi.setDefaultCV(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['candidate-cvs'] });
-            toast.success('Đặt CV mặc định thành công!');
+            toast.success(t('cv.list.toast.setDefaultSuccess'));
         },
         onError: () => {
-            toast.error('Thao tác thất bại. Vui lòng thử lại.');
+            toast.error(t('cv.list.toast.setDefaultFail'));
         },
     });
 
@@ -156,14 +158,14 @@ export function CVListPage() {
     const analyzeMutation = useMutation({
         mutationFn: (id: string) => cvApi.analyzeCV(id),
         onSuccess: (data: any) => {
-            toast.success('Đã xếp hàng yêu cầu phân tích CV! Bắt đầu tiến trình...');
+            toast.success(t('cv.list.toast.analyzeQueued'));
             const jobId = data?.jobId || data?.JobId;
             if (jobId) {
                 setActiveJobId(jobId);
             }
         },
         onError: () => {
-            toast.error('Thao tác thất bại. Vui lòng thử lại.');
+            toast.error(t('cv.list.toast.analyzeFail'));
         },
     });
 
@@ -179,13 +181,13 @@ export function CVListPage() {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ];
         if (!allowedTypes.includes(file.type)) {
-            toast.error('Vui lòng chọn file PDF hoặc Word (.doc, .docx)');
+            toast.error(t('cv.list.toast.fileTypeError'));
             return;
         }
 
         // Validate file size (10MB)
         if (file.size > 10 * 1024 * 1024) {
-            toast.error('Kích thước file không được vượt quá 10MB');
+            toast.error(t('cv.list.toast.fileSizeError'));
             return;
         }
 
@@ -238,7 +240,7 @@ export function CVListPage() {
 
     const handleDelete = () => {
         if (!selectedCV) return;
-        if (window.confirm('Bạn có chắc chắn muốn xóa CV này?')) {
+        if (window.confirm(t('cv.list.modal.deleteConfirm'))) {
             deleteMutation.mutate(selectedCV.id);
         }
     };
@@ -256,7 +258,7 @@ export function CVListPage() {
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN', {
+        return new Date(dateString).toLocaleDateString(i18n.language, {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -270,9 +272,9 @@ export function CVListPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Quản lý CV</h1>
+                            <h1 className="text-3xl font-bold text-gray-900">{t('cv.list.header.title')}</h1>
                             <p className="mt-2 text-gray-600">
-                                Quản lý tất cả CV của bạn tại một nơi
+                                {t('cv.list.header.subtitle')}
                             </p>
                         </div>
                         <Button
@@ -281,7 +283,7 @@ export function CVListPage() {
                             className="bg-[#00b14f] hover:bg-[#00a045]"
                         >
                             <Upload className="h-4 w-4 mr-2" />
-                            {isUploading ? 'Đang tải lên...' : 'Tải lên CV mới'}
+                            {isUploading ? t('cv.list.header.uploading') : t('cv.list.header.upload')}
                         </Button>
                     </div>
                 </div>
@@ -304,19 +306,19 @@ export function CVListPage() {
                                 <Upload className="h-8 w-8 text-[#00b14f]" />
                             </div>
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                Kéo và thả file CV vào đây
+                                {t('cv.list.drop.title')}
                             </h3>
                             <p className="text-gray-500 mb-4">
-                                Hoặc{' '}
+                                {t('cv.list.drop.subtitle')}{' '}
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
                                     className="text-[#00b14f] font-medium hover:underline"
                                 >
-                                    chọn file từ máy tính
+                                    {t('cv.list.drop.browse')}
                                 </button>
                             </p>
                             <p className="text-xs text-gray-400">
-                                Hỗ trợ PDF, DOC, DOCX (Tối đa 10MB)
+                                {t('cv.list.drop.hint')}
                             </p>
                         </div>
                     </CardContent>
@@ -340,7 +342,8 @@ export function CVListPage() {
                                     <FileText className="h-6 w-6 text-blue-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Tổng số CV</p>
+                                    <p className="text-sm text-gray-500">{t('cv.list.stats.total')}</p>
+                                    
                                     <p className="text-2xl font-bold text-gray-900">{cvs.length}</p>
                                 </div>
                             </div>
@@ -353,7 +356,8 @@ export function CVListPage() {
                                     <FileCheck className="h-6 w-6 text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">CV mặc định</p>
+                                    <p className="text-sm text-gray-500">{t('cv.list.stats.default')}</p>
+                                    
                                     <p className="text-2xl font-bold text-gray-900">
                                         {cvs.filter((cv) => cv.isDefault).length}
                                     </p>
@@ -368,7 +372,8 @@ export function CVListPage() {
                                     <Calendar className="h-6 w-6 text-purple-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">CV mới nhất</p>
+                                    <p className="text-sm text-gray-500">{t('cv.list.stats.latest')}</p>
+                                    
                                     <p className="text-lg font-bold text-gray-900">
                                         {cvs.length > 0
                                             ? formatDate(
@@ -378,7 +383,7 @@ export function CVListPage() {
                                                         new Date(a.createdAt).getTime()
                                                 )[0].createdAt
                                             )
-                                            : '—'}
+                                            : t('cv.list.stats.latestEmpty')}
                                     </p>
                                 </div>
                             </div>
@@ -398,17 +403,17 @@ export function CVListPage() {
                                 <FileText className="h-10 w-10 text-gray-400" />
                             </div>
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                Chưa có CV nào
+                                {t('cv.list.empty.title')}
                             </h3>
                             <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                                Tải lên CV đầu tiên của bạn để bắt đầu ứng tuyển các cơ hội việc làm hấp dẫn
+                                {t('cv.list.empty.description')}
                             </p>
                             <Button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="bg-[#00b14f] hover:bg-[#00a045]"
                             >
                                 <Upload className="h-4 w-4 mr-2" />
-                                Tải lên CV ngay
+                                {t('cv.list.empty.action')}
                             </Button>
                         </CardContent>
                     </Card>
@@ -439,13 +444,13 @@ export function CVListPage() {
                                             {cv.isDefault && (
                                                 <Badge variant="success">
                                                     <Star className="h-3 w-3 mr-1 fill-current" />
-                                                    Mặc định
+                                                    {t('cv.list.card.defaultBadge')}
                                                 </Badge>
                                             )}
                                             {cv.isAIGenerated && (
                                                 <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-xs">
                                                     <Sparkles className="h-3 w-3 mr-1" />
-                                                    AI CV
+                                                    {t('cv.list.card.aiBadge')}
                                                 </Badge>
                                             )}
                                         </div>
@@ -454,19 +459,23 @@ export function CVListPage() {
                                 <CardContent>
                                     <div className="space-y-2 text-sm text-gray-500">
                                         <div className="flex justify-between">
-                                            <span>Kích thước:</span>
+                                            <span>{t('cv.list.card.size')}</span>
                                             <span className="font-medium text-gray-700">
                                                 {formatFileSize(cv.fileSize)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span>Định dạng:</span>
+                                            <span>{t('cv.list.card.format')}</span>
                                             <span className="font-medium text-gray-700">
-                                                {cv.isAIGenerated ? 'AI CV' : cv.mimeType?.includes('pdf') ? 'PDF' : 'Word'}
+                                                {cv.isAIGenerated
+                                                    ? t('cv.list.card.formatAi')
+                                                    : cv.mimeType?.includes('pdf')
+                                                        ? t('cv.list.card.formatPdf')
+                                                        : t('cv.list.card.formatWord')}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span>Tải lên:</span>
+                                            <span>{t('cv.list.card.uploaded')}</span>
                                             <span className="font-medium text-gray-700">
                                                 {formatDate(cv.createdAt)}
                                             </span>
@@ -485,7 +494,7 @@ export function CVListPage() {
                                                     }}
                                                 >
                                                     <Eye className="h-4 w-4 mr-1" />
-                                                    Chi tiết
+                                                    {t('cv.list.card.view')}
                                                 </Button>
                                                 {cv.isAIGenerated ? (
                                                     <>
@@ -496,7 +505,7 @@ export function CVListPage() {
                                                             onClick={(e) => { e.stopPropagation(); navigate(`/candidate/cv/editor/${cv.id}`); }}
                                                         >
                                                             <Edit2 className="h-4 w-4 mr-1" />
-                                                            Chỉnh sửa
+                                                            {t('cv.list.card.edit')}
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
@@ -508,7 +517,7 @@ export function CVListPage() {
                                                             }}
                                                         >
                                                             <Download className="h-4 w-4 mr-1" />
-                                                            Tải PDF
+                                                            {t('cv.list.card.downloadPdf')}
                                                         </Button>
                                                     </>
                                                 ) : (
@@ -524,7 +533,7 @@ export function CVListPage() {
                                                             disabled={analyzeMutation.isPending}
                                                         >
                                                             <Sparkles className="h-4 w-4 mr-1" />
-                                                            Phân tích
+                                                            {t('cv.list.card.analyze')}
                                                         </Button>
                                                         {cv.fileUrl && (
                                                             <Button
@@ -537,7 +546,7 @@ export function CVListPage() {
                                                                 }}
                                                             >
                                                                 <Download className="h-4 w-4 mr-1" />
-                                                                Tải về
+                                                                {t('cv.list.card.downloadFile')}
                                                             </Button>
                                                         )}
                                                     </>
@@ -555,7 +564,7 @@ export function CVListPage() {
                                                     disabled={setDefaultMutation.isPending}
                                                 >
                                                     <Star className="h-4 w-4 mr-1" />
-                                                    Mặc định
+                                                    {t('cv.list.card.setDefault')}
                                                 </Button>
                                             )}
                                         </div>
@@ -642,28 +651,29 @@ export function CVListPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <p className="text-sm text-gray-500 mb-1">Kích thước file</p>
+                                    
                                     <p className="font-medium text-gray-900">
                                         {formatFileSize(selectedCV.fileSize)}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500 mb-1">Định dạng</p>
+                                    <p className="text-sm text-gray-500 mb-1">{t('cv.list.card.format')}</p>
                                     <p className="font-medium text-gray-900">
                                         {selectedCV.isAIGenerated
-                                            ? 'AI Generated (JSON)'
+                                            ? t('cv.list.card.formatAi')
                                             : selectedCV.mimeType?.includes('pdf')
-                                                ? 'PDF'
-                                                : 'Microsoft Word'}
+                                                ? t('cv.list.card.formatPdf')
+                                                : t('cv.list.card.formatWord')}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500 mb-1">Ngày tải lên</p>
+                                    <p className="text-sm text-gray-500 mb-1">{t('cv.list.modal.uploaded')}</p>
                                     <p className="font-medium text-gray-900">
                                         {formatDate(selectedCV.createdAt)}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500 mb-1">Cập nhật lần cuối</p>
+                                    <p className="text-sm text-gray-500 mb-1">{t('cv.list.modal.updated')}</p>
                                     <p className="font-medium text-gray-900">
                                         {selectedCV.updatedAt
                                             ? formatDate(selectedCV.updatedAt)
@@ -675,29 +685,29 @@ export function CVListPage() {
                             {/* Job Progress Indicator */}
                             {activeJobId && jobStatus && selectedCV.id === analyzeMutation.variables && (
                                 <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-                                    <h3 className="text-sm font-medium text-indigo-900 mb-2 flex flex-row items-center">
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        Tiến trình phân tích AI (Mã CV: {selectedCV.fileName})
-                                    </h3>
+                                            <h3 className="text-sm font-medium text-indigo-900 mb-2 flex flex-row items-center">
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                {t('cv.list.modal.analysis.title', { name: selectedCV.fileName })}
+                                            </h3>
                                     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                                         <div
                                             className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
                                             style={{ width: `${jobStatus.progressPercentage}%` }}
                                         ></div>
                                     </div>
-                                    <div className="flex justify-between text-xs text-indigo-700">
-                                        <span>{jobStatus.currentStepDetails || 'Đang chờ...'}</span>
+                                            <div className="flex justify-between text-xs text-indigo-700">
+                                                <span>{jobStatus.currentStepDetails || t('cv.list.modal.analysis.pending')}</span>
                                         <span>{jobStatus.progressPercentage}%</span>
                                     </div>
                                     {jobStatus.status === 'Completed' && (
                                         <p className="text-xs text-green-600 mt-2 flex items-center">
                                             <CheckCircle2 className="w-4 h-4 mr-1" />
-                                            Hoàn tất! Hãy cập nhật lại trang để xem kết quả.
+                                                    {t('cv.list.modal.analysis.completed')}
                                         </p>
                                     )}
                                     {jobStatus.status === 'Failed' && (
                                         <p className="text-xs text-red-600 mt-2">
-                                            Lỗi phân tích: {jobStatus.errorMessage || 'Unknown error'}
+                                                    {t('cv.list.modal.analysis.failed', { error: jobStatus.errorMessage || t('cv.list.modal.analysis.errorUnknown') })}
                                         </p>
                                     )}
                                 </div>
@@ -706,8 +716,8 @@ export function CVListPage() {
                             {/* Extracted Skills */}
                             {selectedCV.extractedSkills && selectedCV.extractedSkills.length > 0 && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-900 mb-3">
-                                        Kỹ năng được trích xuất
+                                        <h3 className="text-sm font-medium text-gray-900 mb-3">
+                                        {t('cv.list.modal.extractedSkills')}
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedCV.extractedSkills.map((skill, index) => (
@@ -728,14 +738,14 @@ export function CVListPage() {
                                             onClick={() => { closeDetailModal(); navigate(`/candidate/cv/editor/${selectedCV.id}`); }}
                                         >
                                             <Edit2 className="h-4 w-4 mr-2" />
-                                            Chỉnh sửa nội dung CV
+                                            {t('cv.list.modal.actions.editContent')}
                                         </Button>
                                         <Button
                                             variant="outline"
                                             onClick={() => { closeDetailModal(); navigate(`/candidate/cv/editor/${selectedCV.id}?download=1`); }}
                                         >
                                             <Download className="h-4 w-4 mr-2" />
-                                            Tải PDF
+                                            {t('cv.list.card.downloadPdf')}
                                         </Button>
                                     </>
                                 ) : (
@@ -747,7 +757,7 @@ export function CVListPage() {
                                             className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200"
                                         >
                                             <Sparkles className="h-4 w-4 mr-2" />
-                                            Phân tích CV bằng AI
+                                            {t('cv.list.modal.actions.analyze')}
                                         </Button>
                                         {selectedCV.fileUrl && (
                                             <>
@@ -756,7 +766,7 @@ export function CVListPage() {
                                                     onClick={() => window.open(selectedCV.fileUrl, '_blank')}
                                                 >
                                                     <Eye className="h-4 w-4 mr-2" />
-                                                    Xem file
+                                                    {t('cv.list.modal.actions.viewFile')}
                                                 </Button>
                                                 <Button
                                                     variant="outline"
@@ -768,7 +778,7 @@ export function CVListPage() {
                                                     }}
                                                 >
                                                     <Download className="h-4 w-4 mr-2" />
-                                                    Tải xuống
+                                                    {t('cv.list.modal.actions.downloadFile')}
                                                 </Button>
                                             </>
                                         )}
@@ -780,7 +790,7 @@ export function CVListPage() {
                                     disabled={isEditingName}
                                 >
                                     <Edit2 className="h-4 w-4 mr-2" />
-                                    Chỉnh sửa tên
+                                    {t('cv.list.modal.actions.editName')}
                                 </Button>
                                 {!selectedCV.isDefault && (
                                     <Button
@@ -789,7 +799,7 @@ export function CVListPage() {
                                         disabled={setDefaultMutation.isPending}
                                     >
                                         <Star className="h-4 w-4 mr-2" />
-                                        Đặt làm mặc định
+                                        {t('cv.list.modal.actions.setDefault')}
                                     </Button>
                                 )}
                                 <Button
@@ -799,7 +809,7 @@ export function CVListPage() {
                                     className="ml-auto"
                                 >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Xóa CV
+                                    {t('cv.list.modal.actions.delete')}
                                 </Button>
                             </div>
                         </div>

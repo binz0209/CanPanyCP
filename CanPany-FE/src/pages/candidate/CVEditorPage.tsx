@@ -9,6 +9,7 @@ import {
 import toast from 'react-hot-toast';
 import { cvApi, type CVStructuredData, type CVExperienceEntry, type CVEducationEntry } from '../../api/cv.api';
 import { downloadCVAsPdf } from '../../utils/cv-pdf';
+import { useTranslation } from 'react-i18next';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function blankExp(): CVExperienceEntry { return { company: '', role: '', period: '', bullets: [''] }; }
@@ -16,6 +17,7 @@ function blankEdu(): CVEducationEntry { return { institution: '', degree: '', pe
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 export function CVEditorPage() {
+    const { t } = useTranslation('candidate');
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -41,7 +43,7 @@ export function CVEditorPage() {
             setTimeout(() => setSaved(false), 2500);
             queryClient.invalidateQueries({ queryKey: ['candidate-cvs'] });
         },
-        onError: () => toast.error('Lưu thất bại. Vui lòng thử lại.'),
+        onError: () => toast.error(t('cv.editor.toast.saveFail')),
     });
 
     const save = useCallback(() => {
@@ -55,10 +57,10 @@ export function CVEditorPage() {
             // Save first, then download
             if (cv) saveMutation.mutate(cv);
             await downloadCVAsPdf(cv, cv.fullName ? `CV-${cv.fullName}` : undefined);
-            toast.success('Đã tải PDF thành công!');
+            toast.success(t('cv.editor.toast.downloadSuccess'));
         } catch (err) {
             console.error('PDF download failed:', err);
-            toast.error('Tải PDF thất bại. Vui lòng thử lại.');
+            toast.error(t('cv.editor.toast.downloadFail'));
         } finally {
             setIsDownloading(false);
         }
@@ -131,8 +133,8 @@ export function CVEditorPage() {
         return (
             <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-red-500">
                 <AlertCircle className="h-8 w-8" />
-                <p>Không thể tải dữ liệu CV.</p>
-                <button onClick={() => navigate(-1)} className="text-sm text-gray-500 underline">Quay lại</button>
+                <p>{t('cv.editor.error.title')}</p>
+                <button onClick={() => navigate(-1)} className="text-sm text-gray-500 underline">{t('cv.editor.error.back')}</button>
             </div>
         );
     }
@@ -157,12 +159,12 @@ export function CVEditorPage() {
                     className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Danh sách CV
+                    {t('cv.editor.toolbar.back')}
                 </button>
                 <div className="flex items-center gap-3">
                     {saved && (
                         <span className="flex items-center gap-1 text-sm text-emerald-600">
-                            <CheckCircle className="h-4 w-4" /> Đã lưu
+                            <CheckCircle className="h-4 w-4" /> {t('cv.editor.toolbar.saved')}
                         </span>
                     )}
                     <button
@@ -171,7 +173,7 @@ export function CVEditorPage() {
                         className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-60"
                     >
                         {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Lưu
+                        {t('cv.editor.toolbar.save')}
                     </button>
                     <button
                         onClick={handleDownloadPDF}
@@ -179,7 +181,7 @@ export function CVEditorPage() {
                         className="flex items-center gap-2 rounded-xl bg-[#00b14f] text-white px-4 py-2 text-sm font-medium hover:bg-[#009940] transition-colors disabled:opacity-60"
                     >
                         {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                        {isDownloading ? 'Đang tải...' : 'Tải PDF'}
+                        {isDownloading ? t('cv.editor.toolbar.downloading') : t('cv.editor.toolbar.download')}
                     </button>
                 </div>
             </div>
@@ -194,51 +196,51 @@ export function CVEditorPage() {
                             value={cv.fullName}
                             onChange={v => setField('fullName', v)}
                             className="text-3xl font-bold text-gray-900"
-                            placeholder="Họ và tên"
+                                placeholder={t('cv.editor.placeholders.fullName')}
                         />
                         <EditableField
                             value={cv.title}
                             onChange={v => setField('title', v)}
                             className="text-lg text-[#005f73] font-medium"
-                            placeholder="Chức danh / Vị trí"
+                                placeholder={t('cv.editor.placeholders.title')}
                         />
                     </div>
                     <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-600">
-                        <ContactField icon={<Mail className="h-3.5 w-3.5" />} value={cv.email} onChange={v => setField('email', v)} placeholder="email@example.com" />
-                        <ContactField icon={<Phone className="h-3.5 w-3.5" />} value={cv.phone} onChange={v => setField('phone', v)} placeholder="Số điện thoại" />
-                        <ContactField icon={<MapPin className="h-3.5 w-3.5" />} value={cv.location} onChange={v => setField('location', v)} placeholder="Địa điểm" />
-                        {cv.linkedIn && <ContactField icon={<Linkedin className="h-3.5 w-3.5" />} value={cv.linkedIn} onChange={v => setField('linkedIn', v)} placeholder="LinkedIn" />}
-                        {cv.gitHub && <ContactField icon={<Github className="h-3.5 w-3.5" />} value={cv.gitHub} onChange={v => setField('gitHub', v)} placeholder="GitHub" />}
-                        {cv.portfolio && <ContactField icon={<Globe className="h-3.5 w-3.5" />} value={cv.portfolio} onChange={v => setField('portfolio', v)} placeholder="Portfolio" />}
+                            <ContactField icon={<Mail className="h-3.5 w-3.5" />} value={cv.email} onChange={v => setField('email', v)} placeholder={t('cv.editor.placeholders.email')} />
+                            <ContactField icon={<Phone className="h-3.5 w-3.5" />} value={cv.phone} onChange={v => setField('phone', v)} placeholder={t('cv.editor.placeholders.phone')} />
+                            <ContactField icon={<MapPin className="h-3.5 w-3.5" />} value={cv.location} onChange={v => setField('location', v)} placeholder={t('cv.editor.placeholders.location')} />
+                            {cv.linkedIn && <ContactField icon={<Linkedin className="h-3.5 w-3.5" />} value={cv.linkedIn} onChange={v => setField('linkedIn', v)} placeholder={t('cv.editor.placeholders.linkedIn')} />}
+                            {cv.gitHub && <ContactField icon={<Github className="h-3.5 w-3.5" />} value={cv.gitHub} onChange={v => setField('gitHub', v)} placeholder={t('cv.editor.placeholders.gitHub')} />}
+                            {cv.portfolio && <ContactField icon={<Globe className="h-3.5 w-3.5" />} value={cv.portfolio} onChange={v => setField('portfolio', v)} placeholder={t('cv.editor.placeholders.portfolio')} />}
                     </div>
                     {cv.targetJobTitle && (
-                        <p className="no-print mt-2 text-xs text-[#00b14f] font-medium">✨ CV được tối ưu cho: {cv.targetJobTitle}</p>
+                        <p className="no-print mt-2 text-xs text-[#00b14f] font-medium">{t('cv.editor.target', { job: cv.targetJobTitle })}</p>
                     )}
                 </div>
 
                 {/* Professional Summary */}
-                <SectionHeader icon={<User className="h-4 w-4" />} title="Professional Summary" />
+                    <SectionHeader icon={<User className="h-4 w-4" />} title={t('cv.editor.sections.summary')} />
                 <EditableField
                     value={cv.summary}
                     onChange={v => setField('summary', v)}
                     multiline
                     className="text-sm text-gray-700 leading-relaxed mb-6"
-                    placeholder="Tóm tắt chuyên nghiệp của bạn..."
+                        placeholder={t('cv.editor.placeholders.summary')}
                 />
 
                 {/* Work Experience */}
-                <SectionHeader icon={<Briefcase className="h-4 w-4" />} title="Work Experience" />
+                    <SectionHeader icon={<Briefcase className="h-4 w-4" />} title={t('cv.editor.sections.experience')} />
                 <div className="space-y-5 mb-6">
                     {cv.experience.map((exp, ei) => (
                         <div key={ei} className="relative group">
                             <div className="flex justify-between items-start gap-2">
                                 <div className="flex-1">
                                     <div className="flex gap-2 flex-wrap">
-                                        <EditableField value={exp.role} onChange={v => setExp(ei, 'role', v)} className="font-semibold text-gray-900 text-sm" placeholder="Chức danh" />
+                                                <EditableField value={exp.role} onChange={v => setExp(ei, 'role', v)} className="font-semibold text-gray-900 text-sm" placeholder={t('cv.editor.placeholders.expRole')} />
                                         <span className="text-gray-400 text-sm">·</span>
-                                        <EditableField value={exp.company} onChange={v => setExp(ei, 'company', v)} className="font-medium text-[#005f73] text-sm" placeholder="Công ty" />
+                                                <EditableField value={exp.company} onChange={v => setExp(ei, 'company', v)} className="font-medium text-[#005f73] text-sm" placeholder={t('cv.editor.placeholders.expCompany')} />
                                     </div>
-                                    <EditableField value={exp.period} onChange={v => setExp(ei, 'period', v)} className="text-xs text-gray-400 mt-0.5" placeholder="Thg 1 2022 – Hiện tại" />
+                                            <EditableField value={exp.period} onChange={v => setExp(ei, 'period', v)} className="text-xs text-gray-400 mt-0.5" placeholder={t('cv.editor.placeholders.expPeriod')} />
                                 </div>
                                 <button
                                     onClick={() => setCv(p => p ? { ...p, experience: p.experience.filter((_, j) => j !== ei) } : p)}
@@ -254,7 +256,7 @@ export function CVEditorPage() {
                                             value={b}
                                             onChange={v => setExpBullet(ei, bi, v)}
                                             className="flex-1 text-sm text-gray-600"
-                                            placeholder="Action verb + what you did + measurable result..."
+                                                    placeholder={t('cv.editor.placeholders.expBullet')}
                                         />
                                         <button
                                             onClick={() => removeExpBullet(ei, bi)}
@@ -269,7 +271,7 @@ export function CVEditorPage() {
                                 onClick={() => addExpBullet(ei)}
                                 className="no-print mt-1 ml-4 flex items-center gap-1 text-xs text-gray-400 hover:text-[#00b14f]"
                             >
-                                <Plus className="h-3 w-3" /> Thêm bullet
+                                <Plus className="h-3 w-3" /> {t('cv.editor.placeholders.addBullet')}
                             </button>
                         </div>
                     ))}
@@ -277,21 +279,21 @@ export function CVEditorPage() {
                         onClick={() => setCv(p => p ? { ...p, experience: [...p.experience, blankExp()] } : p)}
                         className="no-print flex items-center gap-1.5 text-sm text-[#00b14f] hover:text-[#009940] transition-colors"
                     >
-                        <Plus className="h-4 w-4" /> Thêm kinh nghiệm
+                        <Plus className="h-4 w-4" /> {t('cv.editor.placeholders.addExperience')}
                     </button>
                 </div>
 
                 {/* Education */}
-                <SectionHeader icon={<GraduationCap className="h-4 w-4" />} title="Education" />
+                <SectionHeader icon={<GraduationCap className="h-4 w-4" />} title={t('cv.editor.sections.education')} />
                 <div className="space-y-3 mb-6">
                     {cv.education.map((edu, ei) => (
                         <div key={ei} className="flex justify-between group">
                             <div className="flex-1">
-                                <EditableField value={edu.degree} onChange={v => setEdu(ei, 'degree', v)} className="font-semibold text-sm text-gray-900" placeholder="Bằng cấp / Chuyên ngành" />
-                                <EditableField value={edu.institution} onChange={v => setEdu(ei, 'institution', v)} className="text-sm text-[#005f73]" placeholder="Trường đại học" />
-                                <EditableField value={edu.period} onChange={v => setEdu(ei, 'period', v)} className="text-xs text-gray-400" placeholder="2018 – 2022" />
+                                <EditableField value={edu.degree} onChange={v => setEdu(ei, 'degree', v)} className="font-semibold text-sm text-gray-900" placeholder={t('cv.editor.placeholders.eduDegree')} />
+                                <EditableField value={edu.institution} onChange={v => setEdu(ei, 'institution', v)} className="text-sm text-[#005f73]" placeholder={t('cv.editor.placeholders.eduInstitution')} />
+                                <EditableField value={edu.period} onChange={v => setEdu(ei, 'period', v)} className="text-xs text-gray-400" placeholder={t('cv.editor.placeholders.eduPeriod')} />
                                 {edu.notes !== undefined && (
-                                    <EditableField value={edu.notes ?? ''} onChange={v => setEdu(ei, 'notes', v)} className="text-xs text-gray-500 italic" placeholder="Ghi chú (tùy chọn)" />
+                                    <EditableField value={edu.notes ?? ''} onChange={v => setEdu(ei, 'notes', v)} className="text-xs text-gray-500 italic" placeholder={t('cv.editor.placeholders.eduNotes')} />
                                 )}
                             </div>
                             <button
@@ -306,29 +308,29 @@ export function CVEditorPage() {
                         onClick={() => setCv(p => p ? { ...p, education: [...p.education, blankEdu()] } : p)}
                         className="no-print flex items-center gap-1.5 text-sm text-[#00b14f] hover:text-[#009940]"
                     >
-                        <Plus className="h-4 w-4" /> Thêm giáo dục
+                        <Plus className="h-4 w-4" /> {t('cv.editor.placeholders.addEducation')}
                     </button>
                 </div>
 
                 {/* Technical Skills */}
-                <SectionHeader icon={<Wrench className="h-4 w-4" />} title="Technical Skills" />
+                <SectionHeader icon={<Wrench className="h-4 w-4" />} title={t('cv.editor.sections.skills')} />
                 <div className="mb-6">
                     <SkillTagEditor
                         tags={cv.skills}
                         onChange={v => setField('skills', v)}
-                        placeholder="Thêm kỹ năng..."
+                        placeholder={t('cv.editor.placeholders.skills')}
                     />
                 </div>
 
                 {/* Languages */}
                 {(cv.languages.length > 0 || true) && (
                     <>
-                        <SectionHeader icon={<FileText className="h-4 w-4" />} title="Languages" />
+                        <SectionHeader icon={<FileText className="h-4 w-4" />} title={t('cv.editor.sections.languages')} />
                         <div className="mb-6">
                             <SkillTagEditor
                                 tags={cv.languages}
                                 onChange={v => setField('languages', v)}
-                                placeholder="Thêm ngôn ngữ..."
+                                placeholder={t('cv.editor.placeholders.languages')}
                             />
                         </div>
                     </>
@@ -337,12 +339,12 @@ export function CVEditorPage() {
                 {/* Certifications */}
                 {(cv.certifications.length > 0 || true) && (
                     <>
-                        <SectionHeader icon={<FileText className="h-4 w-4" />} title="Certifications" />
+                        <SectionHeader icon={<FileText className="h-4 w-4" />} title={t('cv.editor.sections.certifications')} />
                         <div className="mb-2">
                             <SkillTagEditor
                                 tags={cv.certifications}
                                 onChange={v => setField('certifications', v)}
-                                placeholder="Thêm chứng chỉ..."
+                                placeholder={t('cv.editor.placeholders.certifications')}
                             />
                         </div>
                     </>

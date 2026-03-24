@@ -47,12 +47,12 @@ export const cvApi = {
         return response.data.data!;
     },
 
-    /** POST /api/cvs  (upload file) */
+    /** POST /api/cvs/upload  (upload file) */
     uploadCV: async (request: UploadCVRequest): Promise<CV> => {
         const formData = new FormData();
-        formData.append('File', request.file);
-        if (request.isDefault !== undefined) formData.append('IsDefault', request.isDefault.toString());
-        const response = await apiClient.post<ApiResponse<CV>>('/cvs', formData, {
+        formData.append('file', request.file);
+        if (request.isDefault !== undefined) formData.append('isDefault', request.isDefault.toString());
+        const response = await apiClient.post<ApiResponse<CV>>('/cvs/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data.data!;
