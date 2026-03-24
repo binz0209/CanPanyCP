@@ -138,7 +138,8 @@
     "settingsAccount": "Tài khoản",
     "settingsNotifications": "Thông báo",
     "settingsPrivacy": "Quyền riêng tư",
-    "notifications": "Thông báo"
+    "notifications": "Thông báo",
+    "wallet": "Ví của tôi"
   },
   "profile": {
     "hero": {
@@ -429,9 +430,18 @@
       "howItWorks": {
         "title": "Quy trình hoạt động",
         "steps": {
-          "1": { "label": "Đọc hồ sơ", "desc": "AI phân tích toàn bộ thông tin hồ sơ của bạn" },
-          "2": { "label": "Thiết kế CV", "desc": "Gemini tạo nội dung CV chuyên nghiệp & đẹp mắt" },
-          "3": { "label": "Lưu & Tải", "desc": "CV được lưu tự động vào tài khoản của bạn" }
+          "1": {
+            "label": "Đọc hồ sơ",
+            "desc": "AI phân tích toàn bộ thông tin hồ sơ của bạn"
+          },
+          "2": {
+            "label": "Thiết kế CV",
+            "desc": "Gemini tạo nội dung CV chuyên nghiệp & đẹp mắt"
+          },
+          "3": {
+            "label": "Lưu & Tải",
+            "desc": "CV được lưu tự động vào tài khoản của bạn"
+          }
         }
       },
       "tip": {
@@ -440,6 +450,43 @@
         "cta": "Cập nhật ngay →"
       }
     }
+  },
+  "wallet": {
+    "title": "Ví của tôi",
+    "subtitle": "Quản lý số dư và lịch sử giao dịch.",
+    "refresh": "Làm mới",
+    "balanceCard": {
+      "title": "Số dư hiện tại",
+      "label": "Tổng số dư",
+      "note": "Số dư được cập nhật theo hệ thống thanh toán."
+    },
+    "transactionsCard": {
+      "title": "Lịch sử giao dịch",
+      "empty": "Chưa có giao dịch nào.",
+      "loadMore": "Xem thêm",
+      "balanceAfter": "Số dư sau"
+    },
+    "transactionTypes": {
+      "topUp": "Nạp tiền",
+      "withdraw": "Rút tiền",
+      "hold": "Giữ",
+      "release": "Phát hành"
+    },
+    "paymentSection": {
+      "title": "Nạp tiền & thanh toán",
+      "amountLabel": "Số tiền nạp (VND)",
+      "amountPlaceholder": "Ví dụ: 100000",
+      "createButton": "Tạo yêu cầu nạp tiền",
+      "createSuccess": "Đã tạo yêu cầu nạp tiền.",
+      "createError": "Không thể tạo yêu cầu nạp tiền.",
+      "invalidAmount": "Vui lòng nhập số tiền hợp lệ.",
+      "historyTitle": "Lịch sử yêu cầu thanh toán",
+      "historyEmpty": "Chưa có yêu cầu thanh toán nào.",
+      "status": {
+        "pending": "Đang chờ",
+        "paid": "Thành công",
+        "failed": "Thất bại"
+      }
+    }
   }
 }
-

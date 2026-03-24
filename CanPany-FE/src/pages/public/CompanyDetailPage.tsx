@@ -157,7 +157,9 @@ export function CompanyDetailPage() {
                             ) : (
                                 <div className="mt-4 space-y-4">
                                     {jobs.map((job) => (
-                                        <JobCard key={job.id} job={job} onClick={handleJobClick} />
+                                        <div key={job.id} onClick={() => handleJobClick(job.id)}>
+                                            <JobCard job={job} />
+                                        </div>
                                     ))}
                                 </div>
                             )}

@@ -11,7 +11,8 @@ import {
     ChevronUp,
     AlertCircle,
 } from 'lucide-react';
-import { candidateApi, type JobProgressRecord, type JobStatus } from '../../api';
+import { candidateApi } from '../../api';
+import type { JobProgressRecord, JobStatus } from '../../api/candidate.api';
 import { useAuthStore } from '../../stores/auth.store';
 
 // ──────────────────── Helpers ────────────────────
