@@ -367,5 +367,26 @@
     "rejectPlaceholder": "Enter a reason to notify the candidate",
     "btnReject": "Reject application",
     "alreadyProcessed": "This application has already been processed and cannot be changed."
+  },
+  "notificationsPage": {
+    "title": "Company notifications",
+    "description": "Track updates about applications, messages, and system status.",
+    "unreadCountSuffix": "unread notifications",
+    "markAllRead": "Mark all as read",
+    "loading": "Loading notifications...",
+    "noNotificationsTitle": "No notifications",
+    "noMatchingDesc": "No notifications match the current filter.",
+    "noNotificationsDesc": "You don't have any notifications.",
+    "filterAll": "All",
+    "filterJobMatch": "Job Match",
+    "filterApplicationUpdate": "Applications",
+    "filterNewMessage": "Messages",
+    "filterPaymentConfirmation": "Payment confirmation",
+    "filterUnread": "Unread",
+    "filterRead": "Read",
+    "timeJustNow": "Just now",
+    "timeMinutesAgo": "{{count}} minutes ago",
+    "timeHoursAgo": "{{count}} hours ago",
+    "timeDaysAgo": "{{count}} days ago"
   }
 }

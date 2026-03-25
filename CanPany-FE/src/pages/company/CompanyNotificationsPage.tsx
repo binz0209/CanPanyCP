@@ -7,19 +7,20 @@ import { notificationKeys } from '../../lib/queryKeys';
 import { Button } from '../../components/ui/Button';
 import type { NotificationItem, NotificationType } from '../../types/notification.types';
 import { cn } from '../../utils';
+import { useTranslation } from 'react-i18next';
 
 const TYPE_FILTERS = [
-  { value: '', label: 'Tất cả' },
-  { value: 'JobMatch', label: 'Job Match' },
-  { value: 'ApplicationUpdate', label: 'Applications' },
-  { value: 'NewMessage', label: 'Tin nhắn' },
-  { value: 'PaymentConfirmation', label: 'Thanh toán' },
+  { value: '', labelKey: 'filterAll' },
+  { value: 'JobMatch', labelKey: 'filterJobMatch' },
+  { value: 'ApplicationUpdate', labelKey: 'filterApplicationUpdate' },
+  { value: 'NewMessage', labelKey: 'filterNewMessage' },
+  { value: 'PaymentConfirmation', labelKey: 'filterPaymentConfirmation' },
 ] as const;
 
 const READ_FILTERS = [
-  { value: undefined, label: 'Tất cả' },
-  { value: false, label: 'Chưa đọc' },
-  { value: true, label: 'Đã đọc' },
+  { value: undefined, labelKey: 'filterAll' },
+  { value: false, labelKey: 'filterUnread' },
+  { value: true, labelKey: 'filterRead' },
 ] as const;
 
 function notificationIcon(type: NotificationType) {
@@ -50,13 +51,17 @@ function getNavigationPath(notification: NotificationItem): string | null {
   }
 }
 
-function timeAgo(date: string | Date): string {
+function timeAgo(
+  date: string | Date,
+  t: any,
+  locale: string
+): string {
   const diff = (Date.now() - new Date(date).getTime()) / 1000;
-  if (diff < 60) return 'Vừa xong';
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-  return new Date(date).toLocaleDateString('vi-VN');
+  if (diff < 60) return t('notificationsPage.timeJustNow');
+  if (diff < 3600) return t('notificationsPage.timeMinutesAgo', { count: Math.floor(diff / 60) });
+  if (diff < 86400) return t('notificationsPage.timeHoursAgo', { count: Math.floor(diff / 3600) });
+  if (diff < 604800) return t('notificationsPage.timeDaysAgo', { count: Math.floor(diff / 86400) });
+  return new Date(date).toLocaleDateString(locale);
 }
 
 export function CompanyNotificationsPage() {
@@ -64,6 +69,8 @@ export function CompanyNotificationsPage() {
   const queryClient = useQueryClient();
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [readFilter, setReadFilter] = useState<boolean | undefined>(undefined);
+  const { t, i18n } = useTranslation('company');
+  const locale = i18n.language.startsWith('vi') ? 'vi-VN' : 'en-US';
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: notificationKeys.list({ type: typeFilter, isRead: readFilter }),
@@ -103,13 +110,13 @@ export function CompanyNotificationsPage() {
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Thông báo công ty</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('notificationsPage.title')}</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Theo dõi các cập nhật về ứng tuyển, tin nhắn và trạng thái hệ thống.
+              {t('notificationsPage.description')}
             </p>
             {unreadCount > 0 && (
               <p className="mt-1 text-sm text-gray-500">
-                <span className="font-semibold text-[#00b14f]">{unreadCount}</span> thông báo chưa đọc
+                <span className="font-semibold text-[#00b14f]">{unreadCount}</span> {t('notificationsPage.unreadCountSuffix')}
               </p>
             )}
           </div>
@@ -126,7 +133,7 @@ export function CompanyNotificationsPage() {
               ) : (
                 <Check className="mr-1.5 h-4 w-4" />
               )}
-              Đánh dấu tất cả đã đọc
+              {t('notificationsPage.markAllRead')}
             </Button>
           )}
         </div>
@@ -144,7 +151,7 @@ export function CompanyNotificationsPage() {
                 typeFilter === f.value ? 'bg-[#00b14f] text-white' : 'text-gray-600 hover:bg-gray-100'
               )}
             >
-              {f.label}
+              {t(`notificationsPage.${f.labelKey}`)}
             </button>
           ))}
         </div>
@@ -158,7 +165,7 @@ export function CompanyNotificationsPage() {
                 readFilter === f.value ? 'bg-[#00b14f] text-white' : 'text-gray-600 hover:bg-gray-100'
               )}
             >
-              {f.label}
+              {t(`notificationsPage.${f.labelKey}`)}
             </button>
           ))}
         </div>
@@ -167,18 +174,18 @@ export function CompanyNotificationsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
           <Loader2 className="h-8 w-8 animate-spin text-[#00b14f]" />
-          <p className="mt-3 text-sm">Đang tải thông báo...</p>
+          <p className="mt-3 text-sm">{t('notificationsPage.loading')}</p>
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16 text-center">
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
             <BellOff className="h-7 w-7 text-gray-400" />
           </div>
-          <h3 className="font-medium text-gray-700">Không có thông báo nào</h3>
+          <h3 className="font-medium text-gray-700">{t('notificationsPage.noNotificationsTitle')}</h3>
           <p className="mt-1 text-sm text-gray-500">
             {typeFilter || readFilter !== undefined
-              ? 'Không tìm thấy thông báo phù hợp với bộ lọc.'
-              : 'Bạn chưa có thông báo nào.'}
+              ? t('notificationsPage.noMatchingDesc')
+              : t('notificationsPage.noNotificationsDesc')}
           </p>
         </div>
       ) : (
@@ -209,7 +216,7 @@ export function CompanyNotificationsPage() {
                     {notification.title}
                   </p>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="whitespace-nowrap text-xs text-gray-400">{timeAgo(notification.timestamp)}</span>
+                    <span className="whitespace-nowrap text-xs text-gray-400">{timeAgo(notification.timestamp, t, locale)}</span>
                     {!notification.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-[#00b14f]" />}
                   </div>
                 </div>

@@ -1,145 +1,139 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageSquare, Send, ArrowLeft, Circle } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { isAxiosError } from 'axios';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MessageSquare, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button } from '../../components/ui';
+import { Button, Card } from '../../components/ui';
 import { messagesApi } from '../../api/messages.api';
-import { conversationsApi } from '../../api/conversations.api';
 import type { Message } from '../../api/messages.api';
-import type { Conversation } from '../../api/conversations.api';
-import { useSignalR } from '../../hooks/useSignalR';
-import type { ReceivedMessage } from '../../hooks/useSignalR';
 import {
     CompanyWorkspaceErrorState,
     CompanyWorkspaceLoader,
+    EmptyState,
+    SectionHeader,
 } from '../../components/features/companies';
 import { useCompanyWorkspace } from '../../hooks/company/useCompanyWorkspace';
-import { conversationKeys, messageKeys } from '../../lib/queryKeys';
+import { messageKeys } from '../../lib/queryKeys';
 import { useAuthStore } from '../../stores/auth.store';
 import { formatRelativeTime } from '../../utils';
+import { useTranslation } from 'react-i18next';
+
+// BE does not expose a WebSocket/SignalR hub; we fall back to REST polling.
+// 3 s is a reasonable tradeoff between perceived responsiveness and server load.
+const POLLING_INTERVAL_MS = 3_000;
 
 export function CompanyMessagesPage() {
     const { conversationId } = useParams<{ conversationId: string }>();
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
+    const { t } = useTranslation('company');
     const [draft, setDraft] = useState('');
-    const [typingUser, setTypingUser] = useState<string | null>(null);
-    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+    // Invisible anchor element at the bottom of the message list used for auto-scroll.
     const bottomAnchorRef = useRef<HTMLDivElement>(null);
-    const lastTypingSentRef = useRef(0);
 
-    const { isLoading: isWorkspaceLoading, hasFatalError } = useCompanyWorkspace();
+    const {
+        isLoading: isWorkspaceLoading,
+        hasFatalError,
+    } = useCompanyWorkspace();
 
-    // ── SignalR ────────────────────────────────────────────────────────────────
-    const signalR = useSignalR({
-        onReceiveMessage: (msg: ReceivedMessage) => {
-            queryClient.setQueryData<Message[]>(
-                messageKeys.byConversation(msg.conversationId),
-                (current = []) => {
-                    const filtered = current.filter(
-                        (m) => !m.id.startsWith('optimistic-') && m.id !== msg.id
-                    );
-                    return [...filtered, msg as Message];
-                }
-            );
-            queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
-        },
-        onConversationUpdated: () => {
-            queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
-        },
-        onMessageRead: (event) => {
-            queryClient.setQueryData<Message[]>(
-                messageKeys.byConversation(event.conversationId),
-                (current = []) =>
-                    current.map((m) =>
-                        m.senderId === user?.id && !m.isRead
-                            ? { ...m, isRead: true, readAt: new Date().toISOString() }
-                            : m
-                    )
-            );
-        },
-        onUserTyping: (event) => {
-            if (event.conversationId === conversationId) {
-                setTypingUser(event.userId);
-                clearTimeout(typingTimeoutRef.current);
-                typingTimeoutRef.current = setTimeout(() => setTypingUser(null), 3000);
-            }
-        },
-    });
-
-    // ── Join / leave conversation group ────────────────────────────────────────
-    useEffect(() => {
-        if (!conversationId || !signalR.isConnected) return;
-        signalR.joinConversation(conversationId);
-        signalR.markAsRead(conversationId);
-        return () => {
-            signalR.leaveConversation(conversationId);
-        };
-    }, [conversationId, signalR.isConnected]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // ── Conversations list ─────────────────────────────────────────────────────
-    const conversationsQuery = useQuery({
-        queryKey: conversationKeys.list(),
-        queryFn: () => conversationsApi.getConversations(),
-    });
-
-    // ── Messages for the selected conversation ────────────────────────────────
+    // ── Messages (polling) ────────────────────────────────────────────────────
     const messagesQuery = useQuery({
         queryKey: messageKeys.byConversation(conversationId ?? ''),
         queryFn: () => messagesApi.getMessages(conversationId!),
         enabled: !!conversationId,
-        placeholderData: (prev) => prev,
+        refetchInterval: POLLING_INTERVAL_MS,
+        // Keep the previous snapshot visible while a new fetch is in flight so
+        // the list doesn't flash empty.
+        placeholderData: (previousData) => previousData,
     });
 
-    // ── Auto-scroll ───────────────────────────────────────────────────────────
+    // ── Mark conversation as read ─────────────────────────────────────────────
+    // Fire-and-forget — a read-receipt failure should never block the user.
+    const markReadMutation = useMutation({
+        mutationFn: () => messagesApi.markConversationAsRead(conversationId!),
+    });
+
+    useEffect(() => {
+        if (!conversationId) return;
+        markReadMutation.mutate();
+        // We intentionally omit markReadMutation from deps to avoid re-firing
+        // every time the mutation instance changes reference.
+    }, [conversationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── Auto-scroll to bottom when the messages list grows ───────────────────
     useEffect(() => {
         bottomAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messagesQuery.data]);
 
     // ── Send message ──────────────────────────────────────────────────────────
-    const handleSend = useCallback(async () => {
-        const text = draft.trim();
-        if (!text || !conversationId) return;
+    const sendMutation = useMutation({
+        mutationFn: (text: string) => messagesApi.sendMessage(conversationId!, text),
 
-        const optimisticMsg: Message = {
-            id: `optimistic-${Date.now()}`,
-            conversationId,
-            senderId: user?.id ?? '',
-            text,
-            isRead: false,
-            createdAt: new Date().toISOString(),
-        };
+        onMutate: async (text) => {
+            // Cancel any in-flight refetch so it does not overwrite our optimistic update.
+            await queryClient.cancelQueries({
+                queryKey: messageKeys.byConversation(conversationId!),
+            });
 
-        queryClient.setQueryData<Message[]>(
-            messageKeys.byConversation(conversationId),
-            (current = []) => [...current, optimisticMsg]
-        );
-        setDraft('');
-
-        try {
-            await signalR.sendMessage(conversationId, text);
-        } catch {
-            queryClient.setQueryData<Message[]>(
-                messageKeys.byConversation(conversationId),
-                (current = []) => current.filter((m) => m.id !== optimisticMsg.id)
+            const previousMessages = queryClient.getQueryData<Message[]>(
+                messageKeys.byConversation(conversationId!)
             );
-            toast.error('Không thể gửi tin nhắn');
-        }
-    }, [draft, conversationId, user?.id, queryClient, signalR]);
 
-    // ── Typing indicator ──────────────────────────────────────────────────────
-    const handleTyping = useCallback(() => {
-        if (!conversationId) return;
-        const now = Date.now();
-        if (now - lastTypingSentRef.current > 2000) {
-            lastTypingSentRef.current = now;
-            signalR.sendTyping(conversationId);
-        }
-    }, [conversationId, signalR]);
+            // Append a temporary optimistic message immediately so the user
+            // sees their text without waiting for the server round-trip.
+            queryClient.setQueryData<Message[]>(
+                messageKeys.byConversation(conversationId!),
+                (current = []) => [
+                    ...current,
+                    {
+                        id: `optimistic-${Date.now()}`,
+                        conversationId: conversationId!,
+                        senderId: user?.id ?? '',
+                        text,
+                        isRead: false,
+                        createdAt: new Date().toISOString(),
+                    },
+                ]
+            );
 
+            // Clear the input straight away so it feels snappy.
+            setDraft('');
+
+            return { previousMessages };
+        },
+
+        onError: (_error, _text, context) => {
+            // Roll back the optimistic message if the server rejected the request.
+            queryClient.setQueryData(
+                messageKeys.byConversation(conversationId!),
+                context?.previousMessages
+            );
+
+            const message = isAxiosError(_error)
+                ? _error.response?.data?.message || t('messages.toastSendFailed')
+                : t('messages.toastSendFailed');
+            toast.error(message);
+        },
+
+        onSuccess: () => {
+            // Replace the optimistic entry with the real persisted message.
+            queryClient.invalidateQueries({
+                queryKey: messageKeys.byConversation(conversationId!),
+                exact: true,
+            });
+        },
+    });
+
+    const handleSend = () => {
+        const text = draft.trim();
+        if (!text || sendMutation.isPending) return;
+        sendMutation.mutate(text);
+    };
+
+    // Enter sends, Shift+Enter inserts a newline — standard chat UX convention.
     const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
@@ -147,233 +141,140 @@ export function CompanyMessagesPage() {
         }
     };
 
-    // ── Guards ─────────────────────────────────────────────────────────────────
+    // ── Guards ────────────────────────────────────────────────────────────────
     if (isWorkspaceLoading) return <CompanyWorkspaceLoader />;
+
     if (hasFatalError) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải trang nhắn tin"
-                description="Đã xảy ra lỗi khi kết nối. Vui lòng thử lại sau."
+                title={t('messages.errorTitle')}
+                description={t('messages.errorDesc')}
                 icon={<MessageSquare className="h-6 w-6" />}
             />
         );
     }
 
-    const conversations = conversationsQuery.data ?? [];
+    // No conversationId in the URL: the user landed here without context.
+    // They should arrive from an application detail page which provides the id.
+    if (!conversationId) {
+                return (
+            <div className="space-y-6">
+                <SectionHeader title={t('messages.title')} description={t('messages.description')} />
+                <EmptyState
+                    title={t('messages.noConversationTitle')}
+                    description={t('messages.noConversationDesc')}
+                    icon={<MessageSquare className="h-6 w-6" />}
+                />
+            </div>
+        );
+    }
+
     const messages = messagesQuery.data ?? [];
+    const isFetchError = !!messagesQuery.error && !messagesQuery.data;
 
     return (
-        <div className="flex h-[calc(100vh-10rem)] gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            {/* ── Sidebar ──────────────────────────────────────────────────── */}
-            <div
-                className={[
-                    'flex w-full flex-col border-r border-gray-100 md:w-[340px] md:min-w-[340px]',
-                    conversationId ? 'hidden md:flex' : 'flex',
-                ].join(' ')}
-            >
-                <div className="border-b border-gray-100 px-5 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Nhắn tin</h2>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
-                        <Circle
-                            className={`h-2 w-2 fill-current ${signalR.isConnected ? 'text-emerald-500' : 'text-gray-300'}`}
-                        />
-                        {signalR.isConnected ? 'Kết nối trực tiếp' : 'Đang kết nối…'}
-                    </div>
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                    {conversationsQuery.isLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00b14f] border-t-transparent" />
+        <div className="flex h-[calc(100vh-10rem)] flex-col gap-4">
+            <SectionHeader
+                title={t('messages.title')}
+                description={t('messages.descriptionActive')}
+                backLink="/company/applications"
+                backLabel={t('messages.backLabel')}
+            />
+
+            <Card className="flex flex-1 flex-col overflow-hidden p-0">
+                {/* ── Message list ─────────────────────────────────────────── */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    {messagesQuery.isLoading && !messagesQuery.data ? (
+                        <div className="flex h-full items-center justify-center">
+                            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#00b14f]" />
                         </div>
-                    ) : conversations.length === 0 ? (
-                        <div className="px-5 py-12 text-center text-sm text-gray-400">
-                            Chưa có cuộc trò chuyện nào
+                    ) : isFetchError ? (
+                        <div className="flex h-full items-center justify-center">
+                            <p className="text-sm text-red-500">{t('messages.loadFailed')}</p>
+                        </div>
+                    ) : messages.length === 0 ? (
+                        <div className="flex h-full items-center justify-center">
+                            <p className="text-sm text-gray-400">{t('messages.noMessages')}</p>
                         </div>
                     ) : (
-                        conversations.map((conv) => (
-                            <ConversationItem
-                                key={conv.id}
-                                conversation={conv}
-                                isActive={conv.id === conversationId}
-                                onClick={() => navigate(`/company/messages/${conv.id}`)}
-                            />
-                        ))
-                    )}
-                </div>
-            </div>
-
-            {/* ── Chat panel ──────────────────────────────────────────────── */}
-            <div
-                className={[
-                    'flex flex-1 flex-col',
-                    conversationId ? 'flex' : 'hidden md:flex',
-                ].join(' ')}
-            >
-                {!conversationId ? (
-                    <div className="flex flex-1 items-center justify-center">
-                        <div className="text-center">
-                            <MessageSquare className="mx-auto h-12 w-12 text-gray-200" />
-                            <p className="mt-3 text-sm text-gray-400">
-                                Chọn cuộc trò chuyện để bắt đầu nhắn tin
-                            </p>
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        {/* Chat header */}
-                        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-3">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/company/messages')}
-                                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 md:hidden"
-                                aria-label="Quay lại"
-                            >
-                                <ArrowLeft className="h-5 w-5" />
-                            </button>
-                            {(() => {
-                                const conv = conversations.find((c) => c.id === conversationId);
-                                if (!conv) return null;
-                                return (
-                                    <>
-                                        {conv.otherUserAvatar ? (
-                                            <img src={conv.otherUserAvatar} alt="" className="h-9 w-9 rounded-full object-cover" />
-                                        ) : (
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#00b14f] to-emerald-600 text-sm font-semibold text-white">
-                                                {conv.otherUserName?.charAt(0)?.toUpperCase() ?? '?'}
-                                            </div>
-                                        )}
-                                        <p className="text-sm font-semibold text-gray-900">{conv.otherUserName}</p>
-                                    </>
-                                );
-                            })()}
-                        </div>
-
-                        {/* Message list */}
-                        <div className="flex-1 overflow-y-auto px-5 py-4">
-                            {messagesQuery.isLoading && !messagesQuery.data ? (
-                                <div className="flex h-full items-center justify-center">
-                                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#00b14f]" />
-                                </div>
-                            ) : messages.length === 0 ? (
-                                <div className="flex h-full items-center justify-center">
-                                    <p className="text-sm text-gray-400">
-                                        Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {messages.map((msg) => (
-                                        <MessageBubble
-                                            key={msg.id}
-                                            message={msg}
-                                            isSelf={msg.senderId === user?.id}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                            {typingUser && (
-                                <div className="mt-2 text-xs text-gray-400 italic">
-                                    Đang nhập…
-                                </div>
-                            )}
-                            <div ref={bottomAnchorRef} />
-                        </div>
-
-                        {/* Input */}
-                        <div className="border-t border-gray-100 px-5 py-3">
-                            <div className="flex items-end gap-3">
-                                <textarea
-                                    rows={2}
-                                    value={draft}
-                                    onChange={(e) => {
-                                        setDraft(e.target.value);
-                                        handleTyping();
-                                    }}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="Nhập tin nhắn…"
-                                    className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
+                        <div className="space-y-3">
+                            {messages.map((message) => (
+                                <MessageBubble
+                                    key={message.id}
+                                    message={message}
+                                    isSelf={message.senderId === user?.id}
+                                    sendingLabel={t('messages.sendingLabel')}
                                 />
-                                <Button onClick={handleSend} disabled={!draft.trim()} aria-label="Gửi tin nhắn">
-                                    <Send className="h-4 w-4" /> Gửi
-                                </Button>
-                            </div>
-                            <p className="mt-1.5 text-[11px] text-gray-400">
-                                Enter để gửi · Shift+Enter để xuống dòng
-                            </p>
+                            ))}
                         </div>
-                    </>
-                )}
-            </div>
+                    )}
+
+                    {/* Scrolled into view whenever the message list updates */}
+                    <div ref={bottomAnchorRef} />
+                </div>
+
+                {/* ── Input area ───────────────────────────────────────────── */}
+                <div className="border-t border-gray-100 p-4">
+                    <div className="flex items-end gap-3">
+                        <textarea
+                            rows={2}
+                            value={draft}
+                            onChange={(e) => setDraft(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={t('messages.inputPlaceholder')}
+                            disabled={sendMutation.isPending}
+                            className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20 disabled:bg-gray-50"
+                        />
+                        <Button
+                            onClick={handleSend}
+                            disabled={!draft.trim() || sendMutation.isPending}
+                            isLoading={sendMutation.isPending}
+                            aria-label={t('messages.sendAriaLabel')}
+                        >
+                            <Send className="h-4 w-4" />
+                            {t('messages.sendButton')}
+                        </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-400">{t('messages.sendHint')}</p>
+                </div>
+            </Card>
         </div>
     );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── MessageBubble ─────────────────────────────────────────────────────────────
+// Extracted as a standalone component to avoid re-rendering the entire list
+// when only the draft input changes.
 
-function ConversationItem({ conversation, isActive, onClick }: {
-    conversation: Conversation;
-    isActive: boolean;
-    onClick: () => void;
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={[
-                'flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors',
-                isActive ? 'bg-[#00b14f]/5 border-r-2 border-[#00b14f]' : 'hover:bg-gray-50',
-            ].join(' ')}
-        >
-            <div className="relative h-10 w-10 flex-shrink-0">
-                {conversation.otherUserAvatar ? (
-                    <img src={conversation.otherUserAvatar} alt="" className="h-10 w-10 rounded-full object-cover" />
-                ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#00b14f] to-emerald-600 text-sm font-semibold text-white">
-                        {conversation.otherUserName?.charAt(0)?.toUpperCase() ?? '?'}
-                    </div>
-                )}
-                {conversation.unreadCount > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                        {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
-                    </span>
-                )}
-            </div>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-2">
-                    <p className={`truncate text-sm ${conversation.unreadCount > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
-                        {conversation.otherUserName}
-                    </p>
-                    {conversation.lastMessageAt && (
-                        <span className="flex-shrink-0 text-[11px] text-gray-400">
-                            {formatRelativeTime(conversation.lastMessageAt)}
-                        </span>
-                    )}
-                </div>
-                {conversation.lastMessagePreview && (
-                    <p className={`mt-0.5 truncate text-xs ${conversation.unreadCount > 0 ? 'font-medium text-gray-700' : 'text-gray-400'}`}>
-                        {conversation.lastMessagePreview}
-                    </p>
-                )}
-            </div>
-        </button>
-    );
+interface MessageBubbleProps {
+    message: Message;
+    /** True when the message was sent by the currently logged-in user. */
+    isSelf: boolean;
+    sendingLabel: string;
 }
 
-function MessageBubble({ message, isSelf }: { message: Message; isSelf: boolean }) {
+function MessageBubble({ message, isSelf, sendingLabel }: MessageBubbleProps) {
     const isOptimistic = message.id.startsWith('optimistic-');
+
     return (
         <div className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
             <div
                 className={[
                     'max-w-[70%] rounded-2xl px-4 py-2.5 transition-opacity',
-                    isSelf ? 'bg-[#00b14f] text-white' : 'bg-gray-100 text-gray-900',
+                    isSelf
+                        ? 'bg-[#00b14f] text-white'
+                        : 'bg-gray-100 text-gray-900',
+                    // Optimistic messages are slightly faded until the server confirms them.
                     isOptimistic ? 'opacity-60' : 'opacity-100',
                 ].join(' ')}
             >
                 <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
-                <p className={`mt-1 text-right text-[10px] ${isSelf ? 'text-white/70' : 'text-gray-400'}`}>
-                    {isOptimistic ? 'Đang gửi…' : formatRelativeTime(message.createdAt)}
-                    {isSelf && !isOptimistic && message.isRead && ' · Đã đọc'}
+                <p
+                    className={`mt-1 text-right text-[10px] ${
+                        isSelf ? 'text-white/70' : 'text-gray-400'
+                    }`}
+                >
+                    {isOptimistic ? sendingLabel : formatRelativeTime(message.createdAt)}
                 </p>
             </div>
         </div>
