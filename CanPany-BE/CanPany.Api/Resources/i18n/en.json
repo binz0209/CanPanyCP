@@ -1,5 +1,11 @@
 {
   "Display": {
+    "Notification": {
+      "JobMatch": {
+        "Title": "New Job Match Found!",
+        "Message": "A new job matching your alert '{0}' has been posted: {1}"
+      }
+    },
     "Email": {
       "Welcome": {
         "Subject": "Welcome to CanPany!",
@@ -35,44 +41,167 @@
       }
     }
   },
-  "Audit": {
-    "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
-    "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
-    "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
-    "Interceptor.Audit.Format": {
-      "HttpRequestSuccess": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
-      "HttpRequestFailed": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
-      "ServiceCallSuccess": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
-      "ServiceCallFailed": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
-      "JobStart": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Started",
-      "JobComplete": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
-      "JobFailed": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5} | Error: {6}"
-    }
-  },
-  "Security": {
-    "Interceptor.Security.Authentication": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
-    "Interceptor.Security.Authorization": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
-    "Interceptor.Security.Format": {
-      "AuthenticationSuccess": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
-      "AuthenticationFailed": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4} | Reason: {5}",
-      "AuthorizationDenied": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Access Denied",
-      "UnauthorizedAccess": "[SECURITY] UNAUTHORIZED_ACCESS | {0} | User: {1} | Path: {2} | IP: {3} | Unauthorized"
-    }
-  },
-  "Performance": {
-    "Interceptor.Performance.OperationTiming": "[PERFORMANCE] {0} took {1}ms",
-    "Interceptor.Performance.SlowOperation": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)",
-    "Interceptor.Performance.Format": {
-      "OperationCompleted": "[PERFORMANCE] {0} took {1}ms | Metadata: {2}",
-      "SlowOperationWarning": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)"
-    }
-  },
   "Error": {
-    "Interceptor.Exception.Captured": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4}",
-    "Interceptor.Exception.Critical": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
-    "Interceptor.Exception.Format": {
-      "ExceptionOccurred": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4} | Service: {5} | MethodName: {6}",
-      "CriticalException": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}"
+    "Common": {
+      "NotFound": "Resource not found.",
+      "Unauthorized": "You are not authorized to perform this action.",
+      "InternalServerError": "An internal server error occurred. Please try again later.",
+      "BadRequest": "The request was invalid.",
+      "ValidationFailed": "Validation failed. Please check your input."
+    },
+    "User": {
+      "Register": {
+        "EmailExists": "Email already exists in the system.",
+        "Failed": "Registration failed: {0}"
+      },
+      "Login": {
+        "InvalidCredentials": "Invalid email or password.",
+        "Failed": "Login failed: {0}"
+      },
+      "NotFound": "User not found.",
+      "Update": {
+        "Failed": "Failed to update user: {0}"
+      },
+      "Delete": {
+        "Failed": "Failed to delete user: {0}"
+      },
+      "PasswordChange": {
+        "Failed": "Failed to change password: {0}",
+        "OldPasswordIncorrect": "The old password is incorrect."
+      }
+    },
+    "Job": {
+      "NotFound": "Job not found.",
+      "CreateFailed": "Failed to create job: {0}",
+      "UpdateFailed": "Failed to update job: {0}",
+      "DeleteFailed": "Failed to delete job: {0}"
+    },
+    "CV": {
+      "NotFound": "CV not found.",
+      "CreateFailed": "Failed to upload CV: {0}",
+      "UpdateFailed": "Failed to update CV: {0}",
+      "DeleteFailed": "Failed to delete CV: {0}"
+    },
+    "Profile": {
+      "NotFound": "Profile not found.",
+      "UpdateFailed": "Failed to update profile.",
+      "DeleteFailed": "Failed to delete profile.",
+      "SyncLinkedInFailed": "Failed to sync LinkedIn data.",
+      "SyncGitHubFailed": "Failed to sync GitHub data.",
+      "Avatar": {
+        "FileRequired": "Avatar file is required.",
+        "FileTooLarge": "Image size exceeds 2MB limit.",
+        "InvalidFileType": "Only JPG, PNG and WebP images are allowed.",
+        "UploadFailed": "Failed to upload avatar."
+      }
     }
-  }
+  },
+  "Validation": {
+    "User": {
+      "FullNameRequired": "Full name is required.",
+      "EmailRequired": "Email is required.",
+      "EmailInvalid": "Email format is invalid.",
+      "PasswordRequired": "Password is required.",
+      "PasswordMinLength": "Password must be at least {0} characters long."
+    },
+    "Job": {
+      "TitleRequired": "Job title is required.",
+      "DescriptionRequired": "Job description is required.",
+      "CompanyIdRequired": "Company ID is required."
+    }
+  },
+  "Success": {
+    "User": {
+      "Register": "Registration successful.",
+      "Login": "Login successful.",
+      "Logout": "Logout successful.",
+      "Update": "Profile updated successfully.",
+      "PasswordChange": "Password changed successfully.",
+      "GitHubLinked": "GitHub account linked successfully."
+    },
+    "Job": {
+      "Create": "Job created successfully.",
+      "Update": "Job updated successfully.",
+      "Delete": "Job deleted successfully."
+    },
+    "CV": {
+      "Uploaded": "CV uploaded successfully.",
+      "Updated": "CV updated successfully.",
+      "Deleted": "CV deleted successfully.",
+      "SetDefault": "CV set as default successfully."
+    },
+    "Candidate": {
+      "Retrieved": "Candidates retrieved successfully.",
+      "ProfileRetrieved": "Candidate profile retrieved successfully.",
+      "CVsRetrieved": "Candidate CVs retrieved successfully.",
+      "ContactUnlocked": "Candidate contact information unlocked successfully.",
+      "UnlockedListRetrieved": "Unlocked candidates retrieved successfully."
+    },
+    "Application": {
+      "Retrieved": "Applications retrieved successfully."
+    },
+    "Statistics": {
+      "Retrieved": "Statistics retrieved successfully."
+    },
+    "Profile": {
+      "Updated": "Profile updated successfully.",
+      "Deleted": "Profile deleted successfully.",
+      "AvatarUpdated": "Avatar updated successfully.",
+      "LinkedInSynced": "LinkedIn data synced successfully.",
+      "GitHubSynced": "GitHub data synced successfully."
+    }
+  },
+  "Logging": {
+    "User": {
+      "Register": {
+        "Start": "Starting user registration: {0}",
+        "Complete": "Registration successful: {0}, UserId: {1}"
+      },
+      "Login": {
+        "Start": "Starting user login: {0}",
+        "Complete": "Login successful: {0}"
+      }
+    }
+  },
+  "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
+  "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
+  "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
+  "Interceptor.Audit.Format.HttpRequestSuccess": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
+  "Interceptor.Audit.Format.HttpRequestFailed": "[AUDIT] HTTP_REQUEST | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
+  "Interceptor.Audit.Format.ServiceCallSuccess": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
+  "Interceptor.Audit.Format.ServiceCallFailed": "[AUDIT] SERVICE_CALL | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6} | Error: {7}",
+  "Interceptor.Audit.Format.JobStart": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Started",
+  "Interceptor.Audit.Format.JobComplete": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
+  "Interceptor.Audit.Format.JobFailed": "[AUDIT] JOB_EXECUTION | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5} | Error: {6}",
+  "Interceptor.Security.Authentication": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+  "Interceptor.Security.Authorization": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+  "Interceptor.Security.Format.AuthenticationSuccess": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4}",
+  "Interceptor.Security.Format.AuthenticationFailed": "[SECURITY] AUTHENTICATION | {0} | User: {1} | Path: {2} | IP: {3} | Success: {4} | Reason: {5}",
+  "Interceptor.Security.Format.AuthorizationDenied": "[SECURITY] AUTHORIZATION | {0} | User: {1} | Path: {2} | IP: {3} | Access Denied",
+  "Interceptor.Security.Format.UnauthorizedAccess": "[SECURITY] UNAUTHORIZED_ACCESS | {0} | User: {1} | Path: {2} | IP: {3} | Unauthorized",
+  "Interceptor.Performance.OperationTiming": "[PERFORMANCE] {0} took {1}ms",
+  "Interceptor.Performance.SlowOperation": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)",
+  "Interceptor.Performance.Format.OperationCompleted": "[PERFORMANCE] {0} took {1}ms | Metadata: {2}",
+  "Interceptor.Performance.Format.SlowOperationWarning": "[SLOW_OPERATION] {0} exceeded threshold ({1}ms > {2}ms)",
+  "Interceptor.Exception.Captured": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4}",
+  "Interceptor.Exception.Critical": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
+  "Interceptor.Exception.Format.ExceptionOccurred": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4} | Service: {5} | MethodName: {6}",
+  "Interceptor.Exception.Format.CriticalException": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
+  "Interceptor.Audit.HostedService": "[AUDIT] HOSTED_SERVICE | {0} | {1}",
+  "Interceptor.Security.DataAccess": "[SECURITY] DATA_ACCESS | {0} | User: {1} | Resource: {2} | Success: {3}",
+  "Interceptor.Security.TokenAccess": "[SECURITY] TOKEN_ACCESS | {0} | User: {1} | Success: {2}",
+  "Interceptor.Security.Exception": "[SECURITY] EXCEPTION | {0} | User: {1} | Error: {2}",
+  "Interceptor.Audit.Prefix.Metadata": "[AUDIT_METADATA]",
+  "Interceptor.Audit.Prefix.Error": "[AUDIT_ERROR]",
+  "Interceptor.Audit.Prefix.JobStart": "[JOB_START]",
+  "Interceptor.Audit.Prefix.JobComplete": "[JOB_COMPLETE]",
+  "Interceptor.Audit.Prefix.JobFailed": "[JOB_FAILED]",
+  "Interceptor.Audit.Prefix.InterceptStart": "[INTERCEPT_START]",
+  "Interceptor.Audit.Prefix.InterceptSuccess": "[INTERCEPT_SUCCESS]",
+  "Interceptor.Audit.Prefix.InterceptError": "[INTERCEPT_ERROR]",
+  "Interceptor.Security.Prefix.Metadata": "[SECURITY_METADATA]",
+  "Interceptor.Security.Prefix.Failure": "[SECURITY_FAILURE]",
+  "Interceptor.Exception.Prefix.Metadata": "[EXCEPTION_METADATA]",
+  "Interceptor.Audit.GitHubLink": "[GITHUB_LINK] User: {0}",
+  "Interceptor.Audit.GitHubCallback": "[GITHUB_CALLBACK] Username: {0} | User: {1}"
 }

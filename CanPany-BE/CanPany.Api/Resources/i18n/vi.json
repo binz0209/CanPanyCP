@@ -1,5 +1,11 @@
 {
   "Display": {
+    "Notification": {
+      "JobMatch": {
+        "Title": "Tìm thấy công việc mới!",
+        "Message": "Một công việc mới phù hợp với thông báo '{0}' của bạn vừa được đăng: {1}"
+      }
+    },
     "Email": {
       "Welcome": {
         "Subject": "Chào mừng đến với CanPany!",
@@ -35,6 +41,128 @@
       }
     }
   },
+  "Error": {
+    "Common": {
+      "NotFound": "Không tìm thấy tài nguyên.",
+      "Unauthorized": "Bạn không có quyền thực hiện hành động này.",
+      "InternalServerError": "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
+      "BadRequest": "Yêu cầu không hợp lệ.",
+      "ValidationFailed": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại."
+    },
+    "User": {
+      "Register": {
+        "EmailExists": "Email đã tồn tại trong hệ thống",
+        "Failed": "Đăng ký thất bại: {0}"
+      },
+      "Login": {
+        "InvalidCredentials": "Email hoặc mật khẩu không đúng.",
+        "Failed": "Đăng nhập thất bại: {0}"
+      },
+      "NotFound": "Không tìm thấy người dùng.",
+      "Update": {
+        "Failed": "Cập nhật thông tin thất bại: {0}"
+      },
+      "Delete": {
+        "Failed": "Xóa tài khoản thất bại: {0}"
+      },
+      "PasswordChange": {
+        "Failed": "Đổi mật khẩu thất bại: {0}",
+        "OldPasswordIncorrect": "Mật khẩu cũ không chính xác."
+      }
+    },
+    "Job": {
+      "NotFound": "Không tìm thấy công việc.",
+      "CreateFailed": "Tạo công việc thất bại: {0}",
+      "UpdateFailed": "Cập nhật công việc thất bại: {0}",
+      "DeleteFailed": "Xóa công việc thất bại: {0}"
+    },
+    "CV": {
+      "NotFound": "Không tìm thấy CV.",
+      "CreateFailed": "Tải lên CV thất bại: {0}",
+      "UpdateFailed": "Cập nhật CV thất bại: {0}",
+      "DeleteFailed": "Xóa CV thất bại: {0}"
+    },
+    "Profile": {
+      "NotFound": "Không tìm thấy hồ sơ người dùng.",
+      "UpdateFailed": "Cập nhật hồ sơ thất bại.",
+      "DeleteFailed": "Xóa hồ sơ thất bại.",
+      "SyncLinkedInFailed": "Đồng bộ dữ liệu LinkedIn thất bại.",
+      "SyncGitHubFailed": "Đồng bộ dữ liệu GitHub thất bại.",
+      "Avatar": {
+        "FileRequired": "Vui lòng chọn ảnh đại diện.",
+        "FileTooLarge": "Kích thước ảnh vượt quá giới hạn 2MB.",
+        "InvalidFileType": "Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WebP.",
+        "UploadFailed": "Tải lên ảnh đại diện thất bại."
+      }
+    }
+  },
+  "Validation": {
+    "User": {
+      "FullNameRequired": "Họ và tên là bắt buộc.",
+      "EmailRequired": "Email là bắt buộc.",
+      "EmailInvalid": "Định dạng email không hợp lệ.",
+      "PasswordRequired": "Mật khẩu là bắt buộc.",
+      "PasswordMinLength": "Mật khẩu phải có ít nhất {0} ký tự."
+    },
+    "Job": {
+      "TitleRequired": "Tiêu đề công việc là bắt buộc.",
+      "DescriptionRequired": "Mô tả công việc là bắt buộc.",
+      "CompanyIdRequired": "ID công ty là bắt buộc."
+    }
+  },
+  "Success": {
+    "User": {
+      "Register": "Đăng ký thành công",
+      "Login": "Đăng nhập thành công.",
+      "Logout": "Đăng xuất thành công.",
+      "Update": "Cập nhật thông tin thành công.",
+      "PasswordChange": "Đổi mật khẩu thành công.",
+      "GitHubLinked": "Đã liên kết tài khoản GitHub thành công."
+    },
+    "Job": {
+      "Create": "Tạo công việc thành công.",
+      "Update": "Cập nhật công việc thành công.",
+      "Delete": "Xóa công việc thành công."
+    },
+    "CV": {
+      "Uploaded": "Tải lên CV thành công.",
+      "Updated": "Cập nhật CV thành công.",
+      "Deleted": "Xóa CV thành công.",
+      "SetDefault": "Đặt CV mặc định thành công."
+    },
+    "Candidate": {
+      "Retrieved": "Lấy danh sách ứng viên thành công.",
+      "ProfileRetrieved": "Lấy hồ sơ ứng viên thành công.",
+      "CVsRetrieved": "Lấy danh sách CV thành công.",
+      "ContactUnlocked": "Mở khóa thông tin liên hệ ứng viên thành công.",
+      "UnlockedListRetrieved": "Lấy danh sách ứng viên đã mở khóa thành công."
+    },
+    "Application": {
+      "Retrieved": "Lấy danh sách đơn ứng tuyển thành công."
+    },
+    "Statistics": {
+      "Retrieved": "Lấy số liệu thống kê thành công."
+    },
+    "Profile": {
+      "Updated": "Cập nhật hồ sơ thành công.",
+      "Deleted": "Xóa hồ sơ thành công.",
+      "AvatarUpdated": "Cập nhật ảnh đại diện thành công.",
+      "LinkedInSynced": "Đồng bộ dữ liệu LinkedIn thành công.",
+      "GitHubSynced": "Đồng bộ dữ liệu GitHub thành công."
+    }
+  },
+  "Logging": {
+    "User": {
+      "Register": {
+        "Start": "Bắt đầu đăng ký user: {0}",
+        "Complete": "Đăng ký thành công: {0}, UserId: {1}"
+      },
+      "Login": {
+        "Start": "Bắt đầu đăng nhập: {0}",
+        "Complete": "Đăng nhập thành công: {0}"
+      }
+    }
+  },
   "Interceptor.Audit.HttpRequest": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Path: {4} | Duration: {5}ms | Success: {6}",
   "Interceptor.Audit.ServiceCall": "[AUDIT] {0} | {1} | User: {2} | CorrelationId: {3} | Method: {4} | Duration: {5}ms | Success: {6}",
   "Interceptor.Audit.JobExecution": "[AUDIT] {0} | {1} | JobId: {2} | CorrelationId: {3} | Duration: {4}ms | Success: {5}",
@@ -59,11 +187,21 @@
   "Interceptor.Exception.Critical": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
   "Interceptor.Exception.Format.ExceptionOccurred": "[EXCEPTION] {0} | User: {1} | CorrelationId: {2} | Path: {3} | Method: {4} | Service: {5} | MethodName: {6}",
   "Interceptor.Exception.Format.CriticalException": "[CRITICAL_EXCEPTION] {0} | StackTrace: {1}",
-  "Error.User.Register.EmailExists": "Email đã tồn tại trong hệ thống",
-  "Error.User.Register.Failed": "Đăng ký thất bại: {0}",
-  "Logging.User.Register.Start": "Bắt đầu đăng ký user: {0}",
-  "Logging.User.Register.Complete": "Đăng ký thành công: {0}, UserId: {1}",
-  "Logging.User.Register.Error.Failed": "Lỗi đăng ký user: {0}, Lỗi: {1}",
-  "Display.Success.User.Register": "Đăng ký thành công",
-  "Success.User.Register": "Đăng ký thành công"
+  "Interceptor.Audit.HostedService": "[AUDIT] HOSTED_SERVICE | {0} | {1}",
+  "Interceptor.Security.DataAccess": "[SECURITY] TRUY_CAP_DU_LIEU | {0} | User: {1} | Tài nguyên: {2} | Thành công: {3}",
+  "Interceptor.Security.TokenAccess": "[SECURITY] TRUY_CAP_TOKEN | {0} | User: {1} | Thành công: {2}",
+  "Interceptor.Security.Exception": "[SECURITY] LOI_BAO_MAT | {0} | User: {1} | Lỗi: {2}",
+  "Interceptor.Audit.Prefix.Metadata": "[SIEU_AM_METADATA]",
+  "Interceptor.Audit.Prefix.Error": "[LOI_KIEM_TOAN]",
+  "Interceptor.Audit.Prefix.JobStart": "[BAT_DAU_JOB]",
+  "Interceptor.Audit.Prefix.JobComplete": "[HOAN_THANH_JOB]",
+  "Interceptor.Audit.Prefix.JobFailed": "[JOB_THAT_BAI]",
+  "Interceptor.Audit.Prefix.InterceptStart": "[BAT_DAU_CHAN]",
+  "Interceptor.Audit.Prefix.InterceptSuccess": "[CHAN_THANH_CONG]",
+  "Interceptor.Audit.Prefix.InterceptError": "[LOI_CHAN_CHAN]",
+  "Interceptor.Security.Prefix.Metadata": "[METADATA_BAO_MAT]",
+  "Interceptor.Security.Prefix.Failure": "[THAT_BAI_BAO_MAT]",
+  "Interceptor.Exception.Prefix.Metadata": "[METADATA_NGOAI_LE]",
+  "Interceptor.Audit.GitHubLink": "[LIEN_KET_GITHUB] User: {0}",
+  "Interceptor.Audit.GitHubCallback": "[PHAN_HOI_GITHUB] Username: {0} | User: {1}"
 }

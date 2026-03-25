@@ -19,6 +19,7 @@ public class JobAlertProcessor
     private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
     private readonly IJobAlertService _jobAlertService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<JobAlertProcessor> _logger;
 
     public JobAlertProcessor(
@@ -30,6 +31,7 @@ public class JobAlertProcessor
         INotificationService notificationService,
         IEmailService emailService,
         IJobAlertService jobAlertService,
+        II18nService i18nService,
         ILogger<JobAlertProcessor> logger)
     {
         _alertRepo = alertRepo;
@@ -40,6 +42,7 @@ public class JobAlertProcessor
         _notificationService = notificationService;
         _emailService = emailService;
         _jobAlertService = jobAlertService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -261,8 +264,8 @@ public class JobAlertProcessor
                 {
                     UserId = alert.UserId,
                     Type = "JobMatch",
-                    Title = "New Job Match Found!",
-                    Message = $"A new job matching your alert '{alert.Title}' has been posted: {job.Title}",
+                    Title = _i18nService.GetDisplayMessage("Display.Notification.JobMatch.Title"),
+                    Message = _i18nService.GetDisplayMessage("Display.Notification.JobMatch.Message", alert.Title ?? "", job.Title),
                     Payload = System.Text.Json.JsonSerializer.Serialize(new { jobId = job.Id, alertId = alert.Id }),
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow

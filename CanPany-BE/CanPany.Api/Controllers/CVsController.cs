@@ -1,5 +1,6 @@
-using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
+using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,15 +18,18 @@ public class CVsController : ControllerBase
     private readonly ICVService _cvService;
     private readonly ILogger<CVsController> _logger;
     private readonly ICloudinaryService _cloudinaryService;
+    private readonly II18nService _i18nService;
 
     public CVsController(
         ICVService cvService,
         ILogger<CVsController> logger,
-        ICloudinaryService cloudinaryService)
+        ICloudinaryService cloudinaryService,
+        II18nService i18nService)
     {
         _cvService = cvService;
         _logger = logger;
         _cloudinaryService = cloudinaryService;
+        _i18nService = i18nService;
     }
 
     /// <summary>
@@ -106,7 +110,8 @@ public class CVsController : ControllerBase
                 if (file == null || file.Length == 0)
                 {
                     _logger.LogError("Upload failed: No file content received (file is null or length is 0)");
-                    return BadRequest(ApiResponse.CreateError("File is required and must not be empty", "FileRequiredOrEmpty"));
+                    var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.FileRequired);
+                    return BadRequest(ApiResponse.CreateError(errorMsg, "FileRequiredOrEmpty"));
                 }
                 
                 _logger.LogInformation("File recovered from Request.Form.Files: {FileName}, Length={Length}", file.FileName, file.Length);
@@ -116,13 +121,19 @@ public class CVsController : ControllerBase
             // 1. File Validation
             // Size limit: 5MB
             if (file.Length > 5 * 1024 * 1024)
-                return BadRequest(ApiResponse.CreateError("File size exceeds 5MB limit", "FileTooLarge"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.FileTooLarge);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "FileTooLarge"));
+            }
 
             // Type validation
             var allowedExtensions = new[] { ".pdf", ".docx", ".doc" };
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!allowedExtensions.Contains(extension))
-                return BadRequest(ApiResponse.CreateError("Only PDF and Word documents are allowed", "InvalidFileType"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.InvalidFileType);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "InvalidFileType"));
+            }
 
             // 2. Upload file to Cloudinary
             await using var stream = file.OpenReadStream();
@@ -152,7 +163,8 @@ public class CVsController : ControllerBase
                 PublicId = publicId
             };
 
-            return Ok(ApiResponse<object>.CreateSuccess(responseData, "CV uploaded successfully"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.CV.Uploaded);
+            return Ok(ApiResponse<object>.CreateSuccess(responseData, successMsg));
         }
         catch (Exception ex)
         {
@@ -177,7 +189,9 @@ public class CVsController : ControllerBase
                 cv.FileName = request.FileName;
 
             await _cvService.UpdateAsync(id, cv);
-            return Ok(ApiResponse.CreateSuccess("CV updated successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.CV.Updated);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -195,7 +209,9 @@ public class CVsController : ControllerBase
         try
         {
             await _cvService.DeleteAsync(id);
-            return Ok(ApiResponse.CreateSuccess("CV deleted successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.CV.Deleted);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -217,7 +233,9 @@ public class CVsController : ControllerBase
                 return Unauthorized();
 
             await _cvService.SetAsDefaultAsync(id, userId);
-            return Ok(ApiResponse.CreateSuccess("CV set as default successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.CV.SetDefault);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {

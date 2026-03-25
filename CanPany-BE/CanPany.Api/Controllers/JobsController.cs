@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +29,7 @@ public class JobsController : ControllerBase
     private readonly IInteractionTrackingService _interactionService;
     private readonly IJobProducer _jobProducer;
     private readonly IJobProgressTracker _progressTracker;
+    private readonly II18nService _i18nService;
     private readonly ILogger<JobsController> _logger;
 
     public JobsController(
@@ -38,6 +40,7 @@ public class JobsController : ControllerBase
         IInteractionTrackingService interactionService,
         IJobProducer jobProducer,
         IJobProgressTracker progressTracker,
+        II18nService i18nService,
         ILogger<JobsController> logger)
     {
         _jobService = jobService;
@@ -47,6 +50,7 @@ public class JobsController : ControllerBase
         _interactionService = interactionService;
         _jobProducer = jobProducer;
         _progressTracker = progressTracker;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -115,7 +119,10 @@ public class JobsController : ControllerBase
         {
             var job = await _jobService.GetByIdAsync(id);
             if (job == null)
-                return NotFound(ApiResponse.CreateError("Job not found", "NotFound"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Job.NotFound);
+                return NotFound(ApiResponse.CreateError(errorMsg, "NotFound"));
+            }
 
             // Check if bookmarked (if user is authenticated)
             bool isBookmarked = false;
@@ -310,7 +317,8 @@ public class JobsController : ControllerBase
             
             _logger.LogInformation("Job created successfully: {JobId}. Job alert matching triggered.", created.Id);
             
-            return Ok(ApiResponse<Job>.CreateSuccess(created, "Job created successfully"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Job.Create);
+            return Ok(ApiResponse<Job>.CreateSuccess(created, successMsg));
         }
         catch (Exception ex)
         {
@@ -349,7 +357,10 @@ public class JobsController : ControllerBase
         {
             var job = await _jobService.GetByIdAsync(id);
             if (job == null)
-                return NotFound(ApiResponse.CreateError("Job not found", "NotFound"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Job.NotFound);
+                return NotFound(ApiResponse.CreateError(errorMsg, "NotFound"));
+            }
 
             if (!string.IsNullOrWhiteSpace(request.Title)) job.Title = request.Title;
             if (!string.IsNullOrWhiteSpace(request.Description)) job.Description = request.Description;
@@ -360,7 +371,9 @@ public class JobsController : ControllerBase
             if (request.Deadline.HasValue) job.Deadline = request.Deadline;
 
             await _jobService.UpdateAsync(id, job);
-            return Ok(ApiResponse.CreateSuccess("Job updated successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Job.Update);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -384,7 +397,9 @@ public class JobsController : ControllerBase
 
             job.Status = "Closed";
             await _jobService.UpdateAsync(id, job);
-            return Ok(ApiResponse.CreateSuccess("Job closed successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Job.Update);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -408,7 +423,9 @@ public class JobsController : ControllerBase
 
             job.Status = "Open";
             await _jobService.UpdateAsync(id, job);
-            return Ok(ApiResponse.CreateSuccess("Job reopened successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Job.Update);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
