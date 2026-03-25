@@ -125,16 +125,21 @@ public class AuthController : ControllerBase
             var user = await _authService.AuthenticateAsync(request.Email, request.Password);
             if (user == null)
             {
-                return Unauthorized(ApiResponse.CreateError("Invalid email or password", "InvalidCredentials"));
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.User.Login.InvalidCredentials);
+                return Unauthorized(ApiResponse.CreateError(errorMsg, "InvalidCredentials"));
             }
 
             var token = await _authService.GenerateTokenAsync(user);
-            return Ok(ApiResponse<object>.CreateSuccess(new { accessToken = token, user }, "Login successful"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.User.Login);
+            return Ok(ApiResponse<object>.CreateSuccess(new { accessToken = token, user }, successMsg));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during login");
-            return StatusCode(500, ApiResponse.CreateError("Login failed", "LoginFailed"));
+            var logMsg = _i18nService.GetLogMessage(I18nKeys.Error.User.Login.Failed, request.Email, ex.Message);
+            _logger.LogError(ex, logMsg);
+            
+            var userMsg = _i18nService.GetErrorMessage(I18nKeys.Error.User.Login.Failed);
+            return StatusCode(500, ApiResponse.CreateError(userMsg, "LoginFailed"));
         }
     }
 
@@ -155,7 +160,8 @@ public class AuthController : ControllerBase
                 await _authService.LogoutAsync(userId, token);
             }
 
-            return Ok(ApiResponse.CreateSuccess("Logout successful"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.User.Logout);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -183,7 +189,8 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse.CreateError(string.Join(", ", errors), "ChangePasswordFailed"));
             }
 
-            return Ok(ApiResponse.CreateSuccess("Password changed successfully"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.User.PasswordChange);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -258,7 +265,8 @@ public class AuthController : ControllerBase
             var scope = Uri.EscapeDataString("read:user user:email");
             var oauthUrl = $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={callbackUrl}&state={state}&scope={scope}";
 
-            _logger.LogInformation("[GITHUB_LINK] Generated OAuth URL for user {UserId}", userId);
+            var logMsg = _i18nService.GetLogMessage(I18nKeys.Interceptor.Audit.GitHubLink, userId);
+            _logger.LogInformation(logMsg);
 
             return Ok(ApiResponse<object>.CreateSuccess(new { oauthUrl }, "GitHub OAuth URL generated"));
         }
@@ -350,9 +358,8 @@ public class AuthController : ControllerBase
             if (!linked)
                 return Redirect($"{frontendUrl}?github_linked=false&error=profile_update_failed");
 
-            _logger.LogInformation(
-                "[GITHUB_CALLBACK] Successfully linked GitHub '{Username}' to user {UserId}",
-                gitHubUser.Login, userId);
+            var logMsg = _i18nService.GetLogMessage(I18nKeys.Interceptor.Audit.GitHubCallback, gitHubUser.Login, userId);
+            _logger.LogInformation(logMsg);
 
             // Generate a fresh token so the frontend gets the updated claims (if any)
             var user = await _userService.GetByIdAsync(userId);

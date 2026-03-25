@@ -57,6 +57,23 @@ public static class I18nKeys
             public const string UpdateFailed = "Error.CV.UpdateFailed";
             public const string DeleteFailed = "Error.CV.DeleteFailed";
         }
+
+        public static class Profile
+        {
+            public const string NotFound = "Error.Profile.NotFound";
+            public const string UpdateFailed = "Error.Profile.UpdateFailed";
+            public const string DeleteFailed = "Error.Profile.DeleteFailed";
+            public const string SyncLinkedInFailed = "Error.Profile.SyncLinkedInFailed";
+            public const string SyncGitHubFailed = "Error.Profile.SyncGitHubFailed";
+            
+            public static class Avatar
+            {
+                public const string FileRequired = "Error.Profile.Avatar.FileRequired";
+                public const string FileTooLarge = "Error.Profile.Avatar.FileTooLarge";
+                public const string InvalidFileType = "Error.Profile.Avatar.InvalidFileType";
+                public const string UploadFailed = "Error.Profile.Avatar.UploadFailed";
+            }
+        }
     }
 
     public static class Validation
@@ -78,13 +95,28 @@ public static class I18nKeys
         }
     }
 
+    public static class Display
+    {
+        public static class Notification
+        {
+            public static class JobMatch
+            {
+                public const string Title = "Display.Notification.JobMatch.Title";
+                public const string Message = "Display.Notification.JobMatch.Message";
+            }
+        }
+    }
+
     public static class Success
     {
         public static class User
         {
             public const string Register = "Success.User.Register";
             public const string Login = "Success.User.Login";
+            public const string Logout = "Success.User.Logout";
             public const string Update = "Success.User.Update";
+            public const string PasswordChange = "Success.User.PasswordChange";
+            public const string GitHubLinked = "Success.User.GitHubLinked";
         }
 
         public static class Job
@@ -92,6 +124,42 @@ public static class I18nKeys
             public const string Create = "Success.Job.Create";
             public const string Update = "Success.Job.Update";
             public const string Delete = "Success.Job.Delete";
+        }
+
+        public static class CV
+        {
+            public const string Uploaded = "Success.CV.Uploaded";
+            public const string Updated = "Success.CV.Updated";
+            public const string Deleted = "Success.CV.Deleted";
+            public const string SetDefault = "Success.CV.SetDefault";
+        }
+
+        public static class Candidate
+        {
+            public const string Retrieved = "Success.Candidate.Retrieved";
+            public const string ProfileRetrieved = "Success.Candidate.ProfileRetrieved";
+            public const string CVsRetrieved = "Success.Candidate.CVsRetrieved";
+            public const string ContactUnlocked = "Success.Candidate.ContactUnlocked";
+            public const string UnlockedListRetrieved = "Success.Candidate.UnlockedListRetrieved";
+        }
+
+        public static class Application
+        {
+            public const string Retrieved = "Success.Application.Retrieved";
+        }
+
+        public static class Statistics
+        {
+            public const string Retrieved = "Success.Statistics.Retrieved";
+        }
+
+        public static class Profile
+        {
+            public const string Updated = "Success.Profile.Updated";
+            public const string Deleted = "Success.Profile.Deleted";
+            public const string AvatarUpdated = "Success.Profile.AvatarUpdated";
+            public const string LinkedInSynced = "Success.Profile.LinkedInSynced";
+            public const string GitHubSynced = "Success.Profile.GitHubSynced";
         }
     }
 
@@ -124,6 +192,8 @@ public static class I18nKeys
             public const string ServiceCall = "Interceptor.Audit.ServiceCall";
             public const string JobExecution = "Interceptor.Audit.JobExecution";
             public const string HostedService = "Interceptor.Audit.HostedService";
+            public const string GitHubLink = "Interceptor.Audit.GitHubLink";
+            public const string GitHubCallback = "Interceptor.Audit.GitHubCallback";
             
             public static class Format
             {

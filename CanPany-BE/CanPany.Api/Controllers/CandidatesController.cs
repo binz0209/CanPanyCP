@@ -1,6 +1,7 @@
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.DTOs;
 using CanPany.Application.Common.Models;
+using CanPany.Application.Common.Constants;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -55,12 +56,12 @@ public class CandidatesController : ControllerBase
                 c.Profile,
                 c.MatchScore
             });
-            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage("CandidatesRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching candidates");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SearchCandidatesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "SearchCandidatesFailed"));
         }
     }
 
@@ -90,12 +91,12 @@ public class CandidatesController : ControllerBase
                 c.MatchScore
             });
 
-            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage("CandidatesRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching candidates with filters");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SearchCandidatesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "SearchCandidatesFailed"));
         }
     }
 
@@ -109,12 +110,12 @@ public class CandidatesController : ControllerBase
         try
         {
             var results = await _candidateSearchService.SemanticSearchAsync(request);
-            return Ok(ApiResponse.CreateSuccess(results, _i18nService.GetDisplayMessage("CandidatesRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(results, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing semantic search");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToSearchCandidates"), "SemanticSearchFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "SemanticSearchFailed"));
         }
     }
 
@@ -129,7 +130,7 @@ public class CandidatesController : ControllerBase
         {
             var user = await _userService.GetByIdAsync(id);
             if (user == null || user.Role != "Candidate")
-                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage("CandidateNotFound"), "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.NotFound), "NotFound"));
 
             var profile = await _userProfileService.GetByUserIdAsync(id);
             
@@ -148,12 +149,12 @@ public class CandidatesController : ControllerBase
                 } : null
             };
 
-            return Ok(ApiResponse.CreateSuccess(candidateInfo, _i18nService.GetDisplayMessage("CandidateRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(candidateInfo, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.ProfileRetrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetCandidate"), "GetCandidateFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCandidateFailed"));
         }
     }
 
@@ -178,7 +179,7 @@ public class CandidatesController : ControllerBase
 
             var user = await _userService.GetByIdAsync(id);
             if (user == null || user.Role != "Candidate")
-                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage("CandidateNotFound"), "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.NotFound), "NotFound"));
 
             var profile = await _userProfileService.GetByUserIdAsync(id);
             var cvs = await _cvService.GetByUserIdAsync(id);
@@ -204,12 +205,12 @@ public class CandidatesController : ControllerBase
                 })
             };
 
-            return Ok(ApiResponse.CreateSuccess(fullProfile, _i18nService.GetDisplayMessage("CandidateProfileRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(fullProfile, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.ProfileRetrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate profile");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetCandidateProfile"), "GetCandidateProfileFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCandidateProfileFailed"));
         }
     }
 
@@ -229,15 +230,15 @@ public class CandidatesController : ControllerBase
             // Check if company has unlocked this candidate
             var hasUnlocked = await _candidateSearchService.HasUnlockedCandidateAsync(companyId, id);
             if (!hasUnlocked)
-                return StatusCode(403, ApiResponse.CreateError(_i18nService.GetErrorMessage("UnlockRequired"), "UnlockRequired"));
+                return StatusCode(403, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.Unauthorized), "UnlockRequired"));
 
             var cvs = await _cvService.GetByUserIdAsync(id);
-            return Ok(ApiResponse.CreateSuccess(cvs, _i18nService.GetDisplayMessage("CandidateCVsRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(cvs, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.CVsRetrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate CVs");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetCandidateCVs"), "GetCandidateCVsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCandidateCVsFailed"));
         }
     }
 
@@ -266,12 +267,12 @@ public class CandidatesController : ControllerBase
                 applications = applications.Where(a => a.Status == status);
             }
 
-            return Ok(ApiResponse.CreateSuccess(applications, _i18nService.GetDisplayMessage("ApplicationsRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(applications, _i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate applications");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetApplications"), "GetApplicationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetApplicationsFailed"));
         }
     }
 
@@ -310,12 +311,12 @@ public class CandidatesController : ControllerBase
                 SkillsCount = profile?.SkillIds?.Count ?? 0
             };
 
-            return Ok(ApiResponse.CreateSuccess(statistics, _i18nService.GetDisplayMessage("StatisticsRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(statistics, _i18nService.GetDisplayMessage(I18nKeys.Success.Statistics.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting candidate statistics");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetStatistics"), "GetStatisticsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetStatisticsFailed"));
         }
     }
 
@@ -334,14 +335,14 @@ public class CandidatesController : ControllerBase
 
             var succeeded = await _candidateSearchService.UnlockCandidateContactAsync(companyId, candidateId);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage("UnlockFailed"), "UnlockFailed"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "UnlockFailed"));
 
-            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage("CandidateContactUnlockedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.ContactUnlocked)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error unlocking candidate");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToUnlockCandidate"), "UnlockCandidateFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "UnlockCandidateFailed"));
         }
     }
 
@@ -364,12 +365,12 @@ public class CandidatesController : ControllerBase
                 uc.User,
                 uc.Profile
             });
-            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage("UnlockedCandidatesRetrievedSuccessfully")));
+            return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.UnlockedListRetrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting unlocked candidates");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage("FailedToGetUnlockedCandidates"), "GetUnlockedCandidatesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUnlockedCandidatesFailed"));
         }
     }
 

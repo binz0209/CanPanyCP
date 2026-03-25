@@ -4,6 +4,7 @@ using CanPany.Application.DTOs;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CanPany.Application.Common.Constants;
 
 namespace CanPany.Api.Controllers;
 
@@ -18,17 +19,20 @@ public class UserProfilesController : ControllerBase
     private readonly IUserProfileService _profileService;
     private readonly IUserService _userService;
     private readonly ICloudinaryService _cloudinaryService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<UserProfilesController> _logger;
 
     public UserProfilesController(
         IUserProfileService profileService,
         IUserService userService,
         ICloudinaryService cloudinaryService,
+        II18nService i18nService,
         ILogger<UserProfilesController> logger)
     {
         _profileService = profileService;
         _userService = userService;
         _cloudinaryService = cloudinaryService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -45,23 +49,35 @@ public class UserProfilesController : ControllerBase
                 return Unauthorized();
 
             if (file == null || file.Length == 0)
-                return BadRequest(ApiResponse.CreateError("File is required", "FileRequired"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.FileRequired);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "FileRequired"));
+            }
 
             // 1. Image Validation
             // Size limit: 2MB
             if (file.Length > 2 * 1024 * 1024)
-                return BadRequest(ApiResponse.CreateError("Image size exceeds 2MB limit", "FileTooLarge"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.FileTooLarge);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "FileTooLarge"));
+            }
 
             // Type validation
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!allowedExtensions.Contains(extension))
-                return BadRequest(ApiResponse.CreateError("Only JPG, PNG and WebP images are allowed", "InvalidFileType"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.InvalidFileType);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "InvalidFileType"));
+            }
 
             // 2. Fetch user to delete old avatar if exists
             var user = await _userService.GetByIdAsync(userId);
             if (user == null)
-                return NotFound(ApiResponse.CreateError("User not found", "UserNotFound"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.User.NotFound);
+                return NotFound(ApiResponse.CreateError(errorMsg, "UserNotFound"));
+            }
 
             if (!string.IsNullOrWhiteSpace(user.CloudinaryPublicId))
             {
@@ -81,12 +97,16 @@ public class UserProfilesController : ControllerBase
             user.CloudinaryPublicId = publicId;
             await _userService.UpdateAsync(userId, user);
 
-            return Ok(ApiResponse<object>.CreateSuccess(new { Url = secureUrl, PublicId = publicId }, "Avatar updated successfully"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.AvatarUpdated);
+            return Ok(ApiResponse<object>.CreateSuccess(new { Url = secureUrl, PublicId = publicId }, successMsg));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading avatar");
-            return StatusCode(500, ApiResponse.CreateError("Failed to upload avatar", "UploadAvatarFailed"));
+            var errorMsg = _i18nService.GetLogMessage(I18nKeys.Error.Profile.Avatar.UploadFailed);
+            _logger.LogError(ex, errorMsg);
+            
+            var userMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.UploadFailed);
+            return StatusCode(500, ApiResponse.CreateError(userMsg, "UploadAvatarFailed"));
         }
     }
 
@@ -104,7 +124,10 @@ public class UserProfilesController : ControllerBase
 
             var profile = await _profileService.GetByUserIdAsync(userId);
             if (profile == null)
-                return NotFound(ApiResponse.CreateError("Profile not found", "NotFound"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.NotFound);
+                return NotFound(ApiResponse.CreateError(errorMsg, "NotFound"));
+            }
 
             return Ok(ApiResponse<UserProfile>.CreateSuccess(profile));
         }
@@ -155,7 +178,9 @@ public class UserProfilesController : ControllerBase
             if (request.Certifications != null) profile.Certifications = request.Certifications;
 
             await _profileService.UpdateAsync(userId, profile);
-            return Ok(ApiResponse.CreateSuccess("Profile updated successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.Updated);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -177,7 +202,9 @@ public class UserProfilesController : ControllerBase
                 return Unauthorized();
 
             await _userService.DeleteAsync(userId);
-            return Ok(ApiResponse.CreateSuccess("Profile deleted successfully"));
+            
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.Deleted);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -200,9 +227,13 @@ public class UserProfilesController : ControllerBase
 
             var succeeded = await _profileService.SyncFromLinkedInAsync(userId, request.LinkedInData);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError("Failed to sync LinkedIn data", "SyncLinkedInFailed"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.SyncLinkedInFailed);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "SyncLinkedInFailed"));
+            }
 
-            return Ok(ApiResponse.CreateSuccess("LinkedIn data synced successfully"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.LinkedInSynced);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
@@ -225,9 +256,13 @@ public class UserProfilesController : ControllerBase
 
             var succeeded = await _profileService.SyncFromGitHubAsync(userId, request.GitHubData);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError("Failed to sync GitHub data", "SyncGitHubFailed"));
+            {
+                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.SyncGitHubFailed);
+                return BadRequest(ApiResponse.CreateError(errorMsg, "SyncGitHubFailed"));
+            }
 
-            return Ok(ApiResponse.CreateSuccess("GitHub data synced successfully"));
+            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.GitHubSynced);
+            return Ok(ApiResponse.CreateSuccess(successMsg));
         }
         catch (Exception ex)
         {
