@@ -106,5 +106,238 @@
       "title": "Thông báo hàng loạt",
       "description": "Gửi thông báo broadcast tới nhóm người dùng (UC-ADM-26)."
     }
+  },
+  "jobs": {
+    "hideJob": {
+      "title": "Ẩn job",
+      "jobIdLabel": "Job ID",
+      "jobIdPlaceholder": "VD: 65f6... (jobId)",
+      "reasonLabel": "Lý do",
+      "reasonPlaceholder": "Nhập lý do ẩn job...",
+      "submit": "Ẩn job",
+      "success": "Job đã được ẩn.",
+      "error": "Không thể ẩn job."
+    },
+    "deleteJob": {
+      "title": "Xóa job",
+      "jobIdLabel": "Job ID",
+      "jobIdPlaceholder": "VD: 65f6... (jobId)",
+      "submit": "Xóa job",
+      "success": "Job đã được xóa.",
+      "error": "Không thể xóa job."
+    }
+  }
+  ,
+  "payments": {
+    "list": {
+      "sectionTitle": "Danh sách thanh toán",
+      "statusLabel": "Status",
+      "loadButton": "Tải danh sách",
+      "loading": "Đang tải...",
+      "empty": "Chưa có dữ liệu (BE đang TODO cho /admin/payments)."
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "sectionTitle": "Phê duyệt / từ chối",
+      "approve": {
+        "idLabel": "Payment ID (Approve)",
+        "idPlaceholder": "Payment ID",
+        "button": "Phê duyệt"
+      },
+      "reject": {
+        "idLabel": "Payment ID (Reject)",
+        "idPlaceholder": "Payment ID",
+        "reasonLabel": "Lý do từ chối",
+        "reasonPlaceholder": "Nhập lý do...",
+        "button": "Từ chối"
+      }
+    },
+    "approve": {
+      "success": "Đã phê duyệt thanh toán.",
+      "error": "Không thể phê duyệt thanh toán."
+    },
+    "reject": {
+      "success": "Đã từ chối thanh toán.",
+      "error": "Không thể từ chối thanh toán."
+    }
+  }
+  ,
+  "broadcast": {
+    "toast": {
+      "success": "Đã gửi broadcast.",
+      "error": "Không thể gửi broadcast."
+    },
+    "form": {
+      "titleLabel": "Tiêu đề",
+      "titlePlaceholder": "Tiêu đề broadcast",
+      "messageLabel": "Nội dung",
+      "messagePlaceholder": "Nội dung thông báo",
+      "targetRoleLabel": "Target role (optional)",
+      "targetRole": {
+        "all": "Tất cả",
+        "Candidate": "Ứng viên",
+        "Company": "Công ty",
+        "Admin": "Quản trị",
+        "Guest": "Khách"
+      },
+      "sendButton": "Gửi broadcast"
+    }
+  }
+  ,
+  "reports": {
+    "load": {
+      "sectionTitle": "Tải report",
+      "idLabel": "Report ID",
+      "idPlaceholder": "VD: reportId",
+      "button": "Tải chi tiết",
+      "error": "Không thể tải chi tiết report."
+    },
+    "detail": {
+      "sectionTitle": "Chi tiết",
+      "reporterLabel": "Reporter",
+      "statusLabel": "Status",
+      "reportedUserLabel": "Reported user",
+      "reasonLabel": "Reason",
+      "descriptionLabel": "Description",
+      "evidenceLabel": "Evidence"
+    },
+    "resolve": {
+      "sectionTitle": "Resolve",
+      "noteLabel": "Resolution note",
+      "banUserLabel": "Ban user",
+      "button": "Resolve",
+      "success": "Đã resolve report.",
+      "error": "Không thể resolve report."
+    },
+    "reject": {
+      "sectionTitle": "Reject",
+      "reasonLabel": "Rejection reason",
+      "button": "Reject",
+      "success": "Đã từ chối report.",
+      "error": "Không thể từ chối report."
+    }
+  }
+  ,
+  "auditLogs": {
+    "load": {
+      "error": "Không thể tải audit logs."
+    },
+    "filter": {
+      "sectionTitle": "Bộ lọc",
+      "userIdLabel": "User ID",
+      "entityTypeLabel": "Entity Type",
+      "fromDateLabel": "Từ ngày",
+      "toDateLabel": "Đến ngày",
+      "optionalPlaceholder": "(optional)",
+      "loadButton": "Tải audit logs"
+    },
+    "table": {
+      "created": "Created",
+      "action": "Action",
+      "entity": "Entity",
+      "endpoint": "Endpoint",
+      "status": "Status",
+      "error": "Error",
+      "loading": "Đang tải...",
+      "empty": "Chưa có dữ liệu"
+    }
+  }
+  ,
+  "catalog": {
+    "headings": {
+      "categories": "Categories",
+      "skills": "Skills",
+      "banners": "Banners",
+      "premiumPackagePrice": "Premium package price"
+    },
+    "common": {
+      "createButton": "Tạo",
+      "updateButton": "Cập nhật",
+      "deleteButton": "Xóa",
+      "activeLabel": "Active"
+    },
+    "category": {
+      "create": {
+        "nameLabel": "Create category name",
+        "namePlaceholder": "VD: Technology"
+      },
+      "update": {
+        "idLabel": "Update category",
+        "idPlaceholder": "Category ID",
+        "namePlaceholder": "New name"
+      },
+      "delete": {
+        "idLabel": "Delete category",
+        "idPlaceholder": "Category ID"
+      }
+    },
+    "skill": {
+      "create": {
+        "sectionLabel": "Create skill",
+        "namePlaceholder": "Skill name",
+        "categoryOptionalPlaceholder": "Category ID (optional)"
+      },
+      "update": {
+        "sectionLabel": "Update skill",
+        "idPlaceholder": "Skill ID",
+        "namePlaceholder": "New skill name",
+        "categoryOptionalPlaceholder": "Category ID (optional)"
+      },
+      "delete": {
+        "sectionLabel": "Delete skill",
+        "idPlaceholder": "Skill ID"
+      }
+    },
+    "banner": {
+      "create": {
+        "sectionLabel": "Create banner",
+        "titlePlaceholder": "Title",
+        "imagePlaceholder": "Image URL",
+        "linkOptionalPlaceholder": "Link URL (optional)",
+        "submitButton": "Create banner"
+      },
+      "update": {
+        "sectionLabel": "Update banner",
+        "idPlaceholder": "Banner ID",
+        "titleOptionalPlaceholder": "Title (optional)",
+        "imageOptionalPlaceholder": "Image URL (optional)",
+        "linkOptionalPlaceholder": "Link URL (optional)",
+        "orderOptionalPlaceholder": "Order (optional)"
+      },
+      "delete": {
+        "sectionLabel": "Delete banner",
+        "idPlaceholder": "Banner ID"
+      }
+    },
+    "packagePrice": {
+      "packageIdLabel": "Package ID",
+      "packageIdPlaceholder": "PremiumPackage ID",
+      "priceLabel": "Price (VND)",
+      "updatePriceButton": "Cập nhật giá"
+    },
+    "toasts": {
+      "category": {
+        "create": { "success": "Đã tạo category.", "error": "Không thể tạo category." },
+        "update": { "success": "Đã cập nhật category.", "error": "Không thể cập nhật category." },
+        "delete": { "success": "Đã xóa category.", "error": "Không thể xóa category." }
+      },
+      "skill": {
+        "create": { "success": "Đã tạo skill.", "error": "Không thể tạo skill." },
+        "update": { "success": "Đã cập nhật skill.", "error": "Không thể cập nhật skill." },
+        "delete": { "success": "Đã xóa skill.", "error": "Không thể xóa skill." }
+      },
+      "banner": {
+        "create": { "success": "Đã tạo banner.", "error": "Không thể tạo banner." },
+        "update": { "success": "Đã cập nhật banner.", "error": "Không thể cập nhật banner." },
+        "delete": { "success": "Đã xóa banner.", "error": "Không thể xóa banner." }
+      },
+      "packagePrice": {
+        "update": { "success": "Đã cập nhật giá gói premium.", "error": "Không thể cập nhật giá gói." }
+      }
+    }
   }
 }

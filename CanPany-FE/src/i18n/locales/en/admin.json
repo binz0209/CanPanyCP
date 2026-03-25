@@ -106,5 +106,238 @@
       "title": "Broadcast notifications",
       "description": "Send broadcast notifications to user groups (UC-ADM-26)."
     }
+  },
+  "jobs": {
+    "hideJob": {
+      "title": "Hide job",
+      "jobIdLabel": "Job ID",
+      "jobIdPlaceholder": "e.g. 65f6... (jobId)",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Enter a hide reason...",
+      "submit": "Hide job",
+      "success": "Job has been hidden.",
+      "error": "Could not hide job."
+    },
+    "deleteJob": {
+      "title": "Delete job",
+      "jobIdLabel": "Job ID",
+      "jobIdPlaceholder": "e.g. 65f6... (jobId)",
+      "submit": "Delete job",
+      "success": "Job has been deleted.",
+      "error": "Could not delete job."
+    }
+  }
+  ,
+  "payments": {
+    "list": {
+      "sectionTitle": "Payment list",
+      "statusLabel": "Status",
+      "loadButton": "Load list",
+      "loading": "Loading...",
+      "empty": "No data yet (BE TODO for /admin/payments)."
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "sectionTitle": "Approve / Reject",
+      "approve": {
+        "idLabel": "Payment ID (Approve)",
+        "idPlaceholder": "Payment ID",
+        "button": "Approve"
+      },
+      "reject": {
+        "idLabel": "Payment ID (Reject)",
+        "idPlaceholder": "Payment ID",
+        "reasonLabel": "Rejection reason",
+        "reasonPlaceholder": "Enter rejection reason...",
+        "button": "Reject"
+      }
+    },
+    "approve": {
+      "success": "Payment approved.",
+      "error": "Could not approve payment."
+    },
+    "reject": {
+      "success": "Payment rejected.",
+      "error": "Could not reject payment."
+    }
+  }
+  ,
+  "broadcast": {
+    "toast": {
+      "success": "Broadcast sent.",
+      "error": "Could not send broadcast."
+    },
+    "form": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Broadcast title",
+      "messageLabel": "Message",
+      "messagePlaceholder": "Broadcast message",
+      "targetRoleLabel": "Target role (optional)",
+      "targetRole": {
+        "all": "All",
+        "Candidate": "Candidate",
+        "Company": "Company",
+        "Admin": "Admin",
+        "Guest": "Guest"
+      },
+      "sendButton": "Send broadcast"
+    }
+  }
+  ,
+  "reports": {
+    "load": {
+      "sectionTitle": "Load report",
+      "idLabel": "Report ID",
+      "idPlaceholder": "e.g. reportId",
+      "button": "Load details",
+      "error": "Could not load report details."
+    },
+    "detail": {
+      "sectionTitle": "Details",
+      "reporterLabel": "Reporter",
+      "statusLabel": "Status",
+      "reportedUserLabel": "Reported user",
+      "reasonLabel": "Reason",
+      "descriptionLabel": "Description",
+      "evidenceLabel": "Evidence"
+    },
+    "resolve": {
+      "sectionTitle": "Resolve",
+      "noteLabel": "Resolution note",
+      "banUserLabel": "Ban user",
+      "button": "Resolve",
+      "success": "Report resolved.",
+      "error": "Could not resolve report."
+    },
+    "reject": {
+      "sectionTitle": "Reject",
+      "reasonLabel": "Rejection reason",
+      "button": "Reject",
+      "success": "Report rejected.",
+      "error": "Could not reject report."
+    }
+  }
+  ,
+  "auditLogs": {
+    "load": {
+      "error": "Could not load audit logs."
+    },
+    "filter": {
+      "sectionTitle": "Filter",
+      "userIdLabel": "User ID",
+      "entityTypeLabel": "Entity Type",
+      "fromDateLabel": "From date",
+      "toDateLabel": "To date",
+      "optionalPlaceholder": "(optional)",
+      "loadButton": "Load audit logs"
+    },
+    "table": {
+      "created": "Created",
+      "action": "Action",
+      "entity": "Entity",
+      "endpoint": "Endpoint",
+      "status": "Status",
+      "error": "Error",
+      "loading": "Loading...",
+      "empty": "No data"
+    }
+  }
+  ,
+  "catalog": {
+    "headings": {
+      "categories": "Categories",
+      "skills": "Skills",
+      "banners": "Banners",
+      "premiumPackagePrice": "Premium package price"
+    },
+    "common": {
+      "createButton": "Create",
+      "updateButton": "Update",
+      "deleteButton": "Delete",
+      "activeLabel": "Active"
+    },
+    "category": {
+      "create": {
+        "nameLabel": "Create category name",
+        "namePlaceholder": "e.g. Technology"
+      },
+      "update": {
+        "idLabel": "Update category",
+        "idPlaceholder": "Category ID",
+        "namePlaceholder": "New name"
+      },
+      "delete": {
+        "idLabel": "Delete category",
+        "idPlaceholder": "Category ID"
+      }
+    },
+    "skill": {
+      "create": {
+        "sectionLabel": "Create skill",
+        "namePlaceholder": "Skill name",
+        "categoryOptionalPlaceholder": "Category ID (optional)"
+      },
+      "update": {
+        "sectionLabel": "Update skill",
+        "idPlaceholder": "Skill ID",
+        "namePlaceholder": "New skill name",
+        "categoryOptionalPlaceholder": "Category ID (optional)"
+      },
+      "delete": {
+        "sectionLabel": "Delete skill",
+        "idPlaceholder": "Skill ID"
+      }
+    },
+    "banner": {
+      "create": {
+        "sectionLabel": "Create banner",
+        "titlePlaceholder": "Title",
+        "imagePlaceholder": "Image URL",
+        "linkOptionalPlaceholder": "Link URL (optional)",
+        "submitButton": "Create banner"
+      },
+      "update": {
+        "sectionLabel": "Update banner",
+        "idPlaceholder": "Banner ID",
+        "titleOptionalPlaceholder": "Title (optional)",
+        "imageOptionalPlaceholder": "Image URL (optional)",
+        "linkOptionalPlaceholder": "Link URL (optional)",
+        "orderOptionalPlaceholder": "Order (optional)"
+      },
+      "delete": {
+        "sectionLabel": "Delete banner",
+        "idPlaceholder": "Banner ID"
+      }
+    },
+    "packagePrice": {
+      "packageIdLabel": "Package ID",
+      "packageIdPlaceholder": "PremiumPackage ID",
+      "priceLabel": "Price (VND)",
+      "updatePriceButton": "Update price"
+    },
+    "toasts": {
+      "category": {
+        "create": { "success": "Category created.", "error": "Could not create category." },
+        "update": { "success": "Category updated.", "error": "Could not update category." },
+        "delete": { "success": "Category deleted.", "error": "Could not delete category." }
+      },
+      "skill": {
+        "create": { "success": "Skill created.", "error": "Could not create skill." },
+        "update": { "success": "Skill updated.", "error": "Could not update skill." },
+        "delete": { "success": "Skill deleted.", "error": "Could not delete skill." }
+      },
+      "banner": {
+        "create": { "success": "Banner created.", "error": "Could not create banner." },
+        "update": { "success": "Banner updated.", "error": "Could not update banner." },
+        "delete": { "success": "Banner deleted.", "error": "Could not delete banner." }
+      },
+      "packagePrice": {
+        "update": { "success": "Premium package price updated.", "error": "Could not update package price." }
+      }
+    }
   }
 }

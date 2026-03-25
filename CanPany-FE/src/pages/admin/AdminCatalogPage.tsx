@@ -20,29 +20,29 @@ export function AdminCatalogPage() {
     const createCategory = useMutation({
         mutationFn: () => adminApi.createCategory(categoryCreateName.trim()),
         onSuccess: () => {
-            toast.success('Đã tạo category.');
+            toast.success(t('catalog.toasts.category.create.success'));
             setCategoryCreateName('');
         },
-        onError: () => toast.error('Không thể tạo category.'),
+        onError: () => toast.error(t('catalog.toasts.category.create.error')),
     });
 
     const updateCategory = useMutation({
         mutationFn: () => adminApi.updateCategory(categoryUpdateId.trim(), categoryUpdateName.trim()),
         onSuccess: () => {
-            toast.success('Đã cập nhật category.');
+            toast.success(t('catalog.toasts.category.update.success'));
             setCategoryUpdateId('');
             setCategoryUpdateName('');
         },
-        onError: () => toast.error('Không thể cập nhật category.'),
+        onError: () => toast.error(t('catalog.toasts.category.update.error')),
     });
 
     const deleteCategory = useMutation({
         mutationFn: () => adminApi.deleteCategory(categoryDeleteId.trim()),
         onSuccess: () => {
-            toast.success('Đã xóa category.');
+            toast.success(t('catalog.toasts.category.delete.success'));
             setCategoryDeleteId('');
         },
-        onError: () => toast.error('Không thể xóa category.'),
+        onError: () => toast.error(t('catalog.toasts.category.delete.error')),
     });
 
     // Skill
@@ -60,11 +60,11 @@ export function AdminCatalogPage() {
                 skillCreateCategoryId.trim() || undefined
             ),
         onSuccess: () => {
-            toast.success('Đã tạo skill.');
+            toast.success(t('catalog.toasts.skill.create.success'));
             setSkillCreateName('');
             setSkillCreateCategoryId('');
         },
-        onError: () => toast.error('Không thể tạo skill.'),
+        onError: () => toast.error(t('catalog.toasts.skill.create.error')),
     });
 
     const updateSkill = useMutation({
@@ -75,21 +75,21 @@ export function AdminCatalogPage() {
                 skillUpdateCategoryId.trim() || undefined
             ),
         onSuccess: () => {
-            toast.success('Đã cập nhật skill.');
+            toast.success(t('catalog.toasts.skill.update.success'));
             setSkillUpdateId('');
             setSkillUpdateName('');
             setSkillUpdateCategoryId('');
         },
-        onError: () => toast.error('Không thể cập nhật skill.'),
+        onError: () => toast.error(t('catalog.toasts.skill.update.error')),
     });
 
     const deleteSkill = useMutation({
         mutationFn: () => adminApi.deleteSkill(skillDeleteId.trim()),
         onSuccess: () => {
-            toast.success('Đã xóa skill.');
+            toast.success(t('catalog.toasts.skill.delete.success'));
             setSkillDeleteId('');
         },
-        onError: () => toast.error('Không thể xóa skill.'),
+        onError: () => toast.error(t('catalog.toasts.skill.delete.error')),
     });
 
     // Banner
@@ -118,12 +118,12 @@ export function AdminCatalogPage() {
                 isActive: bannerCreateIsActive,
             }),
         onSuccess: () => {
-            toast.success('Đã tạo banner.');
+            toast.success(t('catalog.toasts.banner.create.success'));
             setBannerCreateTitle('');
             setBannerCreateImageUrl('');
             setBannerCreateLinkUrl('');
         },
-        onError: () => toast.error('Không thể tạo banner.'),
+        onError: () => toast.error(t('catalog.toasts.banner.create.error')),
     });
 
     const updateBanner = useMutation({
@@ -143,23 +143,23 @@ export function AdminCatalogPage() {
             return adminApi.updateBanner(bannerUpdateId.trim(), payload);
         },
         onSuccess: () => {
-            toast.success('Đã cập nhật banner.');
+            toast.success(t('catalog.toasts.banner.update.success'));
             setBannerUpdateId('');
             setBannerUpdateTitle('');
             setBannerUpdateImageUrl('');
             setBannerUpdateLinkUrl('');
             setBannerUpdateOrder('0');
         },
-        onError: () => toast.error('Không thể cập nhật banner.'),
+        onError: () => toast.error(t('catalog.toasts.banner.update.error')),
     });
 
     const deleteBanner = useMutation({
         mutationFn: () => adminApi.deleteBanner(bannerDeleteId.trim()),
         onSuccess: () => {
-            toast.success('Đã xóa banner.');
+            toast.success(t('catalog.toasts.banner.delete.success'));
             setBannerDeleteId('');
         },
-        onError: () => toast.error('Không thể xóa banner.'),
+        onError: () => toast.error(t('catalog.toasts.banner.delete.error')),
     });
 
     // Premium package price
@@ -169,11 +169,11 @@ export function AdminCatalogPage() {
     const updatePackage = useMutation({
         mutationFn: () => adminApi.updatePackagePrice(packageId.trim(), packagePrice),
         onSuccess: () => {
-            toast.success('Đã cập nhật giá gói premium.');
+            toast.success(t('catalog.toasts.packagePrice.update.success'));
             setPackageId('');
             setPackagePrice(0);
         },
-        onError: () => toast.error('Không thể cập nhật giá gói.'),
+        onError: () => toast.error(t('catalog.toasts.packagePrice.update.error')),
     });
 
     return (
@@ -185,55 +185,55 @@ export function AdminCatalogPage() {
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.categories')}</h2>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Create category name</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.category.create.nameLabel')}</label>
                         <input
                             value={categoryCreateName}
                             onChange={(e) => setCategoryCreateName(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="VD: Technology"
+                            placeholder={t('catalog.category.create.namePlaceholder')}
                         />
                         <Button
                             className="bg-[#00b14f] hover:bg-[#00b14f]/90"
                             disabled={createCategory.isPending || !categoryCreateName.trim()}
                             onClick={() => createCategory.mutate()}
                         >
-                            Tạo
+                            {t('catalog.common.createButton')}
                         </Button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Update category</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.category.update.idLabel')}</label>
                         <input
                             value={categoryUpdateId}
                             onChange={(e) => setCategoryUpdateId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Category ID"
+                            placeholder={t('catalog.category.update.idPlaceholder')}
                         />
                         <input
                             value={categoryUpdateName}
                             onChange={(e) => setCategoryUpdateName(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="New name"
+                            placeholder={t('catalog.category.update.namePlaceholder')}
                         />
                         <Button
                             variant="outline"
                             disabled={updateCategory.isPending || !categoryUpdateId.trim() || !categoryUpdateName.trim()}
                             onClick={() => updateCategory.mutate()}
                         >
-                            Cập nhật
+                            {t('catalog.common.updateButton')}
                         </Button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Delete category</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.category.delete.idLabel')}</label>
                         <input
                             value={categoryDeleteId}
                             onChange={(e) => setCategoryDeleteId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Category ID"
+                            placeholder={t('catalog.category.delete.idPlaceholder')}
                         />
                         <Button
                             variant="outline"
@@ -241,73 +241,73 @@ export function AdminCatalogPage() {
                             disabled={deleteCategory.isPending || !categoryDeleteId.trim()}
                             onClick={() => deleteCategory.mutate()}
                         >
-                            Xóa
+                            {t('catalog.common.deleteButton')}
                         </Button>
                     </div>
                 </Card>
 
                 <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">Skills</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.skills')}</h2>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Create skill</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.skill.create.sectionLabel')}</label>
                         <input
                             value={skillCreateName}
                             onChange={(e) => setSkillCreateName(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Skill name"
+                            placeholder={t('catalog.skill.create.namePlaceholder')}
                         />
                         <input
                             value={skillCreateCategoryId}
                             onChange={(e) => setSkillCreateCategoryId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Category ID (optional)"
+                            placeholder={t('catalog.skill.create.categoryOptionalPlaceholder')}
                         />
                         <Button
                             className="bg-[#00b14f] hover:bg-[#00b14f]/90"
                             disabled={createSkill.isPending || !skillCreateName.trim()}
                             onClick={() => createSkill.mutate()}
                         >
-                            Tạo
+                            {t('catalog.common.createButton')}
                         </Button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Update skill</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.skill.update.sectionLabel')}</label>
                         <input
                             value={skillUpdateId}
                             onChange={(e) => setSkillUpdateId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Skill ID"
+                            placeholder={t('catalog.skill.update.idPlaceholder')}
                         />
                         <input
                             value={skillUpdateName}
                             onChange={(e) => setSkillUpdateName(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="New skill name"
+                            placeholder={t('catalog.skill.update.namePlaceholder')}
                         />
                         <input
                             value={skillUpdateCategoryId}
                             onChange={(e) => setSkillUpdateCategoryId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Category ID (optional)"
+                            placeholder={t('catalog.skill.update.categoryOptionalPlaceholder')}
                         />
                         <Button
                             variant="outline"
                             disabled={updateSkill.isPending || !skillUpdateId.trim() || !skillUpdateName.trim()}
                             onClick={() => updateSkill.mutate()}
                         >
-                            Cập nhật
+                            {t('catalog.common.updateButton')}
                         </Button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Delete skill</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.skill.delete.sectionLabel')}</label>
                         <input
                             value={skillDeleteId}
                             onChange={(e) => setSkillDeleteId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Skill ID"
+                            placeholder={t('catalog.skill.delete.idPlaceholder')}
                         />
                         <Button
                             variant="outline"
@@ -315,33 +315,33 @@ export function AdminCatalogPage() {
                             disabled={deleteSkill.isPending || !skillDeleteId.trim()}
                             onClick={() => deleteSkill.mutate()}
                         >
-                            Xóa
+                            {t('catalog.common.deleteButton')}
                         </Button>
                     </div>
                 </Card>
 
                 <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">Banners</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.banners')}</h2>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Create banner</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.banner.create.sectionLabel')}</label>
                         <input
                             value={bannerCreateTitle}
                             onChange={(e) => setBannerCreateTitle(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Title"
+                            placeholder={t('catalog.banner.create.titlePlaceholder')}
                         />
                         <input
                             value={bannerCreateImageUrl}
                             onChange={(e) => setBannerCreateImageUrl(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Image URL"
+                            placeholder={t('catalog.banner.create.imagePlaceholder')}
                         />
                         <input
                             value={bannerCreateLinkUrl}
                             onChange={(e) => setBannerCreateLinkUrl(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Link URL (optional)"
+                            placeholder={t('catalog.banner.create.linkOptionalPlaceholder')}
                         />
                         <input
                             value={bannerCreateOrder}
@@ -355,48 +355,48 @@ export function AdminCatalogPage() {
                                 checked={bannerCreateIsActive}
                                 onChange={(e) => setBannerCreateIsActive(e.target.checked)}
                             />
-                            Active
+                            {t('catalog.common.activeLabel')}
                         </label>
                         <Button
                             className="bg-[#00b14f] hover:bg-[#00b14f]/90"
                             disabled={createBanner.isPending || !bannerCreateTitle.trim() || !bannerCreateImageUrl.trim()}
                             onClick={() => createBanner.mutate()}
                         >
-                            Tạo banner
+                            {t('catalog.banner.create.submitButton')}
                         </Button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Update banner</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.banner.update.sectionLabel')}</label>
                         <input
                             value={bannerUpdateId}
                             onChange={(e) => setBannerUpdateId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Banner ID"
+                            placeholder={t('catalog.banner.update.idPlaceholder')}
                         />
                         <input
                             value={bannerUpdateTitle}
                             onChange={(e) => setBannerUpdateTitle(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Title (optional)"
+                            placeholder={t('catalog.banner.update.titleOptionalPlaceholder')}
                         />
                         <input
                             value={bannerUpdateImageUrl}
                             onChange={(e) => setBannerUpdateImageUrl(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Image URL (optional)"
+                            placeholder={t('catalog.banner.update.imageOptionalPlaceholder')}
                         />
                         <input
                             value={bannerUpdateLinkUrl}
                             onChange={(e) => setBannerUpdateLinkUrl(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Link URL (optional)"
+                            placeholder={t('catalog.banner.update.linkOptionalPlaceholder')}
                         />
                         <input
                             value={bannerUpdateOrder}
                             onChange={(e) => setBannerUpdateOrder(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Order (optional)"
+                            placeholder={t('catalog.banner.update.orderOptionalPlaceholder')}
                         />
                         <label className="flex items-center gap-2 text-sm text-gray-700">
                             <input
@@ -404,24 +404,24 @@ export function AdminCatalogPage() {
                                 checked={bannerUpdateIsActive}
                                 onChange={(e) => setBannerUpdateIsActive(e.target.checked)}
                             />
-                            Active
+                            {t('catalog.common.activeLabel')}
                         </label>
                         <Button
                             variant="outline"
                             disabled={updateBanner.isPending || !bannerUpdateId.trim()}
                             onClick={() => updateBanner.mutate()}
                         >
-                            Cập nhật
+                            {t('catalog.common.updateButton')}
                         </Button>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Delete banner</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.banner.delete.sectionLabel')}</label>
                         <input
                             value={bannerDeleteId}
                             onChange={(e) => setBannerDeleteId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Banner ID"
+                            placeholder={t('catalog.banner.delete.idPlaceholder')}
                         />
                         <Button
                             variant="outline"
@@ -429,22 +429,22 @@ export function AdminCatalogPage() {
                             disabled={deleteBanner.isPending || !bannerDeleteId.trim()}
                             onClick={() => deleteBanner.mutate()}
                         >
-                            Xóa
+                            {t('catalog.common.deleteButton')}
                         </Button>
                     </div>
                 </Card>
 
                 <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">Premium package price</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.premiumPackagePrice')}</h2>
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Package ID</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.packagePrice.packageIdLabel')}</label>
                         <input
                             value={packageId}
                             onChange={(e) => setPackageId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="PremiumPackage ID"
+                            placeholder={t('catalog.packagePrice.packageIdPlaceholder')}
                         />
-                        <label className="block text-sm font-medium text-gray-700">Price (VND)</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('catalog.packagePrice.priceLabel')}</label>
                         <input
                             type="number"
                             value={packagePrice}
@@ -456,7 +456,7 @@ export function AdminCatalogPage() {
                             disabled={updatePackage.isPending || !packageId.trim() || packagePrice <= 0}
                             onClick={() => updatePackage.mutate()}
                         >
-                            Cập nhật giá
+                            {t('catalog.packagePrice.updatePriceButton')}
                         </Button>
                     </div>
                 </Card>

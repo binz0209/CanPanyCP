@@ -31,7 +31,7 @@ export function AdminAuditLogsPage() {
             });
         },
         onSuccess: (data) => setLogs(data),
-        onError: () => toast.error('Không thể tải audit logs.'),
+        onError: () => toast.error(t('auditLogs.load.error')),
     });
 
     return (
@@ -42,28 +42,28 @@ export function AdminAuditLogsPage() {
             </div>
 
             <Card className="space-y-4 p-5">
-                <h2 className="text-lg font-semibold text-gray-900">Bộ lọc</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('auditLogs.filter.sectionTitle')}</h2>
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">User ID</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('auditLogs.filter.userIdLabel')}</label>
                         <input
                             value={userId}
                             onChange={(e) => setUserId(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="(optional)"
+                            placeholder={t('auditLogs.filter.optionalPlaceholder')}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Entity Type</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('auditLogs.filter.entityTypeLabel')}</label>
                         <input
                             value={entityType}
                             onChange={(e) => setEntityType(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="(optional)"
+                            placeholder={t('auditLogs.filter.optionalPlaceholder')}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">From date</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('auditLogs.filter.fromDateLabel')}</label>
                         <input
                             type="date"
                             value={fromDate}
@@ -72,7 +72,7 @@ export function AdminAuditLogsPage() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">To date</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('auditLogs.filter.toDateLabel')}</label>
                         <input
                             type="date"
                             value={toDate}
@@ -87,7 +87,7 @@ export function AdminAuditLogsPage() {
                         disabled={loadLogs.isPending}
                         onClick={() => loadLogs.mutate()}
                     >
-                        Tải audit logs
+                        {t('auditLogs.filter.loadButton')}
                     </Button>
                 </div>
             </Card>
@@ -97,19 +97,19 @@ export function AdminAuditLogsPage() {
                     <table className="w-full min-w-[820px] text-left text-sm">
                         <thead className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase text-gray-500">
                             <tr>
-                                <th className="px-4 py-3">Created</th>
-                                <th className="px-4 py-3">Action</th>
-                                <th className="px-4 py-3">Entity</th>
-                                <th className="px-4 py-3">Endpoint</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Error</th>
+                                <th className="px-4 py-3">{t('auditLogs.table.created')}</th>
+                                <th className="px-4 py-3">{t('auditLogs.table.action')}</th>
+                                <th className="px-4 py-3">{t('auditLogs.table.entity')}</th>
+                                <th className="px-4 py-3">{t('auditLogs.table.endpoint')}</th>
+                                <th className="px-4 py-3">{t('auditLogs.table.status')}</th>
+                                <th className="px-4 py-3">{t('auditLogs.table.error')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {logs.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
-                                        {loadLogs.isPending ? 'Đang tải...' : 'Chưa có dữ liệu'}
+                                        {loadLogs.isPending ? t('auditLogs.table.loading') : t('auditLogs.table.empty')}
                                     </td>
                                 </tr>
                             ) : (

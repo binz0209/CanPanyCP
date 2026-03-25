@@ -23,12 +23,12 @@ export function AdminBroadcastPage() {
                 targetRole: targetRole.trim() || undefined,
             }),
         onSuccess: () => {
-            toast.success('Đã gửi broadcast.');
+            toast.success(t('broadcast.toast.success'));
             setBroadcastTitle('');
             setMessage('');
             setTargetRole('');
         },
-        onError: () => toast.error('Không thể gửi broadcast.'),
+        onError: () => toast.error(t('broadcast.toast.error')),
     });
 
     return (
@@ -41,36 +41,36 @@ export function AdminBroadcastPage() {
             <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="space-y-4 p-5 lg:col-span-2">
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Title</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('broadcast.form.titleLabel')}</label>
                         <input
                             value={broadcastTitle}
                             onChange={(e) => setBroadcastTitle(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Tiêu đề broadcast"
+                            placeholder={t('broadcast.form.titlePlaceholder')}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Message</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('broadcast.form.messageLabel')}</label>
                         <textarea
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                             rows={6}
                             className="w-full resize-y rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder="Nội dung thông báo"
+                            placeholder={t('broadcast.form.messagePlaceholder')}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Target role (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700">{t('broadcast.form.targetRoleLabel')}</label>
                         <select
                             value={targetRole}
                             onChange={(e) => setTargetRole(e.target.value)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
                         >
-                            <option value="">All</option>
-                            <option value="Candidate">Candidate</option>
-                            <option value="Company">Company</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Guest">Guest</option>
+                            <option value="">{t('broadcast.form.targetRole.all')}</option>
+                            <option value="Candidate">{t('broadcast.form.targetRole.Candidate')}</option>
+                            <option value="Company">{t('broadcast.form.targetRole.Company')}</option>
+                            <option value="Admin">{t('broadcast.form.targetRole.Admin')}</option>
+                            <option value="Guest">{t('broadcast.form.targetRole.Guest')}</option>
                         </select>
                     </div>
                     <div className="flex justify-end">
@@ -79,7 +79,7 @@ export function AdminBroadcastPage() {
                             disabled={sendMutation.isPending || !broadcastTitle.trim() || !message.trim()}
                             onClick={() => sendMutation.mutate()}
                         >
-                            Gửi broadcast
+                            {t('broadcast.form.sendButton')}
                         </Button>
                     </div>
                 </Card>
