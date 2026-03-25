@@ -5,6 +5,7 @@ import { CompanyNavbar, CompanySidebar } from '../features/companies';
 import { companiesApi } from '../../api';
 import { companyKeys } from '../../lib/queryKeys';
 import { useAuthStore } from '../../stores/auth.store';
+import { isAppRole } from '@/lib/userRole';
 
 export function CompanyLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,7 +14,7 @@ export function CompanyLayout() {
     useQuery({
         queryKey: companyKeys.me(),
         queryFn: () => companiesApi.getMe(),
-        enabled: isAuthenticated && user?.role === 'Company',
+        enabled: isAuthenticated && isAppRole(user?.role, 'Company'),
         retry: false,
     });
 
@@ -29,8 +30,11 @@ export function CompanyLayout() {
         return <Navigate to="/auth/login" replace state={{ from: location }} />;
     }
 
-    if (user.role !== 'Company') {
-        const fallbackPath = user.role === 'Candidate' ? '/candidate/dashboard' : '/';
+    if (!isAppRole(user.role, 'Company')) {
+        if (isAppRole(user.role, 'Admin')) {
+            return <Navigate to="/admin/dashboard" replace />;
+        }
+        const fallbackPath = isAppRole(user.role, 'Candidate') ? '/candidate/dashboard' : '/';
         return <Navigate to={fallbackPath} replace />;
     }
 

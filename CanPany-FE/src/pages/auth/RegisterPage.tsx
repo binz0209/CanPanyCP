@@ -194,7 +194,7 @@ export function RegisterPage() {
                         <Input
                             label={t('register.fullNameLabel')}
                             type="text"
-                            placeholder="Nguyễn Văn A"
+                            placeholder={t('register.fullNamePlaceholder')}
                             icon={<User className="h-5 w-5" />}
                             error={errors.fullName?.message}
                             {...register('fullName')}
@@ -203,7 +203,7 @@ export function RegisterPage() {
                         <Input
                             label={t('register.emailLabel')}
                             type="email"
-                            placeholder="you@example.com"
+                            placeholder={t('register.emailPlaceholder')}
                             icon={<Mail className="h-5 w-5" />}
                             error={errors.email?.message}
                             {...register('email')}
@@ -213,7 +213,7 @@ export function RegisterPage() {
                             <Input
                                 label={t('register.passwordLabel')}
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                                placeholder={t('register.passwordPlaceholder')}
                                 icon={<Lock className="h-5 w-5" />}
                                 error={errors.password?.message}
                                 {...register('password')}
@@ -230,7 +230,7 @@ export function RegisterPage() {
                         <Input
                             label={t('register.passwordConfirmLabel')}
                             type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                                placeholder={t('register.passwordPlaceholder')}
                             icon={<Lock className="h-5 w-5" />}
                             error={errors.confirmPassword?.message}
                             {...register('confirmPassword')}

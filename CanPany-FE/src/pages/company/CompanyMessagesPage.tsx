@@ -28,8 +28,8 @@ export function CompanyMessagesPage() {
     const { conversationId } = useParams<{ conversationId: string }>();
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
-    const [draft, setDraft] = useState('');
     const { t } = useTranslation('company');
+    const [draft, setDraft] = useState('');
 
     // Invisible anchor element at the bottom of the message list used for auto-scroll.
     const bottomAnchorRef = useRef<HTMLDivElement>(null);
@@ -147,8 +147,8 @@ export function CompanyMessagesPage() {
     if (hasFatalError) {
         return (
             <CompanyWorkspaceErrorState
-                title={t('messages.errorTitle')}
-                description={t('messages.errorDesc')}
+                title={t('messages.errorLoadTitle')}
+                description={t('messages.errorLoadDesc')}
                 icon={<MessageSquare className="h-6 w-6" />}
             />
         );
@@ -159,13 +159,10 @@ export function CompanyMessagesPage() {
     if (!conversationId) {
         return (
             <div className="space-y-6">
-                <SectionHeader
-                    title={t('messages.title')}
-                    description={t('messages.description')}
-                />
+                <SectionHeader title={t('messages.title')} description={t('messages.descriptionLanding')} />
                 <EmptyState
-                    title={t('messages.noConversationTitle')}
-                    description={t('messages.noConversationDesc')}
+                    title={t('messages.emptyNoConversationTitle')}
+                    description={t('messages.emptyNoConversationDesc')}
                     icon={<MessageSquare className="h-6 w-6" />}
                 />
             </div>
@@ -179,9 +176,9 @@ export function CompanyMessagesPage() {
         <div className="flex h-[calc(100vh-10rem)] flex-col gap-4">
             <SectionHeader
                 title={t('messages.title')}
-                description={t('messages.descriptionActive')}
+                description={t('messages.descriptionList')}
                 backLink="/company/applications"
-                backLabel={t('messages.backLabel')}
+                backLabel={t('messages.backToApplications')}
             />
 
             <Card className="flex flex-1 flex-col overflow-hidden p-0">
@@ -193,15 +190,11 @@ export function CompanyMessagesPage() {
                         </div>
                     ) : isFetchError ? (
                         <div className="flex h-full items-center justify-center">
-                            <p className="text-sm text-red-500">
-                                {t('messages.loadFailed')}
-                            </p>
+                            <p className="text-sm text-red-500">{t('messages.loadError')}</p>
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="flex h-full items-center justify-center">
-                            <p className="text-sm text-gray-400">
-                                {t('messages.noMessages')}
-                            </p>
+                            <p className="text-sm text-gray-400">{t('messages.emptyThread')}</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -210,6 +203,7 @@ export function CompanyMessagesPage() {
                                     key={message.id}
                                     message={message}
                                     isSelf={message.senderId === user?.id}
+                                    sendingLabel={t('messages.sendingOptimistic')}
                                 />
                             ))}
                         </div>
@@ -238,12 +232,10 @@ export function CompanyMessagesPage() {
                             aria-label={t('messages.sendAriaLabel')}
                         >
                             <Send className="h-4 w-4" />
-                            {sendMutation.isPending ? t('messages.sendingLabel') : t('messages.sendButton')}
+                            {t('messages.sendButton')}
                         </Button>
                     </div>
-                    <p className="mt-2 text-xs text-gray-400">
-                        {t('messages.sendHint')}
-                    </p>
+                    <p className="mt-2 text-xs text-gray-400">{t('messages.composeHint')}</p>
                 </div>
             </Card>
         </div>
@@ -258,10 +250,10 @@ interface MessageBubbleProps {
     message: Message;
     /** True when the message was sent by the currently logged-in user. */
     isSelf: boolean;
+    sendingLabel: string;
 }
 
-function MessageBubble({ message, isSelf }: MessageBubbleProps) {
-    const { t } = useTranslation('company');
+function MessageBubble({ message, isSelf, sendingLabel }: MessageBubbleProps) {
     const isOptimistic = message.id.startsWith('optimistic-');
 
     return (
@@ -282,7 +274,7 @@ function MessageBubble({ message, isSelf }: MessageBubbleProps) {
                         isSelf ? 'text-white/70' : 'text-gray-400'
                     }`}
                 >
-                    {isOptimistic ? t('messages.sendingLabel') : formatRelativeTime(message.createdAt)}
+                    {isOptimistic ? sendingLabel : formatRelativeTime(message.createdAt)}
                 </p>
             </div>
         </div>

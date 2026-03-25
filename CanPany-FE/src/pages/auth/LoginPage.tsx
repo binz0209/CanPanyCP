@@ -8,6 +8,7 @@ import { Mail, Lock, Briefcase, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
 import { authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
+import { isAppRole } from '@/lib/userRole';
 import toast from 'react-hot-toast';
 
 const createLoginSchema = (t: (key: string) => string) =>
@@ -69,11 +70,11 @@ export function LoginPage() {
             setAuth(response.user, response.accessToken);
             toast.success(t('login.success'));
 
-            const redirectPath = response.user.role === 'Candidate'
+            const redirectPath = isAppRole(response.user.role, 'Candidate')
                 ? '/candidate/dashboard'
-                : response.user.role === 'Company'
+                : isAppRole(response.user.role, 'Company')
                     ? '/company/dashboard'
-                    : response.user.role === 'Admin'
+                    : isAppRole(response.user.role, 'Admin')
                         ? '/admin/dashboard'
                         : from;
 

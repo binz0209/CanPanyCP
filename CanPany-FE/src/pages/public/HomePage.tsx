@@ -1,37 +1,41 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Carousel } from '../../components/ui';
 
-const jobBanners = [
-    {
-        id: 1,
-        title: 'Senior Frontend Developer',
-        company: 'FPT Software',
-        location: 'Hà Nội',
-        salary: '20-30 triệu',
-        image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
-    },
-    {
-        id: 2,
-        title: 'UI/UX Designer',
-        company: 'VNG Corporation',
-        location: 'TP. Hồ Chí Minh',
-        salary: '15-25 triệu',
-        image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=400&fit=crop',
-    },
-    {
-        id: 3,
-        title: 'Data Analyst',
-        company: 'Viettel',
-        location: 'Đà Nẵng',
-        salary: '18-28 triệu',
-        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
-    },
-];
-
 export function HomePage() {
     const { t } = useTranslation('public');
+
+    const jobBanners = useMemo(
+        () => [
+            {
+                id: 1,
+                title: t('home.banner1Title'),
+                company: t('home.banner1Company'),
+                location: t('home.banner1Location'),
+                salary: t('home.banner1Salary'),
+                image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
+            },
+            {
+                id: 2,
+                title: t('home.banner2Title'),
+                company: t('home.banner2Company'),
+                location: t('home.banner2Location'),
+                salary: t('home.banner2Salary'),
+                image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=400&fit=crop',
+            },
+            {
+                id: 3,
+                title: t('home.banner3Title'),
+                company: t('home.banner3Company'),
+                location: t('home.banner3Location'),
+                salary: t('home.banner3Salary'),
+                image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
+            },
+        ],
+        [t]
+    );
 
     const features = [
         {
@@ -67,14 +71,27 @@ export function HomePage() {
         { name: t('home.categories.hr'), count: 980, icon: '👥', color: 'bg-cyan-50 text-cyan-600' },
     ];
 
-    const topCompanies = [
-        { name: 'FPT Software', logo: '🏢' },
-        { name: 'VNG Corporation', logo: '🎮' },
-        { name: 'Viettel', logo: '📱' },
-        { name: 'Vingroup', logo: '🏗️' },
-        { name: 'VNPAY', logo: '💳' },
-        { name: 'Momo', logo: '💜' },
-    ];
+    const topCompanies = useMemo(
+        () => [
+            { name: t('home.partnerFpt'), logo: '🏢' },
+            { name: t('home.partnerVng'), logo: '🎮' },
+            { name: t('home.partnerViettel'), logo: '📱' },
+            { name: t('home.partnerVingroup'), logo: '🏗️' },
+            { name: t('home.partnerVnpay'), logo: '💳' },
+            { name: t('home.partnerMomo'), logo: '💜' },
+        ],
+        [t]
+    );
+
+    const popularTerms = useMemo(
+        () => [
+            { keyword: 'Frontend Developer', label: t('home.popularFrontend') },
+            { keyword: 'UI/UX Designer', label: t('home.popularUiUx') },
+            { keyword: 'Data Analyst', label: t('home.popularData') },
+            { keyword: 'Marketing', label: t('home.popularMarketing') },
+        ],
+        [t]
+    );
 
     return (
         <div>
@@ -98,7 +115,7 @@ export function HomePage() {
                             </h1>
                             <p className="mt-6 max-w-xl text-lg text-white/90">
                                 {t('home.heroSubtitlePrefix')}{' '}
-                                <span className="font-semibold">50,000+</span>{' '}
+                                <span className="font-semibold">{t('home.heroSubtitleNumber')}</span>{' '}
                                 {t('home.heroSubtitleSuffix')}
                             </p>
 
@@ -117,9 +134,9 @@ export function HomePage() {
                                         <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                         <select className="w-full appearance-none rounded-lg border-0 bg-gray-50 py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20">
                                             <option>{t('home.allLocations')}</option>
-                                            <option>Hà Nội</option>
-                                            <option>TP. Hồ Chí Minh</option>
-                                            <option>Đà Nẵng</option>
+                                            <option>{t('home.locationHanoi')}</option>
+                                            <option>{t('home.locationHcm')}</option>
+                                            <option>{t('home.locationDanang')}</option>
                                         </select>
                                     </div>
                                     <Link to="/jobs">
@@ -134,13 +151,13 @@ export function HomePage() {
                             {/* Popular searches */}
                             <div className="mt-6 flex flex-wrap items-center gap-2">
                                 <span className="text-sm text-white/80">{t('home.popularLabel')}</span>
-                                {['Frontend Developer', 'UI/UX Designer', 'Data Analyst', 'Marketing'].map((term) => (
+                                {popularTerms.map((term) => (
                                     <Link
-                                        key={term}
-                                        to={`/jobs?keyword=${encodeURIComponent(term)}`}
+                                        key={term.keyword}
+                                        to={`/jobs?keyword=${encodeURIComponent(term.keyword)}`}
                                         className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/25"
                                     >
-                                        {term}
+                                        {term.label}
                                     </Link>
                                 ))}
                             </div>

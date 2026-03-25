@@ -41,7 +41,33 @@
     "ctaFindJob": "Tìm việc ngay",
     "ctaPostJob": "Đăng tin tuyển dụng",
     "trustedBy": "Được tin dùng bởi:",
-    "jobsUnit": "việc làm"
+    "jobsUnit": "việc làm",
+    "heroSubtitleNumber": "50.000+",
+    "locationHanoi": "Hà Nội",
+    "locationHcm": "TP. Hồ Chí Minh",
+    "locationDanang": "Đà Nẵng",
+    "popularFrontend": "Lập trình viên Frontend",
+    "popularUiUx": "Thiết kế UI/UX",
+    "popularData": "Chuyên viên phân tích dữ liệu",
+    "popularMarketing": "Marketing",
+    "banner1Title": "Lập trình viên Frontend Senior",
+    "banner1Company": "FPT Software",
+    "banner1Location": "Hà Nội",
+    "banner1Salary": "20-30 triệu",
+    "banner2Title": "Thiết kế UI/UX",
+    "banner2Company": "VNG Corporation",
+    "banner2Location": "TP. Hồ Chí Minh",
+    "banner2Salary": "15-25 triệu",
+    "banner3Title": "Chuyên viên phân tích dữ liệu",
+    "banner3Company": "Viettel",
+    "banner3Location": "Đà Nẵng",
+    "banner3Salary": "18-28 triệu",
+    "partnerFpt": "FPT Software",
+    "partnerVng": "VNG Corporation",
+    "partnerViettel": "Viettel",
+    "partnerVingroup": "Vingroup",
+    "partnerVnpay": "VNPAY",
+    "partnerMomo": "Momo"
   },
   "jobs": {
     "pageTitle": "Tìm việc làm",
@@ -71,4 +97,3 @@
     "applySuccess": "Ứng tuyển thành công!"
   }
 }
-

@@ -1,0 +1,110 @@
+{
+  "nav": {
+    "workspaceBadge": "Không gian quản trị",
+    "fallbackUser": "Quản trị viên",
+    "logout": "Đăng xuất",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng"
+  },
+  "sidebar": {
+    "dashboard": "Tổng quan",
+    "users": "Người dùng",
+    "verification": "Xác minh công ty",
+    "jobs": "Kiểm duyệt tin tuyển",
+    "catalog": "Danh mục & kỹ năng",
+    "payments": "Thanh toán",
+    "auditLogs": "Nhật ký kiểm tra",
+    "reports": "Báo cáo người dùng",
+    "broadcast": "Thông báo hàng loạt"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "subtitle": "Thống kê tổng quan hệ thống (UC-43)",
+    "refresh": "Làm mới",
+    "cards": {
+      "users": "Người dùng",
+      "jobs": "Tin tuyển dụng",
+      "revenue": "Doanh thu (VND)",
+      "aiUsage": "Sử dụng AI",
+      "companies": "Công ty",
+      "applications": "Ứng tuyển",
+      "pendingVerifications": "Chờ xác minh",
+      "pendingPayments": "Thanh toán chờ xử lý"
+    },
+    "aiUsageHint": "Chi tiết mức dùng AI sẽ hiển thị khi backend bổ sung metric.",
+    "aiUsageValue": "Đang cập nhật",
+    "loadError": "Không tải được thống kê."
+  },
+  "users": {
+    "title": "Quản lý người dùng",
+    "subtitle": "Xem danh sách, khóa / mở khóa tài khoản (UC-44)",
+    "filterRole": "Vai trò",
+    "allRoles": "Tất cả",
+    "searchPlaceholder": "Tìm theo tên hoặc email…",
+    "role": "Vai trò",
+    "email": "Email",
+    "name": "Họ tên",
+    "status": "Trạng thái",
+    "statusActive": "Hoạt động",
+    "statusBanned": "Đã khóa",
+    "ban": "Khóa",
+    "unban": "Mở khóa",
+    "empty": "Không có người dùng.",
+    "loadError": "Không tải được danh sách người dùng.",
+    "banSuccess": "Đã khóa tài khoản.",
+    "unbanSuccess": "Đã mở khóa tài khoản.",
+    "actionError": "Thao tác thất bại.",
+    "roles": {
+      "Candidate": "Ứng viên",
+      "Company": "Công ty",
+      "Admin": "Quản trị",
+      "Guest": "Khách"
+    }
+  },
+  "verification": {
+    "title": "Xác minh doanh nghiệp",
+    "subtitle": "Phê duyệt hoặc từ chối yêu cầu xác minh (UC-45)",
+    "sourceNote": "Danh sách lấy từ công ty có trạng thái xác minh \"Chờ xử lý\".",
+    "apiEmptyNote": "Endpoint admin danh sách yêu cầu riêng hiện trả về rỗng; hiển thị dữ liệu qua danh sách công ty.",
+    "company": "Công ty",
+    "status": "Trạng thái xác minh",
+    "approve": "Phê duyệt",
+    "reject": "Từ chối",
+    "rejectReason": "Lý do từ chối",
+    "rejectReasonPlaceholder": "Nhập lý do…",
+    "confirmReject": "Xác nhận từ chối",
+    "cancel": "Hủy",
+    "empty": "Không có công ty chờ xác minh.",
+    "loadError": "Không tải được dữ liệu.",
+    "approveSuccess": "Đã phê duyệt xác minh.",
+    "rejectSuccess": "Đã từ chối yêu cầu.",
+    "actionError": "Thao tác thất bại.",
+    "pending": "Chờ xử lý"
+  },
+  "placeholders": {
+    "jobs": {
+      "title": "Kiểm duyệt tin tuyển dụng",
+      "description": "UC-46 sẽ được triển khai ở đây (ẩn / xóa tin vi phạm)."
+    },
+    "catalog": {
+      "title": "Danh mục & kỹ năng",
+      "description": "UC-47: CRUD danh mục và kỹ năng hệ thống."
+    },
+    "payments": {
+      "title": "Thanh toán quản trị",
+      "description": "Danh sách thanh toán, phê duyệt / từ chối (UC-ADM)."
+    },
+    "auditLogs": {
+      "title": "Nhật ký kiểm tra",
+      "description": "UC-48: Xem và lọc audit log."
+    },
+    "reports": {
+      "title": "Báo cáo người dùng",
+      "description": "Quản lý báo cáo vi phạm từ người dùng (API admin/reports)."
+    },
+    "broadcast": {
+      "title": "Thông báo hàng loạt",
+      "description": "Gửi thông báo broadcast tới nhóm người dùng (UC-ADM-26)."
+    }
+  }
+}

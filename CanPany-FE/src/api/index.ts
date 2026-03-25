@@ -6,3 +6,6 @@ export { candidateApi } from './candidate.api';
 export { cvApi } from './cv.api';
 export { applicationsApi } from './applications.api';
 export { messagesApi } from './messages.api';
+export { notificationsApi } from './notifications.api';
+export { walletApi } from './wallet.api';
+export { adminApi } from './admin.api';

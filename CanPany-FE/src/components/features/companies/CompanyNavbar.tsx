@@ -5,6 +5,7 @@ import { Button } from '../../ui';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useThemeStore } from '../../../stores/theme.store';
 import { LanguageSwitcher } from '../../layout/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 interface CompanyNavbarProps {
     onMenuClick: () => void;
@@ -16,8 +17,10 @@ export function CompanyNavbar({ onMenuClick, isMenuOpen }: CompanyNavbarProps) {
     const { user, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const navigate = useNavigate();
+    const { t } = useTranslation('company');
+    const { t: tCommon } = useTranslation('common');
 
-    const displayName = user?.fullName?.trim() || 'Company User';
+    const displayName = user?.fullName?.trim() || t('navbar.fallbackUser');
     const displayInitial = displayName.charAt(0).toUpperCase();
     const displayFirstName = displayName.split(' ')[0];
 
@@ -50,9 +53,7 @@ export function CompanyNavbar({ onMenuClick, isMenuOpen }: CompanyNavbarProps) {
                         </span>
                     </Link>
 
-                    <div className="hidden text-sm text-gray-500 lg:block">
-                        Company workspace
-                    </div>
+                    <div className="hidden text-sm text-gray-500 lg:block">{t('navbar.workspaceBadge')}</div>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -60,7 +61,7 @@ export function CompanyNavbar({ onMenuClick, isMenuOpen }: CompanyNavbarProps) {
                     <button
                         onClick={toggleTheme}
                         className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f]"
-                        title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+                        title={theme === 'light' ? tCommon('nav.darkMode') : tCommon('nav.lightMode')}
                     >
                         {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                     </button>
@@ -92,7 +93,7 @@ export function CompanyNavbar({ onMenuClick, isMenuOpen }: CompanyNavbarProps) {
                                     onClick={() => setIsProfileOpen(false)}
                                 >
                                     <User className="h-4 w-4" />
-                                    Dashboard
+                                    {t('navbar.dashboardLink')}
                                 </Link>
 
                                 <div className="my-1 border-t border-gray-100" />
@@ -102,7 +103,7 @@ export function CompanyNavbar({ onMenuClick, isMenuOpen }: CompanyNavbarProps) {
                                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
                                 >
                                     <LogOut className="h-4 w-4" />
-                                    Đăng xuất
+                                    {t('navbar.logout')}
                                 </button>
                             </div>
                         )}

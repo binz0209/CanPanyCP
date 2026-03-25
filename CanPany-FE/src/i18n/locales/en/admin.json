@@ -1,0 +1,110 @@
+{
+  "nav": {
+    "workspaceBadge": "Admin workspace",
+    "fallbackUser": "Administrator",
+    "logout": "Log out",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "verification": "Company verification",
+    "jobs": "Job moderation",
+    "catalog": "Categories & skills",
+    "payments": "Payments",
+    "auditLogs": "Audit logs",
+    "reports": "User reports",
+    "broadcast": "Broadcast"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "System-wide statistics (UC-43)",
+    "refresh": "Refresh",
+    "cards": {
+      "users": "Users",
+      "jobs": "Job postings",
+      "revenue": "Revenue (VND)",
+      "aiUsage": "AI usage",
+      "companies": "Companies",
+      "applications": "Applications",
+      "pendingVerifications": "Pending verifications",
+      "pendingPayments": "Pending payments"
+    },
+    "aiUsageHint": "Detailed AI usage metrics will appear when the backend exposes them.",
+    "aiUsageValue": "Coming soon",
+    "loadError": "Could not load dashboard stats."
+  },
+  "users": {
+    "title": "User moderation",
+    "subtitle": "List, ban and unban accounts (UC-44)",
+    "filterRole": "Role",
+    "allRoles": "All roles",
+    "searchPlaceholder": "Search by name or email…",
+    "role": "Role",
+    "email": "Email",
+    "name": "Name",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusBanned": "Banned",
+    "ban": "Ban",
+    "unban": "Unban",
+    "empty": "No users found.",
+    "loadError": "Could not load users.",
+    "banSuccess": "User has been banned.",
+    "unbanSuccess": "User has been unbanned.",
+    "actionError": "Action failed.",
+    "roles": {
+      "Candidate": "Candidate",
+      "Company": "Company",
+      "Admin": "Admin",
+      "Guest": "Guest"
+    }
+  },
+  "verification": {
+    "title": "Company verification",
+    "subtitle": "Approve or reject verification requests (UC-45)",
+    "sourceNote": "List shows companies with verification status “Pending”.",
+    "apiEmptyNote": "The dedicated admin verification-requests endpoint currently returns an empty list; data is loaded via the company directory.",
+    "company": "Company",
+    "status": "Verification status",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReason": "Rejection reason",
+    "rejectReasonPlaceholder": "Enter a reason…",
+    "confirmReject": "Confirm reject",
+    "cancel": "Cancel",
+    "empty": "No companies pending verification.",
+    "loadError": "Could not load data.",
+    "approveSuccess": "Verification approved.",
+    "rejectSuccess": "Request rejected.",
+    "actionError": "Action failed.",
+    "pending": "Pending"
+  },
+  "placeholders": {
+    "jobs": {
+      "title": "Job moderation",
+      "description": "UC-46 will be implemented here (hide / delete violating jobs)."
+    },
+    "catalog": {
+      "title": "Categories & skills",
+      "description": "UC-47: system-wide category and skill catalog CRUD."
+    },
+    "payments": {
+      "title": "Payment administration",
+      "description": "Payment list with approve / reject (UC-ADM)."
+    },
+    "auditLogs": {
+      "title": "Audit logs",
+      "description": "UC-48: view and filter audit logs."
+    },
+    "reports": {
+      "title": "User reports",
+      "description": "Moderate user-submitted reports (admin/reports API)."
+    },
+    "broadcast": {
+      "title": "Broadcast notifications",
+      "description": "Send broadcast notifications to user groups (UC-ADM-26)."
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useAuthStore } from '@/stores/auth.store';
+import { isAppRole } from '@/lib/userRole';
 import { useThemeStore } from '@/stores/theme.store';
 
 export function Navbar() {
@@ -27,16 +28,10 @@ export function Navbar() {
 
     const getDashboardLink = () => {
         if (!user) return '/';
-        switch (user.role) {
-            case 'Candidate':
-                return '/candidate/dashboard';
-            case 'Company':
-                return '/company/dashboard';
-            case 'Admin':
-                return '/admin/dashboard';
-            default:
-                return '/';
-        }
+        if (isAppRole(user.role, 'Candidate')) return '/candidate/dashboard';
+        if (isAppRole(user.role, 'Company')) return '/company/dashboard';
+        if (isAppRole(user.role, 'Admin')) return '/admin/dashboard';
+        return '/';
     };
 
     return (

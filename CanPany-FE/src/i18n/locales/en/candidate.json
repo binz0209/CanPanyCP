@@ -11,6 +11,90 @@
     "emptyDescription": "Click the save button on job postings to keep track of them.",
     "removeSuccess": "Job removed from saved list.",
     "addSuccess": "Job saved."
+  },
+  "nav": {
+    "searchPlaceholder": "Search jobs...",
+    "aiAdvisor": "AI Advisor",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "profile": "Profile",
+    "cvManagement": "CV Management",
+    "myCVs": "My CVs",
+    "aiCVAssistant": "AI CV Assistant",
+    "jobs": "Jobs",
+    "findJobs": "Job Search",
+    "savedJobs": "Saved Jobs",
+    "aiSuggestions": "AI Suggestions",
+    "applications": "Applications",
+    "jobAlerts": "Job Alerts",
+    "aiCareer": "AI Career",
+    "aiAdvisor": "AI Career Advisor",
+    "skillAnalysis": "Skill Analysis",
+    "careerPath": "Career Guidance",
+    "premium": "Premium Package",
+    "settingsGroup": "Settings",
+    "account": "Account",
+    "notifications": "Notifications",
+    "wallet": "My wallet",
+    "privacy": "Privacy"
+  },
+  "notificationsPanel": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications.",
+    "markAsRead": "Mark as read",
+    "viewAll": "View all",
+    "timeAgoJustNow": "just now",
+    "timeAgoMinutes": "{{count}} minutes ago",
+    "timeAgoHours": "{{count}} hours ago",
+    "timeAgoDays": "{{count}} days ago"
+  },
+  "wallet": {
+    "title": "My wallet",
+    "subtitle": "Manage balance and transaction history.",
+    "refresh": "Refresh",
+    "balanceCard": {
+      "title": "Current balance",
+      "label": "Total balance",
+      "note": "Balance is updated according to the payment system."
+    },
+    "transactionsCard": {
+      "title": "Transaction history",
+      "empty": "No transactions yet.",
+      "loadMore": "Load more",
+      "balanceAfter": "Balance after"
+    },
+    "transactionTypes": {
+      "topUp": "Top up",
+      "withdraw": "Withdraw",
+      "hold": "Hold",
+      "release": "Release"
+    }
+  },
+  "notificationsPage": {
+    "titleUnread": "Unread notifications",
+    "titleAll": "All notifications",
+    "subtitleUnread": "{{count}} unread notifications",
+    "subtitleAll": "You can browse your full notification history.",
+    "tabUnread": "Unread",
+    "tabAll": "All",
+    "markAllRead": "Mark all as read",
+    "listTitle": "List",
+    "empty": "No notifications to display.",
+    "noTitle": "(No title)",
+    "badgeUnread": "Unread",
+    "markRead": "Mark as read",
+    "readState": "Read",
+    "toastMarked": "Marked as read",
+    "toastMarkFailed": "Could not mark as read",
+    "toastAllMarked": "All notifications marked as read",
+    "toastAllMarkFailed": "Could not mark all as read"
   }
 }
 

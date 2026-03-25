@@ -5,6 +5,8 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Đảm bảo dev + preview dùng fallback SPA (deep link / F5).
+  appType: 'spa',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

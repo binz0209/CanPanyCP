@@ -11,6 +11,90 @@
     "emptyDescription": "Hãy bấm nút lưu tại các tin tuyển dụng để theo dõi sau.",
     "removeSuccess": "Đã bỏ lưu job.",
     "addSuccess": "Đã lưu job."
+  },
+  "nav": {
+    "searchPlaceholder": "Tìm kiếm công việc...",
+    "aiAdvisor": "AI Advisor",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng",
+    "dashboard": "Dashboard",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "sidebar": {
+    "overview": "Tổng quan",
+    "profile": "Hồ sơ cá nhân",
+    "cvManagement": "Quản lý CV",
+    "myCVs": "CV của tôi",
+    "aiCVAssistant": "Trợ lý tạo CV AI",
+    "jobs": "Việc làm",
+    "findJobs": "Tìm kiếm việc làm",
+    "savedJobs": "Việc làm đã lưu",
+    "aiSuggestions": "Gợi ý từ AI",
+    "applications": "Đơn ứng tuyển",
+    "jobAlerts": "Cảnh báo việc làm",
+    "aiCareer": "AI Career",
+    "aiAdvisor": "Tư vấn nghề nghiệp AI",
+    "skillAnalysis": "Phân tích kỹ năng",
+    "careerPath": "Định hướng nghề nghiệp",
+    "premium": "Gói Premium",
+    "settingsGroup": "Cài đặt",
+    "account": "Tài khoản",
+    "notifications": "Thông báo",
+    "wallet": "Ví của tôi",
+    "privacy": "Quyền riêng tư"
+  },
+  "notificationsPanel": {
+    "title": "Thông báo",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "empty": "Chưa có thông báo.",
+    "markAsRead": "Đã đọc",
+    "viewAll": "Xem tất cả",
+    "timeAgoJustNow": "vừa xong",
+    "timeAgoMinutes": "{{count}} phút trước",
+    "timeAgoHours": "{{count}} giờ trước",
+    "timeAgoDays": "{{count}} ngày trước"
+  },
+  "wallet": {
+    "title": "Ví của tôi",
+    "subtitle": "Quản lý số dư và lịch sử giao dịch.",
+    "refresh": "Làm mới",
+    "balanceCard": {
+      "title": "Số dư hiện tại",
+      "label": "Tổng số dư",
+      "note": "Số dư được cập nhật theo hệ thống thanh toán."
+    },
+    "transactionsCard": {
+      "title": "Lịch sử giao dịch",
+      "empty": "Chưa có giao dịch nào.",
+      "loadMore": "Xem thêm",
+      "balanceAfter": "Số dư sau"
+    },
+    "transactionTypes": {
+      "topUp": "Nạp tiền",
+      "withdraw": "Rút tiền",
+      "hold": "Giữ",
+      "release": "Phát hành"
+    }
+  },
+  "notificationsPage": {
+    "titleUnread": "Thông báo chưa đọc",
+    "titleAll": "Tất cả thông báo",
+    "subtitleUnread": "{{count}} thông báo chưa đọc",
+    "subtitleAll": "Bạn có thể xem toàn bộ lịch sử thông báo.",
+    "tabUnread": "Chưa đọc",
+    "tabAll": "Tất cả",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "listTitle": "Danh sách",
+    "empty": "Chưa có thông báo để hiển thị.",
+    "noTitle": "(Không có tiêu đề)",
+    "badgeUnread": "Chưa đọc",
+    "markRead": "Đã đọc",
+    "readState": "Đã đọc",
+    "toastMarked": "Đã đánh dấu đã đọc",
+    "toastMarkFailed": "Không thể đánh dấu đã đọc",
+    "toastAllMarked": "Đã đánh dấu tất cả đã đọc",
+    "toastAllMarkFailed": "Không thể đánh dấu tất cả đã đọc"
   }
 }
 

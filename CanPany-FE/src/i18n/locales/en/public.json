@@ -41,7 +41,33 @@
     "ctaFindJob": "Find jobs now",
     "ctaPostJob": "Post a job",
     "trustedBy": "Trusted by:",
-    "jobsUnit": "jobs"
+    "jobsUnit": "jobs",
+    "heroSubtitleNumber": "50,000+",
+    "locationHanoi": "Hanoi",
+    "locationHcm": "Ho Chi Minh City",
+    "locationDanang": "Da Nang",
+    "popularFrontend": "Frontend Developer",
+    "popularUiUx": "UI/UX Designer",
+    "popularData": "Data Analyst",
+    "popularMarketing": "Marketing",
+    "banner1Title": "Senior Frontend Developer",
+    "banner1Company": "FPT Software",
+    "banner1Location": "Hanoi",
+    "banner1Salary": "20–30M VND",
+    "banner2Title": "UI/UX Designer",
+    "banner2Company": "VNG Corporation",
+    "banner2Location": "Ho Chi Minh City",
+    "banner2Salary": "15–25M VND",
+    "banner3Title": "Data Analyst",
+    "banner3Company": "Viettel",
+    "banner3Location": "Da Nang",
+    "banner3Salary": "18–28M VND",
+    "partnerFpt": "FPT Software",
+    "partnerVng": "VNG Corporation",
+    "partnerViettel": "Viettel",
+    "partnerVingroup": "Vingroup",
+    "partnerVnpay": "VNPAY",
+    "partnerMomo": "Momo"
   },
   "jobs": {
     "pageTitle": "Find jobs",
@@ -71,4 +97,3 @@
     "applySuccess": "Application submitted successfully!"
   }
 }
-

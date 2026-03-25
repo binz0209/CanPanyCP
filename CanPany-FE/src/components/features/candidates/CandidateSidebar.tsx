@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   User as UserIcon,
@@ -11,71 +12,163 @@ import {
   Settings,
   ChevronDown,
   Bookmark,
+  Wallet as WalletIcon,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { cn } from '../../../utils';
 
 interface NavItem {
-  label: string;
+  id: string;
+  labelKey?: string;
+  label: string; // fallback label (always present)
   icon: React.ReactNode;
   path?: string;
-  items?: { label: string; path: string; icon: React.ReactNode }[];
+  items?: { id: string; labelKey?: string; label: string; path: string; icon: React.ReactNode }[];
 }
 
 const navItems: NavItem[] = [
   {
+    id: 'overview',
+    labelKey: 'sidebar.overview',
     label: 'Tổng quan',
     icon: <LayoutDashboard className="h-5 w-5" />,
     path: '/candidate/dashboard',
   },
   {
+    id: 'profile',
+    labelKey: 'sidebar.profile',
     label: 'Hồ sơ cá nhân',
     icon: <UserIcon className="h-5 w-5" />,
     path: '/candidate/profile',
   },
   {
+    id: 'CvManagement',
+    labelKey: 'sidebar.cvManagement',
     label: 'Quản lý CV',
     icon: <FileText className="h-5 w-5" />,
     items: [
-      { label: 'CV của tôi', path: '/candidate/cv/list', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Trợ lý tạo CV AI', path: '/candidate/cv/ai', icon: <Wand2 className="h-4 w-4" /> },
+      {
+        id: 'myCVs',
+        labelKey: 'sidebar.myCVs',
+        label: 'CV của tôi',
+        path: '/candidate/cv/list',
+        icon: <FileText className="h-4 w-4" />,
+      },
+      {
+        id: 'aiCVAssistant',
+        labelKey: 'sidebar.aiCVAssistant',
+        label: 'Trợ lý tạo CV AI',
+        path: '/candidate/cv/ai',
+        icon: <Wand2 className="h-4 w-4" />,
+      },
     ],
   },
   {
+    id: 'jobs',
+    labelKey: 'sidebar.jobs',
     label: 'Việc làm',
     icon: <Briefcase className="h-5 w-5" />,
     items: [
-      { label: 'Tìm kiếm việc làm', path: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-      { label: 'Việc làm đã lưu', path: '/candidate/jobs/bookmarks', icon: <Bookmark className="h-4 w-4" /> },
-      { label: 'Gợi ý từ AI', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
+      {
+        id: 'searchJobs',
+        labelKey: 'sidebar.findJobs',
+        label: 'Tìm kiếm việc làm',
+        path: '/jobs',
+        icon: <Briefcase className="h-4 w-4" />,
+      },
+      {
+        id: 'savedJobs',
+        labelKey: 'sidebar.savedJobs',
+        label: 'Việc làm đã lưu',
+        path: '/candidate/jobs/bookmarks',
+        icon: <Bookmark className="h-4 w-4" />,
+      },
+      {
+        id: 'aiRecommendations',
+        labelKey: 'sidebar.aiSuggestions',
+        label: 'Gợi ý từ AI',
+        path: '/candidate/jobs/recommended',
+        icon: <Wand2 className="h-4 w-4" />,
+      },
     ],
   },
   {
+    id: 'application',
+    labelKey: 'sidebar.applications',
     label: 'Đơn ứng tuyển',
     icon: <Send className="h-5 w-5" />,
     path: '/candidate/applications/history',
   },
   {
+    id: 'wallet',
+    labelKey: 'sidebar.wallet',
+    label: 'Ví của tôi',
+    icon: <WalletIcon className="h-5 w-5" />,
+    path: '/candidate/wallet',
+  },
+  {
+    id: 'AICareer',
+    labelKey: 'sidebar.aiCareer',
     label: 'AI Career',
     icon: <Wand2 className="h-5 w-5" />,
     items: [
-      { label: 'Tư vấn nghề nghiệp AI', path: '/candidate/ai/chat', icon: <Wand2 className="h-4 w-4" /> },
-      { label: 'Phân tích kỹ năng', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Định hướng nghề nghiệp', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
+      {
+        id: 'aiChat',
+        labelKey: 'sidebar.aiAdvisor',
+        label: 'Tư vấn nghề nghiệp AI',
+        path: '/candidate/ai/chat',
+        icon: <Wand2 className="h-4 w-4" />,
+      },
+      {
+        id: 'aiSkills',
+        labelKey: 'sidebar.skillAnalysis',
+        label: 'Phân tích kỹ năng',
+        path: '/candidate/ai/skills',
+        icon: <FileText className="h-4 w-4" />,
+      },
+      {
+        id: 'aiGuidance',
+        labelKey: 'sidebar.careerPath',
+        label: 'Định hướng nghề nghiệp',
+        path: '/candidate/ai/guidance',
+        icon: <Wand2 className="h-4 w-4" />,
+      },
     ],
   },
   {
+    id: 'premium',
+    labelKey: 'sidebar.premium',
     label: 'Gói Premium',
     icon: <Crown className="h-5 w-5" />,
     path: '/candidate/premium',
   },
   {
+    id: 'settingsGroup',
+    labelKey: 'sidebar.settingsGroup',
     label: 'Cài đặt',
     icon: <Settings className="h-5 w-5" />,
     items: [
-      { label: 'Tài khoản', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
-      { label: 'Thông báo', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Quyền riêng tư', path: '/candidate/settings/privacy', icon: <Settings className="h-4 w-4" /> },
+      {
+        id: 'account',
+        labelKey: 'sidebar.account',
+        label: 'Tài khoản',
+        path: '/candidate/settings/account',
+        icon: <UserIcon className="h-4 w-4" />,
+      },
+      {
+        id: 'notifications',
+        labelKey: 'sidebar.notifications',
+        label: 'Thông báo',
+        path: '/candidate/settings/notifications',
+        icon: <FileText className="h-4 w-4" />,
+      },
+      {
+        id: 'privacy',
+        labelKey: 'sidebar.privacy',
+        label: 'Quyền riêng tư',
+        path: '/candidate/settings/privacy',
+        icon: <Settings className="h-4 w-4" />,
+      },
     ],
   },
 ];
@@ -86,22 +179,29 @@ interface CandidateSidebarProps {
 }
 
 export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
+  const { t } = useTranslation('candidate');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(['Hồ sơ cá nhân'])
+    // Mặc định mở 1 mục con nếu cần; nếu không thì để rỗng.
+    new Set()
   );
   const location = useLocation();
 
-  const toggleExpand = (label: string) => {
+  const toggleExpand = (id: string) => {
     setExpandedItems((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(label)) {
-        newSet.delete(label);
+      if (newSet.has(id)) {
+        newSet.delete(id);
       } else {
-        newSet.add(label);
+        newSet.add(id);
       }
       return newSet;
     });
   };
+
+  const getLabel = (item: { labelKey?: string; label: string }) =>
+    item.labelKey
+      ? t(item.labelKey, { defaultValue: item.label })
+      : item.label;
 
   const isActive = (path?: string) => {
     if (!path) return false;
@@ -136,7 +236,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       >
         <div className="space-y-2 p-4">
           {navItems.map((item) => (
-            <div key={item.label}>
+            <div key={item.id}>
               {item.path ? (
                 <Link to={item.path} onClick={onClose}>
                   <Button
@@ -153,7 +253,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                     )}>
                       {item.icon}
                     </div>
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className="flex-1 text-left">{getLabel(item)}</span>
                   </Button>
                 </Link>
               ) : (
@@ -164,7 +264,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                     'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                     isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
                   )}
-                  onClick={() => toggleExpand(item.label)}
+                  onClick={() => toggleExpand(item.id)}
                 >
                   <div className={cn(
                     "text-gray-500",
@@ -172,12 +272,12 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                   )}>
                     {item.icon}
                   </div>
-                  <span className="flex-1 text-left">{item.label}</span>
+                  <span className="flex-1 text-left">{getLabel(item)}</span>
                   {item.items && (
                     <ChevronDown
                       className={cn(
                         'h-4 w-4 transition-transform duration-200',
-                        expandedItems.has(item.label) ? 'rotate-180' : ''
+                        expandedItems.has(item.id) ? 'rotate-180' : ''
                       )}
                     />
                   )}
@@ -185,10 +285,10 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
               )}
 
               {/* Sub-items */}
-              {item.items && expandedItems.has(item.label) && (
+              {item.items && expandedItems.has(item.id) && (
                 <div className="ml-4 space-y-1 border-l border-gray-200 pl-3 py-2">
                   {item.items.map((subItem) => (
-                    <Link key={subItem.label} to={subItem.path} onClick={onClose}>
+                    <Link key={subItem.id} to={subItem.path} onClick={onClose}>
                       <Button
                         variant="ghost"
                         className={cn(
@@ -203,7 +303,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                         )}>
                           {subItem.icon}
                         </div>
-                        <span>{subItem.label}</span>
+                        <span>{getLabel(subItem)}</span>
                       </Button>
                     </Link>
                   ))}
