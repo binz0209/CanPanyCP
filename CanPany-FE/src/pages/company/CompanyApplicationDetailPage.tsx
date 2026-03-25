@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, MessageSquare, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { applicationsApi, candidateApi, jobsApi } from '../../api';
-import { conversationsApi } from '../../api/conversations.api';
 import { Button, Card } from '../../components/ui';
 import { companyPaths } from '../../lib/companyNavigation';
 import {
@@ -18,27 +17,14 @@ import {
     StatusBadge,
 } from '../../components/features/companies';
 import type { Application } from '../../types';
-import { applicationKeys, candidateKeys, companyKeys, conversationKeys } from '../../lib/queryKeys';
+import { applicationKeys, candidateKeys, companyKeys } from '../../lib/queryKeys';
 import { formatCurrency, formatDateTime } from '../../utils';
-
-
-function getPersistedPrivateNotes(application: unknown): string[] {
-    const source = application as { privateNotes?: string; PrivateNotes?: string } | null | undefined;
-    const raw = source?.privateNotes ?? source?.PrivateNotes;
-    if (!raw || !raw.trim()) return [];
-
-    // BE appends notes by newline; show newest first for reviewer convenience.
-    return raw
-        .split('\n')
-        .map((note) => note.trim())
-        .filter(Boolean)
-        .reverse();
-}
+import { useTranslation } from 'react-i18next';
 
 export function CompanyApplicationDetailPage() {
     const { applicationId } = useParams<{ applicationId: string }>();
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { t } = useTranslation('company');
     const [rejectReason, setRejectReason] = useState('');
     const [noteDraft, setNoteDraft] = useState('');
     const [sessionNotes, setSessionNotes] = useState<string[]>([]);
@@ -49,6 +35,12 @@ export function CompanyApplicationDetailPage() {
         queryFn: () => applicationsApi.getDetails(applicationId!),
         enabled: !!applicationId,
     });
+
+    const getPrivateNotesFromApplication = (app: any): string | undefined => {
+        // Backend uses C# PascalCase property name by default (`PrivateNotes`)
+        // while FE expects camelCase (`privateNotes`). Normalize both.
+        return app?.privateNotes ?? app?.PrivateNotes ?? undefined;
+    };
 
     const candidateProfileQuery = useQuery({
         queryKey: candidateKeys.profile(applicationQuery.data?.candidateId || ''),
@@ -69,38 +61,20 @@ export function CompanyApplicationDetailPage() {
         enabled: !!applicationQuery.data?.jobId,
     });
 
-    // ── Start conversation with the candidate ─────────────────────────────────
-    const startConversationMutation = useMutation({
-        mutationFn: async () => {
-            const candidateId = applicationQuery.data?.candidateId;
-            const jobId = applicationQuery.data?.jobId;
-            if (!candidateId) throw new Error('Missing candidateId');
-            return conversationsApi.getOrCreateConversation(candidateId, jobId);
-        },
-        onSuccess: (conversation) => {
-            // Add the new conversation to the cache so it shows up immediately in the messages list
-            queryClient.setQueryData<unknown[]>(conversationKeys.list(), (old) => {
-                if (!old) return [conversation];
-                // Avoid duplicates
-                if (old.some((c: unknown) => (c as { id: string }).id === conversation.id)) {
-                    return old;
-                }
-                return [conversation, ...old];
-            });
-            navigate(companyPaths.messageThread(conversation.id));
-        },
-        onError: (error) => {
-            const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể tạo cuộc trò chuyện'
-                : 'Không thể tạo cuộc trò chuyện';
-            toast.error(message);
-        },
-    });
-
     useEffect(() => {
         if (!sessionNoteStorageKey) return;
         const storedNotes = sessionStorage.getItem(sessionNoteStorageKey);
-        if (!storedNotes) return;
+        if (!storedNotes) {
+            const privateNotes = getPrivateNotesFromApplication(applicationQuery.data);
+            if (privateNotes) {
+                const parsed = privateNotes
+                    .split('\n')
+                    .map((n) => n.trim())
+                    .filter(Boolean);
+                setSessionNotes(parsed);
+            }
+            return;
+        }
 
         try {
             const parsedNotes = JSON.parse(storedNotes) as string[];
@@ -110,7 +84,7 @@ export function CompanyApplicationDetailPage() {
         } catch {
             sessionStorage.removeItem(sessionNoteStorageKey);
         }
-    }, [sessionNoteStorageKey]);
+    }, [sessionNoteStorageKey, applicationQuery.data]);
 
     useEffect(() => {
         if (!sessionNoteStorageKey) return;
@@ -131,12 +105,12 @@ export function CompanyApplicationDetailPage() {
                     ? queryClient.invalidateQueries({ queryKey: applicationKeys.byJob(applicationQuery.data.jobId), exact: true })
                     : Promise.resolve(),
             ]);
-            toast.success('Đã cập nhật trạng thái Accepted');
+            toast.success(t('applicationDetail.toastAccepted'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể accept application'
-                : 'Không thể accept application';
+                ? error.response?.data?.message || t('applicationDetail.toastAcceptFailed')
+                : t('applicationDetail.toastAcceptFailed');
             toast.error(message);
         },
     });
@@ -156,28 +130,27 @@ export function CompanyApplicationDetailPage() {
                     ? queryClient.invalidateQueries({ queryKey: applicationKeys.byJob(applicationQuery.data.jobId), exact: true })
                     : Promise.resolve(),
             ]);
-            toast.success('Đã cập nhật trạng thái Rejected');
+            toast.success(t('applicationDetail.toastRejected'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể reject application'
-                : 'Không thể reject application';
+                ? error.response?.data?.message || t('applicationDetail.toastRejectFailed')
+                : t('applicationDetail.toastRejectFailed');
             toast.error(message);
         },
     });
 
     const noteMutation = useMutation({
         mutationFn: () => applicationsApi.addNote(applicationId!, noteDraft.trim()),
-        onSuccess: async () => {
+        onSuccess: () => {
             setSessionNotes((previous) => [noteDraft.trim(), ...previous]);
             setNoteDraft('');
-            await queryClient.invalidateQueries({ queryKey: applicationKeys.detail(applicationId!), exact: true });
-            toast.success('Đã gửi private note');
+            toast.success(t('applicationDetail.toastNoteSaved'));
         },
         onError: (error) => {
             const message = isAxiosError(error)
-                ? error.response?.data?.message || 'Không thể lưu private note'
-                : 'Không thể lưu private note';
+                ? error.response?.data?.message || t('applicationDetail.toastNoteFailed')
+                : t('applicationDetail.toastNoteFailed');
             toast.error(message);
         },
     });
@@ -185,9 +158,9 @@ export function CompanyApplicationDetailPage() {
     const cvAccessMessage = useMemo(() => {
         if (!candidateCVsQuery.error) return null;
         if (isAxiosError(candidateCVsQuery.error) && candidateCVsQuery.error.response?.status === 403) {
-            return 'Vui lòng mở khóa liên hệ ứng viên trước khi xem danh sách CV.';
+            return t('applicationDetail.toastUnlockCVFirst');
         }
-        return 'Không thể tải danh sách CV của ứng viên. Vui lòng thử lại sau.';
+        return t('applicationDetail.toastLoadCVFailed');
     }, [candidateCVsQuery.error]);
 
     const syncApplicationCaches = (updater: (application: Application) => Application) => {
@@ -212,8 +185,8 @@ export function CompanyApplicationDetailPage() {
     if (!applicationId) {
         return (
             <EmptyState
-                title="Thiếu applicationId"
-                description="Đường dẫn hiện tại chưa có mã application hợp lệ."
+                title={t('applicationDetail.missingIdTitle')}
+                description={t('applicationDetail.missingIdDesc')}
                 icon={<FileText className="h-6 w-6" />}
             />
         );
@@ -234,8 +207,8 @@ export function CompanyApplicationDetailPage() {
     if (applicationQuery.error || !applicationQuery.data) {
         return (
             <CompanyWorkspaceErrorState
-                title="Không thể tải chi tiết application"
-                description="Vui lòng kiểm tra lại route hoặc thử reload trang."
+                title={t('applicationDetail.errorTitle')}
+                description={t('applicationDetail.errorDesc')}
                 icon={<FileText className="h-6 w-6" />}
             />
         );
@@ -245,25 +218,45 @@ export function CompanyApplicationDetailPage() {
     const candidate = candidateProfileQuery.data;
     const job = jobQuery.data?.job;
     const canReviewStatus = application.status === 'Pending';
-    const persistedNotes = getPersistedPrivateNotes(application);
-    const notesForDisplay = Array.from(new Set([...sessionNotes, ...persistedNotes]));
+    // UC-36: Private notes (persisted in BE)
+    const enableNotes = true;
+
+    // Robust rendering:
+    // - Prefer notes from session (if present)
+    // - Fallback to persisted notes from BE (in case sessionStorage has an empty/old value)
+    //
+    // Important: do NOT use hooks here (no useMemo) because this code lives after
+    // early-return branches; violating Rules of Hooks can crash React -> blank page.
+    const persistedNotes = (() => {
+        const privateNotes = getPrivateNotesFromApplication(application);
+        if (!privateNotes) return [];
+        return privateNotes
+            .split('\n')
+            .map((n) => n.trim())
+            .filter(Boolean);
+    })();
+
+    const notesToRender = sessionNotes.length > 0 ? sessionNotes : persistedNotes;
+
+    // Build the messaging URL using the application's candidateId as a conversation
+    // routing key.  The full conversationId comes from the server; for now we
+    // navigate to the messages page with an identifier the company can use.
+    // Replace with a real conversationId once the BE exposes a conversations endpoint.
+    const messagingPath = companyPaths.messageThread(application.candidateId);
 
     return (
         <div className="space-y-6">
             <SectionHeader
-                title="Chi tiết hồ sơ ứng tuyển"
-                description="Xem đầy đủ thông tin ứng viên, job liên quan, cover letter và lịch sử xử lý; cập nhật trạng thái hồ sơ và ghi lại private note cho phiên review hiện tại."
+                title={t('applicationDetail.title')}
+                description={t('applicationDetail.description')}
                 backLink="/company/applications"
                 actions={
-                    <Button
-                        variant="outline"
-                        onClick={() => startConversationMutation.mutate()}
-                        isLoading={startConversationMutation.isPending}
-                        disabled={startConversationMutation.isPending}
-                    >
-                        <MessageSquare className="h-4 w-4" />
-                        Nhắn tin với ứng viên
-                    </Button>
+                    <Link to={messagingPath}>
+                        <Button variant="outline">
+                            <MessageSquare className="h-4 w-4" />
+                            {t('applicationDetail.btnMessage')}
+                        </Button>
+                    </Link>
                 }
             />
 
@@ -272,66 +265,66 @@ export function CompanyApplicationDetailPage() {
                     <div className="flex flex-wrap items-center gap-3">
                         <StatusBadge status={application.status} kind="application" />
                         <span className="text-sm text-gray-500">
-                            Ứng tuyển lúc {formatDateTime(application.createdAt)}
+                            {t('applicationDetail.appliedAt', { datetime: formatDateTime(application.createdAt) })}
                         </span>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ứng viên</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('applicationDetail.labelCandidate')}</p>
                             <p className="mt-2 text-lg font-semibold text-gray-900">
                                 {candidate?.user.fullName || application.candidateId}
                             </p>
                             <p className="mt-1 text-sm text-gray-500">
-                                {candidate?.profile?.title || 'Chưa cập nhật vị trí'}
+                                {candidate?.profile?.title || t('candidateSearch.positionPlaceholder')}
                             </p>
                             <p className="mt-3 text-sm text-gray-600">
-                                {candidate?.profile?.location || 'Chưa cập nhật địa điểm'}
+                                {candidate?.profile?.location || t('applicationDetail.noLocation')}
                             </p>
                         </div>
 
                         <div className="rounded-xl bg-gray-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Tin tuyển dụng</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('applicationDetail.labelJob')}</p>
                             <p className="mt-2 text-lg font-semibold text-gray-900">
                                 {job?.title || application.jobId}
                             </p>
                             <p className="mt-1 text-sm text-gray-500">
-                                {job?.location || 'Chưa cập nhật địa điểm'}
+                                {job?.location || t('applicationDetail.noJobLocation')}
                             </p>
                             <p className="mt-3 text-sm text-gray-600">
-                                Mức phù hợp: {Math.round(Number(application.matchScore || 0))}%
+                                {t('applicationDetail.matchScore', { score: Math.round(Number(application.matchScore || 0)) })}
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl border border-gray-100 p-4">
-                            <p className="text-sm font-semibold text-gray-900">Mức lương đề xuất</p>
+                            <p className="text-sm font-semibold text-gray-900">{t('applicationDetail.salaryLabel')}</p>
                             <p className="mt-2 text-sm text-gray-600">
                                 {application.proposedAmount
                                     ? formatCurrency(application.proposedAmount)
-                                    : 'Ứng viên chưa nhập mức đề xuất'}
+                                    : t('applicationDetail.noSalary')}
                             </p>
                         </div>
 
                         <div className="rounded-xl border border-gray-100 p-4">
-                            <p className="text-sm font-semibold text-gray-900">CV được dùng khi apply</p>
+                            <p className="text-sm font-semibold text-gray-900">{t('applicationDetail.cvLabel')}</p>
                             <p className="mt-2 text-sm text-gray-600">
-                                {application.cvId || 'Ứng viên không chỉ định CV'}
+                                {application.cvId || t('applicationDetail.noCV')}
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-6 rounded-xl border border-gray-100 p-4">
-                        <p className="text-sm font-semibold text-gray-900">Thư xin việc</p>
+                        <p className="text-sm font-semibold text-gray-900">{t('applicationDetail.coverLetterLabel')}</p>
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                            {application.coverLetter || 'Ứng viên chưa nhập thư xin việc.'}
+                            {application.coverLetter || t('applicationDetail.noCoverLetter')}
                         </p>
                     </div>
 
                     {application.rejectedReason && (
                         <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
-                            <p className="text-sm font-semibold text-red-700">Lý do từ chối</p>
+                            <p className="text-sm font-semibold text-red-700">{t('applicationDetail.rejectReasonLabel')}</p>
                             <p className="mt-2 text-sm text-red-700">{application.rejectedReason}</p>
                         </div>
                     )}
@@ -339,10 +332,10 @@ export function CompanyApplicationDetailPage() {
                     <div className="mt-6 rounded-xl border border-gray-100 p-4">
                         <div className="flex items-center gap-2 text-gray-900">
                             <UserRound className="h-5 w-5" />
-                            <p className="text-sm font-semibold">Hồ sơ tóm tắt</p>
+                            <p className="text-sm font-semibold">{t('applicationDetail.profileSummary')}</p>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-gray-600">
-                            {candidate?.profile?.bio || candidate?.profile?.experience || 'Ứng viên chưa cập nhật mô tả bản thân.'}
+                            {candidate?.profile?.bio || candidate?.profile?.experience || t('applicationDetail.noProfileSummary')}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2">
                             {(candidate?.profile?.skillIds || []).slice(0, 10).map((skillId) => (
@@ -365,7 +358,7 @@ export function CompanyApplicationDetailPage() {
                         onAccept={() => acceptMutation.mutate()}
                         onReject={() => {
                             if (!rejectReason.trim()) {
-                                toast.error('Vui lòng nhập lý do trước khi từ chối.');
+                                toast.error(t('applicationDetail.toastEnterRejectReason'));
                                 return;
                             }
                             rejectMutation.mutate();
@@ -374,19 +367,21 @@ export function CompanyApplicationDetailPage() {
                         isRejecting={rejectMutation.isPending}
                     />
 
-                    <ApplicationNotesCard
-                        noteDraft={noteDraft}
-                        onNoteDraftChange={setNoteDraft}
-                        onSubmit={() => {
-                            if (!noteDraft.trim()) {
-                                toast.error('Vui lòng nhập ghi chú trước khi lưu.');
-                                return;
-                            }
-                            noteMutation.mutate();
-                        }}
-                        isSubmitting={noteMutation.isPending}
-                        sessionNotes={notesForDisplay}
-                    />
+                    {enableNotes && (
+                        <ApplicationNotesCard
+                            noteDraft={noteDraft}
+                            onNoteDraftChange={setNoteDraft}
+                            onSubmit={() => {
+                                if (!noteDraft.trim()) {
+                                    toast.error(t('applicationDetail.toastEnterNote'));
+                                    return;
+                                }
+                                noteMutation.mutate();
+                            }}
+                            isSubmitting={noteMutation.isPending}
+                            sessionNotes={notesToRender}
+                        />
+                    )}
 
                     <CandidateCVsCard
                         isLoading={candidateCVsQuery.isLoading}

@@ -1,15 +1,26 @@
 import { Suspense, lazy } from 'react';
 import type { ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { queryClient } from '@/lib/queryClient';
 import { companyPaths } from '@/lib/companyNavigation';
-import { PublicLayout, CandidateLayout, CompanyLayout } from '@/components/layout';
-import { HomePageDemo, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
+import { PublicLayout, CandidateLayout, CompanyLayout, AdminLayout } from '@/components/layout';
+import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, RecommendedJobsPage, CandidateMessagesPage, WalletPage } from '@/pages/candidate';
-
+import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage } from '@/pages/candidate';
+import {
+  AdminDashboardPage,
+  AdminUsersPage,
+  AdminVerificationPage,
+  AdminJobsPage,
+  AdminCatalogPage,
+  AdminPaymentsPage,
+  AdminAuditLogsPage,
+  AdminReportsPage,
+  AdminBroadcastPage,
+} from '@/pages/admin';
 
 const CompanyDashboardPage = lazy(() =>
   import('@/pages/company/CompanyDashboardPage').then((module) => ({
@@ -63,11 +74,28 @@ const CompanyNotificationsPage = lazy(() =>
 );
 
 function RouteLoader() {
+  const { t } = useTranslation('common');
   return (
     <div className="flex min-h-[40vh] items-center justify-center px-4">
       <div className="text-center">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#00b14f]/20 border-t-[#00b14f]" />
-        <p className="mt-4 text-sm text-gray-500">Đang tải trang...</p>
+        <p className="mt-4 text-sm text-gray-500">{t('app.loading')}</p>
+      </div>
+    </div>
+  );
+}
+
+function NotFoundPage() {
+  const { t } = useTranslation('common');
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-gray-900">404</h1>
+        <p className="mt-4 text-gray-600">{t('app.notFoundTitle')}</p>
+        <p className="mt-2 max-w-md text-sm text-gray-500">{t('app.notFoundDescription')}</p>
+        <Link to="/" className="mt-4 inline-block text-blue-600 hover:underline">
+          {t('app.backToHome')}
+        </Link>
       </div>
     </div>
   );
@@ -90,7 +118,7 @@ function App() {
         <Routes>
           {/* Public Routes with Layout */}
           <Route element={<PublicLayout />}>
-            <Route path="/" element={<HomePageDemo />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
             <Route path="/companies" element={<CompaniesPage />} />
@@ -105,14 +133,10 @@ function App() {
             <Route path="/candidate/cv/ai" element={<AICVPage />} />
             <Route path="/candidate/applications/history" element={<ApplicationHistoryPage />} />
             <Route path="/candidate/jobs/bookmarks" element={<SavedJobsPage />} />
-            <Route path="/candidate/jobs/recommended" element={<RecommendedJobsPage />} />
-            <Route path="/candidate/job-alerts" element={<JobAlertsPage />} />
-            <Route path="/candidate/notifications" element={<NotificationCenterPage />} />
-            <Route path="/candidate/settings/notifications" element={<NotificationCenterPage />} />
+            {/* Some links point here directly (e.g. sidebar). Keep as alias. */}
+            <Route path="/candidate/notifications" element={<NotificationsPage />} />
+            <Route path="/candidate/settings/notifications" element={<NotificationsPage />} />
             <Route path="/candidate/wallet" element={<WalletPage />} />
-            <Route path="/candidate/background-jobs" element={<BackgroundJobsPage />} />
-            <Route path="/candidate/messages" element={<CandidateMessagesPage />} />
-            <Route path="/candidate/messages/:conversationId" element={<CandidateMessagesPage />} />
           </Route>
 
           {/* Company Routes */}
@@ -130,7 +154,22 @@ function App() {
             {/* No conversationId → landing page; with conversationId → chat thread */}
             <Route path={companyPaths.messages} element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
             <Route path="/company/messages/:conversationId" element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
+            {/* Notifications */}
             <Route path={companyPaths.notifications} element={<LazyRoute><CompanyNotificationsPage /></LazyRoute>} />
+          </Route>
+
+          {/* Admin — RR7: bọc path="/admin" + segment con tương đối (layout không path + path tuyệt đối trên con dễ không khớp → 404 *) */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="verification" element={<AdminVerificationPage />} />
+            <Route path="jobs" element={<AdminJobsPage />} />
+            <Route path="catalog" element={<AdminCatalogPage />} />
+            <Route path="payments" element={<AdminPaymentsPage />} />
+            <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="broadcast" element={<AdminBroadcastPage />} />
           </Route>
 
           {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}
@@ -143,17 +182,7 @@ function App() {
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
           {/* 404 */}
-          <Route path="*" element={
-            <div className="flex min-h-screen items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-6xl font-bold text-gray-900">404</h1>
-                <p className="mt-4 text-gray-600">Trang không tồn tại</p>
-                <a href="/" className="mt-4 inline-block text-blue-600 hover:underline">
-                  Về trang chủ
-                </a>
-              </div>
-            </div>
-          } />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster

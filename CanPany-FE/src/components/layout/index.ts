@@ -3,3 +3,4 @@ export { Footer } from './Footer';
 export { PublicLayout } from './PublicLayout';
 export { CandidateLayout } from './CandidateLayout';
 export { CompanyLayout } from './CompanyLayout';
+export { AdminLayout } from './AdminLayout';

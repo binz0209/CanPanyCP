@@ -367,5 +367,26 @@
     "rejectPlaceholder": "Nhập lý do từ chối để gửi thông báo cho ứng viên",
     "btnReject": "Từ chối hồ sơ",
     "alreadyProcessed": "Hồ sơ này đã được xử lý, không thể thay đổi trạng thái nữa."
+  },
+  "notificationsPage": {
+    "title": "Thông báo công ty",
+    "description": "Theo dõi các cập nhật về ứng tuyển, tin nhắn và trạng thái hệ thống.",
+    "unreadCountSuffix": "thông báo chưa đọc",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "loading": "Đang tải thông báo...",
+    "noNotificationsTitle": "Không có thông báo nào",
+    "noMatchingDesc": "Không tìm thấy thông báo phù hợp với bộ lọc.",
+    "noNotificationsDesc": "Bạn chưa có thông báo nào.",
+    "filterAll": "Tất cả",
+    "filterJobMatch": "Job Match",
+    "filterApplicationUpdate": "Applications",
+    "filterNewMessage": "Tin nhắn",
+    "filterPaymentConfirmation": "Thanh toán",
+    "filterUnread": "Chưa đọc",
+    "filterRead": "Đã đọc",
+    "timeJustNow": "Vừa xong",
+    "timeMinutesAgo": "{{count}} phút trước",
+    "timeHoursAgo": "{{count}} giờ trước",
+    "timeDaysAgo": "{{count}} ngày trước"
   }
 }

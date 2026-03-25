@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom';
 import { MapPin, CheckCircle, ExternalLink, Building2 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
 import type { Company } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface CompanyCardProps {
     company: Company;
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
+    const { t } = useTranslation('company');
     return (
         <Card className="group p-6 transition hover:shadow-lg">
             <div className="flex items-start gap-4">
@@ -52,7 +54,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
             {/* Tags */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
                 {company.isVerified && (
-                    <Badge variant="success">Đã xác thực</Badge>
+                    <Badge variant="success">{t('isVerified' as any)}</Badge>
                 )}
                 {company.website && (
                     <a
@@ -71,7 +73,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
             <div className="mt-4 flex items-center justify-end border-t border-gray-100 pt-4">
                 <Link to={`/companies/${company.id}`}>
                     <Button variant="ghost" size="sm">
-                        Xem chi tiết
+                        {t('applicationReview.btnReviewDetail')}
                     </Button>
                 </Link>
             </div>
