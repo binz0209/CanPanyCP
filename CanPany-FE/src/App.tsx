@@ -9,7 +9,23 @@ import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout, AdminLayout } from '@/components/layout';
 import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage } from '@/pages/candidate';
+import {
+  CandidateProfilePage,
+  CandidateDashboardPage,
+  CVListPage,
+  CVEditorPage,
+  AICVPage,
+  ApplicationHistoryPage,
+  SavedJobsPage,
+  RecommendedJobsPage,
+  JobAlertsPage,
+  BackgroundJobsPage,
+  CandidateMessagesPage,
+  NotificationCenterPage,
+  GitHubAnalysisPage,
+  NotificationsPage,
+  WalletPage,
+} from '@/pages/candidate';
 import {
   AdminDashboardPage,
   AdminUsersPage,
@@ -132,11 +148,28 @@ function App() {
             <Route path="profile" element={<CandidateProfilePage />} />
             <Route path="cv/list" element={<CVListPage />} />
             <Route path="cv/ai" element={<AICVPage />} />
+            <Route path="cv/:cvId/edit" element={<CVEditorPage />} />
             <Route path="applications/history" element={<ApplicationHistoryPage />} />
             <Route path="jobs/bookmarks" element={<SavedJobsPage />} />
+            <Route path="jobs/recommended" element={<RecommendedJobsPage />} />
+            <Route path="job-alerts" element={<JobAlertsPage />} />
+            <Route path="background-jobs" element={<BackgroundJobsPage />} />
+            <Route path="messages" element={<CandidateMessagesPage />} />
+            <Route path="messages/:conversationId" element={<CandidateMessagesPage />} />
+            <Route path="notifications-center" element={<NotificationCenterPage />} />
+            <Route path="github-analysis" element={<GitHubAnalysisPage />} />
             {/* Some links point here directly (e.g. sidebar). Keep as alias. */}
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="settings/notifications" element={<NotificationsPage />} />
+            {/* Settings placeholders (pages not implemented yet) */}
+            <Route path="settings" element={<Navigate to="/candidate/settings/notifications" replace />} />
+            <Route path="settings/account" element={<Navigate to="/candidate/profile" replace />} />
+            <Route path="settings/privacy" element={<Navigate to="/candidate/profile" replace />} />
+            {/* AI & Premium placeholders (routes linked from sidebar) */}
+            <Route path="ai/chat" element={<Navigate to="/candidate/dashboard" replace />} />
+            <Route path="ai/skills" element={<Navigate to="/candidate/dashboard" replace />} />
+            <Route path="ai/guidance" element={<Navigate to="/candidate/dashboard" replace />} />
+            <Route path="premium" element={<Navigate to="/candidate/wallet" replace />} />
             <Route path="wallet" element={<WalletPage />} />
           </Route>
 
