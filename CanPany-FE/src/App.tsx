@@ -126,17 +126,18 @@ function App() {
           </Route>
 
           {/* Candidate Routes */}
-          <Route element={<CandidateLayout />}>
-            <Route path="/candidate/dashboard" element={<CandidateDashboardPage />} />
-            <Route path="/candidate/profile" element={<CandidateProfilePage />} />
-            <Route path="/candidate/cv/list" element={<CVListPage />} />
-            <Route path="/candidate/cv/ai" element={<AICVPage />} />
-            <Route path="/candidate/applications/history" element={<ApplicationHistoryPage />} />
-            <Route path="/candidate/jobs/bookmarks" element={<SavedJobsPage />} />
+          <Route path="/candidate" element={<CandidateLayout />}>
+            <Route index element={<Navigate to="/candidate/dashboard" replace />} />
+            <Route path="dashboard" element={<CandidateDashboardPage />} />
+            <Route path="profile" element={<CandidateProfilePage />} />
+            <Route path="cv/list" element={<CVListPage />} />
+            <Route path="cv/ai" element={<AICVPage />} />
+            <Route path="applications/history" element={<ApplicationHistoryPage />} />
+            <Route path="jobs/bookmarks" element={<SavedJobsPage />} />
             {/* Some links point here directly (e.g. sidebar). Keep as alias. */}
-            <Route path="/candidate/notifications" element={<NotificationsPage />} />
-            <Route path="/candidate/settings/notifications" element={<NotificationsPage />} />
-            <Route path="/candidate/wallet" element={<WalletPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="settings/notifications" element={<NotificationsPage />} />
+            <Route path="wallet" element={<WalletPage />} />
           </Route>
 
           {/* Company Routes */}
