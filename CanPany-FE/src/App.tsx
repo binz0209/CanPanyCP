@@ -12,9 +12,14 @@ import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '
 import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage } from '@/pages/candidate';
 import {
   AdminDashboardPage,
-  AdminPlaceholderPage,
   AdminUsersPage,
   AdminVerificationPage,
+  AdminJobsPage,
+  AdminCatalogPage,
+  AdminPaymentsPage,
+  AdminAuditLogsPage,
+  AdminReportsPage,
+  AdminBroadcastPage,
 } from '@/pages/admin';
 
 const CompanyDashboardPage = lazy(() =>
@@ -150,12 +155,12 @@ function App() {
             <Route path="dashboard" element={<AdminDashboardPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="verification" element={<AdminVerificationPage />} />
-            <Route path="jobs" element={<AdminPlaceholderPage section="jobs" />} />
-            <Route path="catalog" element={<AdminPlaceholderPage section="catalog" />} />
-            <Route path="payments" element={<AdminPlaceholderPage section="payments" />} />
-            <Route path="audit-logs" element={<AdminPlaceholderPage section="auditLogs" />} />
-            <Route path="reports" element={<AdminPlaceholderPage section="reports" />} />
-            <Route path="broadcast" element={<AdminPlaceholderPage section="broadcast" />} />
+            <Route path="jobs" element={<AdminJobsPage />} />
+            <Route path="catalog" element={<AdminCatalogPage />} />
+            <Route path="payments" element={<AdminPaymentsPage />} />
+            <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="broadcast" element={<AdminBroadcastPage />} />
           </Route>
 
           {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}

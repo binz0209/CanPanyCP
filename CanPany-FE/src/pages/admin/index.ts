@@ -1,5 +1,11 @@
 export { AdminDashboardPage } from './AdminDashboardPage';
 export { AdminUsersPage } from './AdminUsersPage';
 export { AdminVerificationPage } from './AdminVerificationPage';
+export { AdminJobsPage } from './AdminJobsPage';
+export { AdminCatalogPage } from './AdminCatalogPage';
+export { AdminPaymentsPage } from './AdminPaymentsPage';
+export { AdminAuditLogsPage } from './AdminAuditLogsPage';
+export { AdminReportsPage } from './AdminReportsPage';
+export { AdminBroadcastPage } from './AdminBroadcastPage';
 export { AdminPlaceholderPage } from './AdminPlaceholderPage';
 export type { AdminPlaceholderSection } from './AdminPlaceholderPage';
