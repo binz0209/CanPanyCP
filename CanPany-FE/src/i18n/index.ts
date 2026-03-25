@@ -7,12 +7,14 @@ import viAuth from './locales/vi/auth.json';
 import viPublic from './locales/vi/public.json';
 import viCompany from './locales/vi/company.json';
 import viCandidate from './locales/vi/candidate.json';
+import viAdmin from './locales/vi/admin.json';
 
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
 import enPublic from './locales/en/public.json';
 import enCompany from './locales/en/company.json';
 import enCandidate from './locales/en/candidate.json';
+import enAdmin from './locales/en/admin.json';
 
 // With inline resources, i18next.init() resolves synchronously.
 // DO NOT use `void` — it discards the promise and may cause React to
@@ -28,7 +30,7 @@ i18n
         keySeparator: '.',
         nsSeparator: ':',
         defaultNS: 'common',
-        ns: ['common', 'auth', 'public', 'company', 'candidate'],
+        ns: ['common', 'auth', 'public', 'company', 'candidate', 'admin'],
         interpolation: {
             escapeValue: false,
         },
@@ -43,6 +45,7 @@ i18n
                 public: viPublic,
                 company: viCompany,
                 candidate: viCandidate,
+                admin: viAdmin,
             },
             en: {
                 common: enCommon,
@@ -50,6 +53,7 @@ i18n
                 public: enPublic,
                 company: enCompany,
                 candidate: enCandidate,
+                admin: enAdmin,
             },
         },
     });

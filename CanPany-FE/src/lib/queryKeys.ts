@@ -61,3 +61,10 @@ export const conversationKeys = {
     unreadCount: () => [...conversationKeys.all, 'unread-count'] as const,
     detail: (id: string) => [...conversationKeys.all, 'detail', id] as const,
 };
+
+export const adminKeys = {
+    all: ['admin'] as const,
+    dashboard: () => [...adminKeys.all, 'dashboard'] as const,
+    users: () => [...adminKeys.all, 'users'] as const,
+    verification: () => [...adminKeys.all, 'verification'] as const,
+};
