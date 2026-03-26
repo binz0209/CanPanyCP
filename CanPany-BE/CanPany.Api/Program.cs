@@ -32,7 +32,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog(Log.Logger, dispose: true);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // Add SignalR for real-time messaging
 builder.Services.AddSignalR();
@@ -228,6 +232,7 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUnlockRecordR
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserSubscriptionRepository, CanPany.Infrastructure.Repositories.UserSubscriptionRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IConversationRepository, CanPany.Infrastructure.Repositories.ConversationRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IGitHubAnalysisRepository, CanPany.Infrastructure.Repositories.GitHubAnalysisRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IFilterPresetRepository, CanPany.Infrastructure.Repositories.FilterPresetRepository>();
 
 // Register Security Services
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
@@ -321,6 +326,7 @@ builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();
 builder.Services.AddScoped<IJobAlertService, JobAlertService>();
 builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
 builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
+builder.Services.AddScoped<IFilterPresetService, FilterPresetService>();
 
 // Register CF Recommendation Services
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserJobInteractionRepository, CanPany.Infrastructure.Repositories.UserJobInteractionRepository>();
