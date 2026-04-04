@@ -74,6 +74,84 @@ public static class I18nKeys
                 public const string UploadFailed = "Error.Profile.Avatar.UploadFailed";
             }
         }
+
+        public static class Company
+        {
+            public const string NotFound = "Error.Company.NotFound";
+            public const string FileRequired = "Error.Company.FileRequired";
+            public const string UpdateFailed = "Error.Company.UpdateFailed";
+            public const string VerificationFailed = "Error.Company.VerificationFailed";
+        }
+
+        public static class Application
+        {
+            public const string NotFound = "Error.Application.NotFound";
+            public const string NoteRequired = "Error.Application.NoteRequired";
+            public const string UpdateFailed = "Error.Application.UpdateFailed";
+        }
+
+        public static class Conversation
+        {
+            public const string NotFound = "Error.Conversation.NotFound";
+            public const string OtherUserRequired = "Error.Conversation.OtherUserRequired";
+            public const string UserNotFound = "Error.Conversation.UserNotFound";
+        }
+
+        public static class Message
+        {
+            public const string NotFound = "Error.Message.NotFound";
+        }
+
+        public static class Notification
+        {
+            public const string NotFound = "Error.Notification.NotFound";
+        }
+
+        public static class Report
+        {
+            public const string NotFound = "Error.Report.NotFound";
+            public const string ResolveFailed = "Error.Report.ResolveFailed";
+        }
+
+        public static class Payment
+        {
+            public const string NotFound = "Error.Payment.NotFound";
+            public const string CreateFailed = "Error.Payment.CreateFailed";
+            public const string InsufficientBalance = "Error.Payment.InsufficientBalance";
+            public const string PackageNotFound = "Error.Payment.PackageNotFound";
+            public const string AlreadyPremium = "Error.Payment.AlreadyPremium";
+        }
+
+        public static class Wallet
+        {
+            public const string NotFound = "Error.Wallet.NotFound";
+            public const string InsufficientBalance = "Error.Wallet.InsufficientBalance";
+        }
+
+        public static class BackgroundJob
+        {
+            public const string NotFound = "Error.BackgroundJob.NotFound";
+        }
+
+        public static class Category
+        {
+            public const string NotFound = "Error.Category.NotFound";
+        }
+
+        public static class Skill
+        {
+            public const string NotFound = "Error.Skill.NotFound";
+        }
+
+        public static class Banner
+        {
+            public const string NotFound = "Error.Banner.NotFound";
+        }
+
+        public static class Package
+        {
+            public const string NotFound = "Error.Package.NotFound";
+        }
     }
 
     public static class Validation

@@ -14,6 +14,7 @@ namespace CanPany.Tests.ControllerTests;
 public class PaymentsControllerTests
 {
     private readonly Mock<IPaymentService> _paymentServiceMock = new();
+    private readonly Mock<ISubscriptionService> _subscriptionServiceMock = new();
     private readonly Mock<ILogger<PaymentsController>> _loggerMock = new();
     private readonly PaymentsController _controller;
 
@@ -21,6 +22,7 @@ public class PaymentsControllerTests
     {
         _controller = new PaymentsController(
             _paymentServiceMock.Object,
+            _subscriptionServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated user
@@ -78,30 +80,31 @@ public class PaymentsControllerTests
     }
 
     [Fact]
-    public async Task PurchasePremium_ShouldReturnSuccess_WhenValid()
+    public async Task PurchasePremiumWithWallet_ShouldReturnSuccess_WhenValid()
     {
         // Arrange
         var userId = "user123";
-        var request = new PurchasePremiumRequest("package123", 500000); // 500,000 VND
-        var payment = new Payment
+        var request = new PurchasePremiumWalletRequest("package123");
+        var subscription = new UserSubscription
         {
-            Id = "payment123",
+            Id = "sub123",
             UserId = userId,
-            Amount = 50000000, // in minor units
-            Purpose = "PremiumPurchase",
-            Status = "Pending"
+            PackageId = "package123",
+            Status = "Active",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(30),
+            Features = new List<string>()
         };
         
-        _paymentServiceMock.Setup(x => x.CreatePremiumPurchaseAsync(userId, request.PackageId, It.IsAny<long>()))
-            .ReturnsAsync(payment);
+        _subscriptionServiceMock.Setup(x => x.PurchasePremiumAsync(userId, request.PackageId))
+            .ReturnsAsync((true, Array.Empty<string>(), subscription));
 
         // Act
-        var result = await _controller.PurchasePremium(request);
+        var result = await _controller.PurchasePremiumWithWallet(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse<Payment>>(okResult.Value);
-        Assert.True(response.Success);
+        Assert.NotNull(okResult.Value);
     }
 
     [Fact]

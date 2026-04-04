@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Send, ArrowLeft, Circle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -19,6 +20,7 @@ export function CandidateMessagesPage() {
     const { conversationId } = useParams<{ conversationId: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { t } = useTranslation('candidate');
     const { user } = useAuthStore();
     const [draft, setDraft] = useState('');
     const [typingUser, setTypingUser] = useState<string | null>(null);
@@ -125,9 +127,9 @@ export function CandidateMessagesPage() {
                 messageKeys.byConversation(conversationId),
                 (current = []) => current.filter((m) => m.id !== optimisticMsg.id)
             );
-            toast.error('Không thể gửi tin nhắn');
+            toast.error(t('messages.error.sendFailed'));
         }
-    }, [draft, conversationId, user?.id, queryClient, signalR]);
+    }, [draft, conversationId, user?.id, queryClient, signalR, t]);
 
     // ── Typing indicator ──────────────────────────────────────────────────────
     const handleTyping = useCallback(() => {
@@ -161,12 +163,12 @@ export function CandidateMessagesPage() {
                 ].join(' ')}
             >
                 <div className="border-b border-gray-100 px-5 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Tin nhắn</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('messages.title')}</h2>
                     <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
                         <Circle
                             className={`h-2 w-2 fill-current ${signalR.isConnected ? 'text-emerald-500' : 'text-gray-300'}`}
                         />
-                        {signalR.isConnected ? 'Đã kết nối' : 'Đang kết nối…'}
+                        {signalR.isConnected ? t('messages.status.connected') : t('messages.status.connecting')}
                     </div>
                 </div>
 
@@ -177,7 +179,7 @@ export function CandidateMessagesPage() {
                         </div>
                     ) : conversations.length === 0 ? (
                         <div className="px-5 py-12 text-center text-sm text-gray-400">
-                            Chưa có cuộc trò chuyện nào
+                            {t('messages.conversations.empty')}
                         </div>
                     ) : (
                         conversations.map((conv) => (
@@ -204,7 +206,7 @@ export function CandidateMessagesPage() {
                         <div className="text-center">
                             <MessageSquare className="mx-auto h-12 w-12 text-gray-200" />
                             <p className="mt-3 text-sm text-gray-400">
-                                Chọn cuộc trò chuyện để bắt đầu nhắn tin
+                                {t('messages.chat.selectPrompt')}
                             </p>
                         </div>
                     </div>
@@ -225,7 +227,7 @@ export function CandidateMessagesPage() {
                             ) : messages.length === 0 ? (
                                 <div className="flex h-full items-center justify-center">
                                     <p className="text-sm text-gray-400">
-                                        Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!
+                                        {t('messages.chat.empty')}
                                     </p>
                                 </div>
                             ) : (
@@ -241,7 +243,7 @@ export function CandidateMessagesPage() {
                             )}
                             {typingUser && (
                                 <div className="mt-2 text-xs text-gray-400 italic">
-                                    Đang nhập…
+                                    {t('messages.chat.typing')}
                                 </div>
                             )}
                             <div ref={bottomAnchorRef} />
@@ -258,20 +260,20 @@ export function CandidateMessagesPage() {
                                         handleTyping();
                                     }}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Nhập tin nhắn…"
+                                    placeholder={t('messages.input.placeholder')}
                                     className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
                                 />
                                 <Button
                                     onClick={handleSend}
                                     disabled={!draft.trim()}
-                                    aria-label="Gửi tin nhắn"
+                                    aria-label={t('messages.input.send')}
                                 >
                                     <Send className="h-4 w-4" />
-                                    Gửi
+                                    {t('messages.input.send')}
                                 </Button>
                             </div>
                             <p className="mt-1.5 text-[11px] text-gray-400">
-                                Enter để gửi · Shift+Enter để xuống dòng
+                                {t('messages.input.hint')}
                             </p>
                         </div>
                     </>
@@ -358,13 +360,14 @@ function ChatHeader({
     conversation?: Conversation;
     onBack: () => void;
 }) {
+    const { t } = useTranslation('candidate');
     return (
         <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-3">
             <button
                 type="button"
                 onClick={onBack}
                 className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 md:hidden"
-                aria-label="Quay lại"
+                aria-label={t('messages.header.back')}
             >
                 <ArrowLeft className="h-5 w-5" />
             </button>
@@ -391,6 +394,7 @@ function ChatHeader({
 }
 
 function MessageBubble({ message, isSelf }: { message: Message; isSelf: boolean }) {
+    const { t } = useTranslation('candidate');
     const isOptimistic = message.id.startsWith('optimistic-');
     return (
         <div className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
@@ -407,8 +411,8 @@ function MessageBubble({ message, isSelf }: { message: Message; isSelf: boolean 
                         isSelf ? 'text-white/70' : 'text-gray-400'
                     }`}
                 >
-                    {isOptimistic ? 'Đang gửi…' : formatRelativeTime(message.createdAt)}
-                    {isSelf && !isOptimistic && message.isRead && ' · Đã đọc'}
+                    {isOptimistic ? t('messages.bubble.sending') : formatRelativeTime(message.createdAt)}
+                    {isSelf && !isOptimistic && message.isRead && ` · ${t('messages.bubble.read')}`}
                 </p>
             </div>
         </div>

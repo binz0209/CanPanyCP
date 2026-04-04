@@ -333,14 +333,19 @@ public class HybridRecommendationService : IHybridRecommendationService
                     if (jobEmbedding != null && jobEmbedding.Any())
                     {
                         // Primary: Profile-job similarity
-                        semanticScore = CosineSimilarity(profileEmbedding, jobEmbedding) * 100;
+                        var similarity = CosineSimilarity(profileEmbedding, jobEmbedding);
+                        
+                        // Normalize 0.7-1.0 to 0-100 (text embeddings usually sit tightly between 0.7 and 1.0)
+                        semanticScore = similarity <= 0.7 ? 0 : (similarity - 0.7) / 0.3 * 100;
+                        semanticScore = Math.Min(100, Math.Max(0, semanticScore));
                         
                         // VIP PRO Boost: If user has interacted with similar jobs, boost this job
                         if (aggregatedJobEmbedding != null && aggregatedJobEmbedding.Any())
                         {
-                            var interactionSimilarity = CosineSimilarity(aggregatedJobEmbedding, jobEmbedding) * 100;
-                            // Boost jobs similar to what user has viewed/bookmarked (weight: 30%)
-                            contentBoost += interactionSimilarity * 0.3;
+                            var interactionSimilarity = CosineSimilarity(aggregatedJobEmbedding, jobEmbedding);
+                            var interactionScore = interactionSimilarity <= 0.7 ? 0 : (interactionSimilarity - 0.7) / 0.3 * 100;
+                            // Boost jobs similar to what user has viewed/bookmarked (weight: 15%)
+                            contentBoost += interactionScore * 0.15;
                         }
                         
                         if (semanticScore > 0) jobsWithSemanticScore++;
@@ -350,25 +355,23 @@ public class HybridRecommendationService : IHybridRecommendationService
                 // VIP PRO: Content-based boost from interaction history
                 if (interactedJobs.Any())
                 {
-                    // Category match boost (strong signal)
+                    // Category match boost
                     if (!string.IsNullOrWhiteSpace(job.CategoryId) && preferredCategories.Contains(job.CategoryId))
                     {
-                        contentBoost += 25.0; // Strong boost for same category
+                        contentBoost += 10.0;
                     }
                     
-                    // Skills overlap boost (use aggregated skills for better matching)
+                    // Skills overlap boost
                     if (job.SkillIds != null && job.SkillIds.Any())
                     {
-                        // Match against aggregated skills (CV + GitHub + Profile)
                         var matchingSkills = job.SkillIds.Intersect(aggregatedSkills, StringComparer.OrdinalIgnoreCase).Count();
                         var totalJobSkills = job.SkillIds.Count;
                         if (totalJobSkills > 0)
                         {
                             var skillMatchRatio = (double)matchingSkills / totalJobSkills;
-                            contentBoost += skillMatchRatio * 25.0; // Up to 25 points for skill match
+                            contentBoost += skillMatchRatio * 10.0;
                         }
                         
-                        // Also boost if matches preferred skills from interactions
                         if (preferredSkills.Any())
                         {
                             var preferredMatch = job.SkillIds.Intersect(preferredSkills, StringComparer.OrdinalIgnoreCase).Count();
@@ -376,35 +379,35 @@ public class HybridRecommendationService : IHybridRecommendationService
                             if (totalPreferredSkills > 0)
                             {
                                 var preferredMatchRatio = (double)preferredMatch / totalPreferredSkills;
-                                contentBoost += preferredMatchRatio * 15.0; // Additional boost for interaction-based preferences
+                                contentBoost += preferredMatchRatio * 10.0;
                             }
                         }
                     }
                     
-                    // Direct similarity with interacted jobs (if embeddings available)
+                    // Direct similarity with interacted jobs
                     if (job.SkillEmbedding != null && job.SkillEmbedding.Any())
                     {
-                        foreach (var interactedJob in interactedJobs.Take(3)) // Check top 3 interacted jobs
+                        foreach (var interactedJob in interactedJobs.Take(3))
                         {
                             if (interactedJob.SkillEmbedding != null && interactedJob.SkillEmbedding.Any())
                             {
-                                var similarity = CosineSimilarity(interactedJob.SkillEmbedding, job.SkillEmbedding) * 100;
-                                // Weight by interaction type (bookmark > click > view)
+                                var similarity = CosineSimilarity(interactedJob.SkillEmbedding, job.SkillEmbedding);
+                                var intScore = similarity <= 0.7 ? 0 : (similarity - 0.7) / 0.3 * 100;
                                 var interaction = userInteractions.FirstOrDefault(i => i.JobId == interactedJob.Id);
                                 var weight = interaction?.Type switch
                                 {
-                                    InteractionType.Bookmark => 0.4,
-                                    InteractionType.Click => 0.3,
-                                    InteractionType.View => 0.2,
-                                    _ => 0.1
+                                    InteractionType.Bookmark => 0.15,
+                                    InteractionType.Click => 0.10,
+                                    InteractionType.View => 0.05,
+                                    _ => 0.05
                                 };
-                                contentBoost += similarity * weight;
+                                contentBoost += intScore * weight;
                             }
                         }
                     }
                 }
                 
-                // Fallback: Enhanced skill matching using aggregated skills (CV + GitHub + Profile)
+                // Fallback: Enhanced skill matching using aggregated skills
                 if (semanticScore == 0 && aggregatedSkills.Any() && job.SkillIds != null && job.SkillIds.Any())
                 {
                     var matchingSkills = aggregatedSkills.Intersect(job.SkillIds, StringComparer.OrdinalIgnoreCase).Count();
@@ -412,24 +415,24 @@ public class HybridRecommendationService : IHybridRecommendationService
                     if (totalSkills > 0)
                     {
                         var skillMatchRatio = (double)matchingSkills / totalSkills;
-                        semanticScore = skillMatchRatio * 50; // Max 50 for basic matching
-                        _logger.LogDebug(
-                            "Basic skill matching for job {JobId}: {Matching}/{Total} skills matched, score={Score:F2}",
-                            job.Id, matchingSkills, totalSkills, semanticScore);
+                        semanticScore = skillMatchRatio * 60; // Max 60 for basic missing semantic embeddings
                     }
                 }
 
                 var cfScore = cfScores.TryGetValue(job.Id, out var cs) ? cs : 0;
                 if (cfScore > 0) jobsWithCfScore++;
 
-                // Hybrid fusion with content boost
+                // Hybrid fusion
                 var hybridScore = CalculateHybridScore(semanticScore, cfScore, alpha);
                 
-                // Apply VIP PRO content boost (additive, not weighted)
-                hybridScore += contentBoost;
+                // Content boost (Max 30%)
+                contentBoost = Math.Min(contentBoost, 30.0);
                 
-                // Cap at 100
-                hybridScore = Math.Min(hybridScore, 100);
+                // Multiply the scale by content boost to improve separation (e.g. 1.0 -> 1.3 scale)
+                hybridScore = hybridScore * (1.0 + contentBoost / 100.0);
+                
+                // Final cap at randomly slightly below 100 to feel natural if perfectly maxed out
+                hybridScore = Math.Min(hybridScore, 99.8);
                 
                 // Ensure minimum score to avoid all zeros
                 if (hybridScore == 0 && semanticScore == 0 && cfScore == 0 && contentBoost == 0)

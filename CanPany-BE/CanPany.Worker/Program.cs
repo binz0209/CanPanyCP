@@ -93,6 +93,7 @@ public class Program
         builder.Services.AddSingleton<IHostedServiceInterceptor, HostedServiceInterceptor>();
 
         // External Services (GitHub, Gemini, Cloudinary)
+        builder.Services.AddHttpClient(); // generic IHttpClientFactory for downloading files
         builder.Services.AddHttpClient<IGitHubService, GitHubService>();
         builder.Services.AddHttpClient<IGeminiService, GeminiService>();
         builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();

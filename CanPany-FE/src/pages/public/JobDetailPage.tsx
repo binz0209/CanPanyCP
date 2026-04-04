@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Button, Badge, Card } from '../../components/ui';
@@ -17,7 +17,7 @@ export function JobDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, user } = useAuthStore();
     const [showApplyModal, setShowApplyModal] = useState(false);
 
     const { data, isLoading, error } = useQuery({
@@ -97,6 +97,17 @@ export function JobDetailPage() {
                         </div>
 
                         <div className="flex gap-3">
+                            {isAuthenticated && user?.role === 'Candidate' && (
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                    onClick={() => navigate(`/candidate/cv/ai?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}&autoStart=true`)}
+                                >
+                                    <Sparkles className="h-4 w-4 mr-2" />
+                                    {t('jobDetail.genCv')}
+                                </Button>
+                            )}
                             <Button
                                 variant="outline"
                                 size="lg"

@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { cvApi, type CVStructuredData, type CVExperienceEntry, type CVEducationEntry } from '../../api/cv.api';
 import { downloadCVAsPdf } from '../../utils/cv-pdf';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../stores/auth.store';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function blankExp(): CVExperienceEntry { return { company: '', role: '', period: '', bullets: [''] }; }
@@ -20,6 +21,7 @@ export function CVEditorPage() {
     const { t } = useTranslation('candidate');
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuthStore();
     const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
     const [saved, setSaved] = useState(false);
@@ -29,12 +31,32 @@ export function CVEditorPage() {
     const { data: initial, isLoading, error } = useQuery({
         queryKey: ['cv-data', id],
         queryFn: () => cvApi.getCVData(id!),
-        enabled: !!id,
+        enabled: !!id && id !== 'new',
     });
 
     const [cv, setCv] = useState<CVStructuredData | null>(null);
     // Sync initial data into local state once
     if (initial && !cv) setCv(JSON.parse(JSON.stringify(initial)));
+    
+    // Initialize blank CV for "new" route
+    if (id === 'new' && !cv) {
+        setCv({
+            fullName: user?.fullName || '',
+            email: user?.email || '',
+            phone: '',
+            location: '',
+            linkedIn: '',
+            gitHub: '',
+            portfolio: '',
+            summary: '',
+            title: '',
+            skills: [],
+            languages: [],
+            certifications: [],
+            experience: [blankExp()],
+            education: [blankEdu()],
+        });
+    }
 
     const saveMutation = useMutation({
         mutationFn: (data: CVStructuredData) => cvApi.updateCVData(id!, data),

@@ -94,6 +94,58 @@
         "InvalidFileType": "Only JPG, PNG and WebP images are allowed.",
         "UploadFailed": "Failed to upload avatar."
       }
+    },
+    "Company": {
+      "NotFound": "Company not found.",
+      "FileRequired": "File is required.",
+      "UpdateFailed": "Failed to update company.",
+      "VerificationFailed": "Failed to verify company."
+    },
+    "Application": {
+      "NotFound": "Application not found.",
+      "NoteRequired": "Note is required.",
+      "UpdateFailed": "Failed to update application."
+    },
+    "Conversation": {
+      "NotFound": "Conversation not found.",
+      "OtherUserRequired": "Please select a user to start a conversation.",
+      "UserNotFound": "User not found."
+    },
+    "Message": {
+      "NotFound": "Message not found."
+    },
+    "Notification": {
+      "NotFound": "Notification not found."
+    },
+    "Report": {
+      "NotFound": "Report not found.",
+      "ResolveFailed": "Failed to resolve report or report is not in pending status."
+    },
+    "Payment": {
+      "NotFound": "Payment not found.",
+      "CreateFailed": "Failed to create payment.",
+      "InsufficientBalance": "Insufficient wallet balance.",
+      "PackageNotFound": "Premium package not found.",
+      "AlreadyPremium": "You already have an active premium subscription."
+    },
+    "Wallet": {
+      "NotFound": "Wallet not found.",
+      "InsufficientBalance": "Insufficient balance for this transaction."
+    },
+    "BackgroundJob": {
+      "NotFound": "Background job not found."
+    },
+    "Category": {
+      "NotFound": "Category not found."
+    },
+    "Skill": {
+      "NotFound": "Skill not found."
+    },
+    "Banner": {
+      "NotFound": "Banner not found."
+    },
+    "Package": {
+      "NotFound": "Package not found."
     }
   },
   "Validation": {

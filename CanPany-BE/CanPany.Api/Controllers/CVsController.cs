@@ -137,11 +137,12 @@ public class CVsController : ControllerBase
 
             // 2. Upload file to Cloudinary
             await using var stream = file.OpenReadStream();
+            var resourceType = extension == ".pdf" ? "image" : "raw"; // Upload PDFs as images for inline viewing/transformations
             var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
                 stream,
                 file.FileName,
                 "cvs",
-                "raw"); // CVs are treated as raw files in Cloudinary
+                resourceType);
 
             var cv = new CV
             {

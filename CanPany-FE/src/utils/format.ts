@@ -1,9 +1,14 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { vi, enUS } from 'date-fns/locale';
+import i18n from '../i18n';
+
+function getLocale() {
+    return i18n.language === 'en' ? enUS : vi;
+}
 
 export function formatDate(date: Date | string, pattern = 'dd/MM/yyyy') {
     const d = typeof date === 'string' ? parseISO(date) : date;
-    return format(d, pattern, { locale: vi });
+    return format(d, pattern, { locale: getLocale() });
 }
 
 export function formatDateTime(date: Date | string) {
@@ -12,11 +17,12 @@ export function formatDateTime(date: Date | string) {
 
 export function formatRelativeTime(date: Date | string) {
     const d = typeof date === 'string' ? parseISO(date) : date;
-    return formatDistanceToNow(d, { addSuffix: true, locale: vi });
+    return formatDistanceToNow(d, { addSuffix: true, locale: getLocale() });
 }
 
 export function formatCurrency(amount: number, currency = 'VND') {
-    return new Intl.NumberFormat('vi-VN', {
+    const localeCode = i18n.language === 'en' ? 'en-US' : 'vi-VN';
+    return new Intl.NumberFormat(localeCode, {
         style: 'currency',
         currency,
         maximumFractionDigits: 0,
@@ -24,7 +30,8 @@ export function formatCurrency(amount: number, currency = 'VND') {
 }
 
 export function formatNumber(num: number) {
-    return new Intl.NumberFormat('vi-VN').format(num);
+    const localeCode = i18n.language === 'en' ? 'en-US' : 'vi-VN';
+    return new Intl.NumberFormat(localeCode).format(num);
 }
 
 export function formatCompactNumber(num: number) {

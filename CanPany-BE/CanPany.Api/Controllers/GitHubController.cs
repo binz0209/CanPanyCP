@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Worker.Infrastructure.Progress;
@@ -24,6 +25,7 @@ public class GitHubController : ControllerBase
     private readonly IGitHubAnalysisRepository _analysisRepository;
     private readonly IUserProfileService _profileService;
     private readonly IGitHubService _gitHubService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<GitHubController> _logger;
 
     public GitHubController(
@@ -32,6 +34,7 @@ public class GitHubController : ControllerBase
         IGitHubAnalysisRepository analysisRepository,
         IUserProfileService profileService,
         IGitHubService gitHubService,
+        II18nService i18nService,
         ILogger<GitHubController> logger)
     {
         _jobProducer = jobProducer;
@@ -39,6 +42,7 @@ public class GitHubController : ControllerBase
         _analysisRepository = analysisRepository;
         _profileService = profileService;
         _gitHubService = gitHubService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -92,7 +96,7 @@ public class GitHubController : ControllerBase
 
                 return StatusCode(500, new
                 {
-                    message = "Failed to enqueue GitHub analysis job"
+                    message = _i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError)
                 });
             }
 
@@ -114,7 +118,7 @@ public class GitHubController : ControllerBase
             _logger.LogError(ex, "[GITHUB_ANALYSIS_ERROR]");
             return StatusCode(500, new
             {
-                message = "An error occurred while processing GitHub analysis request"
+                message = _i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError)
             });
         }
     }
@@ -134,7 +138,7 @@ public class GitHubController : ControllerBase
             {
                 return NotFound(new
                 {
-                    message = "Job not found",
+                    message = _i18nService.GetErrorMessage(I18nKeys.Error.BackgroundJob.NotFound),
                     jobId = jobId
                 });
             }
@@ -154,7 +158,7 @@ public class GitHubController : ControllerBase
             _logger.LogError(ex, "[GET_JOB_STATUS_ERROR] JobId: {JobId}", jobId);
             return StatusCode(500, new
             {
-                message = "An error occurred while retrieving job status"
+                message = _i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError)
             });
         }
     }
@@ -222,7 +226,7 @@ public class GitHubController : ControllerBase
             _logger.LogError(ex, "[GET_ANALYSIS_ERROR]");
             return StatusCode(500, new
             {
-                message = "An error occurred while retrieving analysis"
+                message = _i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError)
             });
         }
     }
@@ -261,7 +265,7 @@ public class GitHubController : ControllerBase
             _logger.LogError(ex, "[GET_HISTORY_ERROR]");
             return StatusCode(500, new
             {
-                message = "An error occurred while retrieving analysis history"
+                message = _i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError)
             });
         }
     }
@@ -313,7 +317,7 @@ public class GitHubController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "[GITHUB_REPOS_ERROR]");
-            return StatusCode(500, ApiResponse.CreateError("Failed to fetch repos", "FetchReposFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "FetchReposFailed"));
         }
     }
 
@@ -361,7 +365,7 @@ public class GitHubController : ControllerBase
 
             var jobId = await _jobProducer.EnqueueJobAsync(job);
             if (string.IsNullOrEmpty(jobId))
-                return StatusCode(500, ApiResponse.CreateError("Failed to enqueue job", "EnqueueFailed"));
+                return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "EnqueueFailed"));
 
             // Initialize progress record immediately so user can track it
             await _progressTracker.InitializeAsync(
@@ -400,7 +404,7 @@ public class GitHubController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "[SYNC_SKILLS_ERROR]");
-            return StatusCode(500, ApiResponse.CreateError("Failed to start sync", "SyncFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "SyncFailed"));
         }
     }
 

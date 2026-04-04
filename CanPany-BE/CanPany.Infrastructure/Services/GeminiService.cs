@@ -587,17 +587,18 @@ SKILLS: {skillsLine}
 {jdSection}
 
 INSTRUCTIONS:
-1. Professional Summary: 3-4 sentences. Years of experience + specialization + 2-3 core skills + value statement.
+1. Professional Summary: 3-4 sentences. Years of experience + specialization + core skills + value statement. 
+{(ctx.HasTargetJob ? $"   CRITICAL: Tailor this summary explicitly to prove fit for the position of '{ctx.TargetJobTitle}'. Mention the position name." : "")}
 2. Experience bullets: STAR format — Action verb + what + how/tools + measurable result.
-   ✅ ""Reduced API response time by 40% by migrating to Redis caching""
-   ❌ ""Responsible for developing APIs""
-3. Skills: ATS-friendly plain list of technical skills.
+{(ctx.HasTargetJob ? "   CRITICAL: Highlight achievements, tools, and responsibilities that directly match the TARGET JOB description." : "")}
+3. Skills: ATS-friendly plain list of technical skills. 
+{(ctx.HasTargetJob ? "   CRITICAL: Reorder skills to put those matching the TARGET JOB requirements first." : "")}
 4. Parse the raw experience/education text into structured entries as best as possible.
 
 Return EXACTLY this JSON structure (no extra keys, no markdown):
 {{
   ""fullName"": ""{ctx.FullName}"",
-  ""title"": ""{ctx.Title ?? "Software Developer"}"",
+  ""title"": ""{ctx.TargetJobTitle ?? ctx.Title ?? "Software Developer"}"",
   ""email"": ""{ctx.Email}"",
   ""phone"": ""{ctx.Phone ?? ""}"",
   ""location"": ""{ctx.Location ?? ctx.Address ?? ""}"",

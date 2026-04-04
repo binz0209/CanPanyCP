@@ -108,7 +108,8 @@
     "applicants": "Ứng viên",
     "requirements": "Yêu cầu",
     "benefits": "Quyền lợi",
-    "applySuccess": "Ứng tuyển thành công!"
+    "applySuccess": "Ứng tuyển thành công!",
+    "genCv": "Tạo CV bằng AI"
   },
   "companies": {
     "title": "Danh sách công ty",

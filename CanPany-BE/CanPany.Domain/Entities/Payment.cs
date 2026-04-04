@@ -40,7 +40,23 @@ public class Payment : AggregateRoot
     [BsonElement("paidAt")]
     public DateTime? PaidAt { get; set; }
 
-    // VNPay fields
+    // SePay fields
+    [BsonElement("sepay_orderInvoiceNumber")]
+    public string? Sepay_OrderInvoiceNumber { get; set; }
+
+    [BsonElement("sepay_transactionId")]
+    public string? Sepay_TransactionId { get; set; }
+
+    [BsonElement("sepay_paymentMethod")]
+    public string? Sepay_PaymentMethod { get; set; }
+
+    [BsonElement("sepay_responseCode")]
+    public string? Sepay_ResponseCode { get; set; }
+
+    [BsonElement("sepay_signature")]
+    public string? Sepay_Signature { get; set; }
+
+    // VNPay fields (legacy)
     [BsonElement("vnp_TxnRef")]
     public string? Vnp_TxnRef { get; set; }
 

@@ -86,6 +86,9 @@ builder.Services.AddSingleton<MongoDbContext>();
 // Configure Cloudinary
 builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection("Cloudinary"));
 
+// Configure SePay Payment Gateway
+builder.Services.Configure<CanPany.Domain.Entities.SePayOptions>(builder.Configuration.GetSection("SePay"));
+
 // Configure Redis for Background Jobs
 var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
 builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
@@ -315,6 +318,8 @@ builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
+builder.Services.AddScoped<ISePayService, SePayService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();

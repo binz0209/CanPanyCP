@@ -15,6 +15,7 @@ public class PaymentServiceTests
     private readonly Mock<INotificationService> _notificationServiceMock = new();
     private readonly Mock<IBackgroundEmailService> _backgroundEmailServiceMock = new();
     private readonly Mock<IUserService> _userServiceMock = new();
+    private readonly Mock<ISePayService> _sePayServiceMock = new();
     private readonly Mock<ILogger<PaymentService>> _loggerMock = new();
     private readonly PaymentService _service;
 
@@ -26,6 +27,7 @@ public class PaymentServiceTests
             _notificationServiceMock.Object,
             _backgroundEmailServiceMock.Object,
             _userServiceMock.Object,
+            _sePayServiceMock.Object,
             _loggerMock.Object);
     }
 

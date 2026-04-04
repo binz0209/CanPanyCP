@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
     Activity,
@@ -31,12 +32,10 @@ function formatDateTime(iso?: string): string {
     });
 }
 
-function statusLabel(s: JobStatus): string {
-    const map: Record<JobStatus, string> = {
-        Pending: 'Chờ xử lý', Running: 'Đang chạy', Completed: 'Hoàn tất',
-        Failed: 'Thất bại', Cancelled: 'Đã hủy', Retrying: 'Thử lại',
-    };
-    return map[s] ?? s;
+function statusLabel(s: JobStatus, t: any): string {
+    const key = `backgroundJobs.status.${s.toLowerCase()}`;
+    const result = t(key);
+    return result !== key ? result : s;
 }
 
 interface StatusBadgeProps { status: JobStatus; }
@@ -49,11 +48,12 @@ function StatusBadge({ status }: StatusBadgeProps) {
         Cancelled: { bg: 'bg-gray-100',   text: 'text-gray-600',   icon: <AlertCircle className="h-3.5 w-3.5" /> },
         Retrying:  { bg: 'bg-orange-100', text: 'text-orange-700', icon: <RefreshCw className="h-3.5 w-3.5" /> },
     };
+    const { t } = useTranslation('candidate');
     const c = cfg[status] ?? cfg.Pending;
     return (
         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${c.bg} ${c.text}`}>
             {c.icon}
-            {statusLabel(status)}
+            {statusLabel(status, t)}
         </span>
     );
 }
@@ -71,12 +71,14 @@ function DetailPanel({ job }: DetailPanelProps) {
     const gitHubUsername: string = job.details?.['gitHubUsername'] ?? '';
     const extractedSkills: string[] = job.result?.['primarySkills'] || job.result?.['PrimarySkills'] || [];
 
+    const { t } = useTranslation('candidate');
+
     return (
         <div className="border-t border-gray-100 bg-gray-50 px-5 pb-5 pt-4 space-y-4 text-sm">
             {/* Progress */}
             <div>
                 <div className="flex justify-between items-center mb-1 text-xs text-gray-500">
-                    <span>{job.currentStep || 'Đang chờ...'}</span>
+                    <span>{job.currentStep || t('backgroundJobs.detail.waiting')}</span>
                     <span className="font-medium">{job.percentComplete}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -90,7 +92,7 @@ function DetailPanel({ job }: DetailPanelProps) {
                 </div>
                 {job.totalSteps > 0 && (
                     <p className="text-xs text-gray-400 mt-1">
-                        Bước {job.completedSteps}/{job.totalSteps}
+                        {t('backgroundJobs.detail.step', { completed: job.completedSteps, total: job.totalSteps })}
                     </p>
                 )}
             </div>
@@ -100,7 +102,7 @@ function DetailPanel({ job }: DetailPanelProps) {
                 <div>
                     <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
                         <Github className="h-4 w-4" />
-                        Repositories đã chọn {gitHubUsername && <span className="text-gray-400">(@{gitHubUsername})</span>}
+                        {t('backgroundJobs.detail.repos')} {gitHubUsername && <span className="text-gray-400">(@{gitHubUsername})</span>}
                     </p>
                     <div className="flex flex-wrap gap-2">
                         {selectedRepos.map(r => (
@@ -115,7 +117,7 @@ function DetailPanel({ job }: DetailPanelProps) {
             {/* Extracted skills (from result) */}
             {extractedSkills.length > 0 && (
                 <div>
-                    <p className="text-xs font-semibold text-gray-700 mb-2">✨ Skills đã trích xuất</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-2">✨ {t('backgroundJobs.detail.skills')}</p>
                     <div className="flex flex-wrap gap-1.5">
                         {extractedSkills.map(s => (
                             <span key={s} className="text-xs px-2.5 py-1 bg-[#00b14f]/10 text-[#00b14f] rounded-full font-medium">
@@ -129,17 +131,17 @@ function DetailPanel({ job }: DetailPanelProps) {
             {/* Error */}
             {job.errorMessage && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-                    <p className="text-xs font-semibold text-red-700 mb-1">Lỗi</p>
+                    <p className="text-xs font-semibold text-red-700 mb-1">{t('backgroundJobs.detail.error')}</p>
                     <p className="text-xs text-red-600 font-mono">{job.errorMessage}</p>
                 </div>
             )}
 
             {/* Timestamps */}
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 border-t border-gray-200 pt-3">
-                <div><span className="font-medium text-gray-600">Bắt đầu:</span> {formatDateTime(job.startedAt)}</div>
-                <div><span className="font-medium text-gray-600">Kết thúc:</span> {formatDateTime(job.completedAt)}</div>
-                <div><span className="font-medium text-gray-600">Thời gian:</span> {formatDuration(job.durationMs)}</div>
-                <div><span className="font-medium text-gray-600">Cập nhật:</span> {formatDateTime(job.updatedAt)}</div>
+                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.started')}</span> {formatDateTime(job.startedAt)}</div>
+                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.ended')}</span> {formatDateTime(job.completedAt)}</div>
+                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.duration')}</span> {formatDuration(job.durationMs)}</div>
+                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.updated')}</span> {formatDateTime(job.updatedAt)}</div>
             </div>
         </div>
     );
@@ -148,6 +150,7 @@ function DetailPanel({ job }: DetailPanelProps) {
 // ──────────────────── Job Row ────────────────────
 interface JobRowProps { job: JobProgressRecord; }
 function JobRow({ job }: JobRowProps) {
+    const { t } = useTranslation('candidate');
     const isActive = job.status === 'Running' || job.status === 'Retrying' || job.status === 'Pending';
     const [expanded, setExpanded] = useState(isActive);
 
@@ -182,8 +185,8 @@ function JobRow({ job }: JobRowProps) {
                         )}
                         <p className="text-xs text-gray-400 mt-1">
                             {isActive
-                                ? (job.currentStep || 'Đang xử lý...')
-                                : `Hoàn tất lúc: ${formatDateTime(job.completedAt)}`
+                                ? (job.currentStep || t('backgroundJobs.row.processing'))
+                                : t('backgroundJobs.row.completedAt', { time: formatDateTime(job.completedAt) })
                             }
                         </p>
                     </div>
@@ -210,6 +213,7 @@ function JobRow({ job }: JobRowProps) {
 
 // ──────────────────── Page ────────────────────
 export function BackgroundJobsPage() {
+    const { t } = useTranslation('candidate');
     const { isAuthenticated } = useAuthStore();
 
     const { data, isLoading, refetch, isFetching } = useQuery({
@@ -236,10 +240,10 @@ export function BackgroundJobsPage() {
                     <div className="text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl flex items-center justify-center gap-3">
                             <Activity className="h-8 w-8" />
-                            Tiến trình công việc
+                            {t('backgroundJobs.title')}
                         </h2>
                         <p className="mt-3 text-white/80 text-sm">
-                            Theo dõi trạng thái các tác vụ nền đang chạy trong tài khoản của bạn
+                            {t('backgroundJobs.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -250,8 +254,8 @@ export function BackgroundJobsPage() {
                 <div className="flex items-center justify-between mb-5">
                     <p className="text-sm text-gray-500">
                         {jobs.length > 0
-                            ? `${jobs.length} công việc gần đây`
-                            : 'Chưa có công việc nào'}
+                            ? t('backgroundJobs.toolbar.count', { count: jobs.length })
+                            : t('backgroundJobs.toolbar.empty')}
                     </p>
                     <button
                         onClick={() => refetch()}
@@ -259,7 +263,7 @@ export function BackgroundJobsPage() {
                         className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-[#00b14f] transition-colors disabled:opacity-50"
                     >
                         <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                        Làm mới
+                        {t('backgroundJobs.toolbar.refresh')}
                     </button>
                 </div>
 
@@ -274,10 +278,9 @@ export function BackgroundJobsPage() {
                 {!isLoading && jobs.length === 0 && (
                     <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-700 mb-1">Chưa có tác vụ nào</h3>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-1">{t('backgroundJobs.empty.title')}</h3>
                         <p className="text-sm text-gray-400">
-                            Khi bạn sync GitHub skills hoặc chạy các tính năng AI,<br />
-                            tiến trình sẽ xuất hiện ở đây.
+                            {t('backgroundJobs.empty.desc')}
                         </p>
                     </div>
                 )}

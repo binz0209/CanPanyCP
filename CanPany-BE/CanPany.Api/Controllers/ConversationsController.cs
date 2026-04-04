@@ -1,3 +1,4 @@
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
@@ -18,17 +19,20 @@ public class ConversationsController : ControllerBase
     private readonly IConversationRepository _conversationRepo;
     private readonly IMessageRepository _messageRepo;
     private readonly IUserRepository _userRepo;
+    private readonly II18nService _i18nService;
     private readonly ILogger<ConversationsController> _logger;
 
     public ConversationsController(
         IConversationRepository conversationRepo,
         IMessageRepository messageRepo,
         IUserRepository userRepo,
+        II18nService i18nService,
         ILogger<ConversationsController> logger)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
         _userRepo = userRepo;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -72,7 +76,7 @@ public class ConversationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting conversations");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get conversations", "GetConversationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetConversationsFailed"));
         }
     }
 
@@ -90,15 +94,15 @@ public class ConversationsController : ControllerBase
                 return Unauthorized();
 
             if (string.IsNullOrWhiteSpace(request.OtherUserId))
-                return BadRequest(ApiResponse.CreateError("OtherUserId is required", "MissingOtherUserId"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Conversation.OtherUserRequired), "MissingOtherUserId"));
 
             if (userId == request.OtherUserId)
-                return BadRequest(ApiResponse.CreateError("Cannot start a conversation with yourself", "SelfConversation"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "SelfConversation"));
 
             // Check if the other user exists
             var otherUser = await _userRepo.GetByIdAsync(request.OtherUserId);
             if (otherUser == null)
-                return NotFound(ApiResponse.CreateError("User not found", "UserNotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Conversation.UserNotFound), "UserNotFound"));
 
             // Try to find an existing conversation
             var conversation = await _conversationRepo.GetByParticipantsAsync(userId, request.OtherUserId, request.JobId);
@@ -138,7 +142,7 @@ public class ConversationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating conversation");
-            return StatusCode(500, ApiResponse.CreateError("Failed to create conversation", "CreateConversationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreateConversationFailed"));
         }
     }
 
@@ -156,7 +160,7 @@ public class ConversationsController : ControllerBase
 
             var conversation = await _conversationRepo.GetByIdAsync(id);
             if (conversation == null || !conversation.ParticipantIds.Contains(userId))
-                return NotFound(ApiResponse.CreateError("Conversation not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Conversation.NotFound), "NotFound"));
 
             var otherUserId = conversation.ParticipantIds.FirstOrDefault(pid => pid != userId);
             var otherUser = otherUserId != null ? await _userRepo.GetByIdAsync(otherUserId) : null;
@@ -180,7 +184,7 @@ public class ConversationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting conversation {ConversationId}", id);
-            return StatusCode(500, ApiResponse.CreateError("Failed to get conversation", "GetConversationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetConversationFailed"));
         }
     }
 
@@ -202,7 +206,7 @@ public class ConversationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting unread count");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get unread count", "GetUnreadCountFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUnreadCountFailed"));
         }
     }
 }
