@@ -20,15 +20,18 @@ public class CVAnalysisJobHandler : BaseJobHandler
     private readonly IGeminiService _geminiService;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CVAnalysisJobHandler> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public CVAnalysisJobHandler(
         ILogger<CVAnalysisJobHandler> logger,
         IGeminiService geminiService,
-        IServiceScopeFactory scopeFactory) : base(logger)
+        IServiceScopeFactory scopeFactory,
+        IHttpClientFactory httpClientFactory) : base(logger)
     {
         _logger = logger;
         _geminiService = geminiService;
         _scopeFactory = scopeFactory;
+        _httpClientFactory = httpClientFactory;
     }
 
     public override string[] SupportedI18nKeys => new[]
@@ -62,7 +65,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
             var _analysisRepository = scope.ServiceProvider.GetRequiredService<ICVAnalysisRepository>();
             var _userProfileRepository = scope.ServiceProvider.GetRequiredService<IUserProfileRepository>();
 
-            await ReportProgressAsync(job.JobId, 10, "Fetching CV file...");
+            await ReportProgressAsync(job.JobId, 10, "Job.CV.Analyze.FetchingFile");
 
             // Get CV details
             var cv = await _cvRepository.GetByIdAsync(payload.CVId);
@@ -71,44 +74,46 @@ public class CVAnalysisJobHandler : BaseJobHandler
                 return JobResult.FailureResult("CV not found", "NOT_FOUND");
             }
 
-            // Read CV physical file
-            var relativeUrl = cv.FileUrl;
-            if (string.IsNullOrEmpty(relativeUrl))
+            if (string.IsNullOrEmpty(cv.FileUrl))
             {
                 return JobResult.FailureResult("CV has no file URL", "NO_FILE");
             }
 
-            // Convert URL back to physical path
-            var fileName = relativeUrl.Substring(relativeUrl.LastIndexOf('/') + 1);
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "cvs", fileName);
-
-            if (!File.Exists(filePath))
+            // Download CV file from Cloudinary URL (not local disk)
+            byte[] fileBytes;
+            try
             {
-                // API uses relative path from CanPany.Api, Worker might run in different directory.
-                // Fallback to searching upwards or relative to CanPany.Api
-                var solutionDir = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "";
-                filePath = Path.Combine(solutionDir, "CanPany.Api", "wwwroot", "cvs", fileName);
-                
-                if (!File.Exists(filePath))
-                {
-                   return JobResult.FailureResult($"Physical CV file not found at {filePath}", "FILE_NOT_FOUND");
-                }
+                var httpClient = _httpClientFactory.CreateClient();
+                fileBytes = await httpClient.GetByteArrayAsync(cv.FileUrl, cancellationToken);
+                _logger.LogInformation("[CV_ANALYSIS] Downloaded CV from URL: {Url}, Size: {Size} bytes", cv.FileUrl, fileBytes.Length);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[CV_ANALYSIS] Failed to download CV from URL: {Url}", cv.FileUrl);
+                return JobResult.FailureResult($"Failed to download CV file: {ex.Message}", "DOWNLOAD_FAILED");
             }
 
-            await ReportProgressAsync(job.JobId, 30, "Extracting text from PDF...");
+            await ReportProgressAsync(job.JobId, 30, "Job.CV.Analyze.ExtractingText");
 
-            // Extract text from PDF
+            // Extract text from PDF bytes
             var sb = new StringBuilder();
-            using (var document = PdfDocument.Open(filePath))
+            try
             {
+                using var stream = new MemoryStream(fileBytes);
+                using var document = PdfDocument.Open(stream);
                 foreach (var page in document.GetPages())
                 {
                     sb.AppendLine(page.Text);
                 }
             }
-            
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[CV_ANALYSIS] Failed to parse PDF");
+                return JobResult.FailureResult("File could not be parsed as PDF. Unrecognized format.", "PDF_ERROR");
+            }
+
             var cvText = sb.ToString();
-            
+
             if (string.IsNullOrWhiteSpace(cvText))
             {
                 return JobResult.FailureResult("CV file contains no readable text", "EMPTY_PDF");
@@ -120,7 +125,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
                 cvText = cvText.Substring(0, 20000);
             }
 
-            await ReportProgressAsync(job.JobId, 60, "Analyzing CV content with AI...");
+            await ReportProgressAsync(job.JobId, 60, "Job.CV.Analyze.AnalyzingWithAI");
 
             // New comprehensive prompt that extracts profile data for updating user profile
             var prompt = $@"
@@ -166,15 +171,15 @@ Provide a comprehensive analysis with EXACTLY this JSON structure (no extra keys
 
 IMPORTANT:
 - Extract ALL information available in the CV
-- If a field is not found, use empty string "" or empty array []
+- If a field is not found, use empty string """" or empty array []
 - For experience and education, provide as detailed text as possible
 - Return ONLY valid JSON, no explanation
 ";
-            
+
             var systemPrompt = "You are a Resume Parser API. Return ONLY raw JSON matching the requested structure.";
 
             var geminiResponse = await _geminiService.GenerateChatResponseAsync(systemPrompt, prompt);
-            
+
             // Clean up Gemini markdown fences if present
             var jsonStart = geminiResponse.IndexOf('{');
             var jsonEnd = geminiResponse.LastIndexOf('}');
@@ -238,7 +243,7 @@ IMPORTANT:
                 Certifications = extractedProfile.Certifications?.Select(c => new Domain.Entities.ExtractedCertification { Name = c }).ToList() ?? new List<Domain.Entities.ExtractedCertification>()
             };
 
-            await ReportProgressAsync(job.JobId, 80, "Saving analysis results...");
+            await ReportProgressAsync(job.JobId, 80, "Job.CV.Analyze.SavingResults");
 
             // Update Domain Entity
             analysisDto.CVId = payload.CVId;
@@ -254,7 +259,7 @@ IMPORTANT:
             var combinedSkills = technical.Concat(soft)
                                           .Where(s => !string.IsNullOrWhiteSpace(s))
                                           .ToList();
-            
+
             Logger.LogInformation("[CV_ANALYSIS] Extracted {Count} skills: {Skills}", combinedSkills.Count, string.Join(", ", combinedSkills));
 
             cv.ExtractedSkills = combinedSkills;
@@ -287,25 +292,25 @@ IMPORTANT:
             {
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Summary))
                     userProfile.Bio = analysisDto.Profile.Summary;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Phone))
                     userProfile.Phone = analysisDto.Profile.Phone;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Title))
                     userProfile.Title = analysisDto.Profile.Title;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Location))
                     userProfile.Location = analysisDto.Profile.Location;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Address))
                     userProfile.Address = analysisDto.Profile.Address;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.LinkedIn))
                     userProfile.LinkedInUrl = analysisDto.Profile.LinkedIn;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.GitHub))
                     userProfile.GitHubUrl = analysisDto.Profile.GitHub;
-                
+
                 if (!string.IsNullOrWhiteSpace(analysisDto.Profile.Portfolio))
                     userProfile.Portfolio = analysisDto.Profile.Portfolio;
             }
@@ -362,10 +367,10 @@ IMPORTANT:
 
             userProfile.MarkAsUpdated();
             await _userProfileRepository.UpdateAsync(userProfile);
-            
+
             Logger.LogInformation("[CV_ANALYSIS_PROFILE_UPDATED] UserId: {UserId} - Profile updated with CV data", payload.UserId);
 
-            await ReportProgressAsync(job.JobId, 100, "CV analysis completed successfully!");
+            await ReportProgressAsync(job.JobId, 100, "Job.CV.Analyze.Completed");
 
             return JobResult.SuccessResult(new Dictionary<string, object?>
             {
@@ -376,15 +381,10 @@ IMPORTANT:
                 ["ImprovementSuggestions"] = analysisDto.ImprovementSuggestions
             });
         }
-        catch (Exception _) when (_.GetType().Name.Contains("PdfDocumentFormatException"))
-        {
-             Logger.LogError(_, "Invalid PDF File Format");
-             return JobResult.FailureResult("File could not be parsed as PDF. Unrecognized format.", "PDF_ERROR");
-        }
         catch (Exception ex)
         {
             Logger.LogError(ex, "[CV_ANALYSIS_FAILED] JobId: {JobId}", job.JobId);
-            await ReportProgressAsync(job.JobId, -1, $"Error: {ex.Message}");
+            await ReportProgressAsync(job.JobId, -1, $"Job.CV.Analyze.Error");
             return JobResult.FailureResult(ex.Message, ex.GetType().Name);
         }
     }

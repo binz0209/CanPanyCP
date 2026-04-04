@@ -58,7 +58,7 @@ export function useSignalR(options: UseSignalROptions = {}) {
         const connection = new HubConnectionBuilder()
             .withUrl(HUB_URL, { accessTokenFactory: () => token })
             .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-            .configureLogging(LogLevel.Warning)
+            .configureLogging(LogLevel.None)
             .build();
 
         connectionRef.current = connection;
@@ -86,13 +86,25 @@ export function useSignalR(options: UseSignalROptions = {}) {
 
         connection
             .start()
-            .then(() => setIsConnected(true))
-            .catch((err) => console.error('SignalR connection failed:', err));
+            .then(() => {
+                if (connectionRef.current === connection) {
+                    setIsConnected(true);
+                }
+            })
+            .catch((err) => {
+                // Ignore AbortError caused by React StrictMode cleanup unmounting the component during negotiation
+                if (err instanceof Error && err.message.includes('stopped during negotiation')) {
+                    return;
+                }
+                console.error('SignalR connection failed:', err);
+            });
 
         return () => {
             connection.stop();
-            connectionRef.current = null;
-            setIsConnected(false);
+            if (connectionRef.current === connection) {
+                connectionRef.current = null;
+                setIsConnected(false);
+            }
         };
     }, [token]);
 

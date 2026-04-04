@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Application.DTOs;
 using CanPany.Domain.Entities;
@@ -16,13 +17,16 @@ namespace CanPany.Api.Controllers;
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<NotificationsController> _logger;
 
     public NotificationsController(
         INotificationService notificationService,
+        II18nService i18nService,
         ILogger<NotificationsController> logger)
     {
         _notificationService = notificationService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -60,7 +64,7 @@ public class NotificationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting notifications");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get notifications", "GetNotificationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetNotificationsFailed"));
         }
     }
 
@@ -83,7 +87,7 @@ public class NotificationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting unread notifications");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get unread notifications", "GetUnreadNotificationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUnreadNotificationsFailed"));
         }
     }
 
@@ -101,7 +105,7 @@ public class NotificationsController : ControllerBase
 
             var succeeded = await _notificationService.MarkAsReadAsync(id);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Notification not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Notification.NotFound), "NotFound"));
 
             // Get updated unread count after marking as read
             var unreadCount = await _notificationService.GetUnreadCountAsync(userId);
@@ -113,7 +117,7 @@ public class NotificationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error marking notification as read");
-            return StatusCode(500, ApiResponse.CreateError("Failed to mark notification as read", "MarkAsReadFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "MarkAsReadFailed"));
         }
     }
 
@@ -135,7 +139,7 @@ public class NotificationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error marking all notifications as read");
-            return StatusCode(500, ApiResponse.CreateError("Failed to mark all as read", "MarkAllAsReadFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "MarkAllAsReadFailed"));
         }
     }
 }

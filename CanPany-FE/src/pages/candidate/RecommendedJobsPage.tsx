@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Sparkles, Briefcase, RefreshCw, Eye, Bookmark, Send, Info, Brain, FileText, CheckCircle2 } from 'lucide-react';
 import { jobsApi } from '../../api/jobs.api';
@@ -20,21 +21,22 @@ function scoreColor(score: number) {
     return 'text-gray-500 bg-gray-50 border-gray-200';
 }
 
-function scoreLabel(score: number) {
-    if (score >= 80) return 'Phù hợp cao';
-    if (score >= 60) return 'Phù hợp tốt';
-    if (score >= 40) return 'Phù hợp';
-    return 'Gợi ý';
+function scoreLabel(score: number, t: any) {
+    if (score >= 80) return t('recommendedJobs.matchLevels.veryHigh');
+    if (score >= 60) return t('recommendedJobs.matchLevels.high');
+    if (score >= 40) return t('recommendedJobs.matchLevels.medium');
+    return t('recommendedJobs.matchLevels.suggested');
 }
 
-function formatBudget(amount?: number, type?: string) {
-    if (!amount) return 'Thỏa thuận';
+function formatBudget(amount: number | undefined, type: string | undefined, t: any) {
+    if (!amount) return t('recommendedJobs.budget.negotiable');
     const fmt = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
-    return type === 'Hourly' ? `${fmt}/giờ` : fmt;
+    return type === 'Hourly' ? `${fmt}${t('recommendedJobs.budget.perHour')}` : fmt;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function RecommendedJobsPage() {
+    const { t } = useTranslation('candidate');
     const queryClient = useQueryClient();
     const [limit] = useState(12);
     const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
@@ -51,9 +53,9 @@ export function RecommendedJobsPage() {
         mutationFn: () => candidateApi.syncRecommendationSkills(20),
         onSuccess: (d) => {
             setSyncJobId(d.jobId);
-            toast.success('🔄 Đang đồng bộ kỹ năng cho AI gợi ý...');
+            toast.success(t('recommendedJobs.toast.syncStarted'));
         },
-        onError: () => toast.error('Không thể bắt đầu đồng bộ kỹ năng.'),
+        onError: () => toast.error(t('recommendedJobs.toast.syncError')),
     });
 
     // Poll sync job
@@ -73,11 +75,11 @@ export function RecommendedJobsPage() {
             setSyncJobId(null);
             queryClient.invalidateQueries({ queryKey: ['jobs', 'recommended'] });
             refetch();
-            toast.success('✅ Đồng bộ xong! Gợi ý đã được cập nhật.');
+            toast.success(t('recommendedJobs.toast.syncSuccess'));
         }
         if (syncProgress?.status === 'Failed' && syncJobId) {
             setSyncJobId(null);
-            toast.error('Đồng bộ kỹ năng thất bại.');
+            toast.error(t('recommendedJobs.toast.syncFailed'));
         }
     }, [syncProgress?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -98,8 +100,8 @@ export function RecommendedJobsPage() {
     function handleBookmarkClick(jobId: string) {
         track(jobId, INTERACTION.Bookmark);
         jobsApi.bookmark(jobId)
-            .then(() => toast.success('Đã lưu việc làm'))
-            .catch(() => toast.error('Không thể lưu việc làm'));
+            .then(() => toast.success(t('recommendedJobs.toast.bookmarkSuccess')))
+            .catch(() => toast.error(t('recommendedJobs.toast.bookmarkError')));
     }
 
     return (
@@ -112,10 +114,9 @@ export function RecommendedJobsPage() {
                             <Sparkles className="h-4 w-4" />
                             <span>AI Recommendation Engine · Hybrid CF + Semantic</span>
                         </div>
-                        <h1 className="mt-1 text-3xl font-bold">Việc làm phù hợp với bạn</h1>
+                        <h1 className="mt-1 text-3xl font-bold">{t('recommendedJobs.title')}</h1>
                         <p className="mt-2 text-emerald-100 text-sm max-w-lg">
-                            Được tổng hợp từ hồ sơ của bạn và hành vi của những ứng viên tương tự.
-                            Tương tác nhiều hơn giúp gợi ý chính xác hơn.
+                            {t('recommendedJobs.subtitle')}
                         </p>
                     </div>
                     <div className="flex flex-col gap-2 self-start lg:self-auto">
@@ -125,7 +126,7 @@ export function RecommendedJobsPage() {
                             className="flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-60"
                         >
                             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                            Làm mới
+                            {t('recommendedJobs.actions.refresh')}
                         </button>
                         <button
                             onClick={() => syncMutation.mutate()}
@@ -133,7 +134,7 @@ export function RecommendedJobsPage() {
                             className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-60"
                         >
                             <Brain className={`h-4 w-4 ${isSyncing ? 'animate-pulse' : ''}`} />
-                            {isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ kỹ năng AI'}
+                            {isSyncing ? t('recommendedJobs.actions.syncing') : t('recommendedJobs.actions.syncAiSkills')}
                         </button>
                     </div>
                 </div>
@@ -142,7 +143,7 @@ export function RecommendedJobsPage() {
                 {isSyncing && syncProgress && (
                     <div className="mt-4 space-y-1">
                         <div className="flex justify-between text-xs text-emerald-100">
-                            <span>{syncProgress.currentStep ?? 'Đang đồng bộ...'}</span>
+                            <span>{syncProgress.currentStep ?? t('recommendedJobs.actions.syncing')}</span>
                             <span>{syncProgress.percentComplete}%</span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
@@ -159,7 +160,7 @@ export function RecommendedJobsPage() {
                     <div className="mt-4 flex items-start gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm text-emerald-50">
                         <Info className="h-4 w-4 mt-0.5 shrink-0" />
                         <span>
-                            Bạn chưa có nhiều tương tác. Nhấn <strong>Đồng bộ kỹ năng AI</strong> để cải thiện gợi ý ngay.
+                            {t('recommendedJobs.tips.coldStart1')} <strong>{t('recommendedJobs.tips.coldStart2')}</strong> {t('recommendedJobs.tips.coldStart3')}
                         </span>
                     </div>
                 )}
@@ -179,6 +180,7 @@ export function RecommendedJobsPage() {
                             viewed={trackedIds.has(job.id)}
                             onView={() => track(job.id, INTERACTION.View)}
                             onBookmark={() => handleBookmarkClick(job.id)}
+                            t={t}
                         />
                     ))}
                 </div>
@@ -193,9 +195,10 @@ interface CardProps {
     viewed: boolean;
     onView: () => void;
     onBookmark: () => void;
+    t: any;
 }
 
-function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
+function RecommendedJobCard({ item, viewed, onView, onBookmark, t }: CardProps) {
     const { job, hybridScore } = item;
     const score = Math.round(hybridScore);
     const [cvDone, setCvDone] = useState(false);
@@ -205,9 +208,9 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
         mutationFn: () => cvApi.generateCV(job.id),
         onSuccess: (d) => {
             setCvJobId(d.jobId);
-            toast.success('🚀 Đang tạo CV phù hợp...');
+            toast.success(t('recommendedJobs.toast.cvStarted'));
         },
-        onError: () => toast.error('Không thể tạo CV.'),
+        onError: () => toast.error(t('recommendedJobs.toast.cvError')),
     });
 
     const { data: cvProgress } = useQuery({
@@ -225,7 +228,7 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
         if (cvProgress?.status === 'Completed' && cvJobId) {
             setCvJobId(null);
             setCvDone(true);
-            toast.success(`✅ CV cho "${job.title}" tạo xong!`);
+            toast.success(t('recommendedJobs.toast.cvSuccess', { title: job.title }));
         }
     }, [cvProgress?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -238,7 +241,7 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
             {/* Score badge */}
             <div className={`absolute top-4 right-4 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${scoreColor(score)}`}>
                 <Sparkles className="h-3 w-3" />
-                {score}% · {scoreLabel(score)}
+                {score}% · {scoreLabel(score, t)}
             </div>
 
             {/* Score bar */}
@@ -267,13 +270,13 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
                     <span className="rounded-full bg-blue-50 text-blue-700 px-2.5 py-1 font-medium">{job.level}</span>
                 )}
                 {job.isRemote && (
-                    <span className="rounded-full bg-purple-50 text-purple-700 px-2.5 py-1 font-medium">Remote</span>
+                    <span className="rounded-full bg-purple-50 text-purple-700 px-2.5 py-1 font-medium">{t('recommendedJobs.status.remote')}</span>
                 )}
                 {job.location && (
                     <span className="rounded-full bg-gray-100 text-gray-600 px-2.5 py-1">{job.location}</span>
                 )}
                 <span className="rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-1 font-medium">
-                    {formatBudget(job.budgetAmount, job.budgetType)}
+                    {formatBudget(job.budgetAmount, job.budgetType, t)}
                 </span>
             </div>
 
@@ -283,7 +286,7 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
                     <div className="flex justify-between text-xs text-gray-600">
                         <span className="flex items-center gap-1">
                             <RefreshCw className="h-3 w-3 animate-spin text-[#00b14f]" />
-                            {cvProgress.currentStep ?? 'Đang tạo CV...'}
+                            {cvProgress.currentStep ?? t('recommendedJobs.actions.generatingCv')}
                         </span>
                         <span>{cvProgress.percentComplete ?? 0}%</span>
                     </div>
@@ -304,14 +307,14 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#00b14f] hover:bg-[#009940] text-white text-sm font-medium py-2 transition-colors"
                 >
                     <Eye className="h-3.5 w-3.5" />
-                    Xem chi tiết
+                    {t('recommendedJobs.actions.viewDetails')}
                 </Link>
 
                 {/* AI CV button */}
                 <button
                     onClick={() => !cvDone && genCVMutation.mutate()}
                     disabled={cvIsRunning || genCVMutation.isPending || cvDone}
-                    title={cvDone ? 'CV đã tạo' : 'Tạo CV phù hợp với vị trí này'}
+                    title={cvDone ? t('recommendedJobs.actions.cvGenerated') : t('recommendedJobs.actions.generateCv')}
                     className={`flex items-center justify-center rounded-xl border p-2 transition-colors ${
                         cvDone
                             ? 'border-emerald-200 text-emerald-500 bg-emerald-50'
@@ -325,7 +328,7 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
 
                 <button
                     onClick={onBookmark}
-                    title="Lưu việc làm"
+                    title={t('recommendedJobs.actions.bookmark')}
                     className="flex items-center justify-center rounded-xl border border-gray-200 hover:border-[#00b14f] hover:text-[#00b14f] text-gray-500 p-2 transition-colors"
                 >
                     <Bookmark className="h-4 w-4" />
@@ -336,7 +339,7 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark }: CardProps) {
             {viewed && (
                 <div className="absolute bottom-2 left-4 flex items-center gap-1 text-[10px] text-emerald-500">
                     <Eye className="h-2.5 w-2.5" />
-                    Đã xem
+                    {t('recommendedJobs.status.viewed')}
                 </div>
             )}
         </div>
@@ -355,14 +358,15 @@ function SkeletonList() {
 }
 
 function EmptyState({ onSync, isSyncing }: { onSync: () => void; isSyncing: boolean }) {
+    const { t } = useTranslation('candidate');
     return (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
                 <Sparkles className="h-8 w-8 text-[#00b14f]" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Chưa có gợi ý</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('recommendedJobs.empty.title')}</h2>
             <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
-                Hãy hoàn thiện hồ sơ và tương tác với các tin tuyển dụng để AI có thể gợi ý việc làm phù hợp.
+                {t('recommendedJobs.empty.description')}
             </p>
             <div className="mt-6 flex gap-3 justify-center flex-wrap">
                 <button
@@ -371,21 +375,21 @@ function EmptyState({ onSync, isSyncing }: { onSync: () => void; isSyncing: bool
                     className="flex items-center gap-2 rounded-xl bg-[#00b14f] text-white px-4 py-2.5 text-sm font-medium hover:bg-[#009940] transition-colors disabled:opacity-60"
                 >
                     {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
-                    Đồng bộ kỹ năng AI
+                    {t('recommendedJobs.actions.syncAiSkills')}
                 </button>
                 <Link
                     to="/candidate/profile"
                     className="flex items-center gap-2 rounded-xl border border-gray-200 text-gray-700 px-4 py-2.5 text-sm font-medium hover:border-gray-300 transition-colors"
                 >
                     <Send className="h-4 w-4" />
-                    Cập nhật hồ sơ
+                    {t('recommendedJobs.actions.updateProfile')}
                 </Link>
                 <Link
                     to="/jobs"
                     className="flex items-center gap-2 rounded-xl border border-gray-200 text-gray-700 px-4 py-2.5 text-sm font-medium hover:border-gray-300 transition-colors"
                 >
                     <Briefcase className="h-4 w-4" />
-                    Khám phá việc làm
+                    {t('recommendedJobs.actions.exploreJobs')}
                 </Link>
             </div>
         </div>

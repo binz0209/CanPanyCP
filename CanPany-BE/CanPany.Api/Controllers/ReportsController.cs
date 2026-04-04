@@ -1,4 +1,5 @@
-﻿using CanPany.Application.Common.Models;
+using CanPany.Application.Common.Constants;
+using CanPany.Application.Common.Models;
 using CanPany.Application.DTOs;
 using CanPany.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -15,13 +16,16 @@ namespace CanPany.Api.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<ReportsController> _logger;
 
     public ReportsController(
         IReportService reportService,
+        II18nService i18nService,
         ILogger<ReportsController> logger)
     {
         _reportService = reportService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -35,7 +39,7 @@ public class ReportsController : ControllerBase
         {
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized(ApiResponse.CreateError("User not authenticated", "Unauthorized"));
+                return Unauthorized(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.Unauthorized), "Unauthorized"));
 
             var report = await _reportService.CreateReportAsync(userId, request);
             return Ok(ApiResponse.CreateSuccess(report, "Report submitted successfully"));
@@ -48,7 +52,7 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating report");
-            return StatusCode(500, ApiResponse.CreateError("Failed to submit report", "CreateReportFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreateReportFailed"));
         }
     }
 
@@ -62,7 +66,7 @@ public class ReportsController : ControllerBase
         {
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized(ApiResponse.CreateError("User not authenticated", "Unauthorized"));
+                return Unauthorized(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.Unauthorized), "Unauthorized"));
 
             var reports = await _reportService.GetReportsByReporterIdAsync(userId);
             return Ok(ApiResponse.CreateSuccess(reports));
@@ -70,7 +74,7 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting user reports");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get reports", "GetReportsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetReportsFailed"));
         }
     }
 
@@ -84,11 +88,11 @@ public class ReportsController : ControllerBase
         {
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized(ApiResponse.CreateError("User not authenticated", "Unauthorized"));
+                return Unauthorized(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.Unauthorized), "Unauthorized"));
 
             var report = await _reportService.GetReportByIdAsync(id);
             if (report == null)
-                return NotFound(ApiResponse.CreateError("Report not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Report.NotFound), "NotFound"));
 
             // Verify the report belongs to the current user
             if (report.Reporter.Id != userId)
@@ -99,7 +103,7 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting report: {ReportId}", id);
-            return StatusCode(500, ApiResponse.CreateError("Failed to get report", "GetReportFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetReportFailed"));
         }
     }
 }

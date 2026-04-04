@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -19,15 +20,18 @@ public class ApplicationsController : ControllerBase
 {
     private readonly IApplicationService _applicationService;
     private readonly IJobService _jobService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<ApplicationsController> _logger;
 
     public ApplicationsController(
         IApplicationService applicationService,
         IJobService jobService,
+        II18nService i18nService,
         ILogger<ApplicationsController> logger)
     {
         _applicationService = applicationService;
         _jobService = jobService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -46,7 +50,7 @@ public class ApplicationsController : ControllerBase
             // Check if already applied
             var hasApplied = await _applicationService.HasAppliedAsync(request.JobId, userId);
             if (hasApplied)
-                return BadRequest(ApiResponse.CreateError("You have already applied for this job", "AlreadyApplied"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "AlreadyApplied"));
 
             var application = new DomainApplication
             {
@@ -60,12 +64,12 @@ public class ApplicationsController : ControllerBase
             };
 
             var created = await _applicationService.CreateAsync(application);
-            return Ok(ApiResponse<DomainApplication>.CreateSuccess(created, "Application submitted successfully"));
+            return Ok(ApiResponse<DomainApplication>.CreateSuccess(created, _i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating application");
-            return StatusCode(500, ApiResponse.CreateError("Failed to submit application", "CreateApplicationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreateApplicationFailed"));
         }
     }
 
@@ -87,7 +91,7 @@ public class ApplicationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting applications");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get applications", "GetApplicationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetApplicationsFailed"));
         }
     }
 
@@ -101,14 +105,14 @@ public class ApplicationsController : ControllerBase
         {
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
-                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
             return Ok(ApiResponse<DomainApplication>.CreateSuccess(application));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting application");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get application", "GetApplicationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetApplicationFailed"));
         }
     }
 
@@ -122,16 +126,16 @@ public class ApplicationsController : ControllerBase
         {
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
-                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
             application.Status = "Withdrawn";
             await _applicationService.UpdateAsync(id, application);
-            return Ok(ApiResponse.CreateSuccess("Application withdrawn successfully"));
+            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error withdrawing application");
-            return StatusCode(500, ApiResponse.CreateError("Failed to withdraw application", "WithdrawApplicationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.UpdateFailed), "WithdrawApplicationFailed"));
         }
     }
 
@@ -150,7 +154,7 @@ public class ApplicationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting job applications");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get job applications", "GetJobApplicationsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetJobApplicationsFailed"));
         }
     }
 
@@ -165,14 +169,14 @@ public class ApplicationsController : ControllerBase
         {
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
-                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
             return Ok(ApiResponse<DomainApplication>.CreateSuccess(application));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting application details");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get application details", "GetApplicationDetailsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetApplicationDetailsFailed"));
         }
     }
 
@@ -187,16 +191,16 @@ public class ApplicationsController : ControllerBase
         {
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
-                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
             application.Status = "Accepted";
             await _applicationService.UpdateAsync(id, application);
-            return Ok(ApiResponse.CreateSuccess("Application accepted successfully"));
+            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error accepting application");
-            return StatusCode(500, ApiResponse.CreateError("Failed to accept application", "AcceptApplicationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.UpdateFailed), "AcceptApplicationFailed"));
         }
     }
 
@@ -211,17 +215,17 @@ public class ApplicationsController : ControllerBase
         {
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
-                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
             application.Status = "Rejected";
             application.RejectedReason = request.Reason;
             await _applicationService.UpdateAsync(id, application);
-            return Ok(ApiResponse.CreateSuccess("Application rejected successfully"));
+            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting application");
-            return StatusCode(500, ApiResponse.CreateError("Failed to reject application", "RejectApplicationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.UpdateFailed), "RejectApplicationFailed"));
         }
     }
 
@@ -235,14 +239,14 @@ public class ApplicationsController : ControllerBase
         try
         {
             if (string.IsNullOrWhiteSpace(id))
-                return BadRequest(ApiResponse.CreateError("Application id is required", "InvalidApplicationId"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "InvalidApplicationId"));
 
             if (request == null || string.IsNullOrWhiteSpace(request.Note))
-                return BadRequest(ApiResponse.CreateError("Note is required", "InvalidNote"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NoteRequired), "InvalidNote"));
 
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
-                return NotFound(ApiResponse.CreateError("Application not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
             var trimmedNote = request.Note.Trim();
             application.PrivateNotes = string.IsNullOrWhiteSpace(application.PrivateNotes)
@@ -251,14 +255,14 @@ public class ApplicationsController : ControllerBase
 
             var updated = await _applicationService.UpdateAsync(id, application);
             if (!updated)
-                return StatusCode(500, ApiResponse.CreateError("Failed to add note", "AddNoteFailed"));
+                return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.UpdateFailed), "AddNoteFailed"));
 
-            return Ok(ApiResponse.CreateSuccess("Note added successfully"));
+            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding note");
-            return StatusCode(500, ApiResponse.CreateError("Failed to add note", "AddNoteFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "AddNoteFailed"));
         }
     }
 }

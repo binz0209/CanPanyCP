@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, BellOff, Check, CheckCheck, Briefcase, MessageSquare, DollarSign, Loader2, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,17 +10,17 @@ import type { NotificationItem, NotificationType } from '../../types/notificatio
 import { cn } from '../../utils';
 
 const TYPE_FILTERS = [
-    { value: '', label: 'Tất cả' },
-    { value: 'JobMatch', label: 'Job Match' },
-    { value: 'ApplicationUpdate', label: 'Applications' },
-    { value: 'NewMessage', label: 'Tin nhắn' },
-    { value: 'PaymentConfirmation', label: 'Thanh toán' },
+    { value: '', labelKey: 'notificationCenter.filters.type.all' },
+    { value: 'JobMatch', labelKey: 'notificationCenter.filters.type.jobMatch' },
+    { value: 'ApplicationUpdate', labelKey: 'notificationCenter.filters.type.applications' },
+    { value: 'NewMessage', labelKey: 'notificationCenter.filters.type.messages' },
+    { value: 'PaymentConfirmation', labelKey: 'notificationCenter.filters.type.payment' },
 ] as const;
 
 const READ_FILTERS = [
-    { value: undefined, label: 'Tất cả' },
-    { value: false, label: 'Chưa đọc' },
-    { value: true, label: 'Đã đọc' },
+    { value: undefined, labelKey: 'notificationCenter.filters.read.all' },
+    { value: false, labelKey: 'notificationCenter.filters.read.unread' },
+    { value: true, labelKey: 'notificationCenter.filters.read.read' },
 ] as const;
 
 function notificationIcon(type: NotificationType) {
@@ -50,16 +51,17 @@ function getNavigationPath(notification: NotificationItem): string | null {
     }
 }
 
-function timeAgo(date: string | Date): string {
+function timeAgo(date: string | Date, t: any): string {
     const diff = (Date.now() - new Date(date).getTime()) / 1000;
-    if (diff < 60) return 'Vừa xong';
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+    if (diff < 60) return t('notificationCenter.timeAgo.justNow');
+    if (diff < 3600) return t('notificationCenter.timeAgo.minutes', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('notificationCenter.timeAgo.hours', { count: Math.floor(diff / 3600) });
+    if (diff < 604800) return t('notificationCenter.timeAgo.days', { count: Math.floor(diff / 86400) });
     return new Date(date).toLocaleDateString('vi-VN');
 }
 
 export function NotificationCenterPage() {
+    const { t } = useTranslation('candidate');
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [typeFilter, setTypeFilter] = useState<string>('');
@@ -104,10 +106,10 @@ export function NotificationCenterPage() {
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Thông báo</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('notificationCenter.title')}</h1>
                     {unreadCount > 0 && (
                         <p className="mt-1 text-sm text-gray-500">
-                            <span className="font-semibold text-[#00b14f]">{unreadCount}</span> thông báo chưa đọc
+                            <span className="font-semibold text-[#00b14f]">{unreadCount}</span> {t('notificationCenter.unreadCount')}
                         </p>
                     )}
                 </div>
@@ -124,7 +126,7 @@ export function NotificationCenterPage() {
                         ) : (
                             <Check className="h-4 w-4 mr-1.5" />
                         )}
-                        Đánh dấu tất cả đã đọc
+                        {t('notificationCenter.markAllRead')}
                     </Button>
                 )}
             </div>
@@ -145,7 +147,7 @@ export function NotificationCenterPage() {
                                     : 'text-gray-600 hover:bg-gray-100'
                             )}
                         >
-                            {f.label}
+                            {t(f.labelKey)}
                         </button>
                     ))}
                 </div>
@@ -161,7 +163,7 @@ export function NotificationCenterPage() {
                                     : 'text-gray-600 hover:bg-gray-100'
                             )}
                         >
-                            {f.label}
+                            {t(f.labelKey)}
                         </button>
                     ))}
                 </div>
@@ -171,18 +173,18 @@ export function NotificationCenterPage() {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                     <Loader2 className="h-8 w-8 animate-spin text-[#00b14f]" />
-                    <p className="mt-3 text-sm">Đang tải thông báo...</p>
+                    <p className="mt-3 text-sm">{t('notificationCenter.states.loading')}</p>
                 </div>
             ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16 text-center">
                     <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                         <BellOff className="h-7 w-7 text-gray-400" />
                     </div>
-                    <h3 className="font-medium text-gray-700">Không có thông báo nào</h3>
+                    <h3 className="font-medium text-gray-700">{t('notificationCenter.states.emptyTitle')}</h3>
                     <p className="mt-1 text-sm text-gray-500">
                         {typeFilter || readFilter !== undefined
-                            ? 'Không tìm thấy thông báo phù hợp với bộ lọc.'
-                            : 'Bạn chưa có thông báo nào.'}
+                            ? t('notificationCenter.states.emptyFiltered')
+                            : t('notificationCenter.states.emptyAll')}
                     </p>
                 </div>
             ) : (
@@ -223,7 +225,7 @@ export function NotificationCenterPage() {
                                     </p>
                                     <div className="flex shrink-0 items-center gap-2">
                                         <span className="whitespace-nowrap text-xs text-gray-400">
-                                            {timeAgo(notification.timestamp)}
+                                            {timeAgo(notification.timestamp, t)}
                                         </span>
                                         {!notification.isRead && (
                                             <span className="h-2 w-2 shrink-0 rounded-full bg-[#00b14f]" />

@@ -1,3 +1,4 @@
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Application.DTOs;
 using CanPany.Application.Interfaces.Services;
@@ -15,13 +16,16 @@ namespace CanPany.Api.Controllers;
 public class AdminReportsController : ControllerBase
 {
     private readonly IReportService _reportService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<AdminReportsController> _logger;
 
     public AdminReportsController(
         IReportService reportService,
+        II18nService i18nService,
         ILogger<AdminReportsController> logger)
     {
         _reportService = reportService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -39,7 +43,7 @@ public class AdminReportsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all reports");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get reports", "GetReportsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetReportsFailed"));
         }
     }
 
@@ -53,14 +57,14 @@ public class AdminReportsController : ControllerBase
         {
             var report = await _reportService.GetReportDetailsAsync(id);
             if (report == null)
-                return NotFound(ApiResponse.CreateError("Report not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Report.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess(report));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting report details: {ReportId}", id);
-            return StatusCode(500, ApiResponse.CreateError("Failed to get report details", "GetReportDetailsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetReportDetailsFailed"));
         }
     }
 
@@ -74,18 +78,18 @@ public class AdminReportsController : ControllerBase
         {
             var adminId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(ApiResponse.CreateError("Admin not authenticated", "Unauthorized"));
+                return Unauthorized(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.Unauthorized), "Unauthorized"));
 
             var succeeded = await _reportService.ResolveReportAsync(id, adminId, request.ResolutionNote, request.BanUser);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError("Failed to resolve report or report not in Pending status", "ResolveFailed"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Report.ResolveFailed), "ResolveFailed"));
 
             return Ok(ApiResponse.CreateSuccess("Report resolved successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error resolving report: {ReportId}", id);
-            return StatusCode(500, ApiResponse.CreateError("Failed to resolve report", "ResolveReportFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "ResolveReportFailed"));
         }
     }
 
@@ -99,18 +103,18 @@ public class AdminReportsController : ControllerBase
         {
             var adminId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(ApiResponse.CreateError("Admin not authenticated", "Unauthorized"));
+                return Unauthorized(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.Unauthorized), "Unauthorized"));
 
             var succeeded = await _reportService.RejectReportAsync(id, adminId, request.RejectionReason);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError("Failed to reject report or report not in Pending status", "RejectFailed"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Report.ResolveFailed), "RejectFailed"));
 
             return Ok(ApiResponse.CreateSuccess("Report rejected successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting report: {ReportId}", id);
-            return StatusCode(500, ApiResponse.CreateError("Failed to reject report", "RejectReportFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "RejectReportFailed"));
         }
     }
 }

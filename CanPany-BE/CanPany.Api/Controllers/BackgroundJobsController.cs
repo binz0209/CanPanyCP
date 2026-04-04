@@ -1,6 +1,8 @@
 using CanPany.Worker.Infrastructure.Queue;
 using CanPany.Worker.Infrastructure.Progress;
 using CanPany.Worker.Models;
+using CanPany.Application.Common.Constants;
+using CanPany.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,15 +19,18 @@ public class BackgroundJobsController : ControllerBase
 {
     private readonly IJobProducer _jobProducer;
     private readonly IJobProgressTracker _progressTracker;
+    private readonly II18nService _i18nService;
     private readonly ILogger<BackgroundJobsController> _logger;
 
     public BackgroundJobsController(
         IJobProducer jobProducer,
         IJobProgressTracker progressTracker,
+        II18nService i18nService,
         ILogger<BackgroundJobsController> logger)
     {
         _jobProducer = jobProducer;
         _progressTracker = progressTracker;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -357,7 +362,7 @@ public class BackgroundJobsController : ControllerBase
         {
             return NotFound(new
             {
-                error = "Job not found",
+                error = _i18nService.GetErrorMessage(I18nKeys.Error.BackgroundJob.NotFound),
                 jobId,
                 message = "Job may not have started yet or has expired (24h retention)"
             });
@@ -433,7 +438,7 @@ public class BackgroundJobsController : ControllerBase
 
         var progress = await _progressTracker.GetProgressAsync(jobId);
         if (progress == null)
-            return NotFound(new { message = "Job not found", jobId });
+            return NotFound(new { message = _i18nService.GetErrorMessage(I18nKeys.Error.BackgroundJob.NotFound), jobId });
 
         // Security: only allow owner to view
         if (progress.UserId != null && progress.UserId != userId)

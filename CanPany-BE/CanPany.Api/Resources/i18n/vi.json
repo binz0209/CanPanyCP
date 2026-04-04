@@ -94,6 +94,58 @@
         "InvalidFileType": "Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WebP.",
         "UploadFailed": "Tải lên ảnh đại diện thất bại."
       }
+    },
+    "Company": {
+      "NotFound": "Không tìm thấy công ty.",
+      "FileRequired": "Vui lòng chọn file.",
+      "UpdateFailed": "Cập nhật công ty thất bại.",
+      "VerificationFailed": "Xác minh công ty thất bại."
+    },
+    "Application": {
+      "NotFound": "Không tìm thấy đơn ứng tuyển.",
+      "NoteRequired": "Ghi chú là bắt buộc.",
+      "UpdateFailed": "Cập nhật đơn ứng tuyển thất bại."
+    },
+    "Conversation": {
+      "NotFound": "Không tìm thấy cuộc hội thoại.",
+      "OtherUserRequired": "Vui lòng chọn người dùng để bắt đầu hội thoại.",
+      "UserNotFound": "Không tìm thấy người dùng."
+    },
+    "Message": {
+      "NotFound": "Không tìm thấy tin nhắn."
+    },
+    "Notification": {
+      "NotFound": "Không tìm thấy thông báo."
+    },
+    "Report": {
+      "NotFound": "Không tìm thấy báo cáo.",
+      "ResolveFailed": "Giải quyết báo cáo thất bại hoặc báo cáo không ở trạng thái chờ xử lý."
+    },
+    "Payment": {
+      "NotFound": "Không tìm thấy khoản thanh toán.",
+      "CreateFailed": "Tạo thanh toán thất bại.",
+      "InsufficientBalance": "Số dư ví không đủ.",
+      "PackageNotFound": "Không tìm thấy gói premium.",
+      "AlreadyPremium": "Bạn đã có gói premium đang hoạt động."
+    },
+    "Wallet": {
+      "NotFound": "Không tìm thấy ví.",
+      "InsufficientBalance": "Số dư không đủ để thực hiện giao dịch."
+    },
+    "BackgroundJob": {
+      "NotFound": "Không tìm thấy tiến trình."
+    },
+    "Category": {
+      "NotFound": "Không tìm thấy chuyên mục."
+    },
+    "Skill": {
+      "NotFound": "Không tìm thấy kỹ năng."
+    },
+    "Banner": {
+      "NotFound": "Không tìm thấy banner."
+    },
+    "Package": {
+      "NotFound": "Không tìm thấy gói dịch vụ."
     }
   },
   "Validation": {

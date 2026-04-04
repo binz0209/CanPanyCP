@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -15,13 +16,16 @@ namespace CanPany.Api.Controllers;
 public class MessagesController : ControllerBase
 {
     private readonly IMessageService _messageService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<MessagesController> _logger;
 
     public MessagesController(
         IMessageService messageService,
+        II18nService i18nService,
         ILogger<MessagesController> logger)
     {
         _messageService = messageService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -38,7 +42,7 @@ public class MessagesController : ControllerBase
                 return Unauthorized();
 
             if (string.IsNullOrWhiteSpace(conversationId))
-                return BadRequest(ApiResponse.CreateError("Conversation ID is required", "MissingConversationId"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "MissingConversationId"));
 
             var messages = await _messageService.GetByConversationIdAsync(conversationId, page, pageSize);
             return Ok(ApiResponse<IEnumerable<Message>>.CreateSuccess(messages));
@@ -46,7 +50,7 @@ public class MessagesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting messages");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get messages", "GetMessagesFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetMessagesFailed"));
         }
     }
 
@@ -68,7 +72,7 @@ public class MessagesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending message");
-            return StatusCode(500, ApiResponse.CreateError("Failed to send message", "SendMessageFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "SendMessageFailed"));
         }
     }
 
@@ -82,14 +86,14 @@ public class MessagesController : ControllerBase
         {
             var succeeded = await _messageService.MarkAsReadAsync(id);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Message not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Message.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Message marked as read"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error marking message as read");
-            return StatusCode(500, ApiResponse.CreateError("Failed to mark message as read", "MarkAsReadFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "MarkAsReadFailed"));
         }
     }
 
@@ -111,7 +115,7 @@ public class MessagesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error marking conversation as read");
-            return StatusCode(500, ApiResponse.CreateError("Failed to mark conversation as read", "MarkConversationAsReadFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "MarkConversationAsReadFailed"));
         }
     }
 }

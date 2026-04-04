@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Application.DTOs;
 using CanPany.Domain.Entities;
@@ -25,6 +26,7 @@ public class AdminController : ControllerBase
     private readonly ISkillService _skillService;
     private readonly IBannerService _bannerService;
     private readonly IPremiumPackageService _premiumPackageService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
@@ -38,6 +40,7 @@ public class AdminController : ControllerBase
         ISkillService skillService,
         IBannerService bannerService,
         IPremiumPackageService premiumPackageService,
+        II18nService i18nService,
         ILogger<AdminController> logger)
     {
         _dashboardService = dashboardService;
@@ -50,6 +53,7 @@ public class AdminController : ControllerBase
         _skillService = skillService;
         _bannerService = bannerService;
         _premiumPackageService = premiumPackageService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -67,7 +71,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting dashboard stats");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get dashboard stats", "GetDashboardFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetDashboardFailed"));
         }
     }
 
@@ -85,7 +89,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting users");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get users", "GetUsersFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUsersFailed"));
         }
     }
 
@@ -99,14 +103,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.BanUserAsync(id);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("User not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.User.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("User banned successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error banning user");
-            return StatusCode(500, ApiResponse.CreateError("Failed to ban user", "BanUserFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "BanUserFailed"));
         }
     }
 
@@ -120,14 +124,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.UnbanUserAsync(id);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("User not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.User.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("User unbanned successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error unbanning user");
-            return StatusCode(500, ApiResponse.CreateError("Failed to unban user", "UnbanUserFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "UnbanUserFailed"));
         }
     }
 
@@ -146,7 +150,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting verification requests");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get verification requests", "GetVerificationRequestsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetVerificationRequestsFailed"));
         }
     }
 
@@ -160,14 +164,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.ApproveCompanyVerificationAsync(id);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Company not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Company verification approved"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error approving verification");
-            return StatusCode(500, ApiResponse.CreateError("Failed to approve verification", "ApproveVerificationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "ApproveVerificationFailed"));
         }
     }
 
@@ -181,14 +185,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.RejectCompanyVerificationAsync(id, request.Reason);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Company not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Company verification rejected"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting verification");
-            return StatusCode(500, ApiResponse.CreateError("Failed to reject verification", "RejectVerificationFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "RejectVerificationFailed"));
         }
     }
 
@@ -202,14 +206,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.HideJobAsync(id, request.Reason);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Job not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Job.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Job hidden successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error hiding job");
-            return StatusCode(500, ApiResponse.CreateError("Failed to hide job", "HideJobFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "HideJobFailed"));
         }
     }
 
@@ -227,7 +231,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting job");
-            return StatusCode(500, ApiResponse.CreateError("Failed to delete job", "DeleteJobFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteJobFailed"));
         }
     }
 
@@ -246,7 +250,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating category");
-            return StatusCode(500, ApiResponse.CreateError("Failed to create category", "CreateCategoryFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreateCategoryFailed"));
         }
     }
 
@@ -260,7 +264,7 @@ public class AdminController : ControllerBase
         {
             var category = await _categoryService.GetByIdAsync(id);
             if (category == null)
-                return NotFound(ApiResponse.CreateError("Category not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Category.NotFound), "NotFound"));
 
             category.Name = request.Name;
             await _categoryService.UpdateAsync(id, category);
@@ -269,7 +273,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating category");
-            return StatusCode(500, ApiResponse.CreateError("Failed to update category", "UpdateCategoryFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "UpdateCategoryFailed"));
         }
     }
 
@@ -287,7 +291,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting category");
-            return StatusCode(500, ApiResponse.CreateError("Failed to delete category", "DeleteCategoryFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteCategoryFailed"));
         }
     }
 
@@ -306,7 +310,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating skill");
-            return StatusCode(500, ApiResponse.CreateError("Failed to create skill", "CreateSkillFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreateSkillFailed"));
         }
     }
 
@@ -320,7 +324,7 @@ public class AdminController : ControllerBase
         {
             var skill = await _skillService.GetByIdAsync(id);
             if (skill == null)
-                return NotFound(ApiResponse.CreateError("Skill not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Skill.NotFound), "NotFound"));
 
             skill.Name = request.Name;
             skill.CategoryId = request.CategoryId;
@@ -330,7 +334,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating skill");
-            return StatusCode(500, ApiResponse.CreateError("Failed to update skill", "UpdateSkillFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "UpdateSkillFailed"));
         }
     }
 
@@ -348,7 +352,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting skill");
-            return StatusCode(500, ApiResponse.CreateError("Failed to delete skill", "DeleteSkillFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteSkillFailed"));
         }
     }
 
@@ -374,7 +378,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating banner");
-            return StatusCode(500, ApiResponse.CreateError("Failed to create banner", "CreateBannerFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreateBannerFailed"));
         }
     }
 
@@ -388,7 +392,7 @@ public class AdminController : ControllerBase
         {
             var banner = await _bannerService.GetByIdAsync(id);
             if (banner == null)
-                return NotFound(ApiResponse.CreateError("Banner not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Banner.NotFound), "NotFound"));
 
             if (!string.IsNullOrWhiteSpace(request.Title)) banner.Title = request.Title;
             if (!string.IsNullOrWhiteSpace(request.ImageUrl)) banner.ImageUrl = request.ImageUrl;
@@ -402,7 +406,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating banner");
-            return StatusCode(500, ApiResponse.CreateError("Failed to update banner", "UpdateBannerFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "UpdateBannerFailed"));
         }
     }
 
@@ -420,7 +424,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting banner");
-            return StatusCode(500, ApiResponse.CreateError("Failed to delete banner", "DeleteBannerFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteBannerFailed"));
         }
     }
 
@@ -436,14 +440,14 @@ public class AdminController : ControllerBase
             var priceInMinorUnits = (long)(request.Price * 100);
             var succeeded = await _premiumPackageService.UpdatePriceAsync(id, priceInMinorUnits);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Package not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Package.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Package price updated successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating package price");
-            return StatusCode(500, ApiResponse.CreateError("Failed to update package price", "UpdatePriceFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "UpdatePriceFailed"));
         }
     }
 
@@ -462,7 +466,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting payments");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get payments", "GetPaymentsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPaymentsFailed"));
         }
     }
 
@@ -476,14 +480,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.ApprovePaymentRequestAsync(id);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Payment not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Payment.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Payment approved successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error approving payment");
-            return StatusCode(500, ApiResponse.CreateError("Failed to approve payment", "ApprovePaymentFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "ApprovePaymentFailed"));
         }
     }
 
@@ -494,14 +498,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.RejectPaymentRequestAsync(id, request.Reason);
             if (!succeeded)
-                return NotFound(ApiResponse.CreateError("Payment not found", "NotFound"));
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Payment.NotFound), "NotFound"));
 
             return Ok(ApiResponse.CreateSuccess("Payment rejected successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting payment");
-            return StatusCode(500, ApiResponse.CreateError("Failed to reject payment", "RejectPaymentFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "RejectPaymentFailed"));
         }
     }
 
@@ -519,7 +523,7 @@ public class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting audit logs");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get audit logs", "GetAuditLogsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetAuditLogsFailed"));
         }
     }
 
@@ -533,14 +537,14 @@ public class AdminController : ControllerBase
         {
             var succeeded = await _adminService.SendBroadcastNotificationAsync(request.Title, request.Message, request.TargetRole);
             if (!succeeded)
-                return BadRequest(ApiResponse.CreateError("Failed to send broadcast notification", "BroadcastFailed"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "BroadcastFailed"));
 
             return Ok(ApiResponse.CreateSuccess("Broadcast notification sent successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending broadcast notification");
-            return StatusCode(500, ApiResponse.CreateError("Failed to send broadcast notification", "BroadcastFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "BroadcastFailed"));
         }
     }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Wand2,
@@ -17,10 +17,11 @@ import {
     RefreshCw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '../../components/ui';
 import { cvApi } from '../../api';
 import { candidateApi } from '../../api/candidate.api';
+import apiClient from '../../api/axios.config';
 import { useAuthStore } from '../../stores/auth.store';
 import { useTranslation } from 'react-i18next';
 
@@ -45,14 +46,8 @@ const normalizeStatus = (status: string | number | undefined): string => {
 
 async function fetchJobStatus(jobId: string) {
     try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/background-jobs/my-jobs/${jobId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (!res.ok) return null;
-        const body = await res.json();
-        const data = body.data ?? body;
+        const res = await apiClient.get(`/background-jobs/my-jobs/${jobId}`);
+        const data = res.data.data ?? res.data;
         // Normalize status to string
         if (data && data.status !== undefined) {
             data.status = normalizeStatus(data.status);
@@ -95,14 +90,19 @@ function ProfileSection({
 }
 
 // ─── main page ──────────────────────────────────────────────────────────────
-export function AICVPage({ targetJobId }: { targetJobId?: string } = {}) {
+export function AICVPage({ targetJobId: propTargetJobId }: { targetJobId?: string } = {}) {
     const { t } = useTranslation('candidate');
     const { user } = useAuthStore();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const [searchParams] = useSearchParams();
+    const targetJobId = propTargetJobId || searchParams.get('jobId') || undefined;
+    const targetJobTitle = searchParams.get('jobTitle');
+    const autoStart = searchParams.get('autoStart') === 'true';
     const [activeJobId, setActiveJobId] = useState<string | null>(null);
     const [generationDone, setGenerationDone] = useState(false);
     const [generatedCVId, setGeneratedCVId] = useState<string | null>(null);
+    const autoStartedRef = useRef(false);
 
     // Load user profile
     const { data: profileData, isLoading: profileLoading } = useQuery({
@@ -169,6 +169,17 @@ export function AICVPage({ targetJobId }: { targetJobId?: string } = {}) {
         generateMutation.mutate();
     };
 
+    // Auto-start generation if autoStart parameter is true and we haven't started yet
+    useEffect(() => {
+        if (autoStart && targetJobId && !autoStartedRef.current && !isGenerating && !profileLoading) {
+            autoStartedRef.current = true;
+            // Short delay to allow UI to render first
+            setTimeout(() => {
+                handleGenerate();
+            }, 300);
+        }
+    }, [autoStart, targetJobId, isGenerating, profileLoading]);
+
     const handleRetry = () => {
         setActiveJobId(null);
         setGenerationDone(false);
@@ -209,7 +220,7 @@ export function AICVPage({ targetJobId }: { targetJobId?: string } = {}) {
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('cv.ai.title')}</h1>
                                 <p className="text-sm text-gray-500 dark:text-slate-400">
-                                    {t('cv.ai.subtitle')}
+                                    {targetJobTitle ? t('cv.ai.subtitleJob', { job: targetJobTitle }) : t('cv.ai.subtitle')}
                                 </p>
                             </div>
                         </div>

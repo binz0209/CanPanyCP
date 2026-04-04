@@ -81,6 +81,262 @@
       "perHour": "/giờ"
     }
   },
+  "applicationHistory": {
+    "title": "Lịch sử ứng tuyển",
+    "subtitle": "Theo dõi và quản lý các đơn ứng tuyển của bạn",
+    "stats": {
+      "total": "Tổng số",
+      "pending": "Chờ duyệt",
+      "shortlisted": "Vào vòng tiếp",
+      "accepted": "Đã chấp nhận",
+      "rejected": "Bị từ chối",
+      "withdrawn": "Đã rút đơn"
+    },
+    "filter": {
+      "label": "Lọc theo trạng thái:",
+      "all": "Tất cả",
+      "pending": "Chờ duyệt",
+      "shortlisted": "Vào vòng tiếp",
+      "accepted": "Đã chấp nhận",
+      "rejected": "Bị từ chối",
+      "withdrawn": "Đã rút đơn"
+    },
+    "empty": {
+      "all": "Bạn chưa ứng tuyển vào công việc nào.",
+      "filtered": "Không có đơn ứng tuyển ở trạng thái này.",
+      "action": "Khám phá việc làm"
+    },
+    "item": {
+      "defaultPosition": "Vị trí tuyển dụng",
+      "remote": "Remote",
+      "proposedSalary": "Mức đề xuất: {{amount}}",
+      "appliedAt": "Nộp đơn: {{date}}",
+      "matchScore": "Phù hợp: {{score}}%",
+      "withdraw": {
+        "idle": "Rút đơn",
+        "loading": "Đang rút..."
+      },
+      "statusMsg": {
+        "shortlisted": "Chúc mừng, bạn đã vào vòng tiếp theo!",
+        "accepted": "Chúc mừng, đơn ứng tuyển đã được chấp nhận!",
+        "rejected": "Hồ sơ chưa phù hợp với vị trí này",
+        "withdrawn": "Bạn đã rút đơn ứng tuyển này"
+      }
+    },
+    "withdrawModal": {
+      "title": "Rút đơn ứng tuyển",
+      "message": "Bạn có chắc chắn muốn rút đơn ứng tuyển của mình không? Hành động này không thể hoàn tác.",
+      "cancel": "Không",
+      "confirm": "Có, rút ngay",
+      "loading": "Đang rút..."
+    },
+    "toast": {
+      "withdrawSuccess": "Đơn đã rút",
+      "withdrawError": "Không thể rút đơn. Vui lòng thử lại.",
+      "fetchError": "Không thể tải lịch sử ứng tuyển. Vui lòng thử lại."
+    }
+  },
+  "messages": {
+    "title": "Tin nhắn",
+    "status": {
+      "connected": "Đã kết nối",
+      "connecting": "Đang kết nối..."
+    },
+    "conversations": {
+      "empty": "Chưa có cuộc trò chuyện nào"
+    },
+    "chat": {
+      "selectPrompt": "Chọn cuộc trò chuyện để bắt đầu nhắn tin",
+      "empty": "Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!",
+      "typing": "Đang nhập..."
+    },
+    "input": {
+      "placeholder": "Nhập tin nhắn...",
+      "send": "Gửi",
+      "hint": "Enter để gửi · Shift+Enter để xuống dòng"
+    },
+    "header": {
+      "back": "Quay lại"
+    },
+    "bubble": {
+      "sending": "Đang gửi...",
+      "read": "Đã đọc"
+    },
+    "error": {
+      "sendFailed": "Không thể gửi tin nhắn"
+    }
+  },
+  "backgroundJobs": {
+    "title": "Tiến trình công việc",
+    "subtitle": "Theo dõi trạng thái các tác vụ nền đang chạy trong tài khoản của bạn",
+    "status": {
+      "pending": "Chờ xử lý",
+      "running": "Đang chạy",
+      "completed": "Hoàn tất",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy",
+      "retrying": "Thử lại"
+    },
+    "detail": {
+      "waiting": "Đang chờ...",
+      "step": "Bước {{completed}}/{{total}}",
+      "repos": "Repositories đã chọn",
+      "skills": "Skills đã trích xuất",
+      "error": "Lỗi",
+      "started": "Bắt đầu:",
+      "ended": "Kết thúc:",
+      "duration": "Thời gian:",
+      "updated": "Cập nhật:"
+    },
+    "row": {
+      "processing": "Đang xử lý...",
+      "completedAt": "Hoàn tất lúc: {{time}}"
+    },
+    "toolbar": {
+      "count": "{{count}} công việc gần đây",
+      "empty": "Chưa có công việc nào",
+      "refresh": "Làm mới"
+    },
+    "empty": {
+      "title": "Chưa có tác vụ nào",
+      "desc": "Khi bạn sync GitHub skills hoặc chạy các tính năng AI, tiến trình sẽ xuất hiện ở đây."
+    }
+  },
+  "githubAnalysis": {
+    "title": "Phân tích GitHub",
+    "subtitle": "Gemini AI đọc code, nghiên cứu repo, và trích xuất kỹ năng thực sự của bạn.",
+    "lastAnalyzed": "Lần phân tích cuối: {{date}}",
+    "actions": {
+      "analyzing": "Đang phân tích...",
+      "reanalyze": "Phân tích lại",
+      "start": "Bắt đầu phân tích"
+    },
+    "progress": {
+      "processing": "Đang xử lý..."
+    },
+    "toast": {
+      "completed": "✅ Phân tích GitHub hoàn thành!",
+      "started": "🔄 Đang phân tích GitHub profile...",
+      "error": "Không thể bắt đầu phân tích. Hãy kết nối GitHub trước."
+    },
+    "stats": {
+      "repositories": "Repositories",
+      "totalStars": "Tổng stars",
+      "totalForks": "Tổng forks",
+      "contributions": "Contributions"
+    },
+    "sections": {
+      "languages": "Ngôn ngữ lập trình",
+      "skills": "Kỹ năng phát hiện",
+      "level": "Level:",
+      "specializations": "Chuyên sâu",
+      "aiSummary": "AI nhận xét",
+      "recommendations": "Gợi ý phát triển",
+      "topRepos": "Top repositories"
+    },
+    "empty": {
+      "title": "Chưa có dữ liệu phân tích",
+      "description": "Kết nối GitHub trong trang hồ sơ, sau đó nhấn phân tích để Gemini AI đọc code và trích xuất kỹ năng."
+    }
+  },
+  "recommendedJobs": {
+    "title": "Việc làm phù hợp với bạn",
+    "subtitle": "Được tổng hợp từ hồ sơ của bạn và hành vi của những ứng viên tương tự. Tương tác nhiều hơn giúp gợi ý chính xác hơn.",
+    "matchLevels": {
+      "veryHigh": "Phù hợp cao",
+      "high": "Phù hợp tốt",
+      "medium": "Phù hợp",
+      "suggested": "Gợi ý"
+    },
+    "budget": {
+      "negotiable": "Thỏa thuận",
+      "perHour": "/giờ"
+    },
+    "actions": {
+      "refresh": "Làm mới",
+      "syncing": "Đang đồng bộ...",
+      "syncAiSkills": "Đồng bộ kỹ năng AI",
+      "viewDetails": "Xem chi tiết",
+      "bookmark": "Lưu việc làm",
+      "updateProfile": "Cập nhật hồ sơ",
+      "exploreJobs": "Khám phá việc làm",
+      "generatingCv": "Đang tạo CV...",
+      "cvGenerated": "CV đã tạo",
+      "generateCv": "Tạo CV phù hợp với vị trí này"
+    },
+    "status": {
+      "viewed": "Đã xem",
+      "remote": "Remote"
+    },
+    "toast": {
+      "syncStarted": "🔄 Đang đồng bộ kỹ năng cho AI gợi ý...",
+      "syncError": "Không thể bắt đầu đồng bộ kỹ năng.",
+      "syncSuccess": "✅ Đồng bộ xong! Gợi ý đã được cập nhật.",
+      "syncFailed": "Đồng bộ kỹ năng thất bại.",
+      "bookmarkSuccess": "Đã lưu việc làm",
+      "bookmarkError": "Không thể lưu việc làm",
+      "cvStarted": "🚀 Đang tạo CV phù hợp...",
+      "cvError": "Không thể tạo CV.",
+      "cvSuccess": "✅ CV cho \"{{title}}\" tạo xong!"
+    },
+    "tips": {
+      "coldStart1": "Bạn chưa có nhiều tương tác. Nhấn",
+      "coldStart2": "Đồng bộ kỹ năng AI",
+      "coldStart3": "để cải thiện gợi ý ngay."
+    },
+    "empty": {
+      "title": "Chưa có gợi ý",
+      "description": "Hãy hoàn thiện hồ sơ và tương tác với các tin tuyển dụng để AI có thể gợi ý việc làm phù hợp."
+    }
+  },
+  "notificationCenter": {
+    "title": "Thông báo",
+    "unreadCount": "thông báo chưa đọc",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "filters": {
+      "type": {
+        "all": "Tất cả",
+        "jobMatch": "Job Match",
+        "applications": "Applications",
+        "messages": "Tin nhắn",
+        "payment": "Thanh toán"
+      },
+      "read": {
+        "all": "Tất cả",
+        "unread": "Chưa đọc",
+        "read": "Đã đọc"
+      }
+    },
+    "timeAgo": {
+      "justNow": "Vừa xong",
+      "minutes": "{{count}} phút trước",
+      "hours": "{{count}} giờ trước",
+      "days": "{{count}} ngày trước"
+    },
+    "states": {
+      "loading": "Đang tải thông báo...",
+      "emptyTitle": "Không có thông báo nào",
+      "emptyFiltered": "Không tìm thấy thông báo phù hợp với bộ lọc.",
+      "emptyAll": "Bạn chưa có thông báo nào."
+    }
+  },
+  "jobAlerts": {
+    "title": "Job Alerts",
+    "subtitle": "Nhận thông báo ngay khi có công việc phù hợp với tiêu chí của bạn.",
+    "createAlert": "Tạo Alert",
+    "createFirstAlert": "Tạo Alert đầu tiên",
+    "stats": {
+      "active": "Đang hoạt động",
+      "totalAlerts": "Tổng alerts",
+      "totalMatches": "Tổng kết quả",
+      "recentMatches": "Kết quả gần đây"
+    },
+    "states": {
+      "loading": "Đang tải job alerts...",
+      "emptyTitle": "Chưa có job alert nào",
+      "emptyDescription": "Tạo alert để nhận thông báo tự động khi có công việc phù hợp với bạn."
+    }
+  },
   "nav": {
     "searchPlaceholder": "Tìm kiếm...",
     "aiAdvisor": "AI Advisor",
@@ -378,6 +634,7 @@
       "back": "Quản lý CV",
       "title": "AI CV Generator",
       "subtitle": "Tự động tạo CV chuyên nghiệp từ hồ sơ của bạn",
+      "subtitleJob": "Đang phân tích Profile và rà soát yêu cầu của vị trí \"{{job}}\"...",
       "badge": "Powered by Gemini AI",
       "warning": {
         "title": "Hồ sơ chưa đầy đủ",
@@ -488,5 +745,91 @@
         "failed": "Thất bại"
       }
     }
+  },
+  "premium": {
+    "title": "Premium",
+    "subtitle": "Nâng cấp tài khoản để mở khóa toàn bộ tính năng AI và tìm kiếm nâng cao.",
+    "balance": "Số dư",
+    "topUp": "Nạp tiền",
+    "active": "Đang hoạt động",
+    "expiredIn": "Sắp hết hạn ({{days}} ngày)",
+    "expiresAt": "Hết hạn: {{date}} ({{days}} ngày còn lại)",
+    "activeLabel": "Premium đang hoạt động",
+    "perMonth": "/tháng",
+    "perYear": "/năm",
+    "perMonthEquiv": "≈ {{amount}}/tháng",
+    "savings": "Tiết kiệm",
+    "buyNow": "Mua ngay",
+    "needTopUp": "Nạp thêm tiền để mua",
+    "noPackages": "Chưa có gói premium nào được cấu hình.",
+    "noPackagesHint": "Vui lòng liên hệ admin để thiết lập gói premium.",
+    "duration": "Thời hạn",
+    "durationDays": "{{days}} ngày",
+    "confirm": {
+      "title": "Xác nhận mua Premium",
+      "package": "Gói",
+      "price": "Giá",
+      "duration": "Thời hạn",
+      "currentBalance": "Số dư hiện tại",
+      "afterPurchase": "Sau khi mua",
+      "deductNote": "Số tiền sẽ được trừ trực tiếp từ ví của bạn.",
+      "cancel": "Hủy",
+      "confirm": "Xác nhận mua",
+      "processing": "Đang xử lý..."
+    },
+    "toast": {
+      "activated": "🎉 Premium đã được kích hoạt thành công!",
+      "purchaseFailed": "Không thể mua gói premium. Vui lòng thử lại.",
+      "insufficientBalance": "Số dư ví không đủ. Cần {{required}}, hiện có {{current}}."
+    },
+    "candidateFeatures": {
+      "title": "Tính năng cho Ứng viên",
+      "aiCv": "AI CV phù hợp cho Job",
+      "aiCvDesc": "Tự động tạo CV AI được tối ưu cho từng vị trí công việc cụ thể",
+      "matchJobs": "Tìm Job tương thích nhất",
+      "matchJobsDesc": "Xem điểm tương thích chi tiết và gợi ý job phù hợp nhất với kỹ năng của bạn",
+      "unlimitedRec": "Không giới hạn gợi ý",
+      "unlimitedRecDesc": "Xem tất cả job được gợi ý (free: chỉ 3 job)"
+    },
+    "companyFeatures": {
+      "title": "Tính năng cho Nhà tuyển dụng",
+      "viewCandidate": "Xem thông tin ứng viên",
+      "viewCandidateDesc": "Xem đầy đủ thông tin liên hệ và hồ sơ chi tiết của ứng viên",
+      "searchCandidate": "Tìm ứng viên phù hợp",
+      "searchCandidateDesc": "Tìm kiếm ứng viên có độ tương thích cao nhất với vị trí tuyển dụng",
+      "prioritySupport": "Hỗ trợ ưu tiên",
+      "prioritySupportDesc": "Được hỗ trợ nhanh chóng khi cần"
+    },
+    "comparison": {
+      "title": "So sánh Free vs Premium",
+      "feature": "Tính năng",
+      "free": "Free",
+      "premium": "Premium",
+      "jobRec": "Gợi ý Job phù hợp",
+      "jobRecFree": "3 jobs",
+      "jobRecPremium": "Không giới hạn",
+      "aiCvGen": "Tạo CV AI cho Job cụ thể",
+      "matchScore": "Điểm tương thích chi tiết",
+      "searchCandidate": "Tìm kiếm ứng viên",
+      "viewCandidate": "Xem thông tin ứng viên"
+    }
+  },
+  "paymentResult": {
+    "success": {
+      "title": "Thanh toán thành công!",
+      "message": "Yêu cầu nạp tiền của bạn đã được xử lý. Số dư ví sẽ được cập nhật trong giây lát."
+    },
+    "error": {
+      "title": "Thanh toán thất bại!",
+      "message": "Rất tiếc, đã có lỗi xảy ra trong quá trình giao dịch. Vui lòng thử lại sau."
+    },
+    "cancel": {
+      "title": "Thanh toán đã bị hủy",
+      "message": "Bạn đã hủy quá trình thanh toán. Không có khoản tiền nào bị trừ."
+    },
+    "goToWallet": "Trở về Ví của tôi",
+    "goHome": "Trang Chủ",
+    "autoRedirect": "Tự động chuyển hướng sau {{seconds}} giây...",
+    "cancelledToast": "Bạn đã hủy thanh toán."
   }
 }
