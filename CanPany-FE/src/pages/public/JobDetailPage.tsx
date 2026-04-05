@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft, Sparkles } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft, Sparkles, Globe, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Button, Badge, Card } from '../../components/ui';
 import { ApplyModal } from '../../components/features/jobs';
-import { jobsApi } from '../../api';
+import { jobsApi, companiesApi } from '../../api';
 import { formatRelativeTime, formatCurrency, formatDate } from '../../utils';
 import { cn } from '../../utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -24,6 +24,12 @@ export function JobDetailPage() {
         queryKey: ['job', id],
         queryFn: () => jobsApi.getById(id!),
         enabled: !!id,
+    });
+
+    const { data: companyData } = useQuery({
+        queryKey: ['company', data?.job.companyId],
+        queryFn: () => companiesApi.getById(data!.job.companyId),
+        enabled: !!data?.job.companyId && !data?.job.company,
     });
 
     const { isBookmarked, toggle, isToggling } = useBookmarks();
@@ -53,7 +59,9 @@ export function JobDetailPage() {
     }
 
     const { job } = data;
+    const company = job.company || companyData;
     const bookmarked = isBookmarked(job.id) || data.isBookmarked;
+    const companyName = company?.name || t('jobCard.companyFallback');
 
     const levelColors = {
         Junior: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
@@ -80,7 +88,7 @@ export function JobDetailPage() {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 lg:text-3xl">{job.title}</h1>
-                                <p className="mt-1 text-lg text-gray-600 dark:text-slate-300">{job.companyId}</p>
+                                {/* <p className="mt-1 text-lg text-gray-600 dark:text-slate-300">{job.companyId}</p> */}
                                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-slate-400">
                                     {job.location && (
                                         <span className="flex items-center gap-1">
@@ -155,6 +163,55 @@ export function JobDetailPage() {
 
                     {/* Sidebar */}
                     <div className="space-y-6">
+                        <Card className="p-6 dark:border-slate-800 dark:bg-slate-900">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.companySection')}</h2>
+                            <div className="mt-4 flex items-start gap-3">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800">
+                                    {company?.logoUrl ? (
+                                        <img
+                                            src={company.logoUrl}
+                                            alt={`${companyName} logo`}
+                                            className="h-8 w-8 object-contain"
+                                        />
+                                    ) : (
+                                        <Building2 className="h-6 w-6 text-gray-500 dark:text-slate-400" />
+                                    )}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate font-semibold text-gray-900 dark:text-slate-100">{companyName}</p>
+
+                                    {company?.website && (
+                                        <a
+                                            href={company.website}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                                        >
+                                            <Globe className="h-4 w-4" />
+                                            {t('jobDetail.companyWebsite')}
+                                            <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                    )}
+
+                                    {company?.address && (
+                                        <p className="mt-2 flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
+                                            <MapPin className="h-4 w-4" />
+                                            {company.address}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {job.companyId && (
+                                <Link to={`/companies/${job.companyId}`} className="mt-4 inline-flex">
+                                    <Button variant="outline" size="sm">
+                                        {t('jobDetail.companyProfile')}
+                                    </Button>
+                                </Link>
+                            )}
+                        </Card>
+
                         <Card className="p-6 dark:border-slate-800 dark:bg-slate-900">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.infoSection')}</h2>
                             <dl className="mt-4 space-y-4">

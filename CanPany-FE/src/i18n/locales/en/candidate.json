@@ -108,6 +108,7 @@
     },
     "item": {
       "defaultPosition": "Job Position",
+      "viewDetail": "View details",
       "remote": "Remote",
       "proposedSalary": "Proposed: {{amount}}",
       "appliedAt": "Applied at: {{date}}",
@@ -133,7 +134,8 @@
     "toast": {
       "withdrawSuccess": "Application withdrawn successfully",
       "withdrawError": "Could not withdraw application. Please try again.",
-      "fetchError": "Could not fetch application history. Please try again."
+      "fetchError": "Could not fetch application history. Please try again.",
+      "jobNotFound": "Related job could not be found."
     }
   },
   "messages": {

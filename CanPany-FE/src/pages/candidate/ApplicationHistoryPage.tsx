@@ -17,6 +17,8 @@ import {
 import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { applicationsApi } from '../../api/applications.api';
+import { jobsApi } from '../../api/jobs.api';
+import { companiesApi } from '../../api/companies.api';
 import type { Application, ApplicationStatus } from '../../types/application.types';
 import { cn } from '../../utils';
 
@@ -78,7 +80,61 @@ export function ApplicationHistoryPage() {
       setLoading(true);
       setError(null);
       const data = await applicationsApi.getMyApplications();
-      setApplications(data);
+
+      const uniqueJobIds = Array.from(new Set(data.map(app => app.jobId).filter(Boolean)));
+      const jobsById = new Map<string, NonNullable<Application['job']>>();
+
+      if (uniqueJobIds.length > 0) {
+        const jobResponses = await Promise.allSettled(
+          uniqueJobIds.map((jobId) => jobsApi.getById(jobId))
+        );
+
+        jobResponses.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value?.job) {
+            jobsById.set(uniqueJobIds[index], result.value.job);
+          }
+        });
+
+        const uniqueCompanyIds = Array.from(
+          new Set(
+            Array.from(jobsById.values())
+              .map((job) => job.companyId)
+              .filter(Boolean)
+          )
+        );
+        const companiesById = new Map<string, Awaited<ReturnType<typeof companiesApi.getById>>>();
+
+        if (uniqueCompanyIds.length > 0) {
+          const companyResponses = await Promise.allSettled(
+            uniqueCompanyIds.map((companyId) => companiesApi.getById(companyId))
+          );
+
+          companyResponses.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value) {
+              companiesById.set(uniqueCompanyIds[index], result.value);
+            }
+          });
+
+          jobsById.forEach((job, jobId) => {
+            if (!job.company && job.companyId) {
+              const company = companiesById.get(job.companyId);
+              if (company) {
+                jobsById.set(jobId, {
+                  ...job,
+                  company,
+                });
+              }
+            }
+          });
+        }
+      }
+
+      const hydratedApplications = data.map((app) => ({
+        ...app,
+        job: app.job ?? jobsById.get(app.jobId),
+      }));
+
+      setApplications(hydratedApplications);
     } catch (err) {
       setError(t('applicationHistory.toast.fetchError'));
       console.error('Error loading applications:', err);
@@ -116,6 +172,15 @@ export function ApplicationHistoryPage() {
   const cancelWithdraw = () => {
     setShowConfirm(false);
     setConfirmingApplicationId(null);
+  };
+
+  const navigateToJobDetail = (jobId?: string) => {
+    if (!jobId) {
+      toast.error(t('applicationHistory.toast.jobNotFound'));
+      return;
+    }
+
+    navigate(`/jobs/${jobId}`);
   };
 
   // Filter applications based on selected status
@@ -157,7 +222,7 @@ export function ApplicationHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00b14f]"></div>
       </div>
     );
@@ -165,7 +230,7 @@ export function ApplicationHistoryPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-100 gap-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <p className="text-gray-600">{error}</p>
         <Button onClick={loadApplications}>Thử lại</Button>
@@ -261,6 +326,7 @@ export function ApplicationHistoryPage() {
           {filteredApplications.map((application) => {
             const status = statusConfig[application.status];
             const withdrawAllowed = canWithdraw(application.status);
+            const companyName = application.job?.company?.name || t('dashboard.recent.unknownCompany');
             
             return (
               <div 
@@ -271,7 +337,7 @@ export function ApplicationHistoryPage() {
                   {/* Job Info */}
                   <div className="flex-1">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
                         {application.job?.company?.logoUrl ? (
                           <img 
                             src={application.job.company.logoUrl} 
@@ -283,16 +349,18 @@ export function ApplicationHistoryPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <button
+                          type="button"
+                          onClick={() => navigateToJobDetail(application.jobId)}
+                          className="text-left text-lg font-semibold text-gray-900 hover:text-[#00b14f] transition-colors"
+                        >
                           {application.job?.title || t('applicationHistory.item.defaultPosition')}
-                        </h3>
+                        </button>
                         <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-600">
-                          {application.job?.company && (
-                            <span className="flex items-center gap-1">
-                              <Building2 className="h-4 w-4" />
-                              {application.job.company.name}
-                            </span>
-                          )}
+                          <span className="flex items-center gap-1">
+                            <Building2 className="h-4 w-4" />
+                            {companyName}
+                          </span>
                           {application.job?.location && (
                             <span className="flex items-center gap-1">
                               <MapPin className="h-4 w-4" />
@@ -340,6 +408,15 @@ export function ApplicationHistoryPage() {
 
                   {/* Status & Actions */}
                   <div className="flex flex-col items-end gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigateToJobDetail(application.jobId)}
+                      className="border-[#00b14f]/30 text-[#00b14f] hover:bg-[#00b14f]/10"
+                    >
+                      {t('applicationHistory.item.viewDetail')}
+                    </Button>
+
                     <div className={cn(
                       'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium',
                       status.bgColor,

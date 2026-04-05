@@ -109,7 +109,10 @@
     "requirements": "Requirements",
     "benefits": "Benefits",
     "applySuccess": "Application submitted successfully!",
-    "genCv": "Generate CV with AI"
+    "genCv": "Generate CV with AI",
+    "companySection": "Company",
+    "companyProfile": "View company profile",
+    "companyWebsite": "Website"
   },
   "companies": {
     "title": "Companies",

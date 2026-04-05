@@ -108,6 +108,7 @@
     },
     "item": {
       "defaultPosition": "Vị trí tuyển dụng",
+      "viewDetail": "Xem chi tiết",
       "remote": "Remote",
       "proposedSalary": "Mức đề xuất: {{amount}}",
       "appliedAt": "Nộp đơn: {{date}}",
@@ -133,7 +134,8 @@
     "toast": {
       "withdrawSuccess": "Đơn đã rút",
       "withdrawError": "Không thể rút đơn. Vui lòng thử lại.",
-      "fetchError": "Không thể tải lịch sử ứng tuyển. Vui lòng thử lại."
+      "fetchError": "Không thể tải lịch sử ứng tuyển. Vui lòng thử lại.",
+      "jobNotFound": "Không tìm thấy công việc tương ứng."
     }
   },
   "messages": {
