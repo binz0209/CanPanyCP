@@ -14,6 +14,7 @@ namespace CanPany.Tests.ControllerTests;
 public class WalletControllerTests
 {
     private readonly Mock<IWalletService> _walletServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<WalletController>> _loggerMock = new();
     private readonly WalletController _controller;
 
@@ -21,6 +22,7 @@ public class WalletControllerTests
     {
         _controller = new WalletController(
             _walletServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated user

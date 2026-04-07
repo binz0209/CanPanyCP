@@ -19,6 +19,7 @@ public class CompaniesControllerTests
     private readonly Mock<IUserService> _userServiceMock = new();
     private readonly Mock<IApplicationService> _applicationServiceMock = new();
     private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<CompaniesController>> _loggerMock = new();
     private readonly CompaniesController _controller;
 
@@ -30,6 +31,7 @@ public class CompaniesControllerTests
             _userServiceMock.Object,
             _applicationServiceMock.Object,
             _cloudinaryServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
     }
 

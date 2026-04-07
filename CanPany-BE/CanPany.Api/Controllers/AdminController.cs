@@ -76,25 +76,75 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-ADM-02: View User List
+    /// UC-44: List / Search Users (with filter + pagination)
+    /// GET /admin/users?search=&role=&status=&page=&pageSize=
     /// </summary>
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] string? search = null,
+        [FromQuery] string? role = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         try
         {
-            var users = await _userService.GetAllAsync();
-            return Ok(ApiResponse<IEnumerable<User>>.CreateSuccess(users));
+            var users = await _adminService.SearchUsersAsync(search, role, status, page, pageSize);
+            return Ok(ApiResponse<IEnumerable<object>>.CreateSuccess(
+                users.Select(u => new
+                {
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Role,
+                    u.IsLocked,
+                    u.LockedUntil,
+                    u.AvatarUrl,
+                    u.CreatedAt
+                })));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting users");
+            _logger.LogError(ex, "Error searching users");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUsersFailed"));
         }
     }
 
     /// <summary>
-    /// UC-ADM-05: Ban User
+    /// UC-44: Get single user detail
+    /// GET /admin/users/{id}
+    /// </summary>
+    [HttpGet("users/{id}")]
+    public async Task<IActionResult> GetUserById(string id)
+    {
+        try
+        {
+            var user = await _adminService.GetUserByIdAsync(id);
+            if (user == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.User.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<object>.CreateSuccess(new
+            {
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.Role,
+                user.IsLocked,
+                user.LockedUntil,
+                user.AvatarUrl,
+                user.CreatedAt,
+                user.UpdatedAt
+            }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user: {UserId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUserFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-44: Ban User
     /// </summary>
     [HttpPut("users/{id}/ban")]
     public async Task<IActionResult> BanUser(string id)
@@ -115,7 +165,7 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-ADM-06: Unban User
+    /// UC-44: Unban User
     /// </summary>
     [HttpPut("users/{id}/unban")]
     public async Task<IActionResult> UnbanUser(string id)
@@ -136,21 +186,84 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-ADM-07: View Company Verification Requests
+    /// UC-44: Permanently delete user from system
+    /// DELETE /admin/users/{id}
+    /// </summary>
+    [HttpDelete("users/{id}")]
+    public async Task<IActionResult> DeleteUser(string id)
+    {
+        try
+        {
+            var succeeded = await _adminService.DeleteUserAsync(id);
+            if (!succeeded)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.User.NotFound), "NotFound"));
+
+            return Ok(ApiResponse.CreateSuccess("User permanently deleted"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting user: {UserId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteUserFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-45: Get Verification Requests (fix stub — now queries DB)
+    /// GET /admin/companies/verification-requests
     /// </summary>
     [HttpGet("companies/verification-requests")]
     public async Task<IActionResult> GetVerificationRequests()
     {
         try
         {
-            // TODO: Implement get verification requests
-            await Task.CompletedTask;
-            return Ok(ApiResponse.CreateSuccess(new List<object>()));
+            var requests = await _adminService.GetVerificationRequestsAsync();
+            return Ok(ApiResponse<IEnumerable<Company>>.CreateSuccess(requests));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting verification requests");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetVerificationRequestsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-45: Get all companies (with optional status filter)
+    /// GET /admin/companies?status=
+    /// </summary>
+    [HttpGet("companies")]
+    public async Task<IActionResult> GetCompanies([FromQuery] string? status = null)
+    {
+        try
+        {
+            var companies = await _adminService.GetAllCompaniesAsync(status);
+            return Ok(ApiResponse<IEnumerable<Company>>.CreateSuccess(companies));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting companies");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCompaniesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-45: Get single company detail
+    /// GET /admin/companies/{id}
+    /// </summary>
+    [HttpGet("companies/{id}")]
+    public async Task<IActionResult> GetCompanyById(string id)
+    {
+        try
+        {
+            var company = await _adminService.GetCompanyByIdAsync(id);
+            if (company == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<Company>.CreateSuccess(company));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting company: {CompanyId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCompanyFailed"));
         }
     }
 
@@ -197,7 +310,48 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-ADM-11: Hide Job (Violation)
+    /// UC-46: Get all jobs (admin view — including hidden, with optional status filter)
+    /// GET /admin/jobs?status=
+    /// </summary>
+    [HttpGet("jobs")]
+    public async Task<IActionResult> GetJobs([FromQuery] string? status = null)
+    {
+        try
+        {
+            var jobs = await _adminService.GetAllJobsAsync(status);
+            return Ok(ApiResponse<IEnumerable<Job>>.CreateSuccess(jobs));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting jobs");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetJobsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-46: Get single job detail (admin view)
+    /// GET /admin/jobs/{id}
+    /// </summary>
+    [HttpGet("jobs/{id}")]
+    public async Task<IActionResult> GetJobById(string id)
+    {
+        try
+        {
+            var job = await _adminService.GetJobByIdAsync(id);
+            if (job == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Job.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<Job>.CreateSuccess(job));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting job: {JobId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetJobFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-46: Hide Job (Violation)
     /// </summary>
     [HttpPut("jobs/{id}/hide")]
     public async Task<IActionResult> HideJob(string id, [FromBody] HideJobRequest request)
@@ -232,6 +386,47 @@ public class AdminController : ControllerBase
         {
             _logger.LogError(ex, "Error deleting job");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteJobFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Get all categories
+    /// GET /admin/categories
+    /// </summary>
+    [HttpGet("categories")]
+    public async Task<IActionResult> GetCategories()
+    {
+        try
+        {
+            var categories = await _categoryService.GetAllAsync();
+            return Ok(ApiResponse<IEnumerable<Category>>.CreateSuccess(categories));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting categories");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCategoriesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Get single category detail
+    /// GET /admin/categories/{id}
+    /// </summary>
+    [HttpGet("categories/{id}")]
+    public async Task<IActionResult> GetCategoryById(string id)
+    {
+        try
+        {
+            var category = await _categoryService.GetByIdAsync(id);
+            if (category == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Category.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<Category>.CreateSuccess(category));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting category: {CategoryId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetCategoryFailed"));
         }
     }
 
@@ -296,6 +491,50 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// UC-47: Get all skills (with optional categoryId filter)
+    /// GET /admin/skills?categoryId=
+    /// </summary>
+    [HttpGet("skills")]
+    public async Task<IActionResult> GetSkills([FromQuery] string? categoryId = null)
+    {
+        try
+        {
+            IEnumerable<Skill> skills = string.IsNullOrWhiteSpace(categoryId)
+                ? await _skillService.GetAllAsync()
+                : await _skillService.GetByCategoryIdAsync(categoryId);
+
+            return Ok(ApiResponse<IEnumerable<Skill>>.CreateSuccess(skills));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting skills");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetSkillsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Get single skill detail
+    /// GET /admin/skills/{id}
+    /// </summary>
+    [HttpGet("skills/{id}")]
+    public async Task<IActionResult> GetSkillById(string id)
+    {
+        try
+        {
+            var skill = await _skillService.GetByIdAsync(id);
+            if (skill == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Skill.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<Skill>.CreateSuccess(skill));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting skill: {SkillId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetSkillFailed"));
+        }
+    }
+
+    /// <summary>
     /// UC-ADM-16: Create Skill
     /// </summary>
     [HttpPost("skills")]
@@ -353,6 +592,47 @@ public class AdminController : ControllerBase
         {
             _logger.LogError(ex, "Error deleting skill");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeleteSkillFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Get all banners
+    /// GET /admin/banners
+    /// </summary>
+    [HttpGet("banners")]
+    public async Task<IActionResult> GetBanners()
+    {
+        try
+        {
+            var banners = await _bannerService.GetAllAsync();
+            return Ok(ApiResponse<IEnumerable<Banner>>.CreateSuccess(banners));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting banners");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetBannersFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Get single banner detail
+    /// GET /admin/banners/{id}
+    /// </summary>
+    [HttpGet("banners/{id}")]
+    public async Task<IActionResult> GetBannerById(string id)
+    {
+        try
+        {
+            var banner = await _bannerService.GetByIdAsync(id);
+            if (banner == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Banner.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<Banner>.CreateSuccess(banner));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting banner: {BannerId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetBannerFailed"));
         }
     }
 
@@ -452,21 +732,133 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-ADM-23: View Payment Requests
+    /// UC-47: Get all premium packages
+    /// GET /admin/premium-packages
+    /// </summary>
+    [HttpGet("premium-packages")]
+    public async Task<IActionResult> GetPremiumPackages()
+    {
+        try
+        {
+            var packages = await _premiumPackageService.GetAllAsync();
+            return Ok(ApiResponse<IEnumerable<PremiumPackage>>.CreateSuccess(packages));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting premium packages");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPackagesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Get single premium package detail
+    /// GET /admin/premium-packages/{id}
+    /// </summary>
+    [HttpGet("premium-packages/{id}")]
+    public async Task<IActionResult> GetPremiumPackageById(string id)
+    {
+        try
+        {
+            var package = await _premiumPackageService.GetByIdAsync(id);
+            if (package == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Package.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<PremiumPackage>.CreateSuccess(package));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting package: {PackageId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPackageFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Create premium package
+    /// POST /admin/premium-packages
+    /// </summary>
+    [HttpPost("premium-packages")]
+    public async Task<IActionResult> CreatePremiumPackage([FromBody] CreatePremiumPackageRequest request)
+    {
+        try
+        {
+            var package = new PremiumPackage
+            {
+                Name = request.Name,
+                Description = request.Description,
+                Price = (long)(request.Price * 100),
+                DurationDays = request.DurationDays,
+                IsActive = request.IsActive ?? true
+            };
+            var created = await _premiumPackageService.CreateAsync(package);
+            return Ok(ApiResponse.CreateSuccess(created, "Package created successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating premium package");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "CreatePackageFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-47: Delete premium package
+    /// DELETE /admin/premium-packages/{id}
+    /// </summary>
+    [HttpDelete("premium-packages/{id}")]
+    public async Task<IActionResult> DeletePremiumPackage(string id)
+    {
+        try
+        {
+            var succeeded = await _premiumPackageService.DeleteAsync(id);
+            if (!succeeded)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Package.NotFound), "NotFound"));
+
+            return Ok(ApiResponse.CreateSuccess("Package deleted successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting premium package: {PackageId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "DeletePackageFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-ADM-23: View Payment Requests (fix stub — now queries DB)
+    /// GET /admin/payments?status=
     /// </summary>
     [HttpGet("payments")]
     public async Task<IActionResult> GetPayments([FromQuery] string? status = null)
     {
         try
         {
-            // TODO: Get all payments or filter by status
-            await Task.CompletedTask;
-            return Ok(ApiResponse.CreateSuccess(new List<object>()));
+            var payments = await _adminService.GetAllPaymentsAsync(status);
+            return Ok(ApiResponse<IEnumerable<Payment>>.CreateSuccess(payments));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting payments");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPaymentsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Payment Oversight: Get single payment detail
+    /// GET /admin/payments/{id}
+    /// </summary>
+    [HttpGet("payments/{id}")]
+    public async Task<IActionResult> GetPaymentById(string id)
+    {
+        try
+        {
+            var payment = await _adminService.GetPaymentByIdAsync(id);
+            if (payment == null)
+                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Payment.NotFound), "NotFound"));
+
+            return Ok(ApiResponse<Payment>.CreateSuccess(payment));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payment: {PaymentId}", id);
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPaymentFailed"));
         }
     }
 
@@ -528,6 +920,31 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// UC-48: Export Audit Logs as CSV
+    /// GET /admin/audit-logs/export?format=csv
+    /// </summary>
+    [HttpGet("audit-logs/export")]
+    public async Task<IActionResult> ExportAuditLogs(
+        [FromQuery] string? userId = null,
+        [FromQuery] string? entityType = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string format = "csv")
+    {
+        try
+        {
+            var csvBytes = await _adminService.ExportAuditLogsCsvAsync(userId, entityType, fromDate, toDate);
+            var fileName = $"audit-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";
+            return File(csvBytes, "text/csv; charset=utf-8", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting audit logs");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "ExportAuditLogsFailed"));
+        }
+    }
+
+    /// <summary>
     /// UC-ADM-26: Send Broadcast Notification
     /// </summary>
     [HttpPost("notifications/broadcast")]
@@ -560,5 +977,11 @@ public record UpdateBannerRequest(string? Title = null, string? ImageUrl = null,
 public record UpdatePriceRequest(decimal Price);
 public record RejectPaymentRequest(string Reason);
 public record BroadcastNotificationRequest(string Title, string Message, string? TargetRole = null);
+public record CreatePremiumPackageRequest(
+    string Name,
+    string? Description = null,
+    decimal Price = 0,
+    int DurationDays = 30,
+    bool? IsActive = true);
 
 
