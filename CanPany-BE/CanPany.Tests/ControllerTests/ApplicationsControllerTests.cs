@@ -17,6 +17,7 @@ public class ApplicationsControllerTests
 {
     private readonly Mock<IApplicationService> _applicationServiceMock = new();
     private readonly Mock<IJobService> _jobServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<ApplicationsController>> _loggerMock = new();
     private readonly ApplicationsController _controller;
 
@@ -25,6 +26,7 @@ public class ApplicationsControllerTests
         _controller = new ApplicationsController(
             _applicationServiceMock.Object,
             _jobServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated user

@@ -22,6 +22,7 @@ public class JobsControllerTests
     private readonly Mock<IInteractionTrackingService> _interactionServiceMock = new();
     private readonly Mock<IJobProducer> _jobProducerMock = new();
     private readonly Mock<IJobProgressTracker> _progressTrackerMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<JobsController>> _loggerMock = new();
     private readonly JobsController _controller;
 
@@ -35,6 +36,7 @@ public class JobsControllerTests
             _interactionServiceMock.Object,
             _jobProducerMock.Object,
             _progressTrackerMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup default HttpContext

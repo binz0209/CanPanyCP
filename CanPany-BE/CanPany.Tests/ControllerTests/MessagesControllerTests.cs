@@ -14,6 +14,7 @@ namespace CanPany.Tests.ControllerTests;
 public class MessagesControllerTests
 {
     private readonly Mock<IMessageService> _messageServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<MessagesController>> _loggerMock = new();
     private readonly MessagesController _controller;
 
@@ -21,6 +22,7 @@ public class MessagesControllerTests
     {
         _controller = new MessagesController(
             _messageServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated user

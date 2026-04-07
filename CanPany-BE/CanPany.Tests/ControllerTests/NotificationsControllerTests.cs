@@ -15,6 +15,7 @@ namespace CanPany.Tests.ControllerTests;
 public class NotificationsControllerTests
 {
     private readonly Mock<INotificationService> _notificationServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<NotificationsController>> _loggerMock = new();
     private readonly NotificationsController _controller;
 
@@ -22,6 +23,7 @@ public class NotificationsControllerTests
     {
         _controller = new NotificationsController(
             _notificationServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated user
