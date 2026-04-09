@@ -15,6 +15,7 @@ public class PaymentsControllerTests
 {
     private readonly Mock<IPaymentService> _paymentServiceMock = new();
     private readonly Mock<ISubscriptionService> _subscriptionServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<PaymentsController>> _loggerMock = new();
     private readonly PaymentsController _controller;
 
@@ -23,6 +24,7 @@ public class PaymentsControllerTests
         _controller = new PaymentsController(
             _paymentServiceMock.Object,
             _subscriptionServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated user

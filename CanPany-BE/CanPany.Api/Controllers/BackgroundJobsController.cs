@@ -50,6 +50,7 @@ public class BackgroundJobsController : ControllerBase
     /// 
     /// </remarks>
     [HttpPost("test/send-email")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> TestSendEmail([FromBody] SendEmailRequest request)
     {
         var payload = new
@@ -96,6 +97,7 @@ public class BackgroundJobsController : ControllerBase
     /// 
     /// </remarks>
     [HttpPost("test/ai-matching")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> TestAIMatching([FromBody] AIMatchingRequest request)
     {
         var payload = new
@@ -141,6 +143,7 @@ public class BackgroundJobsController : ControllerBase
     /// 
     /// </remarks>
     [HttpPost("test/generate-report")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> TestGenerateReport([FromBody] GenerateReportRequest request)
     {
         var payload = new
@@ -188,6 +191,7 @@ public class BackgroundJobsController : ControllerBase
     /// 
     /// </remarks>
     [HttpPost("schedule")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ScheduleJob([FromBody] ScheduleJobRequest request)
     {
         var job = new JobMessage
@@ -221,6 +225,7 @@ public class BackgroundJobsController : ControllerBase
     /// 🔥 Test Bulk Jobs - Enqueue multiple jobs at once (stress test)
     /// </summary>
     [HttpPost("test/bulk")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> TestBulkJobs([FromQuery] int count = 10)
     {
         if (count > 100)
@@ -267,6 +272,7 @@ public class BackgroundJobsController : ControllerBase
     /// 📋 Get queue info and Redis keys
     /// </summary>
     [HttpGet("queue/info")]
+    [Authorize(Roles = "Admin")]
     public IActionResult GetQueueInfo()
     {
         return Ok(new
@@ -301,6 +307,7 @@ public class BackgroundJobsController : ControllerBase
     /// 🎯 Quick test - Send one of each job type
     /// </summary>
     [HttpPost("test/all")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> TestAllJobTypes()
     {
         var results = new List<object>();
