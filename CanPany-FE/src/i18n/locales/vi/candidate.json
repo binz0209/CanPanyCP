@@ -56,6 +56,7 @@
       "title": "Hành động nhanh",
       "description": "Bắt đầu ngay lập tức",
       "findJobs": "Tìm việc làm",
+      "profile": "Hồ sơ",
       "uploadCv": "Tải lên CV",
       "askAi": "Hỏi AI Advisor",
       "seeRecommendations": "Xem đề xuất"
@@ -380,6 +381,7 @@
     "cvList": "CV của tôi",
     "cvAi": "CV AI",
     "jobs": "Việc làm",
+    "updates": "Thông báo & Tin nhắn",
     "jobsSearch": "Tìm kiếm",
     "jobsSaved": "Đã lưu",
     "jobsRecommended": "Gợi ý",
@@ -426,10 +428,14 @@
       "save": "Lưu",
       "cancel": "Hủy",
       "edit": "Chỉnh sửa",
+      "uploadAvatar": "Tải ảnh đại diện",
       "sync": "Đồng bộ",
       "syncing": "Đang đồng bộ...",
       "syncLinkedin": "Đồng bộ LinkedIn",
       "viewProgress": "Xem tiến trình"
+    },
+    "avatar": {
+      "hint": "Hỗ trợ JPG, JPEG, PNG, WEBP (tối đa 2MB)"
     },
     "completion": {
       "title": "Hoàn thiện hồ sơ",
@@ -494,7 +500,11 @@
       "recommendationSyncFailed": "Không thể bắt đầu đồng bộ kỹ năng gợi ý việc làm.",
       "skillsExtracted": "Trích xuất skills hoàn thành! Hồ sơ đã được cập nhật.",
       "analysisFailed": "Phân tích thất bại. Vui lòng thử lại.",
-      "oauthFailed": "Không thể tạo GitHub OAuth URL. Vui lòng thử lại."
+      "oauthFailed": "Không thể tạo GitHub OAuth URL. Vui lòng thử lại.",
+      "avatarUpdated": "Cập nhật ảnh đại diện thành công!",
+      "avatarUploadFailed": "Không thể tải ảnh đại diện. Vui lòng thử lại.",
+      "avatarInvalidType": "Định dạng không hợp lệ. Chỉ chấp nhận JPG, JPEG, PNG hoặc WEBP.",
+      "avatarTooLarge": "Kích thước tệp vượt quá giới hạn 2MB."
     }
   },
   "cv": {

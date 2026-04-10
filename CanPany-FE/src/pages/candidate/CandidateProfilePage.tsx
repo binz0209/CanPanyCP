@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity } from 'lucide-react';
+import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity, Camera } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import { candidateApi, authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
@@ -20,6 +20,7 @@ export function CandidateProfilePage() {
     const [isOAuthLoading, setIsOAuthLoading] = useState(false);
     const [showLinkedInSync, setShowLinkedInSync] = useState(false);
     const [linkedInData, setLinkedInData] = useState('');
+    const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
     const queryClient = useQueryClient();
     const { user: currentUser, isAuthenticated } = useAuthStore();
@@ -113,6 +114,17 @@ export function CandidateProfilePage() {
         },
     });
 
+    const uploadAvatarMutation = useMutation({
+        mutationFn: (file: File) => candidateApi.uploadAvatar(file),
+        onSuccess: () => {
+            toast.success(t('profile.toast.avatarUpdated'));
+            queryClient.invalidateQueries({ queryKey: ['candidate-profile', userId] });
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || t('profile.toast.avatarUploadFailed'));
+        },
+    });
+
     const { data: jobStatus } = useQuery({
         queryKey: ['github-job-status', syncJobId],
         queryFn: () => candidateApi.getGitHubJobStatus(syncJobId!),
@@ -183,6 +195,28 @@ export function CandidateProfilePage() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error(t('profile.toast.avatarInvalidType'));
+            e.target.value = '';
+            return;
+        }
+
+        const maxSize = 2 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast.error(t('profile.toast.avatarTooLarge'));
+            e.target.value = '';
+            return;
+        }
+
+        uploadAvatarMutation.mutate(file);
+        e.target.value = '';
+    };
+
     // Calculate profile completion percentage
     const calculateProfileCompletion = () => {
         if (!profile) return 0;
@@ -210,7 +244,7 @@ export function CandidateProfilePage() {
     return (
         <div>
             {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c]">
+            {/* <section className="relative overflow-hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c]">
                 <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
                     <div className="text-center">
                         <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -221,7 +255,7 @@ export function CandidateProfilePage() {
                         </p>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -239,6 +273,32 @@ export function CandidateProfilePage() {
                                 ) : (
                                     <div className="w-24 h-24 md:w-32 md:h-32 bg-[#00b14f] rounded-full flex items-center justify-center border-4 border-[#00b14f]/20">
                                         <User className="h-12 w-12 md:h-16 md:w-16 text-white" />
+                                    </div>
+                                )}
+
+                                {isEditing && (
+                                    <div className="w-full sm:w-auto">
+                                        <input
+                                            ref={avatarInputRef}
+                                            type="file"
+                                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                            onChange={handleAvatarFileChange}
+                                            className="hidden"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => avatarInputRef.current?.click()}
+                                            disabled={uploadAvatarMutation.isPending}
+                                            isLoading={uploadAvatarMutation.isPending}
+                                            className="mt-3 border-gray-300 text-gray-700"
+                                        >
+                                            <Camera className="h-4 w-4 mr-2" />
+                                            {t('profile.actions.uploadAvatar')}
+                                        </Button>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            {t('profile.avatar.hint')}
+                                        </p>
                                     </div>
                                 )}
 

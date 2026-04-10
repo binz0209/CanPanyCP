@@ -2,10 +2,49 @@ import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { isAxiosError } from 'axios';
-import { jobsApi } from '../../api';
+import { companiesApi, jobsApi } from '../../api';
 import type { Job } from '../../types';
 import { useAuthStore } from '../../stores/auth.store';
 import { bookmarkKeys } from '../../lib/queryKeys';
+
+async function hydrateJobsWithCompanies(jobs: Job[]): Promise<Job[]> {
+    const uniqueCompanyIds = Array.from(
+        new Set(
+            jobs
+                .filter((job) => !job.company && Boolean(job.companyId))
+                .map((job) => job.companyId)
+        )
+    );
+
+    if (uniqueCompanyIds.length === 0) {
+        return jobs;
+    }
+
+    const companyResponses = await Promise.allSettled(
+        uniqueCompanyIds.map((companyId) => companiesApi.getById(companyId))
+    );
+
+    const companiesById = new Map<string, Awaited<ReturnType<typeof companiesApi.getById>>>();
+    companyResponses.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+            companiesById.set(uniqueCompanyIds[index], result.value);
+        }
+    });
+
+    return jobs.map((job) => {
+        if (job.company || !job.companyId) {
+            return job;
+        }
+
+        const company = companiesById.get(job.companyId);
+        return company
+            ? {
+                ...job,
+                company,
+            }
+            : job;
+    });
+}
 
 /**
  * Hook that manages bookmark state for the current candidate.
@@ -22,7 +61,10 @@ export function useBookmarks() {
 
     const bookmarksQuery = useQuery({
         queryKey: bookmarkKeys.list(),
-        queryFn: jobsApi.getBookmarked,
+        queryFn: async () => {
+            const jobs = await jobsApi.getBookmarked();
+            return hydrateJobsWithCompanies(jobs);
+        },
         enabled: isAuthenticated,
         // Bookmarks don't change without user action, so 1 min stale is safe.
         staleTime: 60_000,

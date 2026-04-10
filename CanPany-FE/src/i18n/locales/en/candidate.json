@@ -56,6 +56,7 @@
       "title": "Quick actions",
       "description": "Get started right away",
       "findJobs": "Find jobs",
+      "profile": "Profile",
       "uploadCv": "Upload CV",
       "askAi": "Ask AI Advisor",
       "seeRecommendations": "See recommendations"
@@ -380,6 +381,7 @@
     "cvList": "My CVs",
     "cvAi": "AI CV",
     "jobs": "Jobs",
+    "updates": "Updates",
     "jobsSearch": "Search",
     "jobsSaved": "Saved",
     "jobsRecommended": "Recommended",
@@ -426,10 +428,14 @@
       "save": "Save",
       "cancel": "Cancel",
       "edit": "Edit",
+      "uploadAvatar": "Upload avatar",
       "sync": "Sync",
       "syncing": "Syncing...",
       "syncLinkedin": "Sync LinkedIn",
       "viewProgress": "View progress"
+    },
+    "avatar": {
+      "hint": "Supports JPG, JPEG, PNG, WEBP (max 2MB)"
     },
     "completion": {
       "title": "Profile completion",
@@ -494,7 +500,11 @@
       "recommendationSyncFailed": "Could not start syncing recommended skills.",
       "skillsExtracted": "Skill extraction complete! Profile updated.",
       "analysisFailed": "Analysis failed. Please try again.",
-      "oauthFailed": "Could not create GitHub OAuth URL. Please try again."
+      "oauthFailed": "Could not create GitHub OAuth URL. Please try again.",
+      "avatarUpdated": "Avatar updated successfully!",
+      "avatarUploadFailed": "Could not upload avatar. Please try again.",
+      "avatarInvalidType": "Invalid file type. Only JPG, JPEG, PNG, or WEBP are allowed.",
+      "avatarTooLarge": "File size exceeds the 2MB limit."
     }
   },
   "cv": {
