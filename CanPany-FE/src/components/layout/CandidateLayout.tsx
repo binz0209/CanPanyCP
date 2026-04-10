@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { CandidateNavbar, CandidateSidebar } from '../features/candidates';
+import { useCandidatePrefetch } from '../../hooks/candidate/useCandidatePrefetch';
 
 export function CandidateLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useCandidatePrefetch();
 
   return (
     <div className="min-h-screen bg-gray-50">

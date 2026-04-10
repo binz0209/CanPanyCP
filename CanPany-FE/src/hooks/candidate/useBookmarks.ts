@@ -46,6 +46,11 @@ async function hydrateJobsWithCompanies(jobs: Job[]): Promise<Job[]> {
     });
 }
 
+export async function fetchBookmarkedJobsHydrated(): Promise<Job[]> {
+    const jobs = await jobsApi.getBookmarked();
+    return hydrateJobsWithCompanies(jobs);
+}
+
 /**
  * Hook that manages bookmark state for the current candidate.
  *
@@ -61,10 +66,7 @@ export function useBookmarks() {
 
     const bookmarksQuery = useQuery({
         queryKey: bookmarkKeys.list(),
-        queryFn: async () => {
-            const jobs = await jobsApi.getBookmarked();
-            return hydrateJobsWithCompanies(jobs);
-        },
+        queryFn: fetchBookmarkedJobsHydrated,
         enabled: isAuthenticated,
         // Bookmarks don't change without user action, so 1 min stale is safe.
         staleTime: 60_000,
@@ -139,6 +141,15 @@ export function useBookmarks() {
     return {
         /** True when the initial bookmark list is being fetched. */
         isLoading: bookmarksQuery.isLoading,
+
+        /** True when bookmarks are being refreshed in background. */
+        isFetching: bookmarksQuery.isFetching,
+
+        /** Last query error (if any). */
+        error: bookmarksQuery.error,
+
+        /** Force refresh bookmarked jobs from server. */
+        refetch: bookmarksQuery.refetch,
 
         /** Full list of saved jobs (for the SavedJobsPage). */
         savedJobs: bookmarksQuery.data ?? [],

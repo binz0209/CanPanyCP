@@ -18,6 +18,7 @@ export const companiesKeys = {
 
 export const applicationKeys = {
     all: ['applications'] as const,
+    mine: () => [...applicationKeys.all, 'mine'] as const,
     byJob: (jobId: string) => [...applicationKeys.all, 'by-job', jobId] as const,
     detail: (applicationId: string) => [...applicationKeys.all, 'detail', applicationId] as const,
 };
@@ -52,6 +53,7 @@ export const jobAlertKeys = {
 export const notificationKeys = {
     all: ['notifications'] as const,
     list: (params?: unknown) => [...notificationKeys.all, 'list', params ?? {}] as const,
+    unread: () => [...notificationKeys.all, 'unread'] as const,
     detail: (id: string) => [...notificationKeys.all, 'detail', id] as const,
 };
 

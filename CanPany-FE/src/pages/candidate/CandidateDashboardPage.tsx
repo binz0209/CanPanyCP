@@ -1,17 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { ChevronRight, ArrowRight, Briefcase, Bookmark, FileText, Clock, CheckCircle, XCircle, Loader2, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { candidateApi } from '../../api/candidate.api';
 import type { CandidateStatistics } from '../../api/candidate.api';
-import { applicationsApi } from '../../api/applications.api';
 import { jobsApi } from '../../api/jobs.api';
-import { companiesApi } from '../../api/companies.api';
 import { useAuthStore } from '../../stores/auth.store';
-import type { Application } from '../../types';
-import type { RecommendedJob, Job } from '../../types/job.types';
+import { useBookmarks } from '../../hooks/candidate/useBookmarks';
+import { useQuery } from '@tanstack/react-query';
+import type { Job } from '../../types/job.types';
 import { useTranslation } from 'react-i18next';
+import { useCandidateApplications } from '../../hooks/candidate/useCandidateApplications';
 
 type ApplicationStatus = 'Pending' | 'Shortlisted' | 'Accepted' | 'Rejected' | 'Withdrawn';
 
@@ -19,6 +19,7 @@ export function CandidateDashboardPage() {
   const { t } = useTranslation('candidate');
   const navigate = useNavigate();
   const { user } = useAuthStore();
+    const { savedJobs, isLoading: bookmarksLoading } = useBookmarks();
     const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string }> = {
       Pending:     { label: t('dashboard.status.pending'),     className: 'bg-blue-100 text-blue-700' },
       Shortlisted: { label: t('dashboard.status.shortlisted'), className: 'bg-yellow-100 text-yellow-700' },
@@ -45,134 +46,44 @@ export function CandidateDashboardPage() {
         : t('dashboard.budget.prefix', { amount });
     };
 
-  const [statistics, setStatistics] = useState<CandidateStatistics | null>(null);
-  const [recentApplications, setRecentApplications] = useState<Application[]>([]);
-  const [recommendedJobs, setRecommendedJobs] = useState<RecommendedJob[]>([]);
-  const [bookmarkCount, setBookmarkCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const statisticsQuery = useQuery({
+    queryKey: ['candidate-statistics', user?.id],
+    queryFn: () => candidateApi.getCandidateStatistics(user!.id),
+    enabled: !!user?.id,
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
+  const applicationsQuery = useCandidateApplications({ enabled: !!user?.id });
 
-      setLoading(true);
-      const [statsResult, applicationsResult, recommendedResult, bookmarkedResult] = await Promise.allSettled([
-        candidateApi.getCandidateStatistics(user.id),
-        applicationsApi.getMyApplications(),
-        jobsApi.getRecommended(3),
-        jobsApi.getBookmarked(),
-      ]);
+  const recommendedQuery = useQuery({
+    queryKey: ['jobs', 'recommended', 3],
+    queryFn: () => jobsApi.getRecommended(3),
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+  });
 
-      if (statsResult.status === 'fulfilled') {
-        setStatistics(statsResult.value);
-      } else {
-        console.error('Failed to fetch statistics:', statsResult.reason);
-        setStatistics({
-          totalApplications: 0, pendingApplications: 0,
-          acceptedApplications: 0, rejectedApplications: 0,
-          totalCVs: 0, profileCompleteness: 0, skillsCount: 0,
-        });
-      }
+  const statistics: CandidateStatistics = statisticsQuery.data ?? {
+    totalApplications: 0,
+    pendingApplications: 0,
+    acceptedApplications: 0,
+    rejectedApplications: 0,
+    totalCVs: 0,
+    profileCompleteness: 0,
+    skillsCount: 0,
+  };
 
-      if (applicationsResult.status === 'fulfilled') {
-        const baseApplications = applicationsResult.value;
-        const baseRecommended = recommendedResult.status === 'fulfilled' ? recommendedResult.value : [];
+  const recentApplications = useMemo(() => {
+    const applications = applicationsQuery.data ?? [];
+    return [...applications]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3);
+  }, [applicationsQuery.data]);
 
-        const uniqueJobIds = Array.from(
-          new Set(
-            [
-              ...baseApplications.map((app) => app.jobId).filter(Boolean),
-              ...baseRecommended.map((item) => item.job?.id).filter(Boolean),
-            ]
-          )
-        ) as string[];
-
-        const jobsById = new Map<string, Job>();
-        if (uniqueJobIds.length > 0) {
-          const jobResponses = await Promise.allSettled(uniqueJobIds.map((jobId) => jobsApi.getById(jobId)));
-          jobResponses.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value?.job) {
-              jobsById.set(uniqueJobIds[index], result.value.job);
-            }
-          });
-
-          const uniqueCompanyIds = Array.from(
-            new Set(
-              Array.from(jobsById.values())
-                .filter((job) => !job.company && Boolean(job.companyId))
-                .map((job) => job.companyId)
-            )
-          );
-
-          if (uniqueCompanyIds.length > 0) {
-            const companyResponses = await Promise.allSettled(
-              uniqueCompanyIds.map((companyId) => companiesApi.getById(companyId))
-            );
-            const companiesById = new Map<string, Awaited<ReturnType<typeof companiesApi.getById>>>();
-
-            companyResponses.forEach((result, index) => {
-              if (result.status === 'fulfilled' && result.value) {
-                companiesById.set(uniqueCompanyIds[index], result.value);
-              }
-            });
-
-            jobsById.forEach((job, jobId) => {
-              if (!job.company && job.companyId) {
-                const company = companiesById.get(job.companyId);
-                if (company) {
-                  jobsById.set(jobId, {
-                    ...job,
-                    company,
-                  });
-                }
-              }
-            });
-          }
-        }
-
-        const hydratedApplications = baseApplications.map((app) => ({
-          ...app,
-          job: app.job ?? jobsById.get(app.jobId),
-        }));
-
-        const sorted = [...hydratedApplications].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        setRecentApplications(sorted.slice(0, 3));
-
-        if (recommendedResult.status === 'fulfilled') {
-          const hydratedRecommended = recommendedResult.value.map((item) => ({
-            ...item,
-            job: jobsById.get(item.job?.id) ?? item.job,
-          }));
-          setRecommendedJobs(hydratedRecommended);
-        }
-      } else {
-        console.error('Failed to fetch applications:', applicationsResult.reason);
-      }
-
-      if (recommendedResult.status === 'fulfilled' && applicationsResult.status !== 'fulfilled') {
-        setRecommendedJobs(recommendedResult.value);
-      } else {
-        if (recommendedResult.status !== 'fulfilled') {
-          console.error('Failed to fetch recommended jobs:', recommendedResult.reason);
-        }
-      }
-
-      if (bookmarkedResult.status === 'fulfilled') {
-        setBookmarkCount(bookmarkedResult.value.length);
-      } else {
-        console.error('Failed to fetch bookmarks:', bookmarkedResult.reason);
-      }
-
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [user?.id]);
+  const recommendedJobs = recommendedQuery.data ?? [];
+  const loading =
+    statisticsQuery.isLoading ||
+    applicationsQuery.isLoading ||
+    recommendedQuery.isLoading ||
+    bookmarksLoading;
 
   const cardAnimation = { animation: 'fadeSlideUp 0.5s ease-out forwards', opacity: 0 };
 
@@ -235,7 +146,7 @@ export function CandidateDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="text-3xl font-bold text-gray-900">{bookmarkCount}</div>
+                <div className="text-3xl font-bold text-gray-900">{savedJobs.length}</div>
                 <p className="text-xs text-gray-600 mt-1">{t('dashboard.stats.bookmarked.meta')}</p>
               </>
             )}

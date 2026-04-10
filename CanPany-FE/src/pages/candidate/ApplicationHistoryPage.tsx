@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -17,10 +17,11 @@ import {
 import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { applicationsApi } from '../../api/applications.api';
-import { jobsApi } from '../../api/jobs.api';
-import { companiesApi } from '../../api/companies.api';
-import type { Application, ApplicationStatus } from '../../types/application.types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { ApplicationStatus } from '../../types/application.types';
 import { cn } from '../../utils';
+import { useCandidateApplications } from '../../hooks/candidate/useCandidateApplications';
+import { applicationKeys } from '../../lib/queryKeys';
 
 const statusConfig: Record<ApplicationStatus, { 
   label: string; 
@@ -63,85 +64,31 @@ const statusConfig: Record<ApplicationStatus, {
 export function ApplicationHistoryPage() {
   const navigate = useNavigate();
   const { t } = useTranslation('candidate');
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const applicationsQuery = useCandidateApplications();
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<ApplicationStatus | 'All'>('All');
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmingApplicationId, setConfirmingApplicationId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadApplications();
-  }, []);
+  const applications = applicationsQuery.data ?? [];
+  const loading = applicationsQuery.isLoading;
+  const error = applicationsQuery.isError ? t('applicationHistory.toast.fetchError') : null;
 
-  const loadApplications = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await applicationsApi.getMyApplications();
-
-      const uniqueJobIds = Array.from(new Set(data.map(app => app.jobId).filter(Boolean)));
-      const jobsById = new Map<string, NonNullable<Application['job']>>();
-
-      if (uniqueJobIds.length > 0) {
-        const jobResponses = await Promise.allSettled(
-          uniqueJobIds.map((jobId) => jobsApi.getById(jobId))
-        );
-
-        jobResponses.forEach((result, index) => {
-          if (result.status === 'fulfilled' && result.value?.job) {
-            jobsById.set(uniqueJobIds[index], result.value.job);
-          }
-        });
-
-        const uniqueCompanyIds = Array.from(
-          new Set(
-            Array.from(jobsById.values())
-              .map((job) => job.companyId)
-              .filter(Boolean)
-          )
-        );
-        const companiesById = new Map<string, Awaited<ReturnType<typeof companiesApi.getById>>>();
-
-        if (uniqueCompanyIds.length > 0) {
-          const companyResponses = await Promise.allSettled(
-            uniqueCompanyIds.map((companyId) => companiesApi.getById(companyId))
-          );
-
-          companyResponses.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value) {
-              companiesById.set(uniqueCompanyIds[index], result.value);
-            }
-          });
-
-          jobsById.forEach((job, jobId) => {
-            if (!job.company && job.companyId) {
-              const company = companiesById.get(job.companyId);
-              if (company) {
-                jobsById.set(jobId, {
-                  ...job,
-                  company,
-                });
-              }
-            }
-          });
-        }
-      }
-
-      const hydratedApplications = data.map((app) => ({
-        ...app,
-        job: app.job ?? jobsById.get(app.jobId),
-      }));
-
-      setApplications(hydratedApplications);
-    } catch (err) {
-      setError(t('applicationHistory.toast.fetchError'));
-      console.error('Error loading applications:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const withdrawMutation = useMutation({
+    mutationFn: (id: string) => applicationsApi.withdraw(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+      toast.success(t('applicationHistory.toast.withdrawSuccess'), {
+        duration: 2000,
+        position: 'top-right',
+      });
+    },
+    onError: (err) => {
+      toast.error(t('applicationHistory.toast.withdrawError'));
+      console.error('Error withdrawing application:', err);
+    },
+  });
 
   const handleWithdraw = async (applicationId: string) => {
     setConfirmingApplicationId(applicationId);
@@ -153,15 +100,7 @@ export function ApplicationHistoryPage() {
 
     try {
       setWithdrawingId(confirmingApplicationId);
-      await applicationsApi.withdraw(confirmingApplicationId);
-      await loadApplications();
-      toast.success(t('applicationHistory.toast.withdrawSuccess'), {
-        duration: 2000,
-        position: 'top-right',
-      });
-    } catch (err) {
-      toast.error(t('applicationHistory.toast.withdrawError'));
-      console.error('Error withdrawing application:', err);
+      await withdrawMutation.mutateAsync(confirmingApplicationId);
     } finally {
       setWithdrawingId(null);
       setShowConfirm(false);
@@ -233,7 +172,7 @@ export function ApplicationHistoryPage() {
       <div className="flex flex-col items-center justify-center min-h-100 gap-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <p className="text-gray-600">{error}</p>
-        <Button onClick={loadApplications}>Thử lại</Button>
+        <Button onClick={() => applicationsQuery.refetch()}>Thử lại</Button>
       </div>
     );
   }
