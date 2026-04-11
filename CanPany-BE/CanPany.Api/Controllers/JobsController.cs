@@ -63,7 +63,7 @@ public class JobsController : ControllerBase
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> SearchJobs([FromQuery] string? keyword, [FromQuery] string? categoryId, [FromQuery] List<string>? skillIds, [FromQuery] decimal? minBudget, [FromQuery] decimal? maxBudget)
+    public async Task<IActionResult> SearchJobs([FromQuery] string? keyword, [FromQuery] string? categoryId, [FromQuery] List<string>? skillIds, [FromQuery] decimal? minBudget, [FromQuery] decimal? maxBudget, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -102,7 +102,18 @@ public class JobsController : ControllerBase
                 jobs = jobs.OrderByDescending(j => j.CreatedAt).ToList();
             }
             
-            return Ok(ApiResponse<IEnumerable<Job>>.CreateSuccess(jobs));
+            var totalItems = jobs.Count;
+            var pagedJobs = jobs.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            
+            var result = new PagedResult<Job>
+            {
+                Items = pagedJobs,
+                TotalItems = totalItems,
+                Page = page,
+                PageSize = pageSize
+            };
+            
+            return Ok(ApiResponse<PagedResult<Job>>.CreateSuccess(result));
         }
         catch (Exception ex)
         {
@@ -351,12 +362,24 @@ public class JobsController : ControllerBase
     /// </summary>
     [HttpGet("company/{companyId}")]
     [Authorize]
-    public async Task<IActionResult> GetCompanyJobs(string companyId)
+    public async Task<IActionResult> GetCompanyJobs(string companyId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
-            var jobs = await _jobService.GetByCompanyIdAsync(companyId);
-            return Ok(ApiResponse<IEnumerable<Job>>.CreateSuccess(jobs));
+            var jobs = (await _jobService.GetByCompanyIdAsync(companyId)).ToList();
+            
+            var totalItems = jobs.Count;
+            var pagedJobs = jobs.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            
+            var result = new PagedResult<Job>
+            {
+                Items = pagedJobs,
+                TotalItems = totalItems,
+                Page = page,
+                PageSize = pageSize
+            };
+            
+            return Ok(ApiResponse<PagedResult<Job>>.CreateSuccess(result));
         }
         catch (Exception ex)
         {
