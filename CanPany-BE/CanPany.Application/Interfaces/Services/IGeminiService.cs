@@ -1,4 +1,5 @@
 using CanPany.Application.Models;
+using CanPany.Application.DTOs;
 using CanPany.Domain.DTOs.Analysis;
 using CanPany.Domain.Entities;
 
@@ -33,4 +34,14 @@ public interface IGeminiService
     Task<string> GenerateCVHtmlAsync(
         CVGenerationContext context,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// RAG: Rank and explain candidate matches against a company's search request.
+    /// Returns per-candidate AI reasoning and adjusted scores.
+    /// </summary>
+    Task<List<CandidateRankResult>> RankCandidatesAsync(
+        string companyRequest,
+        List<CandidateSummaryForRanking> candidates,
+        CancellationToken cancellationToken = default);
 }
+

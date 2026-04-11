@@ -61,7 +61,9 @@ public class MongoDbContext
 
     // Collections — Reference & Configuration
     public IMongoCollection<Category> Categories => _database.GetCollection<Category>("categories");
+    public IMongoCollection<Location> Locations => _database.GetCollection<Location>("locations");
     public IMongoCollection<Skill> Skills => _database.GetCollection<Skill>("skills");
+    public IMongoCollection<ExperienceLevel> ExperienceLevels => _database.GetCollection<ExperienceLevel>("experience_levels");
     public IMongoCollection<PremiumPackage> PremiumPackages => _database.GetCollection<PremiumPackage>("premium_packages");
     public IMongoCollection<Banner> Banners => _database.GetCollection<Banner>("banners");
 

@@ -18,5 +18,6 @@ public record SemanticSearchRequest(
 public record SemanticSearchResponse(
     UserProfileDto Profile,
     double MatchScore,
-    UserBasicInfo UserInfo
+    UserBasicInfo UserInfo,
+    string? AiReason = null
 );

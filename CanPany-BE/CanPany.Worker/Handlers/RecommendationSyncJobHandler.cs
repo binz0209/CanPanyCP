@@ -50,7 +50,7 @@ public class RecommendationSyncJobHandler : BaseJobHandler
                 return JobResult.FailureResult("Invalid payload or missing UserId", "INVALID_PAYLOAD");
             }
 
-            await ReportProgressAsync(job.JobId, 15, "Đang tải hồ sơ người dùng...");
+            await ReportProgressAsync(job.JobId, 15, "backgroundJobs.steps.loadingProfile");
 
             var profile = await _profileRepository.GetByUserIdAsync(payload.UserId);
             if (profile == null)
@@ -58,7 +58,7 @@ public class RecommendationSyncJobHandler : BaseJobHandler
                 return JobResult.FailureResult("User profile not found", "PROFILE_NOT_FOUND");
             }
 
-            await ReportProgressAsync(job.JobId, 40, "Đang tổng hợp kỹ năng từ profile/CV/GitHub...");
+            await ReportProgressAsync(job.JobId, 40, "backgroundJobs.steps.extractingSkills");
 
             var allSkills = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -114,7 +114,7 @@ public class RecommendationSyncJobHandler : BaseJobHandler
                 return JobResult.FailureResult("No profile text/skills available for sync", "NO_PROFILE_DATA");
             }
 
-            await ReportProgressAsync(job.JobId, 70, "Đang tạo embedding bằng Gemini...");
+            await ReportProgressAsync(job.JobId, 70, "backgroundJobs.steps.generatingEmbeddings");
 
             var embedding = await _geminiService.GenerateEmbeddingAsync(profileText);
 
@@ -122,7 +122,7 @@ public class RecommendationSyncJobHandler : BaseJobHandler
             profile.UpdatedAt = DateTime.UtcNow;
             await _profileRepository.UpdateAsync(profile);
 
-            await ReportProgressAsync(job.JobId, 100, "Đồng bộ kỹ năng gợi ý thành công.");
+            await ReportProgressAsync(job.JobId, 100, "backgroundJobs.steps.successSyncRec");
 
             return JobResult.SuccessResult(new Dictionary<string, object?>
             {
@@ -147,7 +147,7 @@ public class RecommendationSyncJobHandler : BaseJobHandler
         catch (Exception ex)
         {
             Logger.LogError(ex, "[RECOMMEND_SYNC_FAILED] JobId: {JobId}", job.JobId);
-            await ReportProgressAsync(job.JobId, -1, $"Error: {ex.Message}");
+            await ReportProgressAsync(job.JobId, -1, "backgroundJobs.steps.error", new Dictionary<string, object> { ["message"] = ex.Message });
             return JobResult.FailureResult(ex.Message, ex.GetType().Name);
         }
     }

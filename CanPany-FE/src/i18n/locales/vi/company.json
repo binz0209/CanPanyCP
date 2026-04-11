@@ -258,7 +258,11 @@
     "emailPlaceholder": "Chưa cập nhật email",
     "emailHidden": "Đã ẩn – cần mở khóa để xem",
     "btnUnlockContact": "Mở khóa liên hệ",
-    "unlockedBadge": "Đã mở khóa"
+    "unlockedBadge": "Đã mở khóa",
+    "aiReasonLabel": "Phân tích AI",
+    "rateLimitedTitle": "Dịch vụ AI đang bận",
+    "rateLimited": "Dịch vụ AI tạm thời bận. Vui lòng thử lại sau {{seconds}} giây.",
+    "ragFallback": "Phân tích AI không khả dụng — chỉ hiển thị kết quả vector matching."
   },
   "applications": {
     "title": "Xem xét hồ sơ ứng tuyển",

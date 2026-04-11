@@ -111,8 +111,113 @@ public class UserProfileRepository : IUserProfileRepository
             throw;
         }
     }
+    public async Task<IEnumerable<UserProfile>> SearchByFiltersAsync(
+        string? keyword = null,
+        List<string>? skillIds = null,
+        string? location = null,
+        string? experience = null,
+        decimal? minHourlyRate = null,
+        decimal? maxHourlyRate = null,
+        int page = 1,
+        int pageSize = 20)
+    {
+        try
+        {
+            var builder = Builders<UserProfile>.Filter;
+            var filters = new List<FilterDefinition<UserProfile>>();
 
-    public async Task<IEnumerable<(UserProfile Profile, double Score)>> SearchByVectorAsync(List<double> vector, int limit = 20, double minScore = 0.5)
+            // Keyword + Skill search combined with OR
+            // A candidate matches if keyword appears in text fields OR they have matching skills
+            var keywordOrSkillFilters = new List<FilterDefinition<UserProfile>>();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var escapedKeyword = System.Text.RegularExpressions.Regex.Escape(keyword);
+                var regex = new BsonRegularExpression(escapedKeyword, "i");
+                keywordOrSkillFilters.Add(builder.Or(
+                    builder.Regex(p => p.Title, regex),
+                    builder.Regex(p => p.Bio, regex),
+                    builder.Regex(p => p.Experience, regex),
+                    builder.Regex(p => p.Education, regex),
+                    builder.Regex(p => p.Location, regex)
+                ));
+            }
+
+            if (skillIds != null && skillIds.Any())
+            {
+                keywordOrSkillFilters.Add(builder.AnyIn(p => p.SkillIds, skillIds));
+            }
+
+            // Combine keyword + skills with OR (candidate matches if text OR skill matches)
+            if (keywordOrSkillFilters.Any())
+            {
+                filters.Add(builder.Or(keywordOrSkillFilters));
+            }
+
+            // Location filter (ANDed with above)
+            if (!string.IsNullOrWhiteSpace(location))
+            {
+                var locationRegex = new BsonRegularExpression(location, "i");
+                filters.Add(builder.Or(
+                    builder.Regex(p => p.Location, locationRegex),
+                    builder.Regex(p => p.Address, locationRegex)
+                ));
+            }
+
+            // Experience filter
+            if (!string.IsNullOrWhiteSpace(experience))
+            {
+                var expRegex = new BsonRegularExpression(experience, "i");
+                filters.Add(builder.Regex(p => p.Experience, expRegex));
+            }
+
+            // Hourly rate range
+            if (minHourlyRate.HasValue)
+            {
+                filters.Add(builder.Gte(p => p.HourlyRate, minHourlyRate.Value));
+            }
+            if (maxHourlyRate.HasValue)
+            {
+                filters.Add(builder.Lte(p => p.HourlyRate, maxHourlyRate.Value));
+            }
+
+            var combinedFilter = filters.Any()
+                ? builder.And(filters)
+                : builder.Empty;
+
+            var results = await _collection
+                .Find(combinedFilter)
+                .SortByDescending(p => p.UpdatedAt)
+                .Skip((page - 1) * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
+
+            _logger?.LogInformation("[DB_SEARCH] Filter search returned {Count} results (page={Page})", results.Count, page);
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "[DB_SEARCH] Error searching profiles by filters");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<UserProfile>> GetBySkillIdsAsync(List<string> skillIds, int limit = 20)
+    {
+        try
+        {
+            var filter = Builders<UserProfile>.Filter.AnyIn(p => p.SkillIds, skillIds);
+            return await _collection.Find(filter).Limit(limit).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "[DB_SEARCH] Error getting profiles by skill IDs");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<(UserProfile Profile, double Score)>> SearchByVectorAsync(List<double> vector, int limit = 20, double minScore = 0.0)
     {
         try
         {
@@ -143,6 +248,9 @@ public class UserProfileRepository : IUserProfileRepository
             
             var results = await _collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
 
+            _logger?.LogInformation("[VECTOR_SEARCH] Atlas $vectorSearch returned {Count} results (queryDim={Dim})", 
+                results.Count, vector.Count);
+
             return results.Select(doc => 
             {
                 var score = doc["score"].AsDouble;
@@ -152,11 +260,13 @@ public class UserProfileRepository : IUserProfileRepository
         }
         catch (Exception ex)
         {
-            _logger?.LogWarning(ex, "Vector search failed (likely local MongoDB). Falling back to manual calculation.");
+            _logger?.LogWarning(ex, "[VECTOR_SEARCH_FALLBACK] Atlas vector search failed. Using in-memory cosine similarity (queryDim={Dim})", vector.Count);
             
             // Fallback: Manual similarity calculation for local testing
             // This is ONLY for small datasets/local testing as it loads all profiles
             var allProfiles = await _collection.Find(p => p.Embedding != null).ToListAsync();
+            
+            _logger?.LogInformation("[VECTOR_SEARCH_FALLBACK] Found {Count} profiles with embeddings", allProfiles.Count);
             
             var results = allProfiles
                 .Select(p => (Profile: p, Score: CalculateCosineSimilarity(vector, p.Embedding!)))
@@ -164,6 +274,9 @@ public class UserProfileRepository : IUserProfileRepository
                 .OrderByDescending(x => x.Score)
                 .Take(limit)
                 .ToList();
+
+            _logger?.LogInformation("[VECTOR_SEARCH_FALLBACK] Returned {Count} results after cosine filter (minScore={MinScore})", 
+                results.Count, minScore);
                 
             return results;
         }

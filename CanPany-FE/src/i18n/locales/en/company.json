@@ -258,7 +258,11 @@
     "emailPlaceholder": "Email not updated",
     "emailHidden": "Hidden - unlock to view",
     "btnUnlockContact": "Unlock contact",
-    "unlockedBadge": "Unlocked"
+    "unlockedBadge": "Unlocked",
+    "aiReasonLabel": "AI Analysis",
+    "rateLimitedTitle": "AI service busy",
+    "rateLimited": "AI service is temporarily busy. Please try again in {{seconds}} seconds.",
+    "ragFallback": "AI reasoning unavailable — showing vector-match results only."
   },
   "applications": {
     "title": "Review applications",

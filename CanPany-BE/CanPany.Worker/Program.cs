@@ -59,6 +59,8 @@ public class Program
         builder.Services.AddScoped<ICVAnalysisRepository, CVAnalysisRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+        builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+        builder.Services.AddScoped<IExperienceLevelRepository, ExperienceLevelRepository>();
         builder.Services.AddScoped<IJobRepository, JobRepository>();
 
         // Options

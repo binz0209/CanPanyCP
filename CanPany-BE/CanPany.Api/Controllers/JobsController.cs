@@ -471,12 +471,12 @@ public class JobsController : ControllerBase
                 totalSteps: 4,
                 userId: userId,
                 jobType: "SyncRecommendationSkills",
-                jobTitle: "Đồng bộ kỹ năng để gợi ý việc làm");
+                jobTitle: "backgroundJobs.titles.syncSkillsRec");
 
             await _progressTracker.UpdateProgressAsync(
                 jobId: jobId,
                 percentComplete: 0,
-                currentStep: "Đang chờ xử lý...",
+                currentStep: "backgroundJobs.steps.pending",
                 details: new Dictionary<string, object>
                 {
                     ["limit"] = payload.Limit
@@ -486,7 +486,7 @@ public class JobsController : ControllerBase
             {
                 jobId,
                 limit = payload.Limit,
-                message = "Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm"
+                message = "Started syncing skills for recommendations." // this is returned synchronous so it's fine
             }, "Recommendation sync job started"));
         }
         catch (Exception ex)
