@@ -24,6 +24,7 @@ public class AdminControllerTests
     private readonly Mock<ISkillService> _skillServiceMock = new();
     private readonly Mock<IBannerService> _bannerServiceMock = new();
     private readonly Mock<IPremiumPackageService> _premiumPackageServiceMock = new();
+    private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<AdminController>> _loggerMock = new();
     private readonly AdminController _controller;
 
@@ -40,6 +41,7 @@ public class AdminControllerTests
             _skillServiceMock.Object,
             _bannerServiceMock.Object,
             _premiumPackageServiceMock.Object,
+            _i18nServiceMock.Object,
             _loggerMock.Object);
         
         // Setup authenticated admin user
@@ -82,7 +84,7 @@ public class AdminControllerTests
             new User { Id = "user1", Email = "user1@example.com" },
             new User { Id = "user2", Email = "user2@example.com" }
         };
-        _userServiceMock.Setup(x => x.GetAllAsync())
+        _adminServiceMock.Setup(x => x.SearchUsersAsync(null, null, null, 1, 20))
             .ReturnsAsync(users);
 
         // Act
@@ -90,7 +92,7 @@ public class AdminControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse<IEnumerable<User>>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<IEnumerable<object>>>(okResult.Value);
         Assert.True(response.Success);
         Assert.Equal(2, response.Data?.Count());
     }

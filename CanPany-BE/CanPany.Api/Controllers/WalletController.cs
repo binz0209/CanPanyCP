@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Constants;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -15,13 +16,16 @@ namespace CanPany.Api.Controllers;
 public class WalletController : ControllerBase
 {
     private readonly IWalletService _walletService;
+    private readonly II18nService _i18nService;
     private readonly ILogger<WalletController> _logger;
 
     public WalletController(
         IWalletService walletService,
+        II18nService i18nService,
         ILogger<WalletController> logger)
     {
         _walletService = walletService;
+        _i18nService = i18nService;
         _logger = logger;
     }
 
@@ -44,7 +48,7 @@ public class WalletController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting wallet balance");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get wallet balance", "GetBalanceFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetBalanceFailed"));
         }
     }
 
@@ -66,7 +70,7 @@ public class WalletController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting transaction history");
-            return StatusCode(500, ApiResponse.CreateError("Failed to get transaction history", "GetTransactionsFailed"));
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetTransactionsFailed"));
         }
     }
 }

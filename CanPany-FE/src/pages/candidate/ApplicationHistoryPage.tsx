@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Briefcase, 
   MapPin, 
@@ -16,8 +17,11 @@ import {
 import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { applicationsApi } from '../../api/applications.api';
-import type { Application, ApplicationStatus } from '../../types/application.types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { ApplicationStatus } from '../../types/application.types';
 import { cn } from '../../utils';
+import { useCandidateApplications } from '../../hooks/candidate/useCandidateApplications';
+import { applicationKeys } from '../../lib/queryKeys';
 
 const statusConfig: Record<ApplicationStatus, { 
   label: string; 
@@ -59,31 +63,32 @@ const statusConfig: Record<ApplicationStatus, {
 
 export function ApplicationHistoryPage() {
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation('candidate');
+  const queryClient = useQueryClient();
+  const applicationsQuery = useCandidateApplications();
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<ApplicationStatus | 'All'>('All');
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmingApplicationId, setConfirmingApplicationId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadApplications();
-  }, []);
+  const applications = applicationsQuery.data ?? [];
+  const loading = applicationsQuery.isLoading;
+  const error = applicationsQuery.isError ? t('applicationHistory.toast.fetchError') : null;
 
-  const loadApplications = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await applicationsApi.getMyApplications();
-      setApplications(data);
-    } catch (err) {
-      setError('Failed to load applications. Please try again.');
-      console.error('Error loading applications:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const withdrawMutation = useMutation({
+    mutationFn: (id: string) => applicationsApi.withdraw(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+      toast.success(t('applicationHistory.toast.withdrawSuccess'), {
+        duration: 2000,
+        position: 'top-right',
+      });
+    },
+    onError: (err) => {
+      toast.error(t('applicationHistory.toast.withdrawError'));
+      console.error('Error withdrawing application:', err);
+    },
+  });
 
   const handleWithdraw = async (applicationId: string) => {
     setConfirmingApplicationId(applicationId);
@@ -95,15 +100,7 @@ export function ApplicationHistoryPage() {
 
     try {
       setWithdrawingId(confirmingApplicationId);
-      await applicationsApi.withdraw(confirmingApplicationId);
-      await loadApplications();
-      toast.success('Đơn đã rút', {
-        duration: 2000,
-        position: 'top-right',
-      });
-    } catch (err) {
-      toast.error('Không thể rút đơn. Vui lòng thử lại.');
-      console.error('Error withdrawing application:', err);
+      await withdrawMutation.mutateAsync(confirmingApplicationId);
     } finally {
       setWithdrawingId(null);
       setShowConfirm(false);
@@ -114,6 +111,15 @@ export function ApplicationHistoryPage() {
   const cancelWithdraw = () => {
     setShowConfirm(false);
     setConfirmingApplicationId(null);
+  };
+
+  const navigateToJobDetail = (jobId?: string) => {
+    if (!jobId) {
+      toast.error(t('applicationHistory.toast.jobNotFound'));
+      return;
+    }
+
+    navigate(`/jobs/${jobId}`);
   };
 
   // Filter applications based on selected status
@@ -155,7 +161,7 @@ export function ApplicationHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00b14f]"></div>
       </div>
     );
@@ -163,10 +169,10 @@ export function ApplicationHistoryPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-100 gap-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <p className="text-gray-600">{error}</p>
-        <Button onClick={loadApplications}>Thử lại</Button>
+        <Button onClick={() => applicationsQuery.refetch()}>Thử lại</Button>
       </div>
     );
   }
@@ -176,8 +182,8 @@ export function ApplicationHistoryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lịch sử ứng tuyển</h1>
-          <p className="text-gray-600 mt-1">Theo dõi và quản lý các đơn ứng tuyển của bạn</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('applicationHistory.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('applicationHistory.subtitle')}</p>
         </div>
       </div>
 
@@ -185,41 +191,41 @@ export function ApplicationHistoryPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-500">Tổng số</div>
+          <div className="text-sm text-gray-500">{t('applicationHistory.stats.total')}</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
-          <div className="text-sm text-gray-500">Chờ duyệt</div>
+          <div className="text-sm text-gray-500">{t('applicationHistory.stats.pending')}</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-blue-600">{stats.shortlisted}</div>
-          <div className="text-sm text-gray-500">Vào vòng tiếp</div>
+          <div className="text-sm text-gray-500">{t('applicationHistory.stats.shortlisted')}</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-green-600">{stats.accepted}</div>
-          <div className="text-sm text-gray-500">Đã chấp nhận</div>
+          <div className="text-sm text-gray-500">{t('applicationHistory.stats.accepted')}</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-          <div className="text-sm text-gray-500">Bị từ chối</div>
+          <div className="text-sm text-gray-500">{t('applicationHistory.stats.rejected')}</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-2xl font-bold text-gray-600">{stats.withdrawn}</div>
-          <div className="text-sm text-gray-500">Đã rút đơn</div>
+          <div className="text-sm text-gray-500">{t('applicationHistory.stats.withdrawn')}</div>
         </div>
       </div>
 
       {/* Filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-600">Lọc theo trạng thái:</span>
+        <span className="text-sm text-gray-600">{t('applicationHistory.filter.label')}</span>
         {(['All', 'Pending', 'Shortlisted', 'Accepted', 'Rejected', 'Withdrawn'] as const).map((status) => {
           const labelMap: Record<string, string> = {
-            All: 'Tất cả',
-            Pending: 'Chờ duyệt',
-            Shortlisted: 'Vào vòng tiếp',
-            Accepted: 'Đã chấp nhận',
-            Rejected: 'Bị từ chối',
-            Withdrawn: 'Đã rút đơn',
+            All: t('applicationHistory.filter.all'),
+            Pending: t('applicationHistory.filter.pending'),
+            Shortlisted: t('applicationHistory.filter.shortlisted'),
+            Accepted: t('applicationHistory.filter.accepted'),
+            Rejected: t('applicationHistory.filter.rejected'),
+            Withdrawn: t('applicationHistory.filter.withdrawn'),
           };
           return (
             <Button
@@ -243,15 +249,15 @@ export function ApplicationHistoryPage() {
           <FileText className="h-12 w-12 text-gray-400" />
           <p className="text-gray-600">
             {filterStatus === 'All' 
-              ? 'Bạn chưa ứng tuyển vào công việc nào.' 
-              : `Không có đơn ứng tuyển ở trạng thái này.`
+              ? t('applicationHistory.empty.all')
+              : t('applicationHistory.empty.filtered')
             }
           </p>
           <Button 
             onClick={() => navigate('/jobs')}
             className="bg-[#00b14f] hover:bg-[#00a048]"
           >
-            Khám phá việc làm
+            {t('applicationHistory.empty.action')}
           </Button>
         </div>
       ) : (
@@ -259,6 +265,7 @@ export function ApplicationHistoryPage() {
           {filteredApplications.map((application) => {
             const status = statusConfig[application.status];
             const withdrawAllowed = canWithdraw(application.status);
+            const companyName = application.job?.company?.name || t('dashboard.recent.unknownCompany');
             
             return (
               <div 
@@ -269,7 +276,7 @@ export function ApplicationHistoryPage() {
                   {/* Job Info */}
                   <div className="flex-1">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
                         {application.job?.company?.logoUrl ? (
                           <img 
                             src={application.job.company.logoUrl} 
@@ -281,16 +288,18 @@ export function ApplicationHistoryPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {application.job?.title || 'Vị trí tuyển dụng'}
-                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => navigateToJobDetail(application.jobId)}
+                          className="text-left text-lg font-semibold text-gray-900 hover:text-[#00b14f] transition-colors"
+                        >
+                          {application.job?.title || t('applicationHistory.item.defaultPosition')}
+                        </button>
                         <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-600">
-                          {application.job?.company && (
-                            <span className="flex items-center gap-1">
-                              <Building2 className="h-4 w-4" />
-                              {application.job.company.name}
-                            </span>
-                          )}
+                          <span className="flex items-center gap-1">
+                            <Building2 className="h-4 w-4" />
+                            {companyName}
+                          </span>
                           {application.job?.location && (
                             <span className="flex items-center gap-1">
                               <MapPin className="h-4 w-4" />
@@ -299,7 +308,7 @@ export function ApplicationHistoryPage() {
                           )}
                           {application.job?.isRemote && (
                             <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs">
-                              Remote
+                              {t('applicationHistory.item.remote')}
                             </span>
                           )}
                         </div>
@@ -311,17 +320,17 @@ export function ApplicationHistoryPage() {
                       {application.proposedAmount && (
                         <span className="flex items-center gap-1 text-gray-600">
                           <DollarSign className="h-4 w-4" />
-                          Mức đề xuất: {formatSalary(application.proposedAmount)}
+                          {t('applicationHistory.item.proposedSalary', { amount: formatSalary(application.proposedAmount) })}
                         </span>
                       )}
                       <span className="flex items-center gap-1 text-gray-600">
                         <Clock className="h-4 w-4" />
-                        Nộp đơn: {formatDate(application.createdAt)}
+                        {t('applicationHistory.item.appliedAt', { date: formatDate(application.createdAt) })}
                       </span>
                       {application.matchScore !== undefined && (
                         <span className="flex items-center gap-1 text-gray-600">
                           <Briefcase className="h-4 w-4" />
-                          Phù hợp: {Math.round(application.matchScore)}%
+                          {t('applicationHistory.item.matchScore', { score: Math.round(application.matchScore) })}
                         </span>
                       )}
                     </div>
@@ -338,13 +347,22 @@ export function ApplicationHistoryPage() {
 
                   {/* Status & Actions */}
                   <div className="flex flex-col items-end gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigateToJobDetail(application.jobId)}
+                      className="border-[#00b14f]/30 text-[#00b14f] hover:bg-[#00b14f]/10"
+                    >
+                      {t('applicationHistory.item.viewDetail')}
+                    </Button>
+
                     <div className={cn(
                       'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium',
                       status.bgColor,
                       status.color
                     )}>
                       {status.icon}
-                      {status.label}
+                      {t(`applicationHistory.stats.${application.status.toLowerCase()}` as any)}
                     </div>
 
                     {/* Withdraw Button - Only show before pending status */}
@@ -359,12 +377,12 @@ export function ApplicationHistoryPage() {
                         {withdrawingId === application.id ? (
                           <span className="flex items-center gap-1">
                             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
-                            Đang rút...
+                            {t('applicationHistory.item.withdraw.loading')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
                             <X className="h-4 w-4" />
-                            Rút đơn
+                            {t('applicationHistory.item.withdraw.idle')}
                           </span>
                         )}
                       </Button>
@@ -373,10 +391,10 @@ export function ApplicationHistoryPage() {
                     {/* Status Message */}
                     {!withdrawAllowed && (
                       <p className="text-xs text-gray-500 text-right">
-                        {application.status === 'Shortlisted' && 'Chúc mừng, bạn đã vào vòng tiếp theo!'}
-                        {application.status === 'Accepted' && 'Chúc mừng, đơn ứng tuyển đã được chấp nhận!'}
-                        {application.status === 'Rejected' && 'Hồ sơ chưa phù hợp với vị trí này'}
-                        {application.status === 'Withdrawn' && 'Bạn đã rút đơn ứng tuyển này'}
+                        {application.status === 'Shortlisted' && t('applicationHistory.item.statusMsg.shortlisted')}
+                        {application.status === 'Accepted' && t('applicationHistory.item.statusMsg.accepted')}
+                        {application.status === 'Rejected' && t('applicationHistory.item.statusMsg.rejected')}
+                        {application.status === 'Withdrawn' && t('applicationHistory.item.statusMsg.withdrawn')}
                       </p>
                     )}
                   </div>
@@ -391,21 +409,21 @@ export function ApplicationHistoryPage() {
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Rút đơn ứng tuyển</h3>
-            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn rút đơn ứng tuyển của mình không? Hành động này không thể hoàn tác.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('applicationHistory.withdrawModal.title')}</h3>
+            <p className="text-gray-600 mb-6">{t('applicationHistory.withdrawModal.message')}</p>
             <div className="flex gap-3">
               <button
                 onClick={cancelWithdraw}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Không
+                {t('applicationHistory.withdrawModal.cancel')}
               </button>
               <button
                 onClick={confirmWithdraw}
                 disabled={withdrawingId === confirmingApplicationId}
                 className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors"
               >
-                {withdrawingId === confirmingApplicationId ? 'Đang rút...' : 'Có, rút ngay'}
+                {withdrawingId === confirmingApplicationId ? t('applicationHistory.withdrawModal.loading') : t('applicationHistory.withdrawModal.confirm')}
               </button>
             </div>
           </div>

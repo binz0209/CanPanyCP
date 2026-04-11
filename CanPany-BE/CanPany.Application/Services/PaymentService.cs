@@ -1,6 +1,7 @@
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.DTOs.Payments;
 using Microsoft.Extensions.Logging;
 
 namespace CanPany.Application.Services;
@@ -15,6 +16,7 @@ public class PaymentService : IPaymentService
     private readonly INotificationService _notificationService;
     private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly IUserService _userService;
+    private readonly ISePayService _sePayService;
     private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
@@ -23,6 +25,7 @@ public class PaymentService : IPaymentService
         INotificationService notificationService,
         IBackgroundEmailService backgroundEmailService,
         IUserService userService,
+        ISePayService sePayService,
         ILogger<PaymentService> logger)
     {
         _repo = repo;
@@ -30,6 +33,7 @@ public class PaymentService : IPaymentService
         _notificationService = notificationService;
         _backgroundEmailService = backgroundEmailService;
         _userService = userService;
+        _sePayService = sePayService;
         _logger = logger;
     }
 
@@ -89,6 +93,166 @@ public class PaymentService : IPaymentService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating deposit request: {UserId}, {Amount}", userId, amount);
+            throw;
+        }
+    }
+
+    public async Task<SePayCheckoutResult> CreateSePayCheckoutAsync(
+        string userId,
+        long amount,
+        string purpose,
+        string? packageId,
+        string successUrl,
+        string errorUrl,
+        string cancelUrl)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            if (amount <= 0)
+                throw new ArgumentException("Amount must be greater than 0", nameof(amount));
+
+            // Create a pending payment record first to get a stable ID
+            var payment = new Payment
+            {
+                UserId = userId,
+                Purpose = purpose,
+                PackageId = packageId,
+                Amount = amount,
+                Currency = "VND",
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            payment = await _repo.AddAsync(payment);
+
+            // Use the payment ID as order invoice number for traceability
+            var orderInvoiceNumber = payment.Id;
+
+            // Build SePay checkout request
+            var checkoutRequest = new SePayCheckoutRequest
+            {
+                OrderInvoiceNumber = orderInvoiceNumber,
+                OrderAmount = amount,
+                Currency = "VND",
+                OrderDescription = $"Thanh toan {purpose} - {orderInvoiceNumber}",
+                PaymentMethod = "BANK_TRANSFER",
+                CustomerId = userId,
+                SuccessUrl = successUrl,
+                ErrorUrl = errorUrl,
+                CancelUrl = cancelUrl,
+                CustomData = payment.Id
+            };
+
+            // Store the invoice number on the payment
+            payment.Sepay_OrderInvoiceNumber = orderInvoiceNumber;
+            payment.MarkAsUpdated();
+            await _repo.UpdateAsync(payment);
+
+            var checkoutUrl = _sePayService.GenerateCheckoutUrl();
+            var fields = _sePayService.GenerateCheckoutFields(checkoutRequest);
+
+            _logger.LogInformation(
+                "Created SePay checkout for payment {PaymentId}, user {UserId}, amount {Amount}",
+                payment.Id, userId, amount);
+
+            return new SePayCheckoutResult
+            {
+                PaymentId = payment.Id,
+                CheckoutUrl = checkoutUrl,
+                Fields = fields
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating SePay checkout: userId={UserId}, amount={Amount}", userId, amount);
+            throw;
+        }
+    }
+
+    public async Task<bool> ProcessSePayCallbackAsync(Dictionary<string, string> webhookData)
+    {
+        try
+        {
+
+
+            // 2. Extract key fields from webhook data
+            var orderInvoiceNumber = webhookData.GetValueOrDefault("order_invoice_number");
+            var responseCode = webhookData.GetValueOrDefault("response_code");
+            var transactionId = webhookData.GetValueOrDefault("transaction_id");
+            var paymentMethod = webhookData.GetValueOrDefault("payment_method");
+
+            if (string.IsNullOrEmpty(orderInvoiceNumber))
+            {
+                _logger.LogWarning("SePay webhook missing order_invoice_number");
+                return false;
+            }
+
+            // 3. Look up payment by the order invoice number (which equals payment.Id)
+            var payment = await _repo.GetByIdAsync(orderInvoiceNumber);
+            if (payment == null)
+            {
+                _logger.LogWarning("SePay webhook: payment not found for order {OrderInvoiceNumber}", orderInvoiceNumber);
+                return false;
+            }
+
+            // Prevent double-processing
+            if (payment.Status == "Paid")
+            {
+                _logger.LogInformation("SePay webhook: payment {PaymentId} already processed", payment.Id);
+                return true;
+            }
+
+            // 4. Update payment with SePay data
+            payment.Sepay_TransactionId = transactionId;
+            payment.Sepay_ResponseCode = responseCode;
+            payment.Sepay_PaymentMethod = paymentMethod;
+            payment.Sepay_Signature = webhookData.GetValueOrDefault("signature");
+
+            // SePay returns "00" as success code
+            if (responseCode == "00")
+            {
+                payment.Status = "Paid";
+                payment.PaidAt = DateTime.UtcNow;
+
+                // 5. Credit wallet for TopUp / deposit purposes
+                if (payment.Purpose == "TopUp" || payment.Purpose == "Deposit")
+                {
+                    var (succeeded, errors, _) = await _walletService.ChangeBalanceAsync(
+                        payment.UserId, payment.Amount, "Nap tien qua SePay");
+
+                    if (!succeeded)
+                    {
+                        _logger.LogError(
+                            "Failed to credit wallet for SePay payment {PaymentId}. Errors: {Errors}",
+                            payment.Id, string.Join(", ", errors));
+                    }
+                }
+            }
+            else
+            {
+                payment.Status = "Failed";
+                _logger.LogWarning(
+                    "SePay payment {PaymentId} failed with response code {ResponseCode}",
+                    payment.Id, responseCode);
+            }
+
+            payment.MarkAsUpdated();
+            await _repo.UpdateAsync(payment);
+
+            // 6. Send notifications
+            await SendPaymentNotificationsAsync(payment);
+
+            _logger.LogInformation(
+                "Processed SePay callback for payment {PaymentId}: status={Status}",
+                payment.Id, payment.Status);
+
+            return payment.Status == "Paid";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing SePay callback");
             throw;
         }
     }

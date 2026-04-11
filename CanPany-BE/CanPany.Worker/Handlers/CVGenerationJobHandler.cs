@@ -55,7 +55,7 @@ public class CVGenerationJobHandler : BaseJobHandler
             var jobRepository         = scope.ServiceProvider.GetRequiredService<IJobRepository>();
 
             // ── Step 1: Load user ─────────────────────────────────────────────
-            await ReportProgressAsync(job.JobId, 10, "Đang tải thông tin ứng viên...", null, cancellationToken);
+            await ReportProgressAsync(job.JobId, 10, "backgroundJobs.steps.loadingCandidate", null, cancellationToken);
 
             var user = await userRepository.GetByIdAsync(payload.UserId);
             if (user == null) return JobResult.FailureResult("User not found", "USER_NOT_FOUND");
@@ -63,7 +63,7 @@ public class CVGenerationJobHandler : BaseJobHandler
             var profile = await userProfileRepository.GetByUserIdAsync(payload.UserId);
 
             // ── Step 2: Resolve skill names ───────────────────────────────────
-            await ReportProgressAsync(job.JobId, 25, "Đang xử lý kỹ năng...", null, cancellationToken);
+            await ReportProgressAsync(job.JobId, 25, "backgroundJobs.steps.processingSkills", null, cancellationToken);
 
             var skillNames = new List<string>();
             if (profile?.SkillIds != null && profile.SkillIds.Any())
@@ -80,7 +80,7 @@ public class CVGenerationJobHandler : BaseJobHandler
             }
 
             // ── Step 3: Build context ─────────────────────────────────────────
-            await ReportProgressAsync(job.JobId, 40, "AI đang soạn thảo CV...", null, cancellationToken);
+            await ReportProgressAsync(job.JobId, 40, "backgroundJobs.steps.generatingCvAi", null, cancellationToken);
 
             var ctx = new CVGenerationContext
             {
@@ -124,7 +124,7 @@ public class CVGenerationJobHandler : BaseJobHandler
             // ── Step 4: Generate structured JSON via Gemini ───────────────────
             var cvData = await _geminiService.GenerateCVDataAsync(ctx, cancellationToken);
 
-            await ReportProgressAsync(job.JobId, 80, "Đang lưu CV...", null, cancellationToken);
+            await ReportProgressAsync(job.JobId, 80, "backgroundJobs.steps.savingCv", null, cancellationToken);
 
             // ── Step 5: Save CV entity (no file upload) ───────────────────────
             var dateStr = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
@@ -143,7 +143,7 @@ public class CVGenerationJobHandler : BaseJobHandler
 
             var savedCv = await cvRepository.AddAsync(cv);
 
-            await ReportProgressAsync(job.JobId, 100, "Tạo CV thành công!", null, cancellationToken);
+            await ReportProgressAsync(job.JobId, 100, "backgroundJobs.steps.successCvGen", null, cancellationToken);
 
             _logger.LogInformation("[CV_GEN_DONE] JobId: {JobId} | CVId: {CVId}", job.JobId, savedCv.Id);
 
@@ -157,7 +157,7 @@ public class CVGenerationJobHandler : BaseJobHandler
         catch (Exception ex)
         {
             _logger.LogError(ex, "[CV_GEN_FAILED] JobId: {JobId}", job.JobId);
-            await ReportProgressAsync(job.JobId, -1, $"Lỗi: {ex.Message}", null, cancellationToken);
+            await ReportProgressAsync(job.JobId, -1, "backgroundJobs.steps.error", new Dictionary<string, object> { ["message"] = ex.Message }, cancellationToken);
             return JobResult.FailureResult(ex.Message, ex.GetType().Name);
         }
     }

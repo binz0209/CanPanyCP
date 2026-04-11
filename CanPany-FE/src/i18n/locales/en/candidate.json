@@ -56,6 +56,7 @@
       "title": "Quick actions",
       "description": "Get started right away",
       "findJobs": "Find jobs",
+      "profile": "Profile",
       "uploadCv": "Upload CV",
       "askAi": "Ask AI Advisor",
       "seeRecommendations": "See recommendations"
@@ -79,6 +80,299 @@
       "negotiable": "Negotiable",
       "prefix": "${{amount}}",
       "perHour": "/hour"
+    }
+  },
+  "applicationHistory": {
+    "title": "Application History",
+    "subtitle": "Track and manage your job applications",
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "shortlisted": "Shortlisted",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    },
+    "filter": {
+      "label": "Filter by status:",
+      "all": "All",
+      "pending": "Pending",
+      "shortlisted": "Shortlisted",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    },
+    "empty": {
+      "all": "You have not applied for any jobs yet.",
+      "filtered": "No applications in this status.",
+      "action": "Explore Jobs"
+    },
+    "item": {
+      "defaultPosition": "Job Position",
+      "viewDetail": "View details",
+      "remote": "Remote",
+      "proposedSalary": "Proposed: {{amount}}",
+      "appliedAt": "Applied at: {{date}}",
+      "matchScore": "Match Score: {{score}}%",
+      "withdraw": {
+        "idle": "Withdraw",
+        "loading": "Withdrawing..."
+      },
+      "statusMsg": {
+        "shortlisted": "Congratulations, you have been shortlisted!",
+        "accepted": "Congratulations, your application has been accepted!",
+        "rejected": "Your profile is not suitable for this position at the moment.",
+        "withdrawn": "You have withdrawn this application."
+      }
+    },
+    "withdrawModal": {
+      "title": "Withdraw Application",
+      "message": "Are you sure you want to withdraw your application? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Yes, Withdraw",
+      "loading": "Withdrawing..."
+    },
+    "toast": {
+      "withdrawSuccess": "Application withdrawn successfully",
+      "withdrawError": "Could not withdraw application. Please try again.",
+      "fetchError": "Could not fetch application history. Please try again.",
+      "jobNotFound": "Related job could not be found."
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting..."
+    },
+    "conversations": {
+      "empty": "No conversations yet"
+    },
+    "chat": {
+      "selectPrompt": "Select a conversation to start messaging",
+      "empty": "No messages yet. Start a conversation!",
+      "typing": "Typing..."
+    },
+    "input": {
+      "placeholder": "Type a message...",
+      "send": "Send",
+      "hint": "Enter to send · Shift+Enter for new line"
+    },
+    "header": {
+      "back": "Back"
+    },
+    "bubble": {
+      "sending": "Sending...",
+      "read": "Read"
+    },
+    "error": {
+      "sendFailed": "Could not send message"
+    }
+  },
+  "backgroundJobs": {
+    "title": "Background Jobs",
+    "titles": {
+      "analyzeCv": "Analyze CV: {{fileName}}",
+      "generateAiCv": "AI CV Generation",
+      "tailorAiCv": "Tailor AI CV for Job",
+      "syncSkillsRec": "Sync Skills for Recommendations",
+      "syncSkillsGit": "Sync Skills from {{count}} repo(s)",
+      "fallback": "Background Job"
+    },
+    "steps": {
+      "pending": "Pending...",
+      "loadingCandidate": "Loading candidate info...",
+      "processingSkills": "Processing skills...",
+      "generatingCvAi": "AI is generating CV...",
+      "savingCv": "Saving CV...",
+      "successCvGen": "CV generated successfully!",
+      "error": "Error: {{message}}",
+      "loadingProfile": "Loading user profile...",
+      "extractingSkills": "Extracting skills from profile/CV/GitHub...",
+      "generatingEmbeddings": "Generating embeddings using Gemini...",
+      "successSyncRec": "Skill synchronization successful.",
+      "analyzingRepos": "Analyzing repos and extracting skills...",
+      "fetchingRepos": "Fetching GitHub repositories...",
+      "analyzingLangs": "Found {{repos}} repositories. Analyzing languages...",
+      "preparingData": "Preparing data for skill analysis...",
+      "analyzingAi": "Analyzing skills with AI...",
+      "savingRag": "Saving analysis to RAG storage...",
+      "finalizing": "Finalizing analysis results...",
+      "successGithub": "GitHub analysis completed successfully!",
+      "rateLimited": "Gemini AI rate limited. Will retry after {{seconds}}s...",
+      "fetchingCv": "Fetching CV file...",
+      "extractingCvText": "Extracting text from CV...",
+      "analyzingCvAi": "Analyzing CV with AI...",
+      "savingCvResults": "Saving analysis results...",
+      "successCvAnalyze": "CV analysis completed successfully!"
+    },
+    "subtitle": "Monitor the status of background tasks running in your account",
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "retrying": "Retrying"
+    },
+    "detail": {
+      "waiting": "Waiting...",
+      "step": "Step {{completed}}/{{total}}",
+      "repos": "Selected Repositories",
+      "skills": "Extracted Skills",
+      "error": "Error",
+      "started": "Started:",
+      "ended": "Ended:",
+      "duration": "Duration:",
+      "updated": "Updated:"
+    },
+    "row": {
+      "processing": "Processing...",
+      "completedAt": "Completed at: {{time}}"
+    },
+    "toolbar": {
+      "count": "{{count}} recent jobs",
+      "empty": "No jobs yet",
+      "refresh": "Refresh"
+    },
+    "empty": {
+      "title": "No background tasks",
+      "desc": "When you sync GitHub skills or run AI features, progress will appear here."
+    }
+  },
+  "githubAnalysis": {
+    "title": "GitHub Analysis",
+    "subtitle": "Gemini AI reads your code, studies your repos, and extracts your real skills.",
+    "lastAnalyzed": "Last analyzed: {{date}}",
+    "actions": {
+      "analyzing": "Analyzing...",
+      "reanalyze": "Re-analyze",
+      "start": "Start Analysis"
+    },
+    "progress": {
+      "processing": "Processing..."
+    },
+    "toast": {
+      "completed": "✅ GitHub analysis completed!",
+      "started": "🔄 Analyzing GitHub profile...",
+      "error": "Cannot start analysis. Please connect your GitHub account first."
+    },
+    "stats": {
+      "repositories": "Repositories",
+      "totalStars": "Total Stars",
+      "totalForks": "Total Forks",
+      "contributions": "Contributions"
+    },
+    "sections": {
+      "languages": "Programming Languages",
+      "skills": "Detected Skills",
+      "level": "Level:",
+      "specializations": "Specializations",
+      "aiSummary": "AI Review",
+      "recommendations": "Growth Recommendations",
+      "topRepos": "Top Repositories"
+    },
+    "empty": {
+      "title": "No Analysis Data Yet",
+      "description": "Connect your GitHub account in your profile, then click analyze to let Gemini AI review your code and extract your skills."
+    }
+  },
+  "recommendedJobs": {
+    "title": "Jobs Recommended For You",
+    "subtitle": "Synthesized from your profile and behavior of similar candidates. More interaction helps refine suggestions.",
+    "matchLevels": {
+      "veryHigh": "Very High Match",
+      "high": "High Match",
+      "medium": "Good Match",
+      "suggested": "Suggested"
+    },
+    "budget": {
+      "negotiable": "Negotiable",
+      "perHour": "/hour"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "syncing": "Syncing...",
+      "syncAiSkills": "Sync AI Skills",
+      "viewDetails": "View Details",
+      "bookmark": "Save Job",
+      "updateProfile": "Update Profile",
+      "exploreJobs": "Explore Jobs",
+      "generatingCv": "Generating CV...",
+      "cvGenerated": "CV Generated",
+      "generateCv": "Generate matching CV"
+    },
+    "status": {
+      "viewed": "Viewed",
+      "remote": "Remote"
+    },
+    "toast": {
+      "syncStarted": "🔄 Syncing skills for AI recommendations...",
+      "syncError": "Cannot start skill syncing.",
+      "syncSuccess": "✅ Sync complete! Recommendations updated.",
+      "syncFailed": "Skill synchronization failed.",
+      "bookmarkSuccess": "Job saved",
+      "bookmarkError": "Could not save job",
+      "cvStarted": "🚀 Generating suitable CV...",
+      "cvError": "Cannot generate CV.",
+      "cvSuccess": "✅ CV for \"{{title}}\" completed!"
+    },
+    "tips": {
+      "coldStart1": "You haven't interacted much yet. Click",
+      "coldStart2": "Sync AI Skills",
+      "coldStart3": "to improve recommendations immediately."
+    },
+    "empty": {
+      "title": "No recommendations yet",
+      "description": "Complete your profile and interact with jobs so AI can recommend matching positions."
+    }
+  },
+  "notificationCenter": {
+    "title": "Notifications",
+    "unreadCount": "unread notifications",
+    "markAllRead": "Mark all as read",
+    "filters": {
+      "type": {
+        "all": "All",
+        "jobMatch": "Job Match",
+        "applications": "Applications",
+        "messages": "Messages",
+        "payment": "Payment"
+      },
+      "read": {
+        "all": "All",
+        "unread": "Unread",
+        "read": "Read"
+      }
+    },
+    "timeAgo": {
+      "justNow": "Just now",
+      "minutes": "{{count}} minutes ago",
+      "hours": "{{count}} hours ago",
+      "days": "{{count}} days ago"
+    },
+    "states": {
+      "loading": "Loading notifications...",
+      "emptyTitle": "No notifications",
+      "emptyFiltered": "No notifications match your filters.",
+      "emptyAll": "You don't have any notifications yet."
+    }
+  },
+  "jobAlerts": {
+    "title": "Job Alerts",
+    "subtitle": "Get notified as soon as there are jobs matching your criteria.",
+    "createAlert": "Create Alert",
+    "createFirstAlert": "Create First Alert",
+    "stats": {
+      "active": "Active",
+      "totalAlerts": "Total Alerts",
+      "totalMatches": "Total Matches",
+      "recentMatches": "Recent Matches"
+    },
+    "states": {
+      "loading": "Loading job alerts...",
+      "emptyTitle": "No job alerts yet",
+      "emptyDescription": "Create an alert to receive automatic notifications when matching jobs are found."
     }
   },
   "nav": {
@@ -122,6 +416,7 @@
     "cvList": "My CVs",
     "cvAi": "AI CV",
     "jobs": "Jobs",
+    "updates": "Updates",
     "jobsSearch": "Search",
     "jobsSaved": "Saved",
     "jobsRecommended": "Recommended",
@@ -168,10 +463,11 @@
       "save": "Save",
       "cancel": "Cancel",
       "edit": "Edit",
-      "sync": "Sync",
-      "syncing": "Syncing...",
-      "syncLinkedin": "Sync LinkedIn",
+      "uploadAvatar": "Upload avatar",
       "viewProgress": "View progress"
+    },
+    "avatar": {
+      "hint": "Supports JPG, JPEG, PNG, WEBP (max 2MB)"
     },
     "completion": {
       "title": "Profile completion",
@@ -183,13 +479,7 @@
     "social": {
       "title": "Social links"
     },
-    "linkedin": {
-      "modal": {
-        "title": "Sync LinkedIn",
-        "subtitle": "Paste your LinkedIn data to sync your profile",
-        "placeholder": "Paste LinkedIn data here (JSON or profile URL)"
-      }
-    },
+
     "github": {
       "linked": "GitHub connected",
       "analyzeRepos": "Select repos & extract skills",
@@ -228,15 +518,18 @@
       "githubLinked": "GitHub connected successfully! (@{{username}})",
       "githubLinkFailed": "GitHub connection failed: {{error}}",
       "unknownError": "Unknown error",
-      "linkedinSynced": "LinkedIn profile synced!",
-      "linkedinSyncFailed": "Failed to sync LinkedIn profile",
+
       "repoAnalysisStarted": "Analyzing repositories and extracting skills...",
       "repoAnalysisFailed": "Could not start analysis. Please try again.",
       "recommendationSyncStarted": "Started syncing skills for recommendations.",
       "recommendationSyncFailed": "Could not start syncing recommended skills.",
       "skillsExtracted": "Skill extraction complete! Profile updated.",
       "analysisFailed": "Analysis failed. Please try again.",
-      "oauthFailed": "Could not create GitHub OAuth URL. Please try again."
+      "oauthFailed": "Could not create GitHub OAuth URL. Please try again.",
+      "avatarUpdated": "Avatar updated successfully!",
+      "avatarUploadFailed": "Could not upload avatar. Please try again.",
+      "avatarInvalidType": "Invalid file type. Only JPG, JPEG, PNG, or WEBP are allowed.",
+      "avatarTooLarge": "File size exceeds the 2MB limit."
     }
   },
   "cv": {
@@ -378,6 +671,7 @@
       "back": "Manage CVs",
       "title": "AI CV Generator",
       "subtitle": "Automatically craft a professional CV from your profile",
+      "subtitleJob": "Analyzing Profile and tailoring for the position \"{{job}}\"...",
       "badge": "Powered by Gemini AI",
       "warning": {
         "title": "Profile incomplete",
@@ -488,5 +782,91 @@
         "failed": "Failed"
       }
     }
+  },
+  "premium": {
+    "title": "Premium",
+    "subtitle": "Upgrade your account to unlock all AI features and advanced search.",
+    "balance": "Balance",
+    "topUp": "Top up",
+    "active": "Active",
+    "expiredIn": "Expiring soon ({{days}} days)",
+    "expiresAt": "Expires: {{date}} ({{days}} days remaining)",
+    "activeLabel": "Premium is active",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "perMonthEquiv": "≈ {{amount}}/month",
+    "savings": "Best value",
+    "buyNow": "Buy now",
+    "needTopUp": "Top up to purchase",
+    "noPackages": "No premium packages configured yet.",
+    "noPackagesHint": "Please contact admin to set up premium packages.",
+    "duration": "Duration",
+    "durationDays": "{{days}} days",
+    "confirm": {
+      "title": "Confirm Premium Purchase",
+      "package": "Package",
+      "price": "Price",
+      "duration": "Duration",
+      "currentBalance": "Current balance",
+      "afterPurchase": "After purchase",
+      "deductNote": "The amount will be deducted directly from your wallet.",
+      "cancel": "Cancel",
+      "confirm": "Confirm purchase",
+      "processing": "Processing..."
+    },
+    "toast": {
+      "activated": "🎉 Premium activated successfully!",
+      "purchaseFailed": "Could not purchase premium. Please try again.",
+      "insufficientBalance": "Insufficient wallet balance. Need {{required}}, currently have {{current}}."
+    },
+    "candidateFeatures": {
+      "title": "Features for Candidates",
+      "aiCv": "AI CV tailored for Jobs",
+      "aiCvDesc": "Auto-generate AI CVs optimized for specific job positions",
+      "matchJobs": "Find best matching Jobs",
+      "matchJobsDesc": "View detailed compatibility scores and get recommendations matching your skills",
+      "unlimitedRec": "Unlimited recommendations",
+      "unlimitedRecDesc": "View all recommended jobs (free: only 3 jobs)"
+    },
+    "companyFeatures": {
+      "title": "Features for Employers",
+      "viewCandidate": "View candidate info",
+      "viewCandidateDesc": "Access full contact information and detailed candidate profiles",
+      "searchCandidate": "Find matching candidates",
+      "searchCandidateDesc": "Search for candidates with highest compatibility for your positions",
+      "prioritySupport": "Priority support",
+      "prioritySupportDesc": "Get fast support when needed"
+    },
+    "comparison": {
+      "title": "Free vs Premium Comparison",
+      "feature": "Feature",
+      "free": "Free",
+      "premium": "Premium",
+      "jobRec": "Job recommendations",
+      "jobRecFree": "3 jobs",
+      "jobRecPremium": "Unlimited",
+      "aiCvGen": "AI CV for specific jobs",
+      "matchScore": "Detailed match scores",
+      "searchCandidate": "Candidate search",
+      "viewCandidate": "View candidate info"
+    }
+  },
+  "paymentResult": {
+    "success": {
+      "title": "Payment successful!",
+      "message": "Your top-up request has been processed. Wallet balance will be updated shortly."
+    },
+    "error": {
+      "title": "Payment failed!",
+      "message": "Sorry, an error occurred during the transaction. Please try again later."
+    },
+    "cancel": {
+      "title": "Payment cancelled",
+      "message": "You cancelled the payment. No amount was deducted."
+    },
+    "goToWallet": "Go to My Wallet",
+    "goHome": "Home",
+    "autoRedirect": "Auto-redirecting in {{seconds}} seconds...",
+    "cancelledToast": "You cancelled the payment."
   }
 }

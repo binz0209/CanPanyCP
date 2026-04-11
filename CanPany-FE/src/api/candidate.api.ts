@@ -42,6 +42,11 @@ export interface RecommendationSyncResult {
     message: string;
 }
 
+export interface AvatarUploadResult {
+    url: string;
+    publicId: string;
+}
+
 export type JobStatus = 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Cancelled' | 'Retrying';
 
 export interface JobProgressRecord {
@@ -114,6 +119,7 @@ export interface CandidateStatistics {
 export interface CandidateSearchResult {
     profile: UserProfile;
     matchScore: number;
+    aiReason?: string;
     userInfo?: {
         id: string;
         fullName: string;
@@ -224,9 +230,25 @@ export const candidateApi = {
         await apiClient.put('/userprofiles/me', data);
     },
 
-    // Sync profile from LinkedIn (paste-data approach)
-    syncLinkedInProfile: async (linkedInData: string): Promise<void> => {
-        await apiClient.post('/userprofiles/sync/linkedin', { linkedInData });
+
+    // Upload candidate avatar
+    uploadAvatar: async (file: File): Promise<AvatarUploadResult> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await apiClient.post<ApiResponse<{ Url?: string; PublicId?: string; url?: string; publicId?: string }>>(
+            '/userprofiles/avatar',
+            formData,
+            {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }
+        );
+
+        const data = response.data.data;
+        return {
+            url: data?.url ?? data?.Url ?? '',
+            publicId: data?.publicId ?? data?.PublicId ?? '',
+        };
     },
 
     // Get list of repos from the GitHub account linked in the user profile

@@ -40,6 +40,12 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
 
   const navItems: NavItem[] = [
     {
+      id: 'premium',
+      labelKey: 'sidebar.premium',
+      icon: <Crown className="h-5 w-5" />,
+      path: '/candidate/premium',
+    },
+    {
       id: 'overview',
       labelKey: 'sidebar.overview',
       icon: <LayoutDashboard className="h-5 w-5" />,
@@ -65,34 +71,27 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       labelKey: 'sidebar.jobs',
       icon: <Briefcase className="h-5 w-5" />,
       items: [
+        { id: 'jobs.applications', labelKey: 'sidebar.applications', path: '/candidate/applications/history', icon: <Send className="h-4 w-4" /> },
         { id: 'jobs.search', labelKey: 'sidebar.jobsSearch', path: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
         { id: 'jobs.saved', labelKey: 'sidebar.jobsSaved', path: '/candidate/jobs/bookmarks', icon: <Bookmark className="h-4 w-4" /> },
         { id: 'jobs.recommended', labelKey: 'sidebar.jobsRecommended', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
       ],
     },
     {
-      id: 'applications',
-      labelKey: 'sidebar.applications',
-      icon: <Send className="h-5 w-5" />,
-      path: '/candidate/applications/history',
-    },
-    {
-      id: 'messages',
-      labelKey: 'sidebar.messages',
-      icon: <MessageSquare className="h-5 w-5" />,
-      path: '/candidate/messages',
+      id: 'updates',
+      labelKey: 'sidebar.updates',
+      icon: <Bell className="h-5 w-5" />,
+      items: [
+        { id: 'notifications', labelKey: 'sidebar.notifications', path: '/candidate/notifications', icon: <Bell className="h-4 w-4" /> },
+        { id: 'messages', labelKey: 'sidebar.messages', path: '/candidate/messages', icon: <MessageSquare className="h-4 w-4" /> },
+        { id: 'jobAlerts', labelKey: 'sidebar.jobAlerts', path: '/candidate/job-alerts', icon: <BellRing className="h-4 w-4" /> },
+      ],
     },
     {
       id: 'wallet',
       labelKey: 'sidebar.wallet',
       icon: <WalletIcon className="h-5 w-5" />,
       path: '/candidate/wallet',
-    },
-    {
-      id: 'alerts',
-      labelKey: 'sidebar.jobAlerts',
-      icon: <BellRing className="h-5 w-5" />,
-      path: '/candidate/job-alerts',
     },
     {
       id: 'backgroundJobs',
@@ -109,12 +108,6 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
         { id: 'ai.skills', labelKey: 'sidebar.aiSkills', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
         { id: 'ai.guidance', labelKey: 'sidebar.aiGuidance', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
       ],
-    },
-    {
-      id: 'premium',
-      labelKey: 'sidebar.premium',
-      icon: <Crown className="h-5 w-5" />,
-      path: '/candidate/premium',
     },
     {
       id: 'settings',
@@ -160,7 +153,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
   };
 
   const getBadge = (id: string) => {
-    if (id === 'notifications' && unreadCount > 0) return unreadCount;
+    if ((id === 'notifications' || id === 'updates') && unreadCount > 0) return unreadCount;
     return null;
   };
 
@@ -182,33 +175,10 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
-        {/* Notification shortcut at top */}
-        <div className="px-4 pt-4 pb-2">
-          <Link to="/candidate/notifications" onClick={onClose}>
-            <Button
-              variant="ghost"
-              className={cn(
-                'w-full justify-start gap-3 text-gray-700 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
-                'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                isActive('/candidate/notifications') && 'bg-[#00b14f]/10 text-[#00b14f]'
-              )}
-            >
-              <div className={cn('text-gray-500', isActive('/candidate/notifications') && 'text-[#00b14f]')}>
-                <Bell className="h-5 w-5" />
-              </div>
-              <span className="flex-1 text-left">{t('sidebar.notifications')}</span>
-              {unreadCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </Button>
-          </Link>
-        </div>
-
-        <div className="space-y-2 px-4 pb-4">
+        <div className="space-y-2 px-4 py-4">
           {navItems.map((item) => {
             const badge = getBadge(item.id);
+            const isPremium = item.id === 'premium';
             return (
               <div key={item.id}>
                 {item.path ? (
@@ -216,12 +186,14 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                     <Button
                       variant="ghost"
                       className={cn(
-                        'w-full justify-start gap-3 text-gray-700 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
-                        'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                        isItemActive(item) && 'bg-[#00b14f]/10 text-[#00b14f]'
+                        'w-full justify-start gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300',
+                        isPremium
+                          ? 'bg-linear-to-r from-amber-400 via-orange-400 to-rose-500 text-white shadow-md shadow-orange-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-300'
+                          : 'text-gray-700 hover:bg-[#00b14f]/10 hover:text-[#00b14f]',
+                        isItemActive(item) && (isPremium ? 'ring-2 ring-orange-200' : 'bg-[#00b14f]/10 text-[#00b14f]')
                       )}
                     >
-                      <div className={cn('text-gray-500', isItemActive(item) && 'text-[#00b14f]')}>
+                      <div className={cn(isPremium ? 'text-white' : 'text-gray-500', isItemActive(item) && !isPremium && 'text-[#00b14f]')}>
                         {item.icon}
                       </div>
                       <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
@@ -246,6 +218,11 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                       {item.icon}
                     </div>
                     <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
+                    {badge && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[10px] font-bold text-white">
+                        {badge > 99 ? '99+' : badge}
+                      </span>
+                    )}
                     {item.items && (
                       <ChevronDown
                         className={cn(
@@ -273,7 +250,12 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
                           <div className={cn('text-gray-400', isActive(subItem.path) && 'text-[#00b14f]')}>
                             {subItem.icon}
                           </div>
-                          <span>{t(subItem.labelKey as any)}</span>
+                          <span className="flex-1 text-left">{t(subItem.labelKey as any)}</span>
+                          {subItem.id === 'notifications' && unreadCount > 0 && (
+                            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#00b14f] px-1 text-[9px] font-bold text-white">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
                         </Button>
                       </Link>
                     ))}

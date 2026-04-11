@@ -143,11 +143,12 @@ public class CVsController : ControllerBase
 
             // 2. Upload file to Cloudinary
             await using var stream = file.OpenReadStream();
+            var resourceType = extension == ".pdf" ? "image" : "raw"; // Upload PDFs as images for inline viewing/transformations
             var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
                 stream,
                 file.FileName,
                 "cvs",
-                "raw"); // CVs are treated as raw files in Cloudinary
+                resourceType);
 
             var cv = new CV
             {
@@ -284,10 +285,15 @@ public class CVsController : ControllerBase
                 jobId: jobId,
                 userId: userId,
                 jobType: "AnalyzeCV",
-                jobTitle: $"Phân tích CV: {cv.FileName}",
+                jobTitle: "backgroundJobs.titles.analyzeCv",
                 totalSteps: 100);
 
-            // 2. Prepare payload
+            // Update details for i18n parameters
+            await progressTracker.UpdateProgressAsync(
+                jobId: jobId,
+                percentComplete: 0,
+                currentStep: "backgroundJobs.steps.pending",
+                details: new Dictionary<string, object> { ["fileName"] = cv.FileName ?? "" });
             var payload = new CanPany.Worker.Models.Payloads.CVAnalysisPayload
             {
                 UserId = userId,
@@ -351,8 +357,8 @@ public class CVsController : ControllerBase
             var jobId = Guid.NewGuid().ToString();
 
             var jobTitle = string.IsNullOrEmpty(targetJobId)
-                ? "Tạo CV bằng AI"
-                : "Tạo CV phù hợp với JD";
+                ? "backgroundJobs.titles.generateAiCv"
+                : "backgroundJobs.titles.tailorAiCv";
 
             // Initialize progress tracking
             await progressTracker.InitializeAsync(

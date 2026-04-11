@@ -9,7 +9,12 @@ import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout, AdminLayout } from '@/components/layout';
 import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
-import { CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage } from '@/pages/candidate';
+import { 
+  CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, 
+  ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage, 
+  PremiumPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, 
+  RecommendedJobsPage, CandidateMessagesPage, CVEditorPage, GitHubAnalysisPage
+} from '@/pages/candidate';
 import {
   AdminDashboardPage,
   AdminUsersPage,
@@ -21,6 +26,7 @@ import {
   AdminReportsPage,
   AdminBroadcastPage,
 } from '@/pages/admin';
+import { PaymentResultPage } from '@/pages/payment/PaymentResultPage';
 
 const CompanyDashboardPage = lazy(() =>
   import('@/pages/company/CompanyDashboardPage').then((module) => ({
@@ -45,11 +51,6 @@ const CompanyJobsPage = lazy(() =>
 const CompanyJobFormPage = lazy(() =>
   import('@/pages/company/CompanyJobFormPage').then((module) => ({
     default: module.CompanyJobFormPage,
-  }))
-);
-const CompanyCandidateSearchPage = lazy(() =>
-  import('@/pages/company/CompanyCandidateSearchPage').then((module) => ({
-    default: module.CompanyCandidateSearchPage,
   }))
 );
 const CompanyApplicationsPage = lazy(() =>
@@ -134,9 +135,17 @@ function App() {
             <Route path="/candidate/applications/history" element={<ApplicationHistoryPage />} />
             <Route path="/candidate/jobs/bookmarks" element={<SavedJobsPage />} />
             {/* Some links point here directly (e.g. sidebar). Keep as alias. */}
-            <Route path="/candidate/notifications" element={<NotificationsPage />} />
+            <Route path="/candidate/notifications" element={<NotificationCenterPage />} />
             <Route path="/candidate/settings/notifications" element={<NotificationsPage />} />
             <Route path="/candidate/wallet" element={<WalletPage />} />
+            <Route path="/candidate/premium" element={<PremiumPage />} />
+            <Route path="/candidate/job-alerts" element={<JobAlertsPage />} />
+            <Route path="/candidate/background-jobs" element={<BackgroundJobsPage />} />
+            <Route path="/candidate/jobs/recommended" element={<RecommendedJobsPage />} />
+            <Route path="/candidate/messages" element={<CandidateMessagesPage />} />
+            <Route path="/candidate/messages/:conversationId" element={<CandidateMessagesPage />} />
+            <Route path="/candidate/ai/skills" element={<GitHubAnalysisPage />} />
+            <Route path="/candidate/cv/editor/:id" element={<CVEditorPage />} />
           </Route>
 
           {/* Company Routes */}
@@ -148,7 +157,6 @@ function App() {
             <Route path={companyPaths.jobs} element={<LazyRoute><CompanyJobsPage /></LazyRoute>} />
             <Route path={companyPaths.newJob} element={<LazyRoute><CompanyJobFormPage /></LazyRoute>} />
             <Route path="/company/jobs/:jobId/edit" element={<LazyRoute><CompanyJobFormPage /></LazyRoute>} />
-            <Route path={companyPaths.candidateSearch} element={<LazyRoute><CompanyCandidateSearchPage /></LazyRoute>} />
             <Route path={companyPaths.applications} element={<LazyRoute><CompanyApplicationsPage /></LazyRoute>} />
             <Route path="/company/applications/:applicationId" element={<LazyRoute><CompanyApplicationDetailPage /></LazyRoute>} />
             {/* No conversationId → landing page; with conversationId → chat thread */}
@@ -180,6 +188,9 @@ function App() {
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+
+          {/* Payment Callback Pages */}
+          <Route path="/payment/:status" element={<PaymentResultPage />} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />

@@ -41,8 +41,14 @@ public class Job : AggregateRoot
     [BsonElement("level")]
     public string? Level { get; set; } // Junior, Mid, Senior, Expert
 
+    [BsonElement("experienceLevelId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? ExperienceLevelId { get; set; }
+
     [BsonElement("location")]
     public string? Location { get; set; }
+
+    [BsonElement("locationId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? LocationId { get; set; }
 
     [BsonElement("isRemote")]
     public bool IsRemote { get; set; } = false;

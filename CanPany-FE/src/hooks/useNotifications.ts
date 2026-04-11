@@ -1,13 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '../api/notifications.api';
+import { notificationKeys } from '../lib/queryKeys';
 import type { NotificationItem } from '../types/notification.types';
-
-export const notificationKeys = {
-  all: ['notifications'] as const,
-  lists: () => [...notificationKeys.all, 'list'] as const,
-  list: (filters?: any) => [...notificationKeys.lists(), { filters }] as const,
-  unread: () => [...notificationKeys.all, 'unread'] as const,
-};
 
 interface UseNotificationsOptions {
   enabled?: boolean;

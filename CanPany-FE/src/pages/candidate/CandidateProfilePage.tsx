@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity } from 'lucide-react';
+import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity, Camera } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import { candidateApi, authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
@@ -18,8 +18,7 @@ export function CandidateProfilePage() {
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
     const [recommendationSyncJobId, setRecommendationSyncJobId] = useState<string | null>(null);
     const [isOAuthLoading, setIsOAuthLoading] = useState(false);
-    const [showLinkedInSync, setShowLinkedInSync] = useState(false);
-    const [linkedInData, setLinkedInData] = useState('');
+    const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
     const queryClient = useQueryClient();
     const { user: currentUser, isAuthenticated } = useAuthStore();
@@ -69,18 +68,6 @@ export function CandidateProfilePage() {
         },
     });
 
-    const syncLinkedInMutation = useMutation({
-        mutationFn: (data: string) => candidateApi.syncLinkedInProfile(data),
-        onSuccess: () => {
-            toast.success(t('profile.toast.linkedinSynced'));
-            queryClient.invalidateQueries({ queryKey: ['candidate-profile', userId] });
-            setShowLinkedInSync(false);
-            setLinkedInData('');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || t('profile.toast.linkedinSyncFailed'));
-        },
-    });
 
     const { data: reposData, isLoading: isLoadingRepos } = useQuery({
         queryKey: ['github-repos'],
@@ -110,6 +97,17 @@ export function CandidateProfilePage() {
         },
         onError: () => {
             toast.error(t('profile.toast.recommendationSyncFailed'));
+        },
+    });
+
+    const uploadAvatarMutation = useMutation({
+        mutationFn: (file: File) => candidateApi.uploadAvatar(file),
+        onSuccess: () => {
+            toast.success(t('profile.toast.avatarUpdated'));
+            queryClient.invalidateQueries({ queryKey: ['candidate-profile', userId] });
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || t('profile.toast.avatarUploadFailed'));
         },
     });
 
@@ -183,6 +181,28 @@ export function CandidateProfilePage() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error(t('profile.toast.avatarInvalidType'));
+            e.target.value = '';
+            return;
+        }
+
+        const maxSize = 2 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast.error(t('profile.toast.avatarTooLarge'));
+            e.target.value = '';
+            return;
+        }
+
+        uploadAvatarMutation.mutate(file);
+        e.target.value = '';
+    };
+
     // Calculate profile completion percentage
     const calculateProfileCompletion = () => {
         if (!profile) return 0;
@@ -196,7 +216,6 @@ export function CandidateProfilePage() {
             profile.skillIds?.length > 0,
             profile.experience,
             profile.education,
-            profile.linkedInUrl,
             profile.gitHubUrl
         ];
 
@@ -210,7 +229,7 @@ export function CandidateProfilePage() {
     return (
         <div>
             {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c]">
+            {/* <section className="relative overflow-hidden bg-gradient-to-br from-[#00b14f] via-[#00a045] to-[#008f3c]">
                 <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
                     <div className="text-center">
                         <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -221,7 +240,7 @@ export function CandidateProfilePage() {
                         </p>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -239,6 +258,32 @@ export function CandidateProfilePage() {
                                 ) : (
                                     <div className="w-24 h-24 md:w-32 md:h-32 bg-[#00b14f] rounded-full flex items-center justify-center border-4 border-[#00b14f]/20">
                                         <User className="h-12 w-12 md:h-16 md:w-16 text-white" />
+                                    </div>
+                                )}
+
+                                {isEditing && (
+                                    <div className="w-full sm:w-auto">
+                                        <input
+                                            ref={avatarInputRef}
+                                            type="file"
+                                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                            onChange={handleAvatarFileChange}
+                                            className="hidden"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => avatarInputRef.current?.click()}
+                                            disabled={uploadAvatarMutation.isPending}
+                                            isLoading={uploadAvatarMutation.isPending}
+                                            className="mt-3 border-gray-300 text-gray-700"
+                                        >
+                                            <Camera className="h-4 w-4 mr-2" />
+                                            {t('profile.actions.uploadAvatar')}
+                                        </Button>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            {t('profile.avatar.hint')}
+                                        </p>
                                     </div>
                                 )}
 
@@ -383,15 +428,7 @@ export function CandidateProfilePage() {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <Linkedin className="h-4 w-4 text-gray-500" />
-                                    {isEditing ? (
-                                        <input
-                                            type="url"
-                                            value={formData.linkedInUrl || ''}
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('linkedInUrl', e.target.value)}
-                                            className="flex-1 border border-gray-300 rounded px-3 py-1 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
-                                            placeholder={t('profile.form.linkedinPlaceholder')}
-                                        />
-                                    ) : profile?.linkedInUrl ? (
+                                    {profile?.linkedInUrl ? (
                                         <div className="flex flex-1 items-center justify-between">
                                             <a href={profile.linkedInUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-[#00b14f] hover:underline flex items-center gap-1">
                                                 {profile.linkedInUrl}
@@ -402,16 +439,6 @@ export function CandidateProfilePage() {
                                         <span className="text-sm text-gray-400">{t('profile.labels.notUpdated')}</span>
                                     )}
                                 </div>
-                                {!isEditing && (
-                                    <Button
-                                        onClick={() => setShowLinkedInSync(true)}
-                                        disabled={syncLinkedInMutation.isPending}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                                    >
-                                        <Linkedin className="h-4 w-4 mr-2" />
-                                        {syncLinkedInMutation.isPending ? t('profile.actions.syncing') : t('profile.actions.syncLinkedin')}
-                                    </Button>
-                                )}
                                 <div className="pt-3 border-t border-gray-200">
                                     <div className="flex items-center gap-3 mb-3">
                                         <Github className="h-4 w-4 text-gray-500" />
@@ -723,58 +750,6 @@ export function CandidateProfilePage() {
                 </div>
             )}
 
-            {/* LinkedIn Sync Modal */}
-            {showLinkedInSync && (
-                <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50">
-                    <Card className="w-96 bg-white rounded-xl shadow-2xl">
-                        <div className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                    <Linkedin className="h-5 w-5 text-blue-600" />
-                                    {t('profile.linkedin.modal.title')}
-                                </h3>
-                                <button
-                                    onClick={() => {
-                                        setShowLinkedInSync(false);
-                                        setLinkedInData('');
-                                    }}
-                                    className="text-gray-500 hover:text-gray-700"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-4">
-                                {t('profile.linkedin.modal.subtitle')}
-                            </p>
-                            <textarea
-                                value={linkedInData}
-                                onChange={(e) => setLinkedInData(e.target.value)}
-                                placeholder={t('profile.linkedin.modal.placeholder')}
-                                className="w-full h-24 border border-gray-300 rounded-lg p-3 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 text-sm"
-                            />
-                            <div className="flex gap-2 mt-4">
-                                <Button
-                                    onClick={() => syncLinkedInMutation.mutate(linkedInData)}
-                                    disabled={!linkedInData.trim() || syncLinkedInMutation.isPending}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                                >
-                                    {syncLinkedInMutation.isPending ? t('profile.actions.syncing') : t('profile.actions.sync')}
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        setShowLinkedInSync(false);
-                                        setLinkedInData('');
-                                    }}
-                                    variant="outline"
-                                    className="flex-1 border-gray-300"
-                                >
-                                    {t('profile.actions.cancel')}
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            )}
         </div>
     );
 }

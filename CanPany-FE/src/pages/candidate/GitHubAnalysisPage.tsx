@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Github, RefreshCw, Star, GitFork, Code2, Brain, Zap,
@@ -35,6 +36,7 @@ const langColor = (l: string) => LANG_COLORS[l] ?? '#8b949e';
 // ─── page ────────────────────────────────────────────────────────────────────
 export function GitHubAnalysisPage() {
     const queryClient = useQueryClient();
+    const { t } = useTranslation('candidate');
     const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
 
     // Latest analysis result
@@ -62,7 +64,7 @@ export function GitHubAnalysisPage() {
         setAnalysisJobId(null);
         queryClient.invalidateQueries({ queryKey: ['github-analysis-latest'] });
         refetch();
-        toast.success('✅ Phân tích GitHub hoàn thành!');
+        toast.success(t('githubAnalysis.toast.completed'));
     }
 
     // Re-run analysis (syncs skills from all repos)
@@ -70,9 +72,9 @@ export function GitHubAnalysisPage() {
         mutationFn: () => candidateApi.syncSkillsFromRepos([]), // will trigger full sync via GitHubController
         onSuccess: (d) => {
             setAnalysisJobId(d.jobId);
-            toast.success('🔄 Đang phân tích GitHub profile...');
+            toast.success(t('githubAnalysis.toast.started'));
         },
-        onError: () => toast.error('Không thể bắt đầu phân tích. Hãy kết nối GitHub trước.'),
+        onError: () => toast.error(t('githubAnalysis.toast.error')),
     });
 
     const isRunning = !!analysisJobId && jobProgress?.status !== 'Completed' && jobProgress?.status !== 'Failed';
@@ -87,13 +89,13 @@ export function GitHubAnalysisPage() {
                             <Github className="h-4 w-4" />
                             <span>AI-Powered GitHub Profile Analysis</span>
                         </div>
-                        <h1 className="text-3xl font-bold">Phân tích GitHub</h1>
+                        <h1 className="text-3xl font-bold">{t('githubAnalysis.title')}</h1>
                         <p className="mt-2 text-gray-300 text-sm max-w-lg">
-                            Gemini AI đọc code, nghiên cứu repo, và trích xuất kỹ năng thực sự của bạn.
+                            {t('githubAnalysis.subtitle')}
                         </p>
                         {analysis && (
                             <p className="mt-1 text-xs text-gray-400">
-                                Lần phân tích cuối: {new Date(analysis.analyzedAt).toLocaleString('vi-VN')}
+                                {t('githubAnalysis.lastAnalyzed', { date: new Date(analysis.analyzedAt).toLocaleString('vi-VN') })}
                                 {' · '}@{analysis.gitHubUsername}
                             </p>
                         )}
@@ -104,7 +106,7 @@ export function GitHubAnalysisPage() {
                         className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-50 px-5 py-2.5 text-sm font-medium transition-all self-start lg:self-auto"
                     >
                         <RefreshCw className={`h-4 w-4 ${isRunning ? 'animate-spin' : ''}`} />
-                        {isRunning ? 'Đang phân tích...' : 'Phân tích lại'}
+                        {isRunning ? t('githubAnalysis.actions.analyzing') : t('githubAnalysis.actions.reanalyze')}
                     </button>
                 </div>
 
@@ -112,7 +114,7 @@ export function GitHubAnalysisPage() {
                 {isRunning && jobProgress && (
                     <div className="mt-4 space-y-1">
                         <div className="flex justify-between text-xs text-gray-300">
-                            <span>{jobProgress.currentStep ?? 'Đang xử lý...'}</span>
+                            <span>{jobProgress.currentStep ?? t('githubAnalysis.progress.processing')}</span>
                             <span>{jobProgress.percentComplete}%</span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
@@ -133,10 +135,10 @@ export function GitHubAnalysisPage() {
                 <>
                     {/* Stats row */}
                     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                        <StatCard icon={<Code2 className="h-5 w-5 text-blue-500" />} label="Repositories" value={analysis.statistics.totalRepositories} />
-                        <StatCard icon={<Star className="h-5 w-5 text-yellow-500" />} label="Tổng stars" value={analysis.statistics.totalStars} />
-                        <StatCard icon={<GitFork className="h-5 w-5 text-purple-500" />} label="Tổng forks" value={analysis.statistics.totalForks} />
-                        <StatCard icon={<Zap className="h-5 w-5 text-emerald-500" />} label="Contributions" value={analysis.statistics.totalContributions} />
+                        <StatCard icon={<Code2 className="h-5 w-5 text-blue-500" />} label={t('githubAnalysis.stats.repositories')} value={analysis.statistics.totalRepositories} />
+                        <StatCard icon={<Star className="h-5 w-5 text-yellow-500" />} label={t('githubAnalysis.stats.totalStars')} value={analysis.statistics.totalStars} />
+                        <StatCard icon={<GitFork className="h-5 w-5 text-purple-500" />} label={t('githubAnalysis.stats.totalForks')} value={analysis.statistics.totalForks} />
+                        <StatCard icon={<Zap className="h-5 w-5 text-emerald-500" />} label={t('githubAnalysis.stats.contributions')} value={analysis.statistics.totalContributions} />
                     </div>
 
                     <div className="grid gap-6 lg:grid-cols-2">
@@ -144,7 +146,7 @@ export function GitHubAnalysisPage() {
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                             <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
                                 <BarChart3 className="h-4 w-4 text-[#00b14f]" />
-                                Ngôn ngữ lập trình
+                                {t('githubAnalysis.sections.languages')}
                             </h2>
                             <div className="space-y-3">
                                 {analysis.languages.map((l) => (
@@ -168,11 +170,11 @@ export function GitHubAnalysisPage() {
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                             <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-1">
                                 <Brain className="h-4 w-4 text-[#00b14f]" />
-                                Kỹ năng phát hiện
+                                {t('githubAnalysis.sections.skills')}
                             </h2>
                             {analysis.skills.expertiseLevel && (
                                 <p className="text-xs text-gray-500 mb-3">
-                                    Level: <span className="font-semibold text-gray-800">{analysis.skills.expertiseLevel}</span>
+                                    {t('githubAnalysis.sections.level')} <span className="font-semibold text-gray-800">{analysis.skills.expertiseLevel}</span>
                                 </p>
                             )}
                             <div className="flex flex-wrap gap-2 mb-4">
@@ -184,7 +186,7 @@ export function GitHubAnalysisPage() {
                             </div>
                             {analysis.skills.specializations?.length > 0 && (
                                 <>
-                                    <p className="text-xs font-medium text-gray-500 mb-2">Chuyên sâu</p>
+                                    <p className="text-xs font-medium text-gray-500 mb-2">{t('githubAnalysis.sections.specializations')}</p>
                                     <div className="flex flex-wrap gap-2">
                                         {analysis.skills.specializations.map((s) => (
                                             <span key={s} className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
@@ -202,7 +204,7 @@ export function GitHubAnalysisPage() {
                         <div className="rounded-2xl border border-[#00b14f]/20 bg-gradient-to-br from-[#00b14f]/5 to-transparent p-6 shadow-sm">
                             <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-3">
                                 <Sparkles className="h-4 w-4 text-[#00b14f]" />
-                                AI nhận xét
+                                {t('githubAnalysis.sections.aiSummary')}
                             </h2>
                             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{analysis.aiSummary}</p>
                         </div>
@@ -213,7 +215,7 @@ export function GitHubAnalysisPage() {
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                             <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-3">
                                 <Trophy className="h-4 w-4 text-amber-500" />
-                                Gợi ý phát triển
+                                {t('githubAnalysis.sections.recommendations')}
                             </h2>
                             <ul className="space-y-2">
                                 {analysis.skills.recommendations.map((r, i) => (
@@ -231,7 +233,7 @@ export function GitHubAnalysisPage() {
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                             <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
                                 <BookOpen className="h-4 w-4 text-[#00b14f]" />
-                                Top repositories
+                                {t('githubAnalysis.sections.topRepos')}
                             </h2>
                             <div className="divide-y divide-gray-50">
                                 {analysis.topRepositories.map((repo) => (
@@ -300,14 +302,15 @@ function LoadingSkeleton() {
 }
 
 function EmptyState({ onAnalyze, loading }: { onAnalyze: () => void; loading: boolean }) {
+    const { t } = useTranslation('candidate');
     return (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-50">
                 <Github className="h-8 w-8 text-gray-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Chưa có dữ liệu phân tích</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('githubAnalysis.empty.title')}</h2>
             <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
-                Kết nối GitHub trong trang hồ sơ, sau đó nhấn phân tích để Gemini AI đọc code và trích xuất kỹ năng.
+                {t('githubAnalysis.empty.description')}
             </p>
             <div className="mt-6 flex gap-3 justify-center">
                 <button
@@ -316,7 +319,7 @@ function EmptyState({ onAnalyze, loading }: { onAnalyze: () => void; loading: bo
                     className="flex items-center gap-2 rounded-xl bg-gray-900 text-white px-4 py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-60 transition-colors"
                 >
                     {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
-                    Bắt đầu phân tích
+                    {t('githubAnalysis.actions.start')}
                 </button>
             </div>
         </div>

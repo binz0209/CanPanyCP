@@ -16,7 +16,10 @@ export const messagesApi = {
         const response = await apiClient.get<ApiResponse<Message[]>>('/messages', {
             params: { conversationId, page, pageSize },
         });
-        return response.data.data || [];
+        const msgs = response.data.data || [];
+        // The backend returns messages in descending order (newest first) for pagination.
+        // We reverse them here so the chat UI naturally displays from oldest (top) to newest (bottom).
+        return msgs.reverse();
     },
 
     sendMessage: async (conversationId: string, text: string): Promise<Message> => {

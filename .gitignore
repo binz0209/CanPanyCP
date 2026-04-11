@@ -75,7 +75,11 @@ appsettings.Development.json
 appsettings.Production.json
 
 CanPany-BE/CanPany.Api/appsettings.json
+CanPany-BE/CanPany.Worker/appsettings.json
+CanPany-BE/.env
 /CanPany-FE/md-files-ignore
 
 # CVs
 CanPany-BE/CanPany.Api/wwwroot/cvs/*
+
+node_modules/

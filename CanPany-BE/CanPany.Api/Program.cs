@@ -86,6 +86,9 @@ builder.Services.AddSingleton<MongoDbContext>();
 // Configure Cloudinary
 builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection("Cloudinary"));
 
+// Configure SePay Payment Gateway
+builder.Services.Configure<CanPany.Domain.Entities.SePayOptions>(builder.Configuration.GetSection("SePay"));
+
 // Configure Redis for Background Jobs
 var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
 builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
@@ -179,7 +182,7 @@ if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString)
                 BackupStrategy = new CollectionMongoBackupStrategy()
             },
             Prefix = "hangfire",
-            CheckConnection = true,
+            CheckConnection = false,
             CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
         }));
 
@@ -217,7 +220,9 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IWalletReposit
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IWalletTransactionRepository, CanPany.Infrastructure.Repositories.WalletTransactionRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobBookmarkRepository, CanPany.Infrastructure.Repositories.JobBookmarkRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICategoryRepository, CanPany.Infrastructure.Repositories.CategoryRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ILocationRepository, CanPany.Infrastructure.Repositories.LocationRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ISkillRepository, CanPany.Infrastructure.Repositories.SkillRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IExperienceLevelRepository, CanPany.Infrastructure.Repositories.ExperienceLevelRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IBannerRepository, CanPany.Infrastructure.Repositories.BannerRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IPremiumPackageRepository, CanPany.Infrastructure.Repositories.PremiumPackageRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IAuditLogRepository, CanPany.Infrastructure.Repositories.AuditLogRepository>();
@@ -310,12 +315,16 @@ builder.Services.AddScoped<ICandidateSearchService, CandidateSearchService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<IExperienceLevelService, ExperienceLevelService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
 builder.Services.AddScoped<IUserPremiumService, UserPremiumService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
+builder.Services.AddScoped<ISePayService, SePayService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();

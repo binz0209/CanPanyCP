@@ -19,7 +19,7 @@ import {
 
 import toast from 'react-hot-toast';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Input } from '../../components/ui';
-import { cvApi } from '../../api';
+import { cvApi, apiClient } from '../../api';
 import type { CV } from '../../types';
 import { useTranslation } from 'react-i18next';
 
@@ -135,15 +135,8 @@ export function CVListPage() {
 
     const getJobStatusSafe = async (jobId: string) => {
         try {
-            // Need to import jobApi or fetch it directly. Let's fetch directly for simplicity if jobApi is not imported in this file.
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/background-jobs/my-jobs/${jobId}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) return null;
-            const data = await response.json();
-            const result = data.data;
+            const response = await apiClient.get<{ data: any }>(`/background-jobs/my-jobs/${jobId}`);
+            const result = response.data.data ? response.data.data : response.data;
             // Normalize status to string
             if (result && result.status !== undefined) {
                 result.status = normalizeStatus(result.status);

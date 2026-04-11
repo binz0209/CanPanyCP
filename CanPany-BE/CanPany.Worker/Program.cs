@@ -59,6 +59,8 @@ public class Program
         builder.Services.AddScoped<ICVAnalysisRepository, CVAnalysisRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+        builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+        builder.Services.AddScoped<IExperienceLevelRepository, ExperienceLevelRepository>();
         builder.Services.AddScoped<IJobRepository, JobRepository>();
 
         // Options
@@ -93,6 +95,7 @@ public class Program
         builder.Services.AddSingleton<IHostedServiceInterceptor, HostedServiceInterceptor>();
 
         // External Services (GitHub, Gemini, Cloudinary)
+        builder.Services.AddHttpClient(); // generic IHttpClientFactory for downloading files
         builder.Services.AddHttpClient<IGitHubService, GitHubService>();
         builder.Services.AddHttpClient<IGeminiService, GeminiService>();
         builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
