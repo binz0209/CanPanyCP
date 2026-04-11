@@ -345,7 +345,7 @@ public class CVsController : ControllerBase
             {
                 if (user != null && user.AiCvGenerationCount >= 2)
                 {
-                    return BadRequest(ApiResponse.CreateError("Bạn đã sử dụng hết lượt tạo CV miễn phí. Vui lòng nâng cấp Premium để tiếp tục.", "PremiumRequired"));
+                    return BadRequest(ApiResponse.CreateError("You have used up all your free CV creation attempts. Please upgrade to Premium to continue.", "PremiumRequired"));
                 }
                 if (user != null)
                 {
