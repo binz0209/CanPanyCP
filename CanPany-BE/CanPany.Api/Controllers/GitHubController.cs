@@ -373,17 +373,18 @@ public class GitHubController : ControllerBase
                 totalSteps: request.RepositoryNames.Count + 2,
                 userId: userId,
                 jobType: "SyncSkills",
-                jobTitle: $"Sync Skills từ {request.RepositoryNames.Count} repo(s)");
+                jobTitle: "backgroundJobs.titles.syncSkillsGit");
 
             // Store selected repos context in Details for FE detail view
             await _progressTracker.UpdateProgressAsync(
                 jobId: jobId,
                 percentComplete: 0,
-                currentStep: "Đang chờ xử lý...",
+                currentStep: "backgroundJobs.steps.pending",
                 details: new Dictionary<string, object>
                 {
                     ["selectedRepos"] = request.RepositoryNames,
-                    ["gitHubUsername"] = username
+                    ["gitHubUsername"] = username,
+                    ["count"] = request.RepositoryNames.Count
                 });
 
             _logger.LogInformation(
@@ -396,7 +397,7 @@ public class GitHubController : ControllerBase
                     jobId,
                     gitHubUsername = username,
                     selectedRepos = request.RepositoryNames,
-                    message = "Đang phân tích repos và trích xuất skills..."
+                    message = "Analyzing repos and extracting skills..."
                 },
                 "Skill sync job started"));
         }

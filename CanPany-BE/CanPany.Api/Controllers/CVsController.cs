@@ -279,10 +279,15 @@ public class CVsController : ControllerBase
                 jobId: jobId,
                 userId: userId,
                 jobType: "AnalyzeCV",
-                jobTitle: $"Phân tích CV: {cv.FileName}",
+                jobTitle: "backgroundJobs.titles.analyzeCv",
                 totalSteps: 100);
 
-            // 2. Prepare payload
+            // Update details for i18n parameters
+            await progressTracker.UpdateProgressAsync(
+                jobId: jobId,
+                percentComplete: 0,
+                currentStep: "backgroundJobs.steps.pending",
+                details: new Dictionary<string, object> { ["fileName"] = cv.FileName ?? "" });
             var payload = new CanPany.Worker.Models.Payloads.CVAnalysisPayload
             {
                 UserId = userId,
@@ -331,8 +336,8 @@ public class CVsController : ControllerBase
             var jobId = Guid.NewGuid().ToString();
 
             var jobTitle = string.IsNullOrEmpty(targetJobId)
-                ? "Tạo CV bằng AI"
-                : "Tạo CV phù hợp với JD";
+                ? "backgroundJobs.titles.generateAiCv"
+                : "backgroundJobs.titles.tailorAiCv";
 
             // Initialize progress tracking
             await progressTracker.InitializeAsync(

@@ -57,14 +57,59 @@ public class CandidateSearchService : ICandidateSearchService
             if (job == null)
                 return Enumerable.Empty<(UserProfile, double)>();
 
-            // Generate embedding for job description and skills
-            var jobText = $"{job.Title} {job.Description} {string.Join(" ", job.SkillIds ?? new List<string>())}";
-            var embedding = await _geminiService.GenerateEmbeddingAsync(jobText);
+            var jobSkills = job.SkillIds ?? new List<string>();
 
-            // Search by vector
-            var results = await _profileRepo.SearchByVectorAsync(embedding, limit);
+            // If job has skills, find candidates by skill overlap
+            IEnumerable<UserProfile> candidates;
+            if (jobSkills.Any())
+            {
+                candidates = await _profileRepo.GetBySkillIdsAsync(jobSkills, limit * 3);
+            }
+            else
+            {
+                // No skills on job, get recent profiles
+                candidates = await _profileRepo.GetAllAsync();
+            }
 
-            return results.Select(r => (r.Profile, MatchScore: r.Score * 100)); // Convert 0-1 score to 0-100
+            // Filter to Candidate role only
+            var allCandidateUsers = await _userRepo.GetByRoleAsync("Candidate");
+            var candidateUserIds = new HashSet<string>(allCandidateUsers.Select(u => u.Id));
+
+            // Score by skill overlap + text relevance
+            var jobSkillSet = new HashSet<string>(jobSkills);
+            var jobKeywords = $"{job.Title} {job.Description}".ToLowerInvariant();
+
+            var scored = candidates
+                .Where(p => candidateUserIds.Contains(p.UserId))
+                .Select(p =>
+                {
+                    double score = 0;
+
+                    // Skill overlap score (0-70 points)
+                    if (jobSkillSet.Count > 0 && p.SkillIds != null)
+                    {
+                        var matched = p.SkillIds.Count(s => jobSkillSet.Contains(s));
+                        score += (double)matched / jobSkillSet.Count * 70;
+                    }
+
+                    // Text relevance bonus (0-30 points)
+                    var profileText = $"{p.Title} {p.Bio} {p.Experience}".ToLowerInvariant();
+                    if (!string.IsNullOrWhiteSpace(job.Title) && profileText.Contains(job.Title.ToLowerInvariant()))
+                        score += 15;
+                    if (!string.IsNullOrWhiteSpace(p.Location) && !string.IsNullOrWhiteSpace(job.Location) &&
+                        p.Location.Contains(job.Location, StringComparison.OrdinalIgnoreCase))
+                        score += 15;
+
+                    return (Profile: p, MatchScore: Math.Min(score, 100));
+                })
+                .Where(x => x.MatchScore > 0)
+                .OrderByDescending(x => x.MatchScore)
+                .Take(limit)
+                .ToList();
+
+            _logger.LogInformation("[DB_SEARCH] SearchCandidatesAsync for job {JobId}: found {Count} candidates", jobId, scored.Count);
+
+            return scored;
         }
         catch (Exception ex)
         {
@@ -158,9 +203,64 @@ public class CandidateSearchService : ICandidateSearchService
                 ));
             }
 
-            return finalResults
+            var sortedResults = finalResults
                 .OrderByDescending(x => x.MatchScore)
-                .Take(request.Limit);
+                .Take(request.Limit)
+                .ToList();
+
+            // 5. RAG step — send top N candidates to Gemini for AI reasoning
+            const int ragLimit = 10;
+            var candidatesForRag = sortedResults.Take(ragLimit).ToList();
+
+            if (candidatesForRag.Count > 0)
+            {
+                try
+                {
+                    var summaries = candidatesForRag.Select(c => new CandidateSummaryForRanking(
+                        UserId: c.UserInfo.Id,
+                        FullName: c.UserInfo.FullName,
+                        Title: c.Profile.Title,
+                        Bio: c.Profile.Bio,
+                        Experience: null, // Not in DTO — vector score carries this weight
+                        Location: c.Profile.Location,
+                        Skills: c.Profile.SkillIds ?? new List<string>(),
+                        VectorScore: c.MatchScore
+                    )).ToList();
+
+                    var ragResults = await _geminiService.RankCandidatesAsync(
+                        request.JobDescription, summaries);
+
+                    if (ragResults.Count > 0)
+                    {
+                        var ragLookup = ragResults.ToDictionary(r => r.UserId, r => r);
+
+                        // Merge AI reasoning back into results
+                        sortedResults = sortedResults.Select(r =>
+                        {
+                            if (ragLookup.TryGetValue(r.UserInfo.Id, out var rag))
+                            {
+                                return r with
+                                {
+                                    AiReason = rag.Reason,
+                                    MatchScore = rag.AdjustedScore
+                                };
+                            }
+                            return r;
+                        })
+                        .OrderByDescending(r => r.MatchScore)
+                        .ToList();
+
+                        _logger.LogInformation("[SEMANTIC_RAG] Merged AI reasoning for {Count} candidates", ragResults.Count);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Graceful degradation: RAG failed, return vector-only results
+                    _logger.LogWarning(ex, "[SEMANTIC_RAG_FALLBACK] RAG ranking failed, returning vector-only results");
+                }
+            }
+
+            return sortedResults;
         }
         catch (Exception ex)
         {
@@ -181,102 +281,100 @@ public class CandidateSearchService : ICandidateSearchService
     {
         try
         {
-            var candidatesWithScore = new List<(UserProfile Profile, double MatchScore)>();
-
+            // Resolve keyword → matching skill IDs (so "C#" finds candidates with C# skill)
+            List<string>? mergedSkillIds = skillIds != null ? new List<string>(skillIds) : null;
             if (!string.IsNullOrWhiteSpace(keyword))
             {
-                // Vector search for keyword
-                var embedding = await _geminiService.GenerateEmbeddingAsync(keyword);
-                var vectorResults = await _profileRepo.SearchByVectorAsync(embedding, limit: 100); // Get top 100 semantic matches
-                
-                foreach (var result in vectorResults)
+                var allSkills = await _skillRepo.GetAllAsync();
+                var matchedSkillIds = allSkills
+                    .Where(s => s.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                    .Select(s => s.Id)
+                    .ToList();
+
+                if (matchedSkillIds.Any())
                 {
-                    candidatesWithScore.Add((result.Profile, result.Score * 100));
-                }
-            }
-            else
-            {
-                // No keyword, get all profiles
-                var allProfiles = await _profileRepo.GetAllAsync();
-                foreach (var profile in allProfiles)
-                {
-                    candidatesWithScore.Add((profile, 0)); // Default score, will be updated by skill match
+                    mergedSkillIds ??= new List<string>();
+                    mergedSkillIds.AddRange(matchedSkillIds);
+                    mergedSkillIds = mergedSkillIds.Distinct().ToList();
+                    _logger.LogInformation("[DB_SEARCH] Keyword '{Keyword}' matched {Count} skills: {SkillIds}", 
+                        keyword, matchedSkillIds.Count, string.Join(", ", matchedSkillIds));
                 }
             }
 
-            // Apply filters (in-memory)
-            var filteredCandidates = candidatesWithScore.AsEnumerable();
+            // Pure DB search — no embeddings needed
+            // Pass both keyword (text search) and merged skill IDs (includes keyword-matched skills)
+            var profiles = await _profileRepo.SearchByFiltersAsync(
+                keyword, mergedSkillIds, location, experience, minHourlyRate, maxHourlyRate, page, pageSize);
 
-            // Filter specific user role
-            var allUsers = await _userRepo.GetByRoleAsync("Candidate");
-            var userDict = allUsers.ToDictionary(u => u.Id);
-            filteredCandidates = filteredCandidates.Where(c => userDict.ContainsKey(c.Profile.UserId));
+            // Filter to Candidate role only
+            var allCandidateUsers = await _userRepo.GetByRoleAsync("Candidate");
+            var candidateUserIds = new HashSet<string>(allCandidateUsers.Select(u => u.Id));
 
-            // Apply skill filter
-            if (skillIds != null && skillIds.Any())
+            var candidateProfiles = profiles.Where(p => candidateUserIds.Contains(p.UserId)).ToList();
+
+            // Calculate match scores based on how many filter criteria match
+            var scoredResults = candidateProfiles.Select(profile =>
             {
-                var skillSet = new HashSet<string>(skillIds);
-                filteredCandidates = filteredCandidates.Where(c =>
-                    c.Profile.SkillIds != null && c.Profile.SkillIds.Any(s => skillSet.Contains(s)));
-            }
+                double score = 0;
+                int criteriaCount = 0;
 
-            // Apply location filter
-            if (!string.IsNullOrWhiteSpace(location))
-            {
-                filteredCandidates = filteredCandidates.Where(c =>
-                    (!string.IsNullOrWhiteSpace(c.Profile.Location) && c.Profile.Location.Contains(location, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(c.Profile.Address) && c.Profile.Address.Contains(location, StringComparison.OrdinalIgnoreCase)));
-            }
+                // Keyword match score
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    criteriaCount++;
+                    var kw = keyword.ToLowerInvariant();
+                    var textFields = $"{profile.Title} {profile.Bio} {profile.Experience} {profile.Education} {profile.Location}".ToLowerInvariant();
+                    if (textFields.Contains(kw)) score += 25;
+                }
 
-            // Apply experience filter
-            if (!string.IsNullOrWhiteSpace(experience))
-            {
-                filteredCandidates = filteredCandidates.Where(c =>
-                    !string.IsNullOrWhiteSpace(c.Profile.Experience) && c.Profile.Experience.Contains(experience, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Apply hourly rate filter
-            if (minHourlyRate.HasValue)
-            {
-                filteredCandidates = filteredCandidates.Where(c => c.Profile.HourlyRate >= minHourlyRate.Value);
-            }
-
-            if (maxHourlyRate.HasValue)
-            {
-                filteredCandidates = filteredCandidates.Where(c => c.Profile.HourlyRate <= maxHourlyRate.Value);
-            }
-
-            // Recalculate match scores based on skills if filters heavily rely on them?
-            // Or keep vector score if available?
-            // Simple logic: If Vector Score exists (>0), use it. Else calculate skill overlap.
-            
-            var finalResults = new List<(UserProfile Profile, double MatchScore)>();
-            
-            foreach (var (profile, vectorScore) in filteredCandidates)
-            {
-                double finalScore = vectorScore;
-
+                // Skill match score
                 if (skillIds != null && skillIds.Any())
                 {
-                    // Boost score if skills match exact IDs requested
-                    var skillSetForScoring = new HashSet<string>(skillIds);
-                     if (profile.SkillIds != null)
-                     {
-                        var matchedSkills = skillSetForScoring.Intersect(profile.SkillIds).Count();
-                        var skillScore = (double)matchedSkills / skillSetForScoring.Count * 100.0;
-                        if (finalScore == 0) finalScore = skillScore; // If no keyword search, use skill score
-                        else finalScore = (finalScore * 0.7) + (skillScore * 0.3); // Weighted average
-                     }
+                    criteriaCount++;
+                    if (profile.SkillIds != null)
+                    {
+                        var skillSet = new HashSet<string>(skillIds);
+                        var matchedCount = profile.SkillIds.Count(s => skillSet.Contains(s));
+                        score += (double)matchedCount / skillIds.Count * 40; // Up to 40 points
+                    }
                 }
-                
-                finalResults.Add((profile, finalScore));
-            }
 
-            // Pagination
-            return finalResults
-                .OrderByDescending(x => x.MatchScore)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize);
+                // Location match score
+                if (!string.IsNullOrWhiteSpace(location))
+                {
+                    criteriaCount++;
+                    if ((!string.IsNullOrWhiteSpace(profile.Location) && profile.Location.Contains(location, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrWhiteSpace(profile.Address) && profile.Address.Contains(location, StringComparison.OrdinalIgnoreCase)))
+                        score += 20;
+                }
+
+                // Experience match score
+                if (!string.IsNullOrWhiteSpace(experience))
+                {
+                    criteriaCount++;
+                    if (!string.IsNullOrWhiteSpace(profile.Experience) && profile.Experience.Contains(experience, StringComparison.OrdinalIgnoreCase))
+                        score += 15;
+                }
+
+                // If no filters were specified, give a base score based on profile completeness
+                if (criteriaCount == 0)
+                {
+                    score = 50; // Base score for all profiles when no filters
+                    if (!string.IsNullOrWhiteSpace(profile.Bio)) score += 10;
+                    if (profile.SkillIds != null && profile.SkillIds.Any()) score += 15;
+                    if (!string.IsNullOrWhiteSpace(profile.Experience)) score += 15;
+                    if (!string.IsNullOrWhiteSpace(profile.Title)) score += 10;
+                }
+
+                return (Profile: profile, MatchScore: Math.Min(score, 100));
+            })
+            .OrderByDescending(x => x.MatchScore)
+            .ToList();
+
+            _logger.LogInformation("[DB_SEARCH] SearchCandidatesWithFiltersAsync: {Count} results (keyword={Keyword}, skillIds={SkillCount})", 
+                scoredResults.Count, keyword ?? "none", skillIds?.Count ?? 0);
+
+            return scoredResults;
         }
         catch (Exception ex)
         {

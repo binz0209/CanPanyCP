@@ -3,6 +3,8 @@ using CanPany.Application.DTOs;
 using CanPany.Application.Common.Models;
 using CanPany.Application.Common.Constants;
 using CanPany.Domain.Entities;
+using CanPany.Domain.Interfaces.Repositories;
+using CanPany.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -51,12 +53,32 @@ public class CandidatesController : ControllerBase
         try
         {
             var candidates = await _candidateSearchService.SearchCandidatesAsync(jobId, limit);
-            var result = candidates.Select(c => new 
+            var userIds = candidates.Select(c => c.Profile.UserId).Distinct().ToList();
+            var users = new Dictionary<string, Domain.Entities.User>();
+            foreach (var uid in userIds)
             {
-                c.Profile,
-                c.MatchScore
+                var u = await _userService.GetByIdAsync(uid);
+                if (u != null) users[uid] = u;
+            }
+            var result = candidates.Select(c =>
+            {
+                users.TryGetValue(c.Profile.UserId, out var user);
+                return new
+                {
+                    c.Profile,
+                    c.MatchScore,
+                    UserInfo = user != null ? new { user.Id, user.FullName, user.Email, user.AvatarUrl, user.Role } : null
+                };
             });
             return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.Retrieved)));
+        }
+        catch (GeminiRateLimitException ex)
+        {
+            _logger.LogWarning(ex, "Gemini rate limit hit during candidate search");
+            Response.Headers["Retry-After"] = ex.RetryAfterSeconds.ToString();
+            return StatusCode(429, ApiResponse.CreateError(
+                $"AI service is temporarily busy. Please try again in {ex.RetryAfterSeconds} seconds.",
+                "RateLimited"));
         }
         catch (Exception ex)
         {
@@ -85,13 +107,33 @@ public class CandidatesController : ControllerBase
             var candidates = await _candidateSearchService.SearchCandidatesWithFiltersAsync(
                 keyword, skillIds, location, experience, minHourlyRate, maxHourlyRate, page, pageSize);
             
-            var result = candidates.Select(c => new 
+            var userIds = candidates.Select(c => c.Profile.UserId).Distinct().ToList();
+            var users = new Dictionary<string, Domain.Entities.User>();
+            foreach (var uid in userIds)
             {
-                c.Profile,
-                c.MatchScore
+                var u = await _userService.GetByIdAsync(uid);
+                if (u != null) users[uid] = u;
+            }
+            var result = candidates.Select(c =>
+            {
+                users.TryGetValue(c.Profile.UserId, out var user);
+                return new
+                {
+                    c.Profile,
+                    c.MatchScore,
+                    UserInfo = user != null ? new { user.Id, user.FullName, user.Email, user.AvatarUrl, user.Role } : null
+                };
             });
 
             return Ok(ApiResponse.CreateSuccess(result, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.Retrieved)));
+        }
+        catch (GeminiRateLimitException ex)
+        {
+            _logger.LogWarning(ex, "Gemini rate limit hit during filter search");
+            Response.Headers["Retry-After"] = ex.RetryAfterSeconds.ToString();
+            return StatusCode(429, ApiResponse.CreateError(
+                $"AI service is temporarily busy. Please try again in {ex.RetryAfterSeconds} seconds.",
+                "RateLimited"));
         }
         catch (Exception ex)
         {
@@ -101,7 +143,7 @@ public class CandidatesController : ControllerBase
     }
 
     /// <summary>
-    /// Semantic search for candidates based on job description
+    /// Semantic search for candidates based on job description (with RAG AI reasoning)
     /// </summary>
     [HttpPost("semantic-search")]
     [Authorize(Roles = "Company,Admin")]
@@ -111,6 +153,14 @@ public class CandidatesController : ControllerBase
         {
             var results = await _candidateSearchService.SemanticSearchAsync(request);
             return Ok(ApiResponse.CreateSuccess(results, _i18nService.GetDisplayMessage(I18nKeys.Success.Candidate.Retrieved)));
+        }
+        catch (GeminiRateLimitException ex)
+        {
+            _logger.LogWarning(ex, "Gemini rate limit hit during semantic search");
+            Response.Headers["Retry-After"] = ex.RetryAfterSeconds.ToString();
+            return StatusCode(429, ApiResponse.CreateError(
+                $"AI service is temporarily busy. Please try again in {ex.RetryAfterSeconds} seconds.",
+                "RateLimited"));
         }
         catch (Exception ex)
         {
@@ -371,6 +421,99 @@ public class CandidatesController : ControllerBase
         {
             _logger.LogError(ex, "Error getting unlocked candidates");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetUnlockedCandidatesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Admin: Check embedding health stats
+    /// </summary>
+    [HttpGet("admin/embedding-status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetEmbeddingStatus(
+        [FromServices] IUserProfileRepository profileRepo)
+    {
+        try
+        {
+            var allProfiles = await profileRepo.GetAllAsync();
+            var profileList = allProfiles.ToList();
+            var withEmbedding = profileList.Count(p => p.Embedding != null && p.Embedding.Count > 0);
+            var dims = profileList
+                .Where(p => p.Embedding != null && p.Embedding.Count > 0)
+                .GroupBy(p => p.Embedding!.Count)
+                .Select(g => new { Dimension = g.Key, Count = g.Count() })
+                .ToList();
+
+            return Ok(ApiResponse.CreateSuccess(new
+            {
+                totalProfiles = profileList.Count,
+                withEmbedding,
+                withoutEmbedding = profileList.Count - withEmbedding,
+                dimensionBreakdown = dims
+            }, "Embedding status retrieved"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking embedding status");
+            return StatusCode(500, ApiResponse.CreateError("Failed to get embedding status", "EmbeddingStatusFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Admin: Re-generate all profile embeddings with current model
+    /// </summary>
+    [HttpPost("admin/regenerate-embeddings")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RegenerateEmbeddings(
+        [FromServices] IGeminiService geminiService,
+        [FromServices] IUserProfileRepository profileRepo)
+    {
+        try
+        {
+            var allProfiles = await profileRepo.GetAllAsync();
+            var profileList = allProfiles.ToList();
+            int updated = 0;
+            int failed = 0;
+
+            foreach (var profile in profileList)
+            {
+                try
+                {
+                    var text = $"{profile.Title} {profile.Bio} {profile.Experience} {profile.Location} {string.Join(" ", profile.SkillIds ?? new List<string>())}";
+                    if (string.IsNullOrWhiteSpace(text.Trim())) continue;
+
+                    var user = await _userService.GetByIdAsync(profile.UserId);
+                    var fullName = user?.FullName ?? "";
+                    text = $"{fullName} {text}";
+
+                    var embedding = await geminiService.GenerateEmbeddingAsync(text);
+                    profile.Embedding = embedding;
+                    await profileRepo.UpdateAsync(profile);
+                    updated++;
+
+                    _logger.LogInformation("[REGEN_EMBED] Updated embedding for profile {Id} (dim={Dim})", profile.Id, embedding.Count);
+                    
+                    // Small delay to avoid rate limiting
+                    await Task.Delay(200);
+                }
+                catch (Exception ex)
+                {
+                    failed++;
+                    _logger.LogWarning(ex, "[REGEN_EMBED] Failed for profile {Id}", profile.Id);
+                    await Task.Delay(1000);
+                }
+            }
+
+            return Ok(ApiResponse.CreateSuccess(new
+            {
+                total = profileList.Count,
+                updated,
+                failed
+            }, $"Re-generated {updated} embeddings ({failed} failed)"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error regenerating embeddings");
+            return StatusCode(500, ApiResponse.CreateError("Failed to regenerate embeddings", "RegenerateEmbeddingsFailed"));
         }
     }
 

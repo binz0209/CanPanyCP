@@ -19,7 +19,6 @@ const navIcons: Record<string, ReactNode> = {
     'sidebar.dashboard': <LayoutDashboard className="h-5 w-5" />,
     'sidebar.companyProfile': <Building2 className="h-5 w-5" />,
     'sidebar.jobManagement': <BriefcaseBusiness className="h-5 w-5" />,
-    'sidebar.candidateSearch': <Search className="h-5 w-5" />,
     'sidebar.messages': <MessageSquare className="h-5 w-5" />,
     'sidebar.notifications': <Bell className="h-5 w-5" />,
 };

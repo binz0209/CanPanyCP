@@ -62,7 +62,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                     "INVALID_PAYLOAD");
             }
 
-            await ReportProgressAsync(job.JobId, 10, "Fetching GitHub repositories...");
+            await ReportProgressAsync(job.JobId, 10, "backgroundJobs.steps.fetchingRepos");
 
             // Step 1: Fetch GitHub data
             var contributionSummary = await _gitHubService.GetUserContributionSummaryAsync(
@@ -82,8 +82,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                     "NO_REPOSITORIES");
             }
 
-            await ReportProgressAsync(job.JobId, 40,
-                $"Found {contributionSummary.TotalRepositories} repositories. Analyzing languages...");
+            await ReportProgressAsync(job.JobId, 40, "backgroundJobs.steps.analyzingLangs", new Dictionary<string, object> { ["repos"] = contributionSummary.TotalRepositories });
 
             // Step 2: Prepare data summary
             var languagePercentages = contributionSummary.GetLanguagePercentages();
@@ -98,13 +97,13 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                 contributionSummary.TotalContributions
             );
 
-            await ReportProgressAsync(job.JobId, 60, "Preparing data for skill analysis...");
+            await ReportProgressAsync(job.JobId, 60, "backgroundJobs.steps.preparingData");
 
             // Step 3: Analyze skills with Gemini (if requested)
             SkillAnalysisDto? skillAnalysisDto = null;
             if (payload.AnalyzeSkills)
             {
-                await ReportProgressAsync(job.JobId, 70, "Analyzing skills with AI...");
+                await ReportProgressAsync(job.JobId, 70, "backgroundJobs.steps.analyzingAi");
 
                 // Use Gemini service to analyze skills
                 skillAnalysisDto = await _geminiService.AnalyzeGitHubSkillsAsync(
@@ -121,7 +120,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                     skillAnalysisDto != null ? string.Join(", ", skillAnalysisDto.PrimarySkills) : "None");
             }
 
-            await ReportProgressAsync(job.JobId, 80, "Saving analysis to RAG storage...");
+            await ReportProgressAsync(job.JobId, 80, "backgroundJobs.steps.savingRag");
 
             // Step 4: Save to RAG Storage (GitHubAnalysisResult)
             var analysisResult = new GitHubAnalysisResult
@@ -177,7 +176,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                 await SyncToUserProfileAsync(payload.UserId, savedAnalysis);
             }
 
-            await ReportProgressAsync(job.JobId, 90, "Finalizing analysis results...");
+            await ReportProgressAsync(job.JobId, 90, "backgroundJobs.steps.finalizing");
 
             // Step 6: Build result
             var result = new
@@ -204,7 +203,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
                 AnalyzedAt = savedAnalysis.AnalyzedAt
             };
 
-            await ReportProgressAsync(job.JobId, 100, "GitHub analysis completed successfully!");
+            await ReportProgressAsync(job.JobId, 100, "backgroundJobs.steps.successGithub");
 
             Logger.LogInformation(
                 "[GITHUB_ANALYSIS_SUCCESS] JobId: {JobId} | AnalysisId: {AnalysisId} | User: {Username} | Repos: {Repos} | Skills: {Skills}",
@@ -233,14 +232,13 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
             Logger.LogWarning(
                 "[GITHUB_ANALYSIS_RATE_LIMITED] JobId: {JobId} | RetryAfter: {RetryAfter}s",
                 job.JobId, rateLimitEx.RetryAfterSeconds);
-            await ReportProgressAsync(job.JobId, -1,
-                $"Gemini AI rate limited. Will retry after {rateLimitEx.RetryAfterSeconds}s...");
+            await ReportProgressAsync(job.JobId, -1, "backgroundJobs.steps.rateLimited", new Dictionary<string, object> { ["seconds"] = rateLimitEx.RetryAfterSeconds });
             throw; // Re-throw for Worker Polly retry
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "[GITHUB_ANALYSIS_FAILED] JobId: {JobId}", job.JobId);
-            await ReportProgressAsync(job.JobId, -1, $"Error: {ex.Message}");
+            await ReportProgressAsync(job.JobId, -1, "backgroundJobs.steps.error", new Dictionary<string, object> { ["message"] = ex.Message });
             return JobResult.FailureResult(ex.Message, ex.GetType().Name);
         }
     }

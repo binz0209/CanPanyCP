@@ -119,6 +119,7 @@ export interface CandidateStatistics {
 export interface CandidateSearchResult {
     profile: UserProfile;
     matchScore: number;
+    aiReason?: string;
     userInfo?: {
         id: string;
         fullName: string;

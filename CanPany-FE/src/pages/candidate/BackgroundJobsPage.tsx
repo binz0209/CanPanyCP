@@ -170,7 +170,7 @@ function JobRow({ job }: JobRowProps) {
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="text-sm font-semibold text-gray-900 truncate">
-                                {job.jobTitle || job.jobType || 'Background Job'}
+                                {t(job.jobTitle || job.jobType || 'backgroundJobs.titles.fallback', { defaultValue: job.jobTitle || job.jobType || 'Background Job', ...job.details })}
                             </span>
                             <StatusBadge status={job.status} />
                         </div>
@@ -185,7 +185,7 @@ function JobRow({ job }: JobRowProps) {
                         )}
                         <p className="text-xs text-gray-400 mt-1">
                             {isActive
-                                ? (job.currentStep || t('backgroundJobs.row.processing'))
+                                ? (job.currentStep ? t(job.currentStep, { defaultValue: job.currentStep, ...job.details }) : t('backgroundJobs.row.processing'))
                                 : t('backgroundJobs.row.completedAt', { time: formatDateTime(job.completedAt) })
                             }
                         </p>
