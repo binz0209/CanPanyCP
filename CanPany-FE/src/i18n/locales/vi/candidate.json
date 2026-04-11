@@ -429,9 +429,6 @@
       "cancel": "Hủy",
       "edit": "Chỉnh sửa",
       "uploadAvatar": "Tải ảnh đại diện",
-      "sync": "Đồng bộ",
-      "syncing": "Đang đồng bộ...",
-      "syncLinkedin": "Đồng bộ LinkedIn",
       "viewProgress": "Xem tiến trình"
     },
     "avatar": {
@@ -447,13 +444,7 @@
     "social": {
       "title": "Liên kết mạng xã hội"
     },
-    "linkedin": {
-      "modal": {
-        "title": "Đồng bộ LinkedIn",
-        "subtitle": "Nhập dữ liệu LinkedIn của bạn để đồng bộ hồ sơ",
-        "placeholder": "Dán dữ liệu LinkedIn tại đây (JSON format hoặc profile URL)"
-      }
-    },
+
     "github": {
       "linked": "Đã liên kết GitHub",
       "analyzeRepos": "Chọn repos & Trích xuất skills",
@@ -492,8 +483,7 @@
       "githubLinked": "Đã liên kết GitHub thành công! (@{{username}})",
       "githubLinkFailed": "Liên kết GitHub thất bại: {{error}}",
       "unknownError": "Lỗi không xác định",
-      "linkedinSynced": "Đồng bộ LinkedIn thành công!",
-      "linkedinSyncFailed": "Đồng bộ LinkedIn thất bại",
+
       "repoAnalysisStarted": "Đang phân tích repositories và trích xuất skills...",
       "repoAnalysisFailed": "Không thể bắt đầu phân tích. Vui lòng thử lại.",
       "recommendationSyncStarted": "Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm.",

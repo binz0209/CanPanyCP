@@ -182,7 +182,7 @@ if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString)
                 BackupStrategy = new CollectionMongoBackupStrategy()
             },
             Prefix = "hangfire",
-            CheckConnection = true,
+            CheckConnection = false,
             CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
         }));
 
