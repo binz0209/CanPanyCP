@@ -1,5 +1,7 @@
 using CanPany.Application.Interfaces.Interceptors;
+using CanPany.Application.Common.Attributes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
@@ -37,8 +39,12 @@ public class GlobalAuditMiddleware
         var requestPath = context.Request.Path.Value ?? string.Empty;
         var httpMethod = context.Request.Method;
 
+        // Extract AuditLogAttribute
+        var endpoint = context.GetEndpoint();
+        var auditAttr = endpoint?.Metadata.GetMetadata<AuditLogAttribute>();
+
         // Skip health checks and swagger
-        if (ShouldSkipAudit(requestPath))
+        if (ShouldSkipAudit(context))
         {
             await _next(context);
             return;
@@ -70,18 +76,22 @@ public class GlobalAuditMiddleware
             // Re-fetch user ID in case authentication happened during the pipeline
             var authenticatedUserId = GetUserId(context) ?? userId;
 
-            // Log audit event
-            await auditLogger.LogAuditEventAsync(new AuditEvent
+            // Log audit event if endpoint has the attribute
+            if (auditAttr != null)
             {
-                EventType = "HTTP_REQUEST",
-                Action = httpMethod,
-                UserId = authenticatedUserId, // Use the authenticated ID
-                CorrelationId = correlationId,
-                ResourcePath = requestPath,
-                ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
-                IsSuccess = context.Response.StatusCode < 400,
-                Metadata = requestMetadata
-            });
+                await auditLogger.LogAuditEventAsync(new AuditEvent
+                {
+                    EventType = "HTTP_REQUEST",
+                    Action = auditAttr.I18nActionKey,
+                    EntityType = auditAttr.EntityType,
+                    UserId = authenticatedUserId, // Use the authenticated ID
+                    CorrelationId = correlationId,
+                    ResourcePath = requestPath,
+                    ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
+                    IsSuccess = context.Response.StatusCode < 400,
+                    Metadata = requestMetadata
+                });
+            }
 
             // Track security event for authorization failures
             if (context.Response.StatusCode == 401 || context.Response.StatusCode == 403)
@@ -133,8 +143,10 @@ public class GlobalAuditMiddleware
         }
     }
 
-    private static bool ShouldSkipAudit(string path)
+    private static bool ShouldSkipAudit(HttpContext context)
     {
+        var path = context.Request.Path.Value ?? string.Empty;
+
         var skipPaths = new[]
         {
             "/health",
@@ -144,7 +156,10 @@ public class GlobalAuditMiddleware
             "/_vs"
         };
 
-        return skipPaths.Any(skip => path.StartsWith(skip, StringComparison.OrdinalIgnoreCase));
+        if (skipPaths.Any(skip => path.StartsWith(skip, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return false;
     }
 
     private static bool IsAuthenticationEndpoint(string path)
@@ -172,6 +187,14 @@ public class GlobalAuditMiddleware
                context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     }
 
+    private static string? GetUserFullName(HttpContext context)
+    {
+        return context.User?.FindFirst("name")?.Value ??
+               context.User?.FindFirst("FullName")?.Value ??
+               context.User?.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ??
+               context.User?.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+    }
+
     private Dictionary<string, object?> CaptureRequestMetadata(HttpContext context)
     {
         var metadata = new Dictionary<string, object?>
@@ -183,7 +206,8 @@ public class GlobalAuditMiddleware
             ["ContentType"] = context.Request.ContentType,
             ["ContentLength"] = context.Request.ContentLength,
             ["IpAddress"] = GetClientIpAddress(context),
-            ["UserAgent"] = context.Request.Headers["User-Agent"].ToString()
+            ["UserAgent"] = context.Request.Headers["User-Agent"].ToString(),
+            ["UserFullName"] = GetUserFullName(context)
         };
 
         // Capture headers (masked)

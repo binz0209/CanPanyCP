@@ -11,3 +11,4 @@ export { walletApi } from './wallet.api';
 export { adminApi } from './admin.api';
 export { consentApi } from './consent.api';
 export { contractsApi, reviewsApi } from './contracts.api';
+export { conversationsApi } from './conversations.api';

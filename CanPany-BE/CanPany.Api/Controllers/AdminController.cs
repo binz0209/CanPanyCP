@@ -5,6 +5,7 @@ using CanPany.Application.DTOs;
 using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CanPany.Application.Common.Attributes;
 
 namespace CanPany.Api.Controllers;
 
@@ -147,6 +148,7 @@ public class AdminController : ControllerBase
     /// UC-44: Ban User
     /// </summary>
     [HttpPut("users/{id}/ban")]
+    [AuditLog("User", "auditLogs.actions.banUser")]
     public async Task<IActionResult> BanUser(string id)
     {
         try
@@ -168,6 +170,7 @@ public class AdminController : ControllerBase
     /// UC-44: Unban User
     /// </summary>
     [HttpPut("users/{id}/unban")]
+    [AuditLog("User", "auditLogs.actions.unbanUser")]
     public async Task<IActionResult> UnbanUser(string id)
     {
         try
@@ -190,6 +193,7 @@ public class AdminController : ControllerBase
     /// DELETE /admin/users/{id}
     /// </summary>
     [HttpDelete("users/{id}")]
+    [AuditLog("User", "auditLogs.actions.deleteUser")]
     public async Task<IActionResult> DeleteUser(string id)
     {
         try
@@ -271,6 +275,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-08: Approve Company Verification
     /// </summary>
     [HttpPut("companies/{id}/verify/approve")]
+    [AuditLog("Company", "auditLogs.actions.approveCompany")]
     public async Task<IActionResult> ApproveVerification(string id)
     {
         try
@@ -292,6 +297,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-09: Reject Company Verification
     /// </summary>
     [HttpPut("companies/{id}/verify/reject")]
+    [AuditLog("Company", "auditLogs.actions.rejectCompany")]
     public async Task<IActionResult> RejectVerification(string id, [FromBody] RejectVerificationRequest request)
     {
         try
@@ -354,6 +360,7 @@ public class AdminController : ControllerBase
     /// UC-46: Hide Job (Violation)
     /// </summary>
     [HttpPut("jobs/{id}/hide")]
+    [AuditLog("Job", "auditLogs.actions.hideJob")]
     public async Task<IActionResult> HideJob(string id, [FromBody] HideJobRequest request)
     {
         try
@@ -375,6 +382,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-12: Delete Job
     /// </summary>
     [HttpDelete("jobs/{id}")]
+    [AuditLog("Job", "auditLogs.actions.deleteJob")]
     public async Task<IActionResult> DeleteJob(string id)
     {
         try
@@ -434,6 +442,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-13: Create Category
     /// </summary>
     [HttpPost("categories")]
+    [AuditLog("Category", "auditLogs.actions.createCategory")]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryRequest request)
     {
         try
@@ -453,6 +462,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-14: Update Category
     /// </summary>
     [HttpPut("categories/{id}")]
+    [AuditLog("Category", "auditLogs.actions.updateCategory")]
     public async Task<IActionResult> UpdateCategory(string id, [FromBody] UpdateCategoryRequest request)
     {
         try
@@ -476,6 +486,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-15: Delete Category
     /// </summary>
     [HttpDelete("categories/{id}")]
+    [AuditLog("Category", "auditLogs.actions.deleteCategory")]
     public async Task<IActionResult> DeleteCategory(string id)
     {
         try
@@ -538,6 +549,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-16: Create Skill
     /// </summary>
     [HttpPost("skills")]
+    [AuditLog("Skill", "auditLogs.actions.createSkill")]
     public async Task<IActionResult> CreateSkill([FromBody] CreateSkillRequest request)
     {
         try
@@ -557,6 +569,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-17: Update Skill
     /// </summary>
     [HttpPut("skills/{id}")]
+    [AuditLog("Skill", "auditLogs.actions.updateSkill")]
     public async Task<IActionResult> UpdateSkill(string id, [FromBody] UpdateSkillRequest request)
     {
         try
@@ -581,6 +594,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-18: Delete Skill
     /// </summary>
     [HttpDelete("skills/{id}")]
+    [AuditLog("Skill", "auditLogs.actions.deleteSkill")]
     public async Task<IActionResult> DeleteSkill(string id)
     {
         try
@@ -640,6 +654,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-19: Create Banner
     /// </summary>
     [HttpPost("banners")]
+    [AuditLog("Banner", "auditLogs.actions.createBanner")]
     public async Task<IActionResult> CreateBanner([FromBody] CreateBannerRequest request)
     {
         try
@@ -666,6 +681,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-20: Update Banner
     /// </summary>
     [HttpPut("banners/{id}")]
+    [AuditLog("Banner", "auditLogs.actions.updateBanner")]
     public async Task<IActionResult> UpdateBanner(string id, [FromBody] UpdateBannerRequest request)
     {
         try
@@ -694,6 +710,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-21: Delete Banner
     /// </summary>
     [HttpDelete("banners/{id}")]
+    [AuditLog("Banner", "auditLogs.actions.deleteBanner")]
     public async Task<IActionResult> DeleteBanner(string id)
     {
         try
@@ -804,6 +821,7 @@ public class AdminController : ControllerBase
     /// DELETE /admin/premium-packages/{id}
     /// </summary>
     [HttpDelete("premium-packages/{id}")]
+    [AuditLog("PremiumPackage", "auditLogs.actions.deletePremium")]
     public async Task<IActionResult> DeletePremiumPackage(string id)
     {
         try
@@ -910,6 +928,7 @@ public class AdminController : ControllerBase
     /// UC-ADM-24: Approve/Reject Payment Request
     /// </summary>
     [HttpPut("payments/{id}/approve")]
+    [AuditLog("Payment", "auditLogs.actions.approvePayment")]
     public async Task<IActionResult> ApprovePayment(string id)
     {
         try
@@ -928,6 +947,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("payments/{id}/reject")]
+    [AuditLog("Payment", "auditLogs.actions.rejectPayment")]
     public async Task<IActionResult> RejectPayment(string id, [FromBody] RejectPaymentRequest request)
     {
         try

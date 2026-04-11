@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, MessageSquare, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { applicationsApi, candidateApi, jobsApi } from '../../api';
+import { applicationsApi, candidateApi, jobsApi, conversationsApi } from '../../api';
 import { Button, Card } from '../../components/ui';
 import { companyPaths } from '../../lib/companyNavigation';
 import {
@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 
 export function CompanyApplicationDetailPage() {
     const { applicationId } = useParams<{ applicationId: string }>();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { t } = useTranslation('company');
     const [rejectReason, setRejectReason] = useState('');
@@ -155,6 +156,16 @@ export function CompanyApplicationDetailPage() {
         },
     });
 
+    const createConversationMutation = useMutation({
+        mutationFn: () => conversationsApi.getOrCreateConversation(applicationQuery.data!.candidateId, applicationQuery.data!.jobId),
+        onSuccess: (conversation) => {
+            navigate(companyPaths.messageThread(conversation.id));
+        },
+        onError: () => {
+            toast.error(t('applicationDetail.toastMessageFailed', 'Không thể khởi tạo cuộc trò chuyện'));
+        }
+    });
+
     const cvAccessMessage = useMemo(() => {
         if (!candidateCVsQuery.error) return null;
         if (isAxiosError(candidateCVsQuery.error) && candidateCVsQuery.error.response?.status === 403) {
@@ -251,12 +262,14 @@ export function CompanyApplicationDetailPage() {
                 description={t('applicationDetail.description')}
                 backLink="/company/applications"
                 actions={
-                    <Link to={messagingPath}>
-                        <Button variant="outline">
-                            <MessageSquare className="h-4 w-4" />
-                            {t('applicationDetail.btnMessage')}
-                        </Button>
-                    </Link>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => createConversationMutation.mutate()}
+                        isLoading={createConversationMutation.isPending}
+                    >
+                        <MessageSquare className="h-4 w-4" />
+                        {t('applicationDetail.btnMessage')}
+                    </Button>
                 }
             />
 

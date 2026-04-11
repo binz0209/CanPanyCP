@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Headers;
+using CanPany.Application.Common.Attributes;
 
 namespace CanPany.Api.Controllers;
 
@@ -51,6 +52,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("register")]
+    [AuditLog("User", "auditLogs.actions.register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try
@@ -118,6 +120,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("login")]
+    [AuditLog("User", "auditLogs.actions.login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
@@ -148,6 +151,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [Authorize]
     [HttpPost("logout")]
+    [AuditLog("User", "auditLogs.actions.logout")]
     public async Task<IActionResult> Logout()
     {
         try
@@ -175,6 +179,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [Authorize]
     [HttpPost("change-password")]
+    [AuditLog("User", "auditLogs.actions.changePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
         try

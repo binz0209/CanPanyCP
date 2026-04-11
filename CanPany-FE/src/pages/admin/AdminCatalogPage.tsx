@@ -1,467 +1,483 @@
-import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Button, Card } from '../../components/ui';
+import {
+    Tags, Wrench, Image, Package, Plus, Pencil, Trash2, Check, X,
+    Loader2, Search
+} from 'lucide-react';
+import { Button, Badge, Card } from '../../components/ui';
 import { adminApi } from '../../api';
 
-export function AdminCatalogPage() {
-    const { t } = useTranslation('admin');
+type Tab = 'categories' | 'skills' | 'banners' | 'packages';
 
-    const title = t('placeholders.catalog.title');
-    const desc = t('placeholders.catalog.description');
+const TABS: { id: Tab; label: string; Icon: any }[] = [
+    { id: 'categories', label: 'Categories', Icon: Tags },
+    { id: 'skills',     label: 'Skills',      Icon: Wrench },
+    { id: 'banners',    label: 'Banners',      Icon: Image },
+    { id: 'packages',   label: 'Premium Pkgs', Icon: Package },
+];
 
-    // Category
-    const [categoryCreateName, setCategoryCreateName] = useState('');
-    const [categoryUpdateId, setCategoryUpdateId] = useState('');
-    const [categoryUpdateName, setCategoryUpdateName] = useState('');
-    const [categoryDeleteId, setCategoryDeleteId] = useState('');
-
-    const createCategory = useMutation({
-        mutationFn: () => adminApi.createCategory(categoryCreateName.trim()),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.category.create.success'));
-            setCategoryCreateName('');
-        },
-        onError: () => toast.error(t('catalog.toasts.category.create.error')),
-    });
-
-    const updateCategory = useMutation({
-        mutationFn: () => adminApi.updateCategory(categoryUpdateId.trim(), categoryUpdateName.trim()),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.category.update.success'));
-            setCategoryUpdateId('');
-            setCategoryUpdateName('');
-        },
-        onError: () => toast.error(t('catalog.toasts.category.update.error')),
-    });
-
-    const deleteCategory = useMutation({
-        mutationFn: () => adminApi.deleteCategory(categoryDeleteId.trim()),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.category.delete.success'));
-            setCategoryDeleteId('');
-        },
-        onError: () => toast.error(t('catalog.toasts.category.delete.error')),
-    });
-
-    // Skill
-    const [skillCreateName, setSkillCreateName] = useState('');
-    const [skillCreateCategoryId, setSkillCreateCategoryId] = useState('');
-    const [skillUpdateId, setSkillUpdateId] = useState('');
-    const [skillUpdateName, setSkillUpdateName] = useState('');
-    const [skillUpdateCategoryId, setSkillUpdateCategoryId] = useState('');
-    const [skillDeleteId, setSkillDeleteId] = useState('');
-
-    const createSkill = useMutation({
-        mutationFn: () =>
-            adminApi.createSkill(
-                skillCreateName.trim(),
-                skillCreateCategoryId.trim() || undefined
-            ),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.skill.create.success'));
-            setSkillCreateName('');
-            setSkillCreateCategoryId('');
-        },
-        onError: () => toast.error(t('catalog.toasts.skill.create.error')),
-    });
-
-    const updateSkill = useMutation({
-        mutationFn: () =>
-            adminApi.updateSkill(
-                skillUpdateId.trim(),
-                skillUpdateName.trim(),
-                skillUpdateCategoryId.trim() || undefined
-            ),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.skill.update.success'));
-            setSkillUpdateId('');
-            setSkillUpdateName('');
-            setSkillUpdateCategoryId('');
-        },
-        onError: () => toast.error(t('catalog.toasts.skill.update.error')),
-    });
-
-    const deleteSkill = useMutation({
-        mutationFn: () => adminApi.deleteSkill(skillDeleteId.trim()),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.skill.delete.success'));
-            setSkillDeleteId('');
-        },
-        onError: () => toast.error(t('catalog.toasts.skill.delete.error')),
-    });
-
-    // Banner
-    const [bannerCreateTitle, setBannerCreateTitle] = useState('');
-    const [bannerCreateImageUrl, setBannerCreateImageUrl] = useState('');
-    const [bannerCreateLinkUrl, setBannerCreateLinkUrl] = useState('');
-    const [bannerCreateOrder, setBannerCreateOrder] = useState<number>(0);
-    const [bannerCreateIsActive, setBannerCreateIsActive] = useState(true);
-
-    const [bannerUpdateId, setBannerUpdateId] = useState('');
-    const [bannerUpdateTitle, setBannerUpdateTitle] = useState('');
-    const [bannerUpdateImageUrl, setBannerUpdateImageUrl] = useState('');
-    const [bannerUpdateLinkUrl, setBannerUpdateLinkUrl] = useState('');
-    const [bannerUpdateOrder, setBannerUpdateOrder] = useState<string>('0');
-    const [bannerUpdateIsActive, setBannerUpdateIsActive] = useState<boolean>(true);
-
-    const [bannerDeleteId, setBannerDeleteId] = useState('');
-
-    const createBanner = useMutation({
-        mutationFn: () =>
-            adminApi.createBanner({
-                title: bannerCreateTitle.trim(),
-                imageUrl: bannerCreateImageUrl.trim(),
-                linkUrl: bannerCreateLinkUrl.trim() || undefined,
-                order: bannerCreateOrder,
-                isActive: bannerCreateIsActive,
-            }),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.banner.create.success'));
-            setBannerCreateTitle('');
-            setBannerCreateImageUrl('');
-            setBannerCreateLinkUrl('');
-        },
-        onError: () => toast.error(t('catalog.toasts.banner.create.error')),
-    });
-
-    const updateBanner = useMutation({
-        mutationFn: () => {
-            const payload: any = {
-                title: bannerUpdateTitle.trim() || undefined,
-                imageUrl: bannerUpdateImageUrl.trim() || undefined,
-                linkUrl: bannerUpdateLinkUrl.trim() || undefined,
-                order:
-                    bannerUpdateOrder.trim() === ''
-                        ? undefined
-                        : Number(bannerUpdateOrder.trim()),
-                isActive: bannerUpdateIsActive,
-            };
-            // Remove undefined keys so BE nhận đúng optional fields
-            Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
-            return adminApi.updateBanner(bannerUpdateId.trim(), payload);
-        },
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.banner.update.success'));
-            setBannerUpdateId('');
-            setBannerUpdateTitle('');
-            setBannerUpdateImageUrl('');
-            setBannerUpdateLinkUrl('');
-            setBannerUpdateOrder('0');
-        },
-        onError: () => toast.error(t('catalog.toasts.banner.update.error')),
-    });
-
-    const deleteBanner = useMutation({
-        mutationFn: () => adminApi.deleteBanner(bannerDeleteId.trim()),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.banner.delete.success'));
-            setBannerDeleteId('');
-        },
-        onError: () => toast.error(t('catalog.toasts.banner.delete.error')),
-    });
-
-    // Premium package price
-    const [packageId, setPackageId] = useState('');
-    const [packagePrice, setPackagePrice] = useState<number>(0);
-
-    const updatePackage = useMutation({
-        mutationFn: () => adminApi.updatePackagePrice(packageId.trim(), packagePrice),
-        onSuccess: () => {
-            toast.success(t('catalog.toasts.packagePrice.update.success'));
-            setPackageId('');
-            setPackagePrice(0);
-        },
-        onError: () => toast.error(t('catalog.toasts.packagePrice.update.error')),
-    });
-
+/* ─── tiny shared input ─── */
+function Field({ value, onChange, placeholder, type = 'text' }: {
+    value: string; onChange: (v: string) => void; placeholder?: string; type?: string;
+}) {
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                <p className="mt-1 text-sm text-gray-600">{desc}</p>
-            </div>
+        <input
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+        />
+    );
+}
 
-            <div className="grid gap-4 lg:grid-cols-2">
-                <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.categories')}</h2>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.category.create.nameLabel')}</label>
-                        <input
-                            value={categoryCreateName}
-                            onChange={(e) => setCategoryCreateName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.category.create.namePlaceholder')}
-                        />
-                        <Button
-                            className="bg-[#00b14f] hover:bg-[#00b14f]/90"
-                            disabled={createCategory.isPending || !categoryCreateName.trim()}
-                            onClick={() => createCategory.mutate()}
-                        >
-                            {t('catalog.common.createButton')}
-                        </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.category.update.idLabel')}</label>
-                        <input
-                            value={categoryUpdateId}
-                            onChange={(e) => setCategoryUpdateId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.category.update.idPlaceholder')}
-                        />
-                        <input
-                            value={categoryUpdateName}
-                            onChange={(e) => setCategoryUpdateName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.category.update.namePlaceholder')}
-                        />
-                        <Button
-                            variant="outline"
-                            disabled={updateCategory.isPending || !categoryUpdateId.trim() || !categoryUpdateName.trim()}
-                            onClick={() => updateCategory.mutate()}
-                        >
-                            {t('catalog.common.updateButton')}
-                        </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.category.delete.idLabel')}</label>
-                        <input
-                            value={categoryDeleteId}
-                            onChange={(e) => setCategoryDeleteId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.category.delete.idPlaceholder')}
-                        />
-                        <Button
-                            variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50"
-                            disabled={deleteCategory.isPending || !categoryDeleteId.trim()}
-                            onClick={() => deleteCategory.mutate()}
-                        >
-                            {t('catalog.common.deleteButton')}
-                        </Button>
-                    </div>
-                </Card>
-
-                <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.skills')}</h2>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.skill.create.sectionLabel')}</label>
-                        <input
-                            value={skillCreateName}
-                            onChange={(e) => setSkillCreateName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.skill.create.namePlaceholder')}
-                        />
-                        <input
-                            value={skillCreateCategoryId}
-                            onChange={(e) => setSkillCreateCategoryId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.skill.create.categoryOptionalPlaceholder')}
-                        />
-                        <Button
-                            className="bg-[#00b14f] hover:bg-[#00b14f]/90"
-                            disabled={createSkill.isPending || !skillCreateName.trim()}
-                            onClick={() => createSkill.mutate()}
-                        >
-                            {t('catalog.common.createButton')}
-                        </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.skill.update.sectionLabel')}</label>
-                        <input
-                            value={skillUpdateId}
-                            onChange={(e) => setSkillUpdateId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.skill.update.idPlaceholder')}
-                        />
-                        <input
-                            value={skillUpdateName}
-                            onChange={(e) => setSkillUpdateName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.skill.update.namePlaceholder')}
-                        />
-                        <input
-                            value={skillUpdateCategoryId}
-                            onChange={(e) => setSkillUpdateCategoryId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.skill.update.categoryOptionalPlaceholder')}
-                        />
-                        <Button
-                            variant="outline"
-                            disabled={updateSkill.isPending || !skillUpdateId.trim() || !skillUpdateName.trim()}
-                            onClick={() => updateSkill.mutate()}
-                        >
-                            {t('catalog.common.updateButton')}
-                        </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.skill.delete.sectionLabel')}</label>
-                        <input
-                            value={skillDeleteId}
-                            onChange={(e) => setSkillDeleteId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.skill.delete.idPlaceholder')}
-                        />
-                        <Button
-                            variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50"
-                            disabled={deleteSkill.isPending || !skillDeleteId.trim()}
-                            onClick={() => deleteSkill.mutate()}
-                        >
-                            {t('catalog.common.deleteButton')}
-                        </Button>
-                    </div>
-                </Card>
-
-                <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.banners')}</h2>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.banner.create.sectionLabel')}</label>
-                        <input
-                            value={bannerCreateTitle}
-                            onChange={(e) => setBannerCreateTitle(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.create.titlePlaceholder')}
-                        />
-                        <input
-                            value={bannerCreateImageUrl}
-                            onChange={(e) => setBannerCreateImageUrl(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.create.imagePlaceholder')}
-                        />
-                        <input
-                            value={bannerCreateLinkUrl}
-                            onChange={(e) => setBannerCreateLinkUrl(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.create.linkOptionalPlaceholder')}
-                        />
-                        <input
-                            value={bannerCreateOrder}
-                            onChange={(e) => setBannerCreateOrder(Number(e.target.value))}
-                            type="number"
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                        />
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input
-                                type="checkbox"
-                                checked={bannerCreateIsActive}
-                                onChange={(e) => setBannerCreateIsActive(e.target.checked)}
-                            />
-                            {t('catalog.common.activeLabel')}
-                        </label>
-                        <Button
-                            className="bg-[#00b14f] hover:bg-[#00b14f]/90"
-                            disabled={createBanner.isPending || !bannerCreateTitle.trim() || !bannerCreateImageUrl.trim()}
-                            onClick={() => createBanner.mutate()}
-                        >
-                            {t('catalog.banner.create.submitButton')}
-                        </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.banner.update.sectionLabel')}</label>
-                        <input
-                            value={bannerUpdateId}
-                            onChange={(e) => setBannerUpdateId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.update.idPlaceholder')}
-                        />
-                        <input
-                            value={bannerUpdateTitle}
-                            onChange={(e) => setBannerUpdateTitle(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.update.titleOptionalPlaceholder')}
-                        />
-                        <input
-                            value={bannerUpdateImageUrl}
-                            onChange={(e) => setBannerUpdateImageUrl(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.update.imageOptionalPlaceholder')}
-                        />
-                        <input
-                            value={bannerUpdateLinkUrl}
-                            onChange={(e) => setBannerUpdateLinkUrl(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.update.linkOptionalPlaceholder')}
-                        />
-                        <input
-                            value={bannerUpdateOrder}
-                            onChange={(e) => setBannerUpdateOrder(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.update.orderOptionalPlaceholder')}
-                        />
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input
-                                type="checkbox"
-                                checked={bannerUpdateIsActive}
-                                onChange={(e) => setBannerUpdateIsActive(e.target.checked)}
-                            />
-                            {t('catalog.common.activeLabel')}
-                        </label>
-                        <Button
-                            variant="outline"
-                            disabled={updateBanner.isPending || !bannerUpdateId.trim()}
-                            onClick={() => updateBanner.mutate()}
-                        >
-                            {t('catalog.common.updateButton')}
-                        </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.banner.delete.sectionLabel')}</label>
-                        <input
-                            value={bannerDeleteId}
-                            onChange={(e) => setBannerDeleteId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.banner.delete.idPlaceholder')}
-                        />
-                        <Button
-                            variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50"
-                            disabled={deleteBanner.isPending || !bannerDeleteId.trim()}
-                            onClick={() => deleteBanner.mutate()}
-                        >
-                            {t('catalog.common.deleteButton')}
-                        </Button>
-                    </div>
-                </Card>
-
-                <Card className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-gray-900">{t('catalog.headings.premiumPackagePrice')}</h2>
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.packagePrice.packageIdLabel')}</label>
-                        <input
-                            value={packageId}
-                            onChange={(e) => setPackageId(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                            placeholder={t('catalog.packagePrice.packageIdPlaceholder')}
-                        />
-                        <label className="block text-sm font-medium text-gray-700">{t('catalog.packagePrice.priceLabel')}</label>
-                        <input
-                            type="number"
-                            value={packagePrice}
-                            onChange={(e) => setPackagePrice(Number(e.target.value))}
-                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#00b14f]"
-                        />
-                        <Button
-                            className="bg-[#00b14f] hover:bg-[#00b14f]/90"
-                            disabled={updatePackage.isPending || !packageId.trim() || packagePrice <= 0}
-                            onClick={() => updatePackage.mutate()}
-                        >
-                            {t('catalog.packagePrice.updatePriceButton')}
-                        </Button>
-                    </div>
-                </Card>
-            </div>
+/* ─── inline edit row ─── */
+function EditRow({ onSave, onCancel, children }: { onSave: () => void; onCancel: () => void; children: React.ReactNode }) {
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex-1 flex gap-2">{children}</div>
+            <button onClick={onSave} className="rounded p-1.5 text-green-600 hover:bg-green-50"><Check className="h-4 w-4" /></button>
+            <button onClick={onCancel} className="rounded p-1.5 text-gray-400 hover:bg-gray-100"><X className="h-4 w-4" /></button>
         </div>
     );
 }
 
+/* ═══════════════════════════════╗
+   CATEGORIES TAB
+╚═══════════════════════════════ */
+function CategoriesTab() {
+    const qc = useQueryClient();
+    const [search, setSearch] = useState('');
+    const [createName, setCreateName] = useState('');
+    const [editId, setEditId] = useState<string | null>(null);
+    const [editName, setEditName] = useState('');
+
+    const { data: categories = [], isLoading } = useQuery({
+        queryKey: ['admin-categories'],
+        queryFn: () => adminApi.getCategories(),
+    });
+
+
+    const createMut = useMutation({
+        mutationFn: () => adminApi.createCategory(createName.trim()),
+        onSuccess: () => { toast.success('Category created'); setCreateName(''); qc.invalidateQueries({ queryKey: ['admin-categories'] }); },
+        onError: () => toast.error('Failed to create'),
+    });
+    const updateMut = useMutation({
+        mutationFn: () => adminApi.updateCategory(editId!, editName.trim()),
+        onSuccess: () => { toast.success('Updated'); setEditId(null); qc.invalidateQueries({ queryKey: ['admin-categories'] }); },
+        onError: () => toast.error('Failed to update'),
+    });
+    const deleteMut = useMutation({
+        mutationFn: (id: string) => adminApi.deleteCategory(id),
+        onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-categories'] }); },
+        onError: () => toast.error('Failed to delete'),
+    });
+
+    const filtered = categories.filter((c: any) => (c.name ?? '').toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className="space-y-4">
+            {/* Create */}
+            <div className="flex gap-2">
+                <input value={createName} onChange={(e) => setCreateName(e.target.value)} placeholder="New category name…"
+                    className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+                    onKeyDown={(e) => e.key === 'Enter' && createName.trim() && createMut.mutate()}
+                />
+                <Button className="bg-slate-900 hover:bg-slate-800 text-white" disabled={!createName.trim() || createMut.isPending}
+                    onClick={() => createMut.mutate()}>
+                    <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+            </div>
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Filter…"
+                    className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-slate-900" />
+            </div>
+            {/* List */}
+            {isLoading ? <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" /></div> : (
+                <div className="divide-y divide-gray-50 rounded-xl border border-gray-100">
+                    {filtered.length === 0 ? <div className="py-8 text-center text-sm text-gray-400">No categories</div> : filtered.map((c: any) => (
+                        <div key={c.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/80">
+                            {editId === c.id ? (
+                                <EditRow onSave={() => updateMut.mutate()} onCancel={() => setEditId(null)}>
+                                    <Field value={editName} onChange={setEditName} placeholder="Category name" />
+                                </EditRow>
+                            ) : (
+                                <>
+                                    <span className="flex-1 text-sm font-medium text-gray-800">{c.name}</span>
+                                    <span className="text-xs text-gray-400 font-mono">{c.id}</span>
+                                    <button onClick={() => { setEditId(c.id); setEditName(c.name); }}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => deleteMut.mutate(c.id)}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════╗
+   SKILLS TAB
+╚═══════════════════════════════ */
+function SkillsTab() {
+    const qc = useQueryClient();
+    const [search, setSearch] = useState('');
+    const [createName, setCreateName] = useState('');
+    const [createCatId, setCreateCatId] = useState('');
+    const [editId, setEditId] = useState<string | null>(null);
+    const [editName, setEditName] = useState('');
+    const [editCatId, setEditCatId] = useState('');
+
+    const { data: skills = [], isLoading } = useQuery({
+        queryKey: ['admin-skills'],
+        queryFn: () => adminApi.getSkills(),
+    });
+
+    const createMut = useMutation({
+        mutationFn: () => adminApi.createSkill(createName.trim(), createCatId.trim() || undefined),
+        onSuccess: () => { toast.success('Skill created'); setCreateName(''); setCreateCatId(''); qc.invalidateQueries({ queryKey: ['admin-skills'] }); },
+        onError: () => toast.error('Failed to create'),
+    });
+    const updateMut = useMutation({
+        mutationFn: () => adminApi.updateSkill(editId!, editName.trim(), editCatId.trim() || undefined),
+        onSuccess: () => { toast.success('Updated'); setEditId(null); qc.invalidateQueries({ queryKey: ['admin-skills'] }); },
+        onError: () => toast.error('Failed to update'),
+    });
+    const deleteMut = useMutation({
+        mutationFn: (id: string) => adminApi.deleteSkill(id),
+        onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-skills'] }); },
+        onError: () => toast.error('Failed to delete'),
+    });
+
+    const filtered = skills.filter((s: any) => (s.name ?? '').toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className="space-y-4">
+            <div className="flex gap-2">
+                <input value={createName} onChange={(e) => setCreateName(e.target.value)} placeholder="Skill name…"
+                    className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900" />
+                <input value={createCatId} onChange={(e) => setCreateCatId(e.target.value)} placeholder="Category ID (optional)"
+                    className="w-48 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900" />
+                <Button className="bg-slate-900 hover:bg-slate-800 text-white" disabled={!createName.trim() || createMut.isPending}
+                    onClick={() => createMut.mutate()}>
+                    <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+            </div>
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Filter…"
+                    className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-slate-900" />
+            </div>
+            {isLoading ? <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" /></div> : (
+                <div className="divide-y divide-gray-50 rounded-xl border border-gray-100">
+                    {filtered.length === 0 ? <div className="py-8 text-center text-sm text-gray-400">No skills</div> : filtered.map((s: any) => (
+                        <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/80">
+                            {editId === s.id ? (
+                                <EditRow onSave={() => updateMut.mutate()} onCancel={() => setEditId(null)}>
+                                    <Field value={editName} onChange={setEditName} placeholder="Skill name" />
+                                    <Field value={editCatId} onChange={setEditCatId} placeholder="Category ID" />
+                                </EditRow>
+                            ) : (
+                                <>
+                                    <span className="flex-1 text-sm font-medium text-gray-800">{s.name}</span>
+                                    {s.categoryId && <Badge variant="secondary" className="text-xs">{s.categoryId.slice(0, 8)}…</Badge>}
+                                    <button onClick={() => { setEditId(s.id); setEditName(s.name); setEditCatId(s.categoryId ?? ''); }}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => deleteMut.mutate(s.id)}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════╗
+   BANNERS TAB
+╚═══════════════════════════════ */
+function BannersTab() {
+    const qc = useQueryClient();
+    const [showCreate, setShowCreate] = useState(false);
+    const [form, setForm] = useState({ title: '', imageUrl: '', linkUrl: '', order: '0', isActive: true });
+    const [editId, setEditId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<any>({});
+
+    const { data: banners = [], isLoading } = useQuery({
+        queryKey: ['admin-banners'],
+        queryFn: () => adminApi.getBanners(),
+    });
+
+    const createMut = useMutation({
+        mutationFn: () => adminApi.createBanner({ title: form.title.trim(), imageUrl: form.imageUrl.trim(), linkUrl: form.linkUrl.trim() || undefined, order: Number(form.order), isActive: form.isActive }),
+        onSuccess: () => { toast.success('Banner created'); setShowCreate(false); setForm({ title: '', imageUrl: '', linkUrl: '', order: '0', isActive: true }); qc.invalidateQueries({ queryKey: ['admin-banners'] }); },
+        onError: () => toast.error('Failed to create'),
+    });
+    const updateMut = useMutation({
+        mutationFn: () => adminApi.updateBanner(editId!, { title: editForm.title, imageUrl: editForm.imageUrl, linkUrl: editForm.linkUrl || undefined, order: Number(editForm.order), isActive: editForm.isActive }),
+        onSuccess: () => { toast.success('Updated'); setEditId(null); qc.invalidateQueries({ queryKey: ['admin-banners'] }); },
+        onError: () => toast.error('Failed to update'),
+    });
+    const deleteMut = useMutation({
+        mutationFn: (id: string) => adminApi.deleteBanner(id),
+        onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-banners'] }); },
+        onError: () => toast.error('Failed to delete'),
+    });
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-end">
+                <Button className="bg-slate-900 hover:bg-slate-800 text-white" onClick={() => setShowCreate(s => !s)}>
+                    <Plus className="h-4 w-4 mr-1" /> New Banner
+                </Button>
+            </div>
+            {showCreate && (
+                <Card className="p-4 space-y-3 border border-slate-200">
+                    <h3 className="font-medium text-gray-900 text-sm">Create Banner</h3>
+                    <Field value={form.title} onChange={(v) => setForm(f => ({ ...f, title: v }))} placeholder="Title *" />
+                    <Field value={form.imageUrl} onChange={(v) => setForm(f => ({ ...f, imageUrl: v }))} placeholder="Image URL *" />
+                    <Field value={form.linkUrl} onChange={(v) => setForm(f => ({ ...f, linkUrl: v }))} placeholder="Link URL (optional)" />
+                    <div className="flex gap-3">
+                        <Field value={form.order} onChange={(v) => setForm(f => ({ ...f, order: v }))} placeholder="Order" type="number" />
+                        <label className="flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                            <input type="checkbox" checked={form.isActive} onChange={(e) => setForm(f => ({ ...f, isActive: e.target.checked }))} />
+                            Active
+                        </label>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                        <Button className="bg-slate-900 hover:bg-slate-800 text-white" disabled={!form.title.trim() || !form.imageUrl.trim() || createMut.isPending} onClick={() => createMut.mutate()}>
+                            Create
+                        </Button>
+                    </div>
+                </Card>
+            )}
+            {isLoading ? <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" /></div> : (
+                <div className="divide-y divide-gray-50 rounded-xl border border-gray-100">
+                    {banners.length === 0 ? <div className="py-8 text-center text-sm text-gray-400">No banners</div> : banners.map((b: any) => (
+                        <div key={b.id} className="px-4 py-3 hover:bg-gray-50/80">
+                            {editId === b.id ? (
+                                <div className="space-y-2">
+                                    <Field value={editForm.title ?? ''} onChange={(v) => setEditForm((f: any) => ({ ...f, title: v }))} placeholder="Title" />
+                                    <Field value={editForm.imageUrl ?? ''} onChange={(v) => setEditForm((f: any) => ({ ...f, imageUrl: v }))} placeholder="Image URL" />
+                                    <Field value={editForm.linkUrl ?? ''} onChange={(v) => setEditForm((f: any) => ({ ...f, linkUrl: v }))} placeholder="Link URL" />
+                                    <div className="flex gap-3">
+                                        <Field value={String(editForm.order ?? 0)} onChange={(v) => setEditForm((f: any) => ({ ...f, order: v }))} placeholder="Order" type="number" />
+                                        <label className="flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                                            <input type="checkbox" checked={editForm.isActive ?? true} onChange={(e) => setEditForm((f: any) => ({ ...f, isActive: e.target.checked }))} />
+                                            Active
+                                        </label>
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => setEditId(null)}>Cancel</Button>
+                                        <Button size="sm" className="bg-slate-900 text-white" onClick={() => updateMut.mutate()}>Save</Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    {b.imageUrl && <img src={b.imageUrl} alt="" className="h-10 w-16 rounded object-cover border border-gray-100" />}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">{b.title}</p>
+                                        <p className="text-xs text-gray-400 truncate">{b.linkUrl ?? 'No link'}</p>
+                                    </div>
+                                    <Badge className={b.isActive ? 'bg-green-50 text-green-700 text-xs' : 'bg-gray-100 text-gray-500 text-xs'}>
+                                        {b.isActive ? 'Active' : 'Inactive'}
+                                    </Badge>
+                                    <span className="text-xs text-gray-400">#{b.order ?? 0}</span>
+                                    <button onClick={() => { setEditId(b.id); setEditForm({ title: b.title, imageUrl: b.imageUrl, linkUrl: b.linkUrl ?? '', order: b.order ?? 0, isActive: b.isActive ?? true }); }}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => deleteMut.mutate(b.id)}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════╗
+   PREMIUM PACKAGES TAB
+╚═══════════════════════════════ */
+function PackagesTab() {
+    const qc = useQueryClient();
+    const [showCreate, setShowCreate] = useState(false);
+    const [form, setForm] = useState({ name: '', description: '', price: '', durationDays: '30', isActive: true });
+    const [editId, setEditId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<any>({});
+
+    const { data: packages = [], isLoading } = useQuery({
+        queryKey: ['admin-packages'],
+        queryFn: () => adminApi.getPremiumPackages(),
+    });
+
+    const createMut = useMutation({
+        mutationFn: () => adminApi.createPremiumPackage({ name: form.name.trim(), description: form.description.trim() || undefined, price: Number(form.price), durationDays: Number(form.durationDays), isActive: form.isActive }),
+        onSuccess: () => { toast.success('Package created'); setShowCreate(false); setForm({ name: '', description: '', price: '', durationDays: '30', isActive: true }); qc.invalidateQueries({ queryKey: ['admin-packages'] }); },
+        onError: () => toast.error('Failed to create'),
+    });
+    const updateMut = useMutation({
+        mutationFn: () => adminApi.updatePremiumPackage(editId!, { name: editForm.name, description: editForm.description || undefined, price: Number(editForm.price), durationDays: Number(editForm.durationDays), isActive: editForm.isActive }),
+        onSuccess: () => { toast.success('Updated'); setEditId(null); qc.invalidateQueries({ queryKey: ['admin-packages'] }); },
+        onError: () => toast.error('Failed to update'),
+    });
+    const deleteMut = useMutation({
+        mutationFn: (id: string) => adminApi.deletePremiumPackage(id),
+        onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-packages'] }); },
+        onError: () => toast.error('Failed to delete'),
+    });
+
+    const formatPrice = (price: number) => {
+        // BE stores in minor units (×100)
+        const vnd = price > 1000 ? price : price * 100;
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vnd);
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-end">
+                <Button className="bg-slate-900 hover:bg-slate-800 text-white" onClick={() => setShowCreate(s => !s)}>
+                    <Plus className="h-4 w-4 mr-1" /> New Package
+                </Button>
+            </div>
+            {showCreate && (
+                <Card className="p-4 space-y-3 border border-slate-200">
+                    <h3 className="font-medium text-gray-900 text-sm">Create Premium Package</h3>
+                    <Field value={form.name} onChange={(v) => setForm(f => ({ ...f, name: v }))} placeholder="Package name *" />
+                    <Field value={form.description} onChange={(v) => setForm(f => ({ ...f, description: v }))} placeholder="Description (optional)" />
+                    <div className="flex gap-3">
+                        <Field value={form.price} onChange={(v) => setForm(f => ({ ...f, price: v }))} placeholder="Price (VND) *" type="number" />
+                        <Field value={form.durationDays} onChange={(v) => setForm(f => ({ ...f, durationDays: v }))} placeholder="Duration (days)" type="number" />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" checked={form.isActive} onChange={(e) => setForm(f => ({ ...f, isActive: e.target.checked }))} />
+                        Active
+                    </label>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                        <Button className="bg-slate-900 hover:bg-slate-800 text-white" disabled={!form.name.trim() || !form.price || createMut.isPending} onClick={() => createMut.mutate()}>
+                            Create
+                        </Button>
+                    </div>
+                </Card>
+            )}
+            {isLoading ? <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" /></div> : (
+                <div className="divide-y divide-gray-50 rounded-xl border border-gray-100">
+                    {packages.length === 0 ? <div className="py-8 text-center text-sm text-gray-400">No packages</div> : packages.map((pkg: any) => (
+                        <div key={pkg.id} className="px-4 py-4 hover:bg-gray-50/80">
+                            {editId === pkg.id ? (
+                                <div className="space-y-2">
+                                    <Field value={editForm.name ?? ''} onChange={(v) => setEditForm((f: any) => ({ ...f, name: v }))} placeholder="Package name" />
+                                    <Field value={editForm.description ?? ''} onChange={(v) => setEditForm((f: any) => ({ ...f, description: v }))} placeholder="Description" />
+                                    <div className="flex gap-3">
+                                        <Field value={String(editForm.price ?? 0)} onChange={(v) => setEditForm((f: any) => ({ ...f, price: v }))} placeholder="Price" type="number" />
+                                        <Field value={String(editForm.durationDays ?? 30)} onChange={(v) => setEditForm((f: any) => ({ ...f, durationDays: v }))} placeholder="Days" type="number" />
+                                    </div>
+                                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                                        <input type="checkbox" checked={editForm.isActive ?? true} onChange={(e) => setEditForm((f: any) => ({ ...f, isActive: e.target.checked }))} />
+                                        Active
+                                    </label>
+                                    <div className="flex justify-end gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => setEditId(null)}>Cancel</Button>
+                                        <Button size="sm" className="bg-slate-900 text-white" onClick={() => updateMut.mutate()}>Save</Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-medium text-gray-900">{pkg.name}</p>
+                                            <Badge className={pkg.isActive ? 'bg-green-50 text-green-700 text-xs' : 'bg-gray-100 text-gray-500 text-xs'}>
+                                                {pkg.isActive ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                        </div>
+                                        {pkg.description && <p className="text-xs text-gray-500 mt-0.5">{pkg.description}</p>}
+                                        <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                                            <span className="font-semibold text-gray-800">{formatPrice(pkg.price ?? 0)}</span>
+                                            <span>{pkg.durationDays ?? 30} days</span>
+                                            {pkg.userType && <span>For: {pkg.userType}</span>}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setEditId(pkg.id); setEditForm({ name: pkg.name, description: pkg.description ?? '', price: pkg.price ?? 0, durationDays: pkg.durationDays ?? 30, isActive: pkg.isActive ?? true }); }}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => deleteMut.mutate(pkg.id)}
+                                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════╗
+   MAIN PAGE
+╚═══════════════════════════════ */
+export function AdminCatalogPage() {
+    const [activeTab, setActiveTab] = useState<Tab>('categories');
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Catalog Management</h1>
+                <p className="mt-1 text-sm text-gray-500">Manage categories, skills, banners and premium packages.</p>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 rounded-xl bg-gray-100 p-1">
+                {TABS.map(({ id, label, Icon }) => (
+                    <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
+                            activeTab === id
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        <Icon className="h-4 w-4" />
+                        <span className="hidden sm:inline">{label}</span>
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab Content */}
+            <Card className="p-6">
+                {activeTab === 'categories' && <CategoriesTab />}
+                {activeTab === 'skills'     && <SkillsTab />}
+                {activeTab === 'banners'    && <BannersTab />}
+                {activeTab === 'packages'   && <PackagesTab />}
+            </Card>
+        </div>
+    );
+}

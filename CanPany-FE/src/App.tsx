@@ -20,6 +20,7 @@ import {
   AdminDashboardPage,
   AdminUsersPage,
   AdminVerificationPage,
+  AdminCompaniesPage,
   AdminJobsPage,
   AdminCatalogPage,
   AdminPaymentsPage,
@@ -175,6 +176,7 @@ function App() {
             <Route path="dashboard" element={<AdminDashboardPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="verification" element={<AdminVerificationPage />} />
+            <Route path="companies" element={<AdminCompaniesPage />} />
             <Route path="jobs" element={<AdminJobsPage />} />
             <Route path="catalog" element={<AdminCatalogPage />} />
             <Route path="payments" element={<AdminPaymentsPage />} />

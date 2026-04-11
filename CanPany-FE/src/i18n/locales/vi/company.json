@@ -332,22 +332,36 @@
     "cvAccessNotReady": "Quyền xem CV của ứng viên hiện chưa sẵn sàng. Vui lòng thử lại sau hoặc kiểm tra lại quyền truy cập/mức độ mở khóa hồ sơ."
   },
   "messages": {
-    "title": "Nhắn tin",
-    "description": "Trao đổi trực tiếp với ứng viên trong quá trình tuyển dụng.",
-    "descriptionActive": "Tin nhắn được tự động làm mới. Mọi nội dung trao đổi được mã hóa.",
-    "backLabel": "Quay lại danh sách ứng tuyển",
-    "loadFailed": "Không thể tải tin nhắn. Vui lòng kiểm tra kết nối và thử lại.",
-    "noMessages": "Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.",
-    "inputPlaceholder": "Nhập tin nhắn…",
-    "sendAriaLabel": "Gửi tin nhắn",
-    "sendButton": "Gửi",
-    "sendHint": "Enter để gửi · Shift+Enter để xuống dòng",
-    "sendingLabel": "Đang gửi…",
-    "noConversationTitle": "Chưa chọn cuộc trò chuyện",
-    "noConversationDesc": "Mở trang chi tiết hồ sơ ứng tuyển và nhấn 'Nhắn tin với ứng viên' để bắt đầu cuộc trò chuyện.",
+    "title": "Tin nhắn",
+    "status": {
+      "connected": "Đã kết nối",
+      "connecting": "Đang kết nối..."
+    },
+    "conversations": {
+      "empty": "Chưa có cuộc trò chuyện nào"
+    },
+    "chat": {
+      "selectPrompt": "Chọn cuộc trò chuyện để bắt đầu nhắn tin",
+      "empty": "Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!",
+      "typing": "Đang nhập..."
+    },
+    "input": {
+      "placeholder": "Nhập tin nhắn...",
+      "send": "Gửi",
+      "hint": "Enter để gửi · Shift+Enter để xuống dòng"
+    },
+    "header": {
+      "back": "Quay lại"
+    },
+    "bubble": {
+      "sending": "Đang gửi...",
+      "read": "Đã đọc"
+    },
+    "error": {
+      "sendFailed": "Không thể gửi tin nhắn"
+    },
     "errorTitle": "Không thể tải trang nhắn tin",
-    "errorDesc": "Đã xảy ra lỗi khi kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên.",
-    "toastSendFailed": "Không thể gửi tin nhắn"
+    "errorDesc": "Đã xảy ra lỗi khi kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên."
   },
   "applicationNotes": {
     "title": "Ghi chú nội bộ",

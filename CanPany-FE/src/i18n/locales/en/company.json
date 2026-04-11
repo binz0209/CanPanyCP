@@ -333,21 +333,35 @@
   },
   "messages": {
     "title": "Messages",
-    "description": "Communicate directly with candidates during the hiring process.",
-    "descriptionActive": "Messages are automatically refreshed. All communications are encrypted.",
-    "backLabel": "Back to applications",
-    "loadFailed": "Unable to load messages. Please check your connection and try again.",
-    "noMessages": "No messages yet. Start the conversation.",
-    "inputPlaceholder": "Type a message…",
-    "sendAriaLabel": "Send message",
-    "sendButton": "Send",
-    "sendHint": "Enter to send · Shift+Enter for new line",
-    "sendingLabel": "Sending…",
-    "noConversationTitle": "No conversation selected",
-    "noConversationDesc": "Open an application detail page and click 'Message candidate' to start a conversation.",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting..."
+    },
+    "conversations": {
+      "empty": "No conversations yet"
+    },
+    "chat": {
+      "selectPrompt": "Select a conversation to start messaging",
+      "empty": "No messages yet. Start a conversation!",
+      "typing": "Typing..."
+    },
+    "input": {
+      "placeholder": "Type a message...",
+      "send": "Send",
+      "hint": "Enter to send · Shift+Enter for new line"
+    },
+    "header": {
+      "back": "Back"
+    },
+    "bubble": {
+      "sending": "Sending...",
+      "read": "Read"
+    },
+    "error": {
+      "sendFailed": "Could not send message"
+    },
     "errorTitle": "Unable to load messages page",
-    "errorDesc": "A connection error occurred. Please try again later or contact the admin.",
-    "toastSendFailed": "Unable to send message"
+    "errorDesc": "A connection error occurred. Please try again later or contact the admin."
   },
   "applicationNotes": {
     "title": "Internal notes",

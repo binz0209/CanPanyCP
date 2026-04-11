@@ -1,6 +1,7 @@
 export { AdminDashboardPage } from './AdminDashboardPage';
 export { AdminUsersPage } from './AdminUsersPage';
 export { AdminVerificationPage } from './AdminVerificationPage';
+export { AdminCompaniesPage } from './AdminCompaniesPage';
 export { AdminJobsPage } from './AdminJobsPage';
 export { AdminCatalogPage } from './AdminCatalogPage';
 export { AdminPaymentsPage } from './AdminPaymentsPage';

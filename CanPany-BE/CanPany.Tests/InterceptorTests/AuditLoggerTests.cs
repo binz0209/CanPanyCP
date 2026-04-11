@@ -1,4 +1,5 @@
 using CanPany.Application.Interfaces.Interceptors;
+using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Infrastructure.Interceptors;
 using Microsoft.Extensions.Logging;
@@ -12,11 +13,12 @@ public class AuditLoggerTests
     private readonly Mock<ILogger<AuditLogger>> _loggerMock = new();
     private readonly Mock<IDataMasker> _dataMaskerMock = new();
     private readonly Mock<II18nService> _i18nServiceMock = new();
+    private readonly Mock<IAuditLogRepository> _auditLogRepoMock = new();
     private readonly AuditLogger _auditLogger;
 
     public AuditLoggerTests()
     {
-        _auditLogger = new AuditLogger(_loggerMock.Object, _dataMaskerMock.Object, _i18nServiceMock.Object);
+        _auditLogger = new AuditLogger(_loggerMock.Object, _dataMaskerMock.Object, _i18nServiceMock.Object, _auditLogRepoMock.Object);
         
         _dataMaskerMock.Setup(x => x.MaskSensitiveData(It.IsAny<Dictionary<string, object?>>()))
             .Returns<Dictionary<string, object?>>(d => d ?? new Dictionary<string, object?>());

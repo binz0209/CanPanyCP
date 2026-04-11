@@ -10,6 +10,7 @@
     "dashboard": "Dashboard",
     "users": "Users",
     "verification": "Company verification",
+    "companies": "Companies",
     "jobs": "Job moderation",
     "catalog": "Categories & skills",
     "payments": "Payments",
@@ -219,6 +220,37 @@
       "button": "Reject",
       "success": "Report rejected.",
       "error": "Could not reject report."
+    },
+    "tabs": {
+      "pending": "Pending",
+      "resolved": "Resolved"
+    },
+    "table": {
+      "reporter": "Reporter",
+      "reported": "Reported",
+      "reason": "Reason",
+      "status": "Status",
+      "date": "Date",
+      "action": "Action",
+      "empty": "No reports",
+      "search": "Search reason, email, ID..."
+    },
+    "modal": {
+      "title": "Report Detail",
+      "close": "Close",
+      "reporter": "Reporter",
+      "reportedUser": "Reported User",
+      "reason": "Reason",
+      "description": "Description",
+      "evidence": "Evidence",
+      "resolutionNote": "Resolution Note",
+      "resolveTab": "Resolve",
+      "rejectTab": "Reject",
+      "resolvePlaceholder": "Resolution note (required)...",
+      "rejectPlaceholder": "Rejection reason (required)...",
+      "banUser": "Also ban the reported user",
+      "resolve": "Resolve",
+      "reject": "Reject"
     }
   }
   ,
@@ -236,14 +268,47 @@
       "loadButton": "Load audit logs"
     },
     "table": {
-      "created": "Created",
+      "time": "Time",
+      "userId": "User ID",
+      "username": "Username",
       "action": "Action",
-      "entity": "Entity",
-      "endpoint": "Endpoint",
-      "status": "Status",
-      "error": "Error",
       "loading": "Loading...",
       "empty": "No data"
+    },
+    "entities": {
+      "User": "User",
+      "Job": "Job",
+      "Category": "Category",
+      "Skill": "Skill",
+      "PremiumPackage": "Premium Package",
+      "Company": "Company",
+      "Report": "Report",
+      "Payment": "Payment",
+      "Banner": "Banner",
+      "Settings": "Settings"
+    },
+    "actions": {
+      "readEntity": "View {{entity}}",
+      "createEntity": "Create {{entity}}",
+      "updateEntity": "Update {{entity}}",
+      "deleteEntity": "Delete {{entity}}",
+      "login": "Login",
+      "register": "Register",
+      "read": "Read (View)",
+      "create": "Create",
+      "update": "Update",
+      "delete": "Delete",
+      "resolveReport": "Resolve report",
+      "rejectReport": "Reject report",
+      "banUser": "Ban user",
+      "unbanUser": "Unban user",
+      "deleteUser": "Delete user",
+      "approveVerification": "Approve company",
+      "rejectVerification": "Reject company",
+      "hideJob": "Hide job",
+      "deleteJob": "Delete job",
+      "approvePayment": "Approve payment",
+      "rejectPayment": "Reject payment"
     }
   }
   ,
