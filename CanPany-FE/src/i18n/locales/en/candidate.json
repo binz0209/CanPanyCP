@@ -275,6 +275,14 @@
     "empty": {
       "title": "No Analysis Data Yet",
       "description": "Connect your GitHub account in your profile, then click analyze to let Gemini AI review your code and extract your skills."
+    },
+    "consent": {
+      "title": "GitHub Access Consent Required",
+      "description": "To analyze your GitHub, you need to consent to the system accessing and processing your GitHub data per Decree 13/2023/ND-CP.",
+      "grantBtn": "Consent to GitHub Access",
+      "granted": "GitHub access consent granted!",
+      "error": "Could not grant consent. Please try again.",
+      "required": "You need to consent to GitHub access before analysis."
     }
   },
   "recommendedJobs": {
@@ -434,7 +442,8 @@
     "settingsNotifications": "Notifications",
     "settingsPrivacy": "Privacy",
     "notifications": "Notifications",
-    "wallet": "My wallet"
+    "wallet": "My wallet",
+    "contracts": "Contracts"
   },
   "profile": {
     "hero": {

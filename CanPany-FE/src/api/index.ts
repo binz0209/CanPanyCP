@@ -9,3 +9,5 @@ export { messagesApi } from './messages.api';
 export { notificationsApi } from './notifications.api';
 export { walletApi } from './wallet.api';
 export { adminApi } from './admin.api';
+export { consentApi } from './consent.api';
+export { contractsApi, reviewsApi } from './contracts.api';

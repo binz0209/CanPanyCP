@@ -62,5 +62,26 @@ public class CVRepository : ICVRepository
         var count = await _collection.CountDocumentsAsync(cv => cv.Id == id);
         return count > 0;
     }
+
+    public async Task<IEnumerable<CV>> GetVersionsAsync(string parentCvId)
+    {
+        // Get all CVs that share the same parent (or are the parent themselves)
+        var filter = Builders<CV>.Filter.Or(
+            Builders<CV>.Filter.Eq(cv => cv.Id, parentCvId),
+            Builders<CV>.Filter.Eq(cv => cv.ParentCvId, parentCvId)
+        );
+
+        return await _collection
+            .Find(filter)
+            .SortByDescending(cv => cv.Version)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetNextVersionAsync(string parentCvId)
+    {
+        var versions = await GetVersionsAsync(parentCvId);
+        var maxVersion = versions.Any() ? versions.Max(cv => cv.Version) : 0;
+        return maxVersion + 1;
+    }
 }
 

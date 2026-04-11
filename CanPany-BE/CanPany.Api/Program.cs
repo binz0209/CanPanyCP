@@ -20,6 +20,8 @@ using Hangfire.Mongo.Migration.Strategies;
 using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 using CanPany.Domain.Entities;
+using System.Threading.RateLimiting;
+using CanPany.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -340,9 +342,19 @@ builder.Services.AddScoped<IFilterPresetService, FilterPresetService>();
 
 // Register CF Recommendation Services
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserJobInteractionRepository, CanPany.Infrastructure.Repositories.UserJobInteractionRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICfModelRepository, CanPany.Infrastructure.Repositories.CfModelRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IRecommendationLogRepository, CanPany.Infrastructure.Repositories.RecommendationLogRepository>();
 builder.Services.AddScoped<IInteractionTrackingService, InteractionTrackingService>();
 builder.Services.AddScoped<ICollaborativeFilteringService, CollaborativeFilteringService>();
 builder.Services.AddScoped<IHybridRecommendationService, HybridRecommendationService>();
+
+// Register Contract & Review Services
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+
+// Register Consent/Privacy Services
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IUserConsentRepository, CanPany.Infrastructure.Repositories.UserConsentRepository>();
+builder.Services.AddScoped<IConsentService, ConsentService>();
 
 // Register Background Email Services
 builder.Services.AddScoped<IBackgroundEmailService, BackgroundEmailService>();
@@ -379,6 +391,22 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Rate Limiting — Fixed window: 60 requests per minute per IP
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            }));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -395,6 +423,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+// Rate Limiting Middleware
+app.UseRateLimiter();
 
 // Serve static files from wwwroot (e.g. CVs)
 app.UseStaticFiles();
@@ -491,6 +522,16 @@ using (var scope = app.Services.CreateScope())
         "process-daily-candidate-alerts",
         processor => processor.ProcessDailyCandidateAlertsAsync(),
         Cron.Daily(10), // 10 AM daily
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Local
+        });
+
+    // Weekly CF model training - runs every Sunday at 3 AM (UC-49)
+    recurringJobManager.AddOrUpdate<ICollaborativeFilteringService>(
+        "train-cf-model-weekly",
+        service => service.TrainAndSaveModelAsync(),
+        Cron.Weekly(DayOfWeek.Sunday, 3), // Sunday 3 AM
         new RecurringJobOptions
         {
             TimeZone = TimeZoneInfo.Local

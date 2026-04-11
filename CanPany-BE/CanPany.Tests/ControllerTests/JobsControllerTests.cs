@@ -24,6 +24,7 @@ public class JobsControllerTests
     private readonly Mock<IJobProgressTracker> _progressTrackerMock = new();
     private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<JobsController>> _loggerMock = new();
+    private readonly Mock<IUserPremiumService> _userPremiumServiceMock = new();
     private readonly JobsController _controller;
 
     public JobsControllerTests()
@@ -37,7 +38,8 @@ public class JobsControllerTests
             _jobProducerMock.Object,
             _progressTrackerMock.Object,
             _i18nServiceMock.Object,
-            _loggerMock.Object);
+            _loggerMock.Object,
+            _userPremiumServiceMock.Object);
         
         // Setup default HttpContext
         var claims = new List<Claim> { new Claim("sub", "user123") };

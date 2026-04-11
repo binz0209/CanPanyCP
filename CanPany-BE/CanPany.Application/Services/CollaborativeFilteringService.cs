@@ -18,15 +18,18 @@ namespace CanPany.Application.Services;
 public class CollaborativeFilteringService : ICollaborativeFilteringService
 {
     private readonly IUserJobInteractionRepository _interactionRepo;
+    private readonly ICfModelRepository _cfModelRepo;
     private readonly ILogger<CollaborativeFilteringService> _logger;
 
     private const int K_NEIGHBORS = 20;
 
     public CollaborativeFilteringService(
         IUserJobInteractionRepository interactionRepo,
+        ICfModelRepository cfModelRepo,
         ILogger<CollaborativeFilteringService> logger)
     {
         _interactionRepo = interactionRepo;
+        _cfModelRepo = cfModelRepo;
         _logger = logger;
     }
 
@@ -341,6 +344,88 @@ public class CollaborativeFilteringService : ICollaborativeFilteringService
 
         var denominator = Math.Sqrt(normA) * Math.Sqrt(normB);
         return denominator == 0 ? 0 : dotProduct / denominator;
+    }
+
+    #endregion
+
+    #region Model Training (UC-49)
+
+    /// <summary>
+    /// Train and save a CF model snapshot.
+    /// Called by Hangfire recurring job (weekly).
+    /// </summary>
+    public async Task TrainAndSaveModelAsync()
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        _logger.LogInformation("[CF_TRAIN] Starting CF model training...");
+
+        try
+        {
+            // 1. Get all interactions
+            var allInteractions = (await _interactionRepo.GetAllAsync()).ToList();
+
+            if (!allInteractions.Any())
+            {
+                _logger.LogWarning("[CF_TRAIN] No interactions found. Skipping model training.");
+                return;
+            }
+
+            // 2. Build user-item matrix
+            var userItemMatrix = BuildUserItemMatrix(allInteractions);
+
+            var allJobIds = allInteractions
+                .Where(i => !string.IsNullOrWhiteSpace(i.JobId))
+                .Select(i => i.JobId)
+                .Distinct()
+                .ToList();
+
+            // 3. Compute training metrics
+            var totalUsers = userItemMatrix.Count;
+            var totalJobs = allJobIds.Count;
+            var totalInteractions = allInteractions.Count;
+            var matrixSize = (long)totalUsers * totalJobs;
+            var filledCells = userItemMatrix.Values.Sum(r => r.Count);
+            var sparsity = matrixSize > 0 ? 1.0 - ((double)filledCells / matrixSize) : 1.0;
+
+            sw.Stop();
+
+            // 4. Archive current active models
+            await _cfModelRepo.ArchiveAllActiveAsync();
+
+            // 5. Save new model snapshot
+            var nextVersion = await _cfModelRepo.GetNextVersionAsync();
+
+            var model = new CfModel
+            {
+                ModelType = "user-knn",
+                Version = nextVersion,
+                Status = "active",
+                SimilarityMetric = "cosine",
+                KNeighbors = K_NEIGHBORS,
+                TrainingMetrics = new CfTrainingMetrics
+                {
+                    TotalUsers = totalUsers,
+                    TotalJobs = totalJobs,
+                    TotalInteractions = totalInteractions,
+                    Sparsity = Math.Round(sparsity, 4),
+                    TrainingDurationMs = sw.ElapsedMilliseconds
+                },
+                TrainedAt = DateTime.UtcNow,
+                ActivatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _cfModelRepo.AddAsync(model);
+
+            _logger.LogInformation(
+                "[CF_TRAIN] Model v{Version} saved: {Users} users, {Jobs} jobs, {Interactions} interactions, sparsity={Sparsity:P2}, duration={Duration}ms",
+                nextVersion, totalUsers, totalJobs, totalInteractions, sparsity, sw.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CF_TRAIN] Error training CF model");
+            throw;
+        }
     }
 
     #endregion

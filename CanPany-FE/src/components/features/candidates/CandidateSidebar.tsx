@@ -16,6 +16,8 @@ import {
   Activity,
   MessageSquare,
   Wallet as WalletIcon,
+  FileSignature,
+  Shield,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useNotifications } from '../../../hooks/useNotifications';
@@ -75,6 +77,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
         { id: 'jobs.search', labelKey: 'sidebar.jobsSearch', path: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
         { id: 'jobs.saved', labelKey: 'sidebar.jobsSaved', path: '/candidate/jobs/bookmarks', icon: <Bookmark className="h-4 w-4" /> },
         { id: 'jobs.recommended', labelKey: 'sidebar.jobsRecommended', path: '/candidate/jobs/recommended', icon: <Wand2 className="h-4 w-4" /> },
+        { id: 'jobs.contracts', labelKey: 'sidebar.contracts', path: '/candidate/contracts', icon: <FileSignature className="h-4 w-4" /> },
       ],
     },
     {
@@ -116,7 +119,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       items: [
         { id: 'settings.account', labelKey: 'sidebar.settingsAccount', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
         { id: 'settings.notifications', labelKey: 'sidebar.settingsNotifications', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
-        { id: 'settings.privacy', labelKey: 'sidebar.settingsPrivacy', path: '/candidate/settings/privacy', icon: <Settings className="h-4 w-4" /> },
+        { id: 'settings.privacy', labelKey: 'sidebar.settingsPrivacy', path: '/candidate/settings/privacy', icon: <Shield className="h-4 w-4" /> },
       ],
     },
   ];

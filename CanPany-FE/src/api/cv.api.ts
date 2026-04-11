@@ -100,4 +100,16 @@ export const cvApi = {
     updateCVData: async (id: string, data: CVStructuredData): Promise<void> => {
         await apiClient.put(`/cvs/${id}/data`, data);
     },
+
+    /** GET /api/cvs/{id}/versions — get version history for a CV */
+    getCVVersions: async (id: string): Promise<CV[]> => {
+        const response = await apiClient.get<ApiResponse<CV[]>>(`/cvs/${id}/versions`);
+        return response.data.data || [];
+    },
+
+    /** POST /api/cvs/{id}/save-version — snapshot current CV as a new version */
+    saveCVVersion: async (id: string, versionNote?: string): Promise<CV> => {
+        const response = await apiClient.post<ApiResponse<CV>>(`/cvs/${id}/save-version`, { versionNote });
+        return response.data.data!;
+    },
 };

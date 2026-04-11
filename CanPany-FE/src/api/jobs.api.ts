@@ -28,20 +28,37 @@ export const jobsApi = {
      * @returns Array of jobs matching the search criteria
      */
     search: async (params?: JobSearchParams): Promise<Job[]> => {
-        const response = await apiClient.get<ApiResponse<Job[]>>('/jobs', { params });
-        return response.data.data || [];
+        const response = await apiClient.get<ApiResponse<{ items: Job[]; totalItems: number; page: number; pageSize: number }>>('/jobs', { params });
+        // Backend returns a PagedResult wrapper — extract the items array
+        const data = response.data.data;
+        if (!data) return [];
+        // Handle both paged result { items: [] } and plain array (future-proof)
+        if (Array.isArray(data)) return data;
+        if ('items' in data && Array.isArray((data as any).items)) return (data as any).items;
+        return [];
     },
 
     /**
      * UC-CAN-13: Search Jobs with pagination
      * GET /api/jobs with page parameters
-     * 
+     *
      * @param params - Search parameters including pagination
      * @returns Paginated job list with total count
      */
     searchWithPagination: async (params?: JobSearchParams): Promise<JobListResponse> => {
-        const response = await apiClient.get<ApiResponse<JobListResponse>>('/jobs', { params });
-        return response.data.data || { jobs: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
+        const response = await apiClient.get<ApiResponse<{ items: Job[]; totalItems: number; page: number; pageSize: number }>>('/jobs', { params });
+        const data = response.data.data;
+        if (!data) return { jobs: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
+        const items = Array.isArray(data) ? data : ((data as any).items ?? []);
+        const total = (data as any).totalItems ?? items.length;
+        const pageSize = (data as any).pageSize ?? 20;
+        return {
+            jobs: items,
+            total,
+            page: (data as any).page ?? 1,
+            pageSize,
+            totalPages: Math.ceil(total / pageSize),
+        };
     },
 
     /**
@@ -120,8 +137,12 @@ export const jobsApi = {
      * @returns Array of jobs posted by the company
      */
     getByCompany: async (companyId: string): Promise<Job[]> => {
-        const response = await apiClient.get<ApiResponse<Job[]>>(`/jobs/company/${companyId}`);
-        return response.data.data || [];
+        const response = await apiClient.get<ApiResponse<{ items: Job[]; totalItems: number }>>(`/jobs/company/${companyId}`);
+        const data = response.data.data;
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if ('items' in data && Array.isArray((data as any).items)) return (data as any).items;
+        return [];
     },
 
     create: async (payload: CreateJobRequest): Promise<Job> => {

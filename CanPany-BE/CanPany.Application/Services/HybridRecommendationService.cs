@@ -26,6 +26,7 @@ public class HybridRecommendationService : IHybridRecommendationService
     private readonly IInteractionTrackingService _interactionService;
     private readonly ICVRepository _cvRepo;
     private readonly IGitHubAnalysisRepository _githubAnalysisRepo;
+    private readonly IRecommendationLogRepository _recLogRepo;
     private readonly ILogger<HybridRecommendationService> _logger;
 
     public HybridRecommendationService(
@@ -37,6 +38,7 @@ public class HybridRecommendationService : IHybridRecommendationService
         IInteractionTrackingService interactionService,
         ICVRepository cvRepo,
         IGitHubAnalysisRepository githubAnalysisRepo,
+        IRecommendationLogRepository recLogRepo,
         ILogger<HybridRecommendationService> logger)
     {
         _jobRepo = jobRepo;
@@ -47,6 +49,7 @@ public class HybridRecommendationService : IHybridRecommendationService
         _interactionService = interactionService;
         _cvRepo = cvRepo;
         _githubAnalysisRepo = githubAnalysisRepo;
+        _recLogRepo = recLogRepo;
         _logger = logger;
     }
 
@@ -467,6 +470,36 @@ public class HybridRecommendationService : IHybridRecommendationService
                 topJobs.Any() ? topJobs.Min(j => j.HybridScore) : 0,
                 topJobs.Any() ? topJobs.Max(j => j.HybridScore) : 0);
             
+            // Log recommendation for audit trail (UC-50)
+            try
+            {
+                var recLog = new RecommendationLog
+                {
+                    UserId = userId,
+                    RecommendationType = "hybrid",
+                    RecommendedJobIds = topJobs.Select(j => j.Job.Id).ToList(),
+                    Scores = topJobs.Select((j, idx) => new RecommendationScore
+                    {
+                        JobId = j.Job.Id,
+                        HybridScore = j.HybridScore,
+                        SemanticScore = null, // Individual scores not tracked at this level
+                        CfScore = cfScores.TryGetValue(j.Job.Id, out var cs2) ? cs2 : null,
+                        Rank = idx + 1
+                    }).ToList(),
+                    AlphaUsed = alpha,
+                    InputContext = "profile",
+                    TotalCandidateJobs = candidateJobs.Count,
+                    InteractionCount = interactionCount,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _recLogRepo.AddAsync(recLog);
+            }
+            catch (Exception logEx)
+            {
+                // Never fail the recommendation because of logging
+                _logger.LogWarning(logEx, "Failed to save recommendation log for user {UserId}", userId);
+            }
+
             return topJobs;
         }
         catch (Exception ex)

@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Save, Download, ArrowLeft, Plus, Trash2,
     Loader2, CheckCircle, AlertCircle, User, Mail, Phone,
-    MapPin, Linkedin, Github, Globe, FileText, Briefcase, GraduationCap, Wrench
+    MapPin, Linkedin, Github, Globe, FileText, Briefcase, GraduationCap, Wrench,
+    History, GitBranch
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cvApi, type CVStructuredData, type CVExperienceEntry, type CVEducationEntry } from '../../api/cv.api';
@@ -27,6 +28,8 @@ export function CVEditorPage() {
     const [saved, setSaved] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const autoDownloadTriggered = useRef(false);
+    const [showVersions, setShowVersions] = useState(false);
+    const [versionNote, setVersionNote] = useState('');
 
     const { data: initial, isLoading, error } = useQuery({
         queryKey: ['cv-data', id],
@@ -100,6 +103,23 @@ export function CVEditorPage() {
 
     const setField = <K extends keyof CVStructuredData>(key: K, value: CVStructuredData[K]) =>
         setCv(prev => prev ? { ...prev, [key]: value } : prev);
+
+    // ── Versioning ──
+    const { data: versions = [], isLoading: versionsLoading } = useQuery({
+        queryKey: ['cv-versions', id],
+        queryFn: () => cvApi.getCVVersions(id!),
+        enabled: !!id && id !== 'new' && showVersions,
+    });
+
+    const saveVersionMutation = useMutation({
+        mutationFn: () => cvApi.saveCVVersion(id!, versionNote || undefined),
+        onSuccess: () => {
+            toast.success('Đã lưu phiên bản mới');
+            setVersionNote('');
+            queryClient.invalidateQueries({ queryKey: ['cv-versions', id] });
+        },
+        onError: () => toast.error('Lỗi khi lưu phiên bản'),
+    });
 
     const setExp = (i: number, field: keyof CVExperienceEntry, value: string | string[]) =>
         setCv(prev => {
@@ -189,6 +209,17 @@ export function CVEditorPage() {
                             <CheckCircle className="h-4 w-4" /> {t('cv.editor.toolbar.saved')}
                         </span>
                     )}
+                    {id !== 'new' && (
+                        <button
+                            onClick={() => setShowVersions(v => !v)}
+                            className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                                showVersions ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-200 hover:bg-gray-50'
+                            }`}
+                        >
+                            <History className="h-4 w-4" />
+                            Lịch sử
+                        </button>
+                    )}
                     <button
                         onClick={save}
                         disabled={saveMutation.isPending}
@@ -207,6 +238,60 @@ export function CVEditorPage() {
                     </button>
                 </div>
             </div>
+
+            {/* ── Version History Panel ── */}
+            {showVersions && (
+                <div className="no-print mb-6 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                            <GitBranch className="h-4 w-4 text-indigo-500" />
+                            Lịch sử phiên bản
+                        </h3>
+                        {/* Save version form */}
+                        <div className="flex items-center gap-2">
+                            <input
+                                value={versionNote}
+                                onChange={(e) => setVersionNote(e.target.value)}
+                                placeholder="Ghi chú phiên bản..."
+                                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs w-48 focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                            />
+                            <button
+                                onClick={() => saveVersionMutation.mutate()}
+                                disabled={saveVersionMutation.isPending}
+                                className="flex items-center gap-1.5 rounded-lg bg-indigo-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                            >
+                                {saveVersionMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <GitBranch className="h-3 w-3" />}
+                                Lưu phiên bản
+                            </button>
+                        </div>
+                    </div>
+
+                    {versionsLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+                        </div>
+                    ) : versions.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-4">Chưa có phiên bản nào được lưu.</p>
+                    ) : (
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {versions.map((v: any, i: number) => (
+                                <div key={v.id || i} className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2">
+                                    <div className="h-2 w-2 rounded-full bg-indigo-400 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-800 truncate">
+                                            v{v.version ?? i + 1}
+                                            {v.versionNote && <span className="text-gray-500"> — {v.versionNote}</span>}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400">
+                                            {new Date(v.createdAt).toLocaleString('vi-VN')}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ── CV Paper ── */}
             <div className="cv-paper mx-auto w-full max-w-3xl rounded-2xl bg-white p-10 shadow-lg border border-gray-100 print:shadow-none print:p-8">
