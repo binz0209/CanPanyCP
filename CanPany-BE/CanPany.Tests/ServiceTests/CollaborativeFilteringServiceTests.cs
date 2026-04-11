@@ -10,12 +10,13 @@ namespace CanPany.Tests.ServiceTests;
 public class CollaborativeFilteringServiceTests
 {
     private readonly Mock<IUserJobInteractionRepository> _interactionRepoMock = new();
+    private readonly Mock<ICfModelRepository> _cfModelRepoMock = new();
     private readonly Mock<ILogger<CollaborativeFilteringService>> _loggerMock = new();
     private readonly CollaborativeFilteringService _service;
 
     public CollaborativeFilteringServiceTests()
     {
-        _service = new CollaborativeFilteringService(_interactionRepoMock.Object, _loggerMock.Object);
+        _service = new CollaborativeFilteringService(_interactionRepoMock.Object, _cfModelRepoMock.Object, _loggerMock.Object);
     }
 
     [Fact]

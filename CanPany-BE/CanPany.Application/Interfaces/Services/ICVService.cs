@@ -14,6 +14,8 @@ public interface ICVService
     Task<bool> UpdateAsync(string id, CV cv);
     Task<bool> DeleteAsync(string id);
     Task SetAsDefaultAsync(string cvId, string userId);
+    Task<IEnumerable<CV>> GetVersionsAsync(string parentCvId);
+    Task<int> GetNextVersionAsync(string parentCvId);
 }
 
 

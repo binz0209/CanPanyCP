@@ -275,6 +275,14 @@
     "empty": {
       "title": "Chưa có dữ liệu phân tích",
       "description": "Kết nối GitHub trong trang hồ sơ, sau đó nhấn phân tích để Gemini AI đọc code và trích xuất kỹ năng."
+    },
+    "consent": {
+      "title": "Yêu cầu đồng ý truy cập GitHub",
+      "description": "Để phân tích GitHub, bạn cần đồng ý cho hệ thống truy cập và xử lý dữ liệu GitHub của bạn theo Nghị định 13/2023/NĐ-CP.",
+      "grantBtn": "Đồng ý truy cập GitHub",
+      "granted": "Đã cấp quyền truy cập GitHub!",
+      "error": "Không thể cấp quyền. Vui lòng thử lại.",
+      "required": "Bạn cần đồng ý truy cập GitHub trước khi phân tích."
     }
   },
   "recommendedJobs": {
@@ -434,7 +442,8 @@
     "settingsNotifications": "Thông báo",
     "settingsPrivacy": "Quyền riêng tư",
     "notifications": "Thông báo",
-    "wallet": "Ví của tôi"
+    "wallet": "Ví của tôi",
+    "contracts": "Hợp đồng"
   },
   "profile": {
     "hero": {

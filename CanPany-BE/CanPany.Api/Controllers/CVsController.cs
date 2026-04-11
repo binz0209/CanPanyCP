@@ -453,11 +453,91 @@ public class CVsController : ControllerBase
             return StatusCode(500, ApiResponse.CreateError("Failed to save CV data", "UpdateCVDataFailed"));
         }
     }
+
+
+    /// <summary>
+    /// UC-20: Get all versions of a CV.
+    /// GET /api/cvs/{id}/versions
+    /// </summary>
+    [HttpGet("{id}/versions")]
+    public async Task<IActionResult> GetCVVersions(string id)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var cv = await _cvService.GetByIdAsync(id);
+            if (cv == null || cv.UserId != userId)
+                return NotFound(ApiResponse.CreateError("CV not found", "NotFound"));
+
+            // Use the CV's own ID or its ParentCvId as the root
+            var rootId = cv.ParentCvId ?? cv.Id;
+            var versions = await _cvService.GetVersionsAsync(rootId);
+
+            return Ok(ApiResponse<IEnumerable<CV>>.CreateSuccess(versions));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GET_CV_VERSIONS] id={Id}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to get CV versions", "GetVersionsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-20: Save current CV state as a new version.
+    /// POST /api/cvs/{id}/save-version
+    /// </summary>
+    [HttpPost("{id}/save-version")]
+    public async Task<IActionResult> SaveCVVersion(string id, [FromBody] SaveVersionRequest? request)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var cv = await _cvService.GetByIdAsync(id);
+            if (cv == null || cv.UserId != userId)
+                return NotFound(ApiResponse.CreateError("CV not found", "NotFound"));
+
+            // Use the original CV as the root parent
+            var rootId = cv.ParentCvId ?? cv.Id;
+            var nextVersion = await _cvService.GetNextVersionAsync(rootId);
+
+            // Clone the CV as a new version
+            var newCv = new CV
+            {
+                UserId = cv.UserId,
+                FileName = cv.FileName,
+                FileUrl = cv.FileUrl,
+                FileSize = cv.FileSize,
+                MimeType = cv.MimeType,
+                CloudinaryPublicId = cv.CloudinaryPublicId,
+                IsDefault = false,
+                ExtractedSkills = new List<string>(cv.ExtractedSkills),
+                StructuredData = cv.StructuredData,
+                IsAIGenerated = cv.IsAIGenerated,
+                Version = nextVersion,
+                ParentCvId = rootId,
+                VersionNote = request?.VersionNote ?? $"Version {nextVersion}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var created = await _cvService.CreateAsync(newCv);
+
+            return Ok(ApiResponse<CV>.CreateSuccess(created, $"CV version {nextVersion} saved"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SAVE_CV_VERSION] id={Id}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to save CV version", "SaveVersionFailed"));
+        }
+    }
 }
 
 
 
 public record UpdateCVRequest(string? FileName);
 
-
+public record SaveVersionRequest(string? VersionNote);
 

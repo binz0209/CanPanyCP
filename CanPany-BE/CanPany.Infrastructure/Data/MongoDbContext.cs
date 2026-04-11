@@ -80,6 +80,13 @@ public class MongoDbContext
     public IMongoCollection<JobBookmark> JobBookmarks => _database.GetCollection<JobBookmark>("job_bookmarks");
     public IMongoCollection<UserJobInteraction> UserJobInteractions => _database.GetCollection<UserJobInteraction>("user_job_interactions");
     public IMongoCollection<FilterPreset> FilterPresets => _database.GetCollection<FilterPreset>("filter_presets");
+
+    // Collections — CF & Recommendations
+    public IMongoCollection<CfModel> CfModels => _database.GetCollection<CfModel>("cf_models");
+    public IMongoCollection<RecommendationLog> RecommendationLogs => _database.GetCollection<RecommendationLog>("recommendation_logs");
+
+    // Collections — Consent & Privacy
+    public IMongoCollection<UserConsent> UserConsents => _database.GetCollection<UserConsent>("user_consents");
 }
 
 public class MongoOptions

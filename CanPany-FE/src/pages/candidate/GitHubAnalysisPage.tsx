@@ -4,10 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Github, RefreshCw, Star, GitFork, Code2, Brain, Zap,
     CheckCircle, AlertCircle, Clock, BarChart3, BookOpen,
-    Sparkles, Trophy, ChevronRight, ExternalLink
+    Sparkles, Trophy, ChevronRight, ExternalLink, Shield, ShieldCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { candidateApi } from '../../api/candidate.api';
+import { consentApi } from '../../api/consent.api';
 
 // ─── types ───────────────────────────────────────────────────────────────────
 interface LanguageStat { language: string; percentage: number; bytes: number }
@@ -47,6 +48,21 @@ export function GitHubAnalysisPage() {
     });
     const analysis: GitHubAnalysis | null = latestRaw?.data ?? null;
 
+    // Consent check
+    const { data: hasConsent, isLoading: consentLoading, refetch: refetchConsent } = useQuery({
+        queryKey: ['github-consent-check'],
+        queryFn: () => consentApi.checkConsent('ExternalSync_GitHub'),
+    });
+
+    const grantConsentMutation = useMutation({
+        mutationFn: () => consentApi.grantConsent('ExternalSync_GitHub', '1.0'),
+        onSuccess: () => {
+            refetchConsent();
+            toast.success(t('githubAnalysis.consent.granted'));
+        },
+        onError: () => toast.error(t('githubAnalysis.consent.error')),
+    });
+
     // Sync skill job polling
     const { data: jobProgress } = useQuery({
         queryKey: ['github-job-status', analysisJobId],
@@ -74,13 +90,48 @@ export function GitHubAnalysisPage() {
             setAnalysisJobId(d.jobId);
             toast.success(t('githubAnalysis.toast.started'));
         },
-        onError: () => toast.error(t('githubAnalysis.toast.error')),
+        onError: (err: any) => {
+            const msg = err?.response?.data?.message || '';
+            if (msg.toLowerCase().includes('consent')) {
+                toast.error(t('githubAnalysis.consent.required'));
+                refetchConsent();
+            } else {
+                toast.error(t('githubAnalysis.toast.error'));
+            }
+        },
     });
 
     const isRunning = !!analysisJobId && jobProgress?.status !== 'Completed' && jobProgress?.status !== 'Failed';
+    const needsConsent = !consentLoading && hasConsent === false;
 
     return (
         <div className="space-y-6">
+            {/* Consent Banner */}
+            {needsConsent && (
+                <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm">
+                    <div className="flex items-start gap-4">
+                        <div className="rounded-xl bg-amber-100 p-3">
+                            <Shield className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-sm font-semibold text-amber-900">
+                                {t('githubAnalysis.consent.title', { defaultValue: 'Yêu cầu đồng ý truy cập GitHub' })}
+                            </h3>
+                            <p className="mt-1 text-xs text-amber-700 leading-relaxed">
+                                {t('githubAnalysis.consent.description', { defaultValue: 'Để phân tích GitHub, bạn cần đồng ý cho hệ thống truy cập và xử lý dữ liệu GitHub của bạn theo Nghị định 13/2023/NĐ-CP.' })}
+                            </p>
+                            <button
+                                onClick={() => grantConsentMutation.mutate()}
+                                disabled={grantConsentMutation.isPending}
+                                className="mt-3 flex items-center gap-2 rounded-xl bg-amber-600 text-white px-4 py-2 text-xs font-medium hover:bg-amber-700 disabled:opacity-50 transition-colors"
+                            >
+                                {grantConsentMutation.isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                                {t('githubAnalysis.consent.grantBtn', { defaultValue: 'Đồng ý truy cập GitHub' })}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-[#161b22] p-6 text-white shadow-xl">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -102,7 +153,7 @@ export function GitHubAnalysisPage() {
                     </div>
                     <button
                         onClick={() => refreshMutation.mutate()}
-                        disabled={isRunning || refreshMutation.isPending}
+                        disabled={isRunning || refreshMutation.isPending || needsConsent}
                         className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-50 px-5 py-2.5 text-sm font-medium transition-all self-start lg:self-auto"
                     >
                         <RefreshCw className={`h-4 w-4 ${isRunning ? 'animate-spin' : ''}`} />

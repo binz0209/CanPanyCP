@@ -150,6 +150,22 @@ public class CVService : ICVService
             throw;
         }
     }
+
+    public async Task<IEnumerable<CV>> GetVersionsAsync(string parentCvId)
+    {
+        if (string.IsNullOrWhiteSpace(parentCvId))
+            throw new ArgumentException("Parent CV ID cannot be null or empty", nameof(parentCvId));
+
+        return await _repo.GetVersionsAsync(parentCvId);
+    }
+
+    public async Task<int> GetNextVersionAsync(string parentCvId)
+    {
+        if (string.IsNullOrWhiteSpace(parentCvId))
+            throw new ArgumentException("Parent CV ID cannot be null or empty", nameof(parentCvId));
+
+        return await _repo.GetNextVersionAsync(parentCvId);
+    }
 }
 
 

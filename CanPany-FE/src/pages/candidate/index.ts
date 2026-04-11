@@ -13,4 +13,6 @@ export { CVEditorPage } from './CVEditorPage';
 export { WalletPage } from './WalletPage';
 export { PremiumPage } from './PremiumPage';
 export { NotificationsPage } from './settings/NotificationsPage';
+export { PrivacyConsentPage } from './settings/PrivacyConsentPage';
 export { GitHubAnalysisPage } from './GitHubAnalysisPage';
+export { ContractsPage } from './ContractsPage';

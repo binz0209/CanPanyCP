@@ -19,6 +19,7 @@ public class HybridRecommendationServiceTests
     private readonly Mock<IInteractionTrackingService> _interactionServiceMock = new();
     private readonly Mock<ICVRepository> _cvRepoMock = new();
     private readonly Mock<IGitHubAnalysisRepository> _githubAnalysisRepoMock = new();
+    private readonly Mock<IRecommendationLogRepository> _recLogRepoMock = new();
     private readonly Mock<ILogger<HybridRecommendationService>> _loggerMock = new();
     private readonly HybridRecommendationService _service;
 
@@ -53,6 +54,7 @@ public class HybridRecommendationServiceTests
             _interactionServiceMock.Object,
             _cvRepoMock.Object,
             _githubAnalysisRepoMock.Object,
+            _recLogRepoMock.Object,
             _loggerMock.Object);
     }
 

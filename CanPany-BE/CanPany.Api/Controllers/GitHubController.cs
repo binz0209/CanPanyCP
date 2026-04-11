@@ -26,6 +26,7 @@ public class GitHubController : ControllerBase
     private readonly IUserProfileService _profileService;
     private readonly IGitHubService _gitHubService;
     private readonly II18nService _i18nService;
+    private readonly IConsentService _consentService;
     private readonly ILogger<GitHubController> _logger;
 
     public GitHubController(
@@ -35,6 +36,7 @@ public class GitHubController : ControllerBase
         IUserProfileService profileService,
         IGitHubService gitHubService,
         II18nService i18nService,
+        IConsentService consentService,
         ILogger<GitHubController> logger)
     {
         _jobProducer = jobProducer;
@@ -43,6 +45,7 @@ public class GitHubController : ControllerBase
         _profileService = profileService;
         _gitHubService = gitHubService;
         _i18nService = i18nService;
+        _consentService = consentService;
         _logger = logger;
     }
 
@@ -64,6 +67,15 @@ public class GitHubController : ControllerBase
             if (string.IsNullOrEmpty(request.GitHubUsername))
             {
                 return BadRequest(new { message = "GitHub username is required" });
+            }
+
+            // UC-12: Check external data consent before syncing
+            var hasConsent = await _consentService.HasConsentAsync(userId, "ExternalSync_GitHub");
+            if (!hasConsent)
+            {
+                return BadRequest(ApiResponse.CreateError(
+                    "GitHub data sync requires your consent. Please grant 'ExternalSync_GitHub' consent first.",
+                    "ConsentRequired"));
             }
 
             // Create job payload

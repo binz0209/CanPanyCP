@@ -56,6 +56,18 @@ public class CV : AggregateRoot
 
     [BsonElement("isAIGenerated")]
     public bool IsAIGenerated { get; set; } = false;
+
+    /// <summary>Version number for CV versioning (UC-20). Starts at 1.</summary>
+    [BsonElement("version")]
+    public int Version { get; set; } = 1;
+
+    /// <summary>Reference to the parent CV for version chain tracking.</summary>
+    [BsonElement("parentCvId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? ParentCvId { get; set; }
+
+    /// <summary>Description of what changed in this version.</summary>
+    [BsonElement("versionNote")]
+    public string? VersionNote { get; set; }
 }
 
 /// <summary>Structured CV data returned by Gemini and editable by the user.</summary>

@@ -15,5 +15,7 @@ public interface ICVRepository
     Task DeleteAsync(string id);
     Task SetAsDefaultAsync(string cvId, string userId);
     Task<bool> ExistsAsync(string id);
+    Task<IEnumerable<CV>> GetVersionsAsync(string parentCvId);
+    Task<int> GetNextVersionAsync(string parentCvId);
 }
 

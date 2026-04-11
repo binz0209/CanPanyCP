@@ -13,7 +13,8 @@ import {
   CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, 
   ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage, 
   PremiumPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, 
-  RecommendedJobsPage, CandidateMessagesPage, CVEditorPage, GitHubAnalysisPage
+  RecommendedJobsPage, CandidateMessagesPage, CVEditorPage, GitHubAnalysisPage,
+  PrivacyConsentPage, ContractsPage
 } from '@/pages/candidate';
 import {
   AdminDashboardPage,
@@ -146,6 +147,8 @@ function App() {
             <Route path="/candidate/messages/:conversationId" element={<CandidateMessagesPage />} />
             <Route path="/candidate/ai/skills" element={<GitHubAnalysisPage />} />
             <Route path="/candidate/cv/editor/:id" element={<CVEditorPage />} />
+            <Route path="/candidate/settings/privacy" element={<PrivacyConsentPage />} />
+            <Route path="/candidate/contracts" element={<ContractsPage />} />
           </Route>
 
           {/* Company Routes */}

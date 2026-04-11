@@ -1,7 +1,7 @@
+using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Interfaces;
+using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
-using CanPany.Shared.Common;
-using CanPany.Shared.Common.I18n;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CanPany.Api.Controllers;
