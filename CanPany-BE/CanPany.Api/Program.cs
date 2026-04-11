@@ -182,7 +182,7 @@ if (mongoOptions != null && !string.IsNullOrEmpty(mongoOptions.ConnectionString)
                 BackupStrategy = new CollectionMongoBackupStrategy()
             },
             Prefix = "hangfire",
-            CheckConnection = true,
+            CheckConnection = false,
             CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
         }));
 
@@ -220,7 +220,9 @@ builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IWalletReposit
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IWalletTransactionRepository, CanPany.Infrastructure.Repositories.WalletTransactionRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IJobBookmarkRepository, CanPany.Infrastructure.Repositories.JobBookmarkRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ICategoryRepository, CanPany.Infrastructure.Repositories.CategoryRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ILocationRepository, CanPany.Infrastructure.Repositories.LocationRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.ISkillRepository, CanPany.Infrastructure.Repositories.SkillRepository>();
+builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IExperienceLevelRepository, CanPany.Infrastructure.Repositories.ExperienceLevelRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IBannerRepository, CanPany.Infrastructure.Repositories.BannerRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IPremiumPackageRepository, CanPany.Infrastructure.Repositories.PremiumPackageRepository>();
 builder.Services.AddScoped<CanPany.Domain.Interfaces.Repositories.IAuditLogRepository, CanPany.Infrastructure.Repositories.AuditLogRepository>();
@@ -313,9 +315,12 @@ builder.Services.AddScoped<ICandidateSearchService, CandidateSearchService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<IExperienceLevelService, ExperienceLevelService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
+builder.Services.AddScoped<IUserPremiumService, UserPremiumService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
 builder.Services.AddScoped<ISePayService, SePayService>();

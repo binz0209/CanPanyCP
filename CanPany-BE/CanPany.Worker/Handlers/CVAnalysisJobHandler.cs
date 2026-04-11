@@ -65,7 +65,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
             var _analysisRepository = scope.ServiceProvider.GetRequiredService<ICVAnalysisRepository>();
             var _userProfileRepository = scope.ServiceProvider.GetRequiredService<IUserProfileRepository>();
 
-            await ReportProgressAsync(job.JobId, 10, "Job.CV.Analyze.FetchingFile");
+            await ReportProgressAsync(job.JobId, 10, "backgroundJobs.steps.fetchingCv");
 
             // Get CV details
             var cv = await _cvRepository.GetByIdAsync(payload.CVId);
@@ -93,7 +93,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
                 return JobResult.FailureResult($"Failed to download CV file: {ex.Message}", "DOWNLOAD_FAILED");
             }
 
-            await ReportProgressAsync(job.JobId, 30, "Job.CV.Analyze.ExtractingText");
+            await ReportProgressAsync(job.JobId, 30, "backgroundJobs.steps.extractingCvText");
 
             // Extract text from PDF bytes
             var sb = new StringBuilder();
@@ -125,7 +125,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
                 cvText = cvText.Substring(0, 20000);
             }
 
-            await ReportProgressAsync(job.JobId, 60, "Job.CV.Analyze.AnalyzingWithAI");
+            await ReportProgressAsync(job.JobId, 60, "backgroundJobs.steps.analyzingCvAi");
 
             // New comprehensive prompt that extracts profile data for updating user profile
             var prompt = $@"
@@ -243,7 +243,7 @@ IMPORTANT:
                 Certifications = extractedProfile.Certifications?.Select(c => new Domain.Entities.ExtractedCertification { Name = c }).ToList() ?? new List<Domain.Entities.ExtractedCertification>()
             };
 
-            await ReportProgressAsync(job.JobId, 80, "Job.CV.Analyze.SavingResults");
+            await ReportProgressAsync(job.JobId, 80, "backgroundJobs.steps.savingCvResults");
 
             // Update Domain Entity
             analysisDto.CVId = payload.CVId;
@@ -370,7 +370,7 @@ IMPORTANT:
 
             Logger.LogInformation("[CV_ANALYSIS_PROFILE_UPDATED] UserId: {UserId} - Profile updated with CV data", payload.UserId);
 
-            await ReportProgressAsync(job.JobId, 100, "Job.CV.Analyze.Completed");
+            await ReportProgressAsync(job.JobId, 100, "backgroundJobs.steps.successCvAnalyze");
 
             return JobResult.SuccessResult(new Dictionary<string, object?>
             {
@@ -384,7 +384,7 @@ IMPORTANT:
         catch (Exception ex)
         {
             Logger.LogError(ex, "[CV_ANALYSIS_FAILED] JobId: {JobId}", job.JobId);
-            await ReportProgressAsync(job.JobId, -1, $"Job.CV.Analyze.Error");
+            await ReportProgressAsync(job.JobId, -1, "backgroundJobs.steps.error", new Dictionary<string, object> { ["message"] = ex.Message });
             return JobResult.FailureResult(ex.Message, ex.GetType().Name);
         }
     }

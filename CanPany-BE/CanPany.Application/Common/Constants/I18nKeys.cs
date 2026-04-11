@@ -63,7 +63,7 @@ public static class I18nKeys
             public const string NotFound = "Error.Profile.NotFound";
             public const string UpdateFailed = "Error.Profile.UpdateFailed";
             public const string DeleteFailed = "Error.Profile.DeleteFailed";
-            public const string SyncLinkedInFailed = "Error.Profile.SyncLinkedInFailed";
+
             public const string SyncGitHubFailed = "Error.Profile.SyncGitHubFailed";
             
             public static class Avatar
@@ -236,7 +236,7 @@ public static class I18nKeys
             public const string Updated = "Success.Profile.Updated";
             public const string Deleted = "Success.Profile.Deleted";
             public const string AvatarUpdated = "Success.Profile.AvatarUpdated";
-            public const string LinkedInSynced = "Success.Profile.LinkedInSynced";
+
             public const string GitHubSynced = "Success.Profile.GitHubSynced";
         }
     }

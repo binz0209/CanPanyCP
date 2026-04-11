@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import type { UserProfile } from '../../../types';
 import { formatCurrency } from '../../../utils';
 import { Button } from '../../ui';
@@ -10,6 +12,7 @@ export interface CandidateSearchResultCardData {
     avatarUrl?: string;
     profile: UserProfile;
     matchScore: number;
+    aiReason?: string;
 }
 
 interface CandidateSearchResultCardProps {
@@ -26,6 +29,7 @@ export function CandidateSearchResultCard({
     onUnlock,
 }: CandidateSearchResultCardProps) {
     const { t } = useTranslation('company');
+    const [showAiReason, setShowAiReason] = useState(false);
 
     return (
         <div className="rounded-xl border border-gray-100 p-5 transition hover:border-[#00b14f]/30 hover:shadow-sm">
@@ -103,6 +107,31 @@ export function CandidateSearchResultCard({
                     </div>
                 </div>
             </div>
+
+            {/* AI Reasoning Section */}
+            {candidate.aiReason && (
+                <div className="mt-4 border-t border-gray-100 pt-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowAiReason(!showAiReason)}
+                        className="flex w-full items-center gap-2 text-left text-sm font-medium text-purple-700 transition hover:text-purple-900"
+                    >
+                        <Sparkles className="h-4 w-4 flex-shrink-0" />
+                        <span>{t('candidateSearch.aiReasonLabel')}</span>
+                        {showAiReason ? (
+                            <ChevronUp className="ml-auto h-4 w-4" />
+                        ) : (
+                            <ChevronDown className="ml-auto h-4 w-4" />
+                        )}
+                    </button>
+                    {showAiReason && (
+                        <p className="mt-2 rounded-lg bg-purple-50 px-4 py-3 text-sm leading-relaxed text-purple-900">
+                            {candidate.aiReason}
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
+

@@ -171,6 +171,41 @@
   },
   "backgroundJobs": {
     "title": "Background Jobs",
+    "titles": {
+      "analyzeCv": "Analyze CV: {{fileName}}",
+      "generateAiCv": "AI CV Generation",
+      "tailorAiCv": "Tailor AI CV for Job",
+      "syncSkillsRec": "Sync Skills for Recommendations",
+      "syncSkillsGit": "Sync Skills from {{count}} repo(s)",
+      "fallback": "Background Job"
+    },
+    "steps": {
+      "pending": "Pending...",
+      "loadingCandidate": "Loading candidate info...",
+      "processingSkills": "Processing skills...",
+      "generatingCvAi": "AI is generating CV...",
+      "savingCv": "Saving CV...",
+      "successCvGen": "CV generated successfully!",
+      "error": "Error: {{message}}",
+      "loadingProfile": "Loading user profile...",
+      "extractingSkills": "Extracting skills from profile/CV/GitHub...",
+      "generatingEmbeddings": "Generating embeddings using Gemini...",
+      "successSyncRec": "Skill synchronization successful.",
+      "analyzingRepos": "Analyzing repos and extracting skills...",
+      "fetchingRepos": "Fetching GitHub repositories...",
+      "analyzingLangs": "Found {{repos}} repositories. Analyzing languages...",
+      "preparingData": "Preparing data for skill analysis...",
+      "analyzingAi": "Analyzing skills with AI...",
+      "savingRag": "Saving analysis to RAG storage...",
+      "finalizing": "Finalizing analysis results...",
+      "successGithub": "GitHub analysis completed successfully!",
+      "rateLimited": "Gemini AI rate limited. Will retry after {{seconds}}s...",
+      "fetchingCv": "Fetching CV file...",
+      "extractingCvText": "Extracting text from CV...",
+      "analyzingCvAi": "Analyzing CV with AI...",
+      "savingCvResults": "Saving analysis results...",
+      "successCvAnalyze": "CV analysis completed successfully!"
+    },
     "subtitle": "Monitor the status of background tasks running in your account",
     "status": {
       "pending": "Pending",
@@ -429,9 +464,6 @@
       "cancel": "Cancel",
       "edit": "Edit",
       "uploadAvatar": "Upload avatar",
-      "sync": "Sync",
-      "syncing": "Syncing...",
-      "syncLinkedin": "Sync LinkedIn",
       "viewProgress": "View progress"
     },
     "avatar": {
@@ -447,13 +479,7 @@
     "social": {
       "title": "Social links"
     },
-    "linkedin": {
-      "modal": {
-        "title": "Sync LinkedIn",
-        "subtitle": "Paste your LinkedIn data to sync your profile",
-        "placeholder": "Paste LinkedIn data here (JSON or profile URL)"
-      }
-    },
+
     "github": {
       "linked": "GitHub connected",
       "analyzeRepos": "Select repos & extract skills",
@@ -492,8 +518,7 @@
       "githubLinked": "GitHub connected successfully! (@{{username}})",
       "githubLinkFailed": "GitHub connection failed: {{error}}",
       "unknownError": "Unknown error",
-      "linkedinSynced": "LinkedIn profile synced!",
-      "linkedinSyncFailed": "Failed to sync LinkedIn profile",
+
       "repoAnalysisStarted": "Analyzing repositories and extracting skills...",
       "repoAnalysisFailed": "Could not start analysis. Please try again.",
       "recommendationSyncStarted": "Started syncing skills for recommendations.",

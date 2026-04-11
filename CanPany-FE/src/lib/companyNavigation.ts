@@ -6,7 +6,6 @@ export const companyPaths = {
     jobs: '/company/jobs',
     newJob: '/company/jobs/new',
     editJob: (jobId: string) => `/company/jobs/${jobId}/edit`,
-    candidateSearch: '/company/candidates/search',
     applications: '/company/applications',
     applicationDetail: (applicationId: string) => `/company/applications/${applicationId}`,
     messages: '/company/messages',
@@ -40,10 +39,6 @@ export const companyNavigationItems: CompanyNavItem[] = [
             { labelKey: 'sidebar.createJob', path: companyPaths.newJob },
             { labelKey: 'sidebar.reviewApplications', path: companyPaths.applications },
         ],
-    },
-    {
-        labelKey: 'sidebar.candidateSearch',
-        path: companyPaths.candidateSearch,
     },
     {
         labelKey: 'sidebar.messages',

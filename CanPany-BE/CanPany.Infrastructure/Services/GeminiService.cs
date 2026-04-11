@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Models;
+using CanPany.Application.DTOs;
 using CanPany.Domain.DTOs.Analysis;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -43,12 +44,15 @@ public class GeminiService : IGeminiService
     private readonly string _apiKey;
     private readonly string _chatModelUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
-    // Fallback order for embedding models/endpoints (Gemini API can change available model names by version/project)
+    // Fallback order for embedding models/endpoints
+    // gemini-embedding-001 is the current working model (text-embedding-004 & embedding-001 deprecated)
+    // outputDimensionality is set to 768 to match existing MongoDB vector_index and stored embeddings
+    private const int EmbeddingDimensions = 768;
     private static readonly (string Model, string Url)[] EmbeddingCandidates =
     {
+        ("models/gemini-embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent"),
         ("models/text-embedding-004", "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent"),
-        ("models/embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent"),
-        ("models/gemini-embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent")
+        ("models/embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent")
     };
 
     // Rate limit config
@@ -134,7 +138,8 @@ public class GeminiService : IGeminiService
                 var requestBody = new
                 {
                     model,
-                    content = new { parts = new[] { new { text } } }
+                    content = new { parts = new[] { new { text } } },
+                    outputDimensionality = EmbeddingDimensions
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
@@ -650,5 +655,118 @@ Return EXACTLY this JSON structure (no extra keys, no markdown):
             data.Experience.Count);
 
         return data;
+    }
+
+    /// <summary>
+    /// RAG: Send top candidate summaries + company request to Gemini for ranking & reasoning
+    /// </summary>
+    public async Task<List<CandidateRankResult>> RankCandidatesAsync(
+        string companyRequest,
+        List<CandidateSummaryForRanking> candidates,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+            throw new InvalidOperationException("Gemini API Key is missing.");
+
+        if (candidates.Count == 0)
+            return new List<CandidateRankResult>();
+
+        // Build candidate summaries for the prompt
+        var candidateLines = candidates.Select((c, idx) =>
+        {
+            var skills = c.Skills.Any() ? string.Join(", ", c.Skills) : "N/A";
+            return $"""
+            Candidate #{idx + 1}:
+            - UserId: {c.UserId}
+            - Name: {c.FullName}
+            - Title: {c.Title ?? "N/A"}
+            - Bio: {(string.IsNullOrWhiteSpace(c.Bio) ? "N/A" : c.Bio)}
+            - Experience: {(string.IsNullOrWhiteSpace(c.Experience) ? "N/A" : c.Experience)}
+            - Location: {c.Location ?? "N/A"}
+            - Skills: {skills}
+            - Vector Match Score: {c.VectorScore:F1}%
+            """;
+        });
+
+        var candidateBlock = string.Join("\n", candidateLines);
+
+        var systemPrompt = @"You are an expert AI recruiting assistant. 
+Your task is to analyze candidate profiles and rank them against a company's hiring request.
+For each candidate, provide:
+1. A brief reason explaining WHY they are (or aren't) a good fit
+2. An adjusted match score (0-100) that reflects your analysis
+
+Return ONLY a valid JSON array — no markdown fences, no extra text.
+Each element must have: ""userId"" (string), ""reason"" (string, 1-2 sentences), ""adjustedScore"" (number 0-100).
+Order by adjustedScore descending.";
+
+        var userPrompt = $@"COMPANY REQUEST:
+{companyRequest}
+
+CANDIDATE PROFILES:
+{candidateBlock}
+
+Analyze each candidate against the company request. Return a JSON array:
+[
+  {{""userId"": ""..."", ""reason"": ""..."", ""adjustedScore"": 85}},
+  ...
+]";
+
+        _logger.LogInformation("[GEMINI_RAG] Ranking {Count} candidates for request: {Request}",
+            candidates.Count, companyRequest.Length > 100 ? companyRequest[..100] + "..." : companyRequest);
+
+        try
+        {
+            var raw = await GenerateChatResponseAsync(systemPrompt, userPrompt);
+
+            // Extract JSON array from response
+            var arrayStart = raw.IndexOf('[');
+            var arrayEnd = raw.LastIndexOf(']');
+            if (arrayStart < 0 || arrayEnd <= arrayStart)
+            {
+                _logger.LogWarning("[GEMINI_RAG_PARSE] Could not find JSON array in response. Length: {Len}", raw.Length);
+                return new List<CandidateRankResult>();
+            }
+
+            var jsonArray = raw[arrayStart..(arrayEnd + 1)];
+
+            var results = JsonSerializer.Deserialize<List<RagRankItem>>(jsonArray,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (results == null || results.Count == 0)
+            {
+                _logger.LogWarning("[GEMINI_RAG_PARSE] Deserialized null/empty from Gemini RAG response");
+                return new List<CandidateRankResult>();
+            }
+
+            _logger.LogInformation("[GEMINI_RAG] Successfully ranked {Count} candidates", results.Count);
+
+            return results.Select(r => new CandidateRankResult(
+                r.UserId ?? "",
+                r.Reason ?? "",
+                Math.Clamp(r.AdjustedScore, 0, 100)
+            )).ToList();
+        }
+        catch (GeminiRateLimitException)
+        {
+            _logger.LogWarning("[GEMINI_RAG_429] Rate limited during candidate ranking");
+            throw; // Propagate for caller to handle gracefully
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GEMINI_RAG_ERROR] Error ranking candidates");
+            // Return empty — caller will use vector-only results
+            return new List<CandidateRankResult>();
+        }
+    }
+
+    /// <summary>
+    /// Internal DTO for deserializing Gemini RAG ranking JSON response
+    /// </summary>
+    private class RagRankItem
+    {
+        public string? UserId { get; set; }
+        public string? Reason { get; set; }
+        public double AdjustedScore { get; set; }
     }
 }

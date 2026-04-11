@@ -170,7 +170,42 @@
     }
   },
   "backgroundJobs": {
-    "title": "Tiến trình công việc",
+    "title": "Tiến trình AI",
+    "titles": {
+      "analyzeCv": "Phân tích CV: {{fileName}}",
+      "generateAiCv": "Tạo CV bằng AI",
+      "tailorAiCv": "Tạo CV phù hợp với JD",
+      "syncSkillsRec": "Đồng bộ kỹ năng gợi ý việc làm",
+      "syncSkillsGit": "Đồng bộ kỹ năng từ {{count}} repo(s)",
+      "fallback": "Tiến trình xử lý nền"
+    },
+    "steps": {
+      "pending": "Đang chờ xử lý...",
+      "loadingCandidate": "Đang tải thông tin ứng viên...",
+      "processingSkills": "Đang xử lý kỹ năng...",
+      "generatingCvAi": "AI đang soạn thảo CV...",
+      "savingCv": "Đang lưu CV...",
+      "successCvGen": "Tạo CV thành công!",
+      "error": "Lỗi: {{message}}",
+      "loadingProfile": "Đang tải hồ sơ người dùng...",
+      "extractingSkills": "Đang tổng hợp kỹ năng từ profile/CV/GitHub...",
+      "generatingEmbeddings": "Đang tạo embedding bằng Gemini...",
+      "successSyncRec": "Đồng bộ kỹ năng gợi ý thành công.",
+      "analyzingRepos": "Đang phân tích repos và trích xuất skills...",
+      "fetchingRepos": "Đang tải danh sách GitHub repositories...",
+      "analyzingLangs": "Tìm thấy {{repos}} mục. Đang phân tích ngôn ngữ...",
+      "preparingData": "Đang chuẩn bị dữ liệu...",
+      "analyzingAi": "Đang phân tích kỹ năng bằng AI...",
+      "savingRag": "Đang lưu trữ dữ liệu phân tích...",
+      "finalizing": "Đang hoàn thiện kết quả phân tích...",
+      "successGithub": "Phân tích GitHub thành công!",
+      "rateLimited": "Gemini AI đang bị giới hạn. Thử lại sau {{seconds}}s...",
+      "fetchingCv": "Đang tải hồ sơ CV...",
+      "extractingCvText": "Đang trích xuất nội dung CV...",
+      "analyzingCvAi": "Đang phân tích CV với AI...",
+      "savingCvResults": "Đang lưu kết quả phân tích...",
+      "successCvAnalyze": "Phân tích CV thành công!"
+    },
     "subtitle": "Theo dõi trạng thái các tác vụ nền đang chạy trong tài khoản của bạn",
     "status": {
       "pending": "Chờ xử lý",
@@ -429,9 +464,6 @@
       "cancel": "Hủy",
       "edit": "Chỉnh sửa",
       "uploadAvatar": "Tải ảnh đại diện",
-      "sync": "Đồng bộ",
-      "syncing": "Đang đồng bộ...",
-      "syncLinkedin": "Đồng bộ LinkedIn",
       "viewProgress": "Xem tiến trình"
     },
     "avatar": {
@@ -447,13 +479,7 @@
     "social": {
       "title": "Liên kết mạng xã hội"
     },
-    "linkedin": {
-      "modal": {
-        "title": "Đồng bộ LinkedIn",
-        "subtitle": "Nhập dữ liệu LinkedIn của bạn để đồng bộ hồ sơ",
-        "placeholder": "Dán dữ liệu LinkedIn tại đây (JSON format hoặc profile URL)"
-      }
-    },
+
     "github": {
       "linked": "Đã liên kết GitHub",
       "analyzeRepos": "Chọn repos & Trích xuất skills",
@@ -492,8 +518,7 @@
       "githubLinked": "Đã liên kết GitHub thành công! (@{{username}})",
       "githubLinkFailed": "Liên kết GitHub thất bại: {{error}}",
       "unknownError": "Lỗi không xác định",
-      "linkedinSynced": "Đồng bộ LinkedIn thành công!",
-      "linkedinSyncFailed": "Đồng bộ LinkedIn thất bại",
+
       "repoAnalysisStarted": "Đang phân tích repositories và trích xuất skills...",
       "repoAnalysisFailed": "Không thể bắt đầu phân tích. Vui lòng thử lại.",
       "recommendationSyncStarted": "Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm.",

@@ -34,6 +34,9 @@ public class UserProfile : AggregateRoot
     [BsonElement("experience")]
     public string? Experience { get; set; }
 
+    [BsonElement("experienceLevelId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? ExperienceLevelId { get; set; }
+
     [BsonElement("education")]
     public string? Education { get; set; }
 
@@ -51,6 +54,9 @@ public class UserProfile : AggregateRoot
 
     [BsonElement("location")]
     public string? Location { get; set; }
+
+    [BsonElement("locationId"), BsonRepresentation(BsonType.ObjectId)]
+    public string? LocationId { get; set; }
 
     [BsonElement("hourlyRate")]
     public decimal? HourlyRate { get; set; }

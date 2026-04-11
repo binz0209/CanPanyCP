@@ -137,22 +137,6 @@ public class UserProfileService : IUserProfileService
         }
     }
 
-    public async Task<bool> SyncFromLinkedInAsync(string userId, string linkedInData)
-    {
-        try
-        {
-            // TODO: Parse LinkedIn data and update profile
-            // This should parse JSON data from LinkedIn API and update profile fields
-            _logger.LogInformation("Syncing LinkedIn data for user: {UserId}", userId);
-            await Task.CompletedTask;
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error syncing LinkedIn data: {UserId}", userId);
-            return false;
-        }
-    }
 
     public async Task<bool> SyncFromGitHubAsync(string userId, string gitHubData)
     {

@@ -53,11 +53,6 @@ const CompanyJobFormPage = lazy(() =>
     default: module.CompanyJobFormPage,
   }))
 );
-const CompanyCandidateSearchPage = lazy(() =>
-  import('@/pages/company/CompanyCandidateSearchPage').then((module) => ({
-    default: module.CompanyCandidateSearchPage,
-  }))
-);
 const CompanyApplicationsPage = lazy(() =>
   import('@/pages/company/CompanyApplicationsPage').then((module) => ({
     default: module.CompanyApplicationsPage,
@@ -162,7 +157,6 @@ function App() {
             <Route path={companyPaths.jobs} element={<LazyRoute><CompanyJobsPage /></LazyRoute>} />
             <Route path={companyPaths.newJob} element={<LazyRoute><CompanyJobFormPage /></LazyRoute>} />
             <Route path="/company/jobs/:jobId/edit" element={<LazyRoute><CompanyJobFormPage /></LazyRoute>} />
-            <Route path={companyPaths.candidateSearch} element={<LazyRoute><CompanyCandidateSearchPage /></LazyRoute>} />
             <Route path={companyPaths.applications} element={<LazyRoute><CompanyApplicationsPage /></LazyRoute>} />
             <Route path="/company/applications/:applicationId" element={<LazyRoute><CompanyApplicationDetailPage /></LazyRoute>} />
             {/* No conversationId → landing page; with conversationId → chat thread */}
