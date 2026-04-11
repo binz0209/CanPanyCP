@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Menu, X, User, LogOut, Briefcase, Settings, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,10 +14,12 @@ export function Navbar() {
     const { user, isAuthenticated, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const displayName = user?.fullName?.trim() || t('nav.login');
     const displayInitial = displayName.charAt(0).toUpperCase();
     const displayFirstName = displayName.split(' ')[0];
+    const isCandidateNotificationsActive = location.pathname === '/candidate/notifications';
 
     const handleLogout = () => {
         logout();
@@ -70,7 +72,7 @@ export function Navbar() {
                                 {t('nav.companies')}
                             </Link>
                             <Link
-                                to="/cv"
+                                to="/candidate/cv/list"
                                 className="text-sm font-medium text-gray-700 transition-colors hover:text-[#00b14f] dark:text-gray-300 dark:hover:text-[#00b14f]"
                             >
                                 {t('nav.cvProfile')}
@@ -83,7 +85,14 @@ export function Navbar() {
                         <LanguageSwitcher />
                         {isAuthenticated && user ? (
                             <>
-                                <button className="relative rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800">
+                                <button
+                                    className={`relative rounded-full p-2 transition-colors ${
+                                        isCandidateNotificationsActive
+                                            ? 'bg-[#00b14f]/10 text-[#00b14f]'
+                                            : 'text-gray-500 hover:bg-gray-100 hover:text-[#00b14f] dark:text-gray-400 dark:hover:bg-gray-800'
+                                    }`}
+                                    onClick={() => navigate('/candidate/notifications')}
+                                >
                                     <Bell className="h-5 w-5" />
                                     <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900" />
                                 </button>
@@ -92,9 +101,13 @@ export function Navbar() {
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                                         className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 transition-colors hover:border-[#00b14f]/30 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                                     >
-                                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00b14f] text-xs font-semibold text-white">
-                                            {displayInitial}
-                                        </div>
+                                        {user?.avatarUrl ? (
+                                            <img src={user.avatarUrl} alt={displayName} className="h-7 w-7 rounded-full object-cover" />
+                                        ) : (
+                                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00b14f] text-xs font-semibold text-white">
+                                                {displayInitial}
+                                            </div>
+                                        )}
                                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayFirstName}</span>
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
                                     </button>
@@ -113,12 +126,28 @@ export function Navbar() {
                                                 {t('nav.candidateDashboard')}
                                             </Link>
                                             <Link
-                                                to={`/${user.role.toLowerCase()}/settings`}
+                                                to="/candidate/profile"
                                                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <Settings className="h-4 w-4" />
                                                 {t('userMenu.profile')}
+                                            </Link>
+                                            <Link
+                                                to="/candidate/cv/list"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
+                                                onClick={() => setIsProfileOpen(false)}
+                                            >
+                                                <Briefcase className="h-4 w-4" />
+                                                {t('nav.cvProfile')}
+                                            </Link>
+                                            <Link
+                                                to="/candidate/premium"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
+                                                onClick={() => setIsProfileOpen(false)}
+                                            >
+                                                <Settings className="h-4 w-4" />
+                                                Premium
                                             </Link>
                                             <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                                             <button
@@ -201,7 +230,7 @@ export function Navbar() {
                             {t('nav.companies')}
                         </Link>
                         <Link
-                            to="/cv"
+                            to="/candidate/cv/list"
                             className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-800"
                             onClick={() => setIsMenuOpen(false)}
                         >
