@@ -43,6 +43,9 @@ public class User : AggregateRoot
     [BsonElement("updatedAt")]
     public new DateTime? UpdatedAt { get; set; }
 
+    [BsonElement("aiCvGenerationCount")]
+    public int AiCvGenerationCount { get; set; } = 0;
+
     // Navigation properties (not stored in MongoDB, loaded separately)
     [BsonIgnore]
     public UserProfile? Profile { get; set; }

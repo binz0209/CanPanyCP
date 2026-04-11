@@ -320,6 +320,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IExperienceLevelService, ExperienceLevelService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
+builder.Services.AddScoped<IUserPremiumService, UserPremiumService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
 builder.Services.AddScoped<ISePayService, SePayService>();

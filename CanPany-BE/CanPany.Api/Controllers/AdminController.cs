@@ -822,8 +822,52 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-ADM-23: View Payment Requests (fix stub — now queries DB)
-    /// GET /admin/payments?status=
+    /// View Premium Packages (Admin)
+    /// </summary>
+    [HttpGet("premium-packages")]
+    public async Task<IActionResult> GetPremiumPackages([FromQuery] string? type = null)
+    {
+        try
+        {
+            var packages = await _premiumPackageService.GetAllAsync();
+            
+            if (!string.IsNullOrEmpty(type))
+            {
+                packages = packages.Where(p => p.UserType.Equals(type, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return Ok(ApiResponse<IEnumerable<PremiumPackage>>.CreateSuccess(packages));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting premium packages");
+            return StatusCode(500, ApiResponse.CreateError("Failed to get packages", "GetPackagesFailed"));
+        }
+    }
+
+    /// <summary>
+    /// View Premium Package Details (Admin)
+    /// </summary>
+    [HttpGet("premium-packages/{id}")]
+    public async Task<IActionResult> GetPremiumPackageDetails(string id)
+    {
+        try
+        {
+            var package = await _premiumPackageService.GetByIdAsync(id);
+            if (package == null)
+                return NotFound(ApiResponse.CreateError("Package not found", "NotFound"));
+
+            return Ok(ApiResponse<PremiumPackage>.CreateSuccess(package));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting package details");
+            return StatusCode(500, ApiResponse.CreateError("Failed to get package details", "GetPackageDetailsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// UC-ADM-23: View Payment Requests
     /// </summary>
     [HttpGet("payments")]
     public async Task<IActionResult> GetPayments([FromQuery] string? status = null)
