@@ -313,6 +313,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
+builder.Services.AddScoped<IUserPremiumService, UserPremiumService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
 builder.Services.AddScoped<IReportService, ReportService>();

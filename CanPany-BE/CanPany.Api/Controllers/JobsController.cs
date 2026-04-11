@@ -31,6 +31,7 @@ public class JobsController : ControllerBase
     private readonly IJobProgressTracker _progressTracker;
     private readonly II18nService _i18nService;
     private readonly ILogger<JobsController> _logger;
+    private readonly IUserPremiumService _userPremiumService;
 
     public JobsController(
         IJobService jobService,
@@ -41,7 +42,8 @@ public class JobsController : ControllerBase
         IJobProducer jobProducer,
         IJobProgressTracker progressTracker,
         II18nService i18nService,
-        ILogger<JobsController> logger)
+        ILogger<JobsController> logger,
+        IUserPremiumService userPremiumService)
     {
         _jobService = jobService;
         _bookmarkService = bookmarkService;
@@ -52,6 +54,7 @@ public class JobsController : ControllerBase
         _progressTracker = progressTracker;
         _i18nService = i18nService;
         _logger = logger;
+        _userPremiumService = userPremiumService;
     }
 
     /// <summary>
@@ -153,6 +156,12 @@ public class JobsController : ControllerBase
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
+
+            bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
+            if (!hasPremium)
+            {
+                return BadRequest(ApiResponse.CreateError("Need purchase premium pagkage to use Recommend Job.", "PremiumRequired"));
+            }
 
             var recommendations = await _recommendationService.GetRecommendedJobsAsync(userId, limit);
 
@@ -292,6 +301,16 @@ public class JobsController : ControllerBase
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
+
+            bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
+            if (!hasPremium)
+            {
+                var currentJobs = await _jobService.GetByCompanyIdAsync(request.CompanyId);
+                if (currentJobs.Count() >= 5)
+                {
+                    return BadRequest(ApiResponse.CreateError("You have used up your free job postings (maximum 5). Please upgrade to Premium to continue.", "PremiumRequired"));
+                }
+            }
 
             var job = new Job
             {

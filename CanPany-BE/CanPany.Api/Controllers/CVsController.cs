@@ -19,17 +19,23 @@ public class CVsController : ControllerBase
     private readonly ILogger<CVsController> _logger;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly II18nService _i18nService;
+    private readonly IUserPremiumService _userPremiumService;
+    private readonly CanPany.Domain.Interfaces.Repositories.IUserRepository _userRepo;
 
     public CVsController(
         ICVService cvService,
         ILogger<CVsController> logger,
         ICloudinaryService cloudinaryService,
-        II18nService i18nService)
+        II18nService i18nService,
+        IUserPremiumService userPremiumService,
+        CanPany.Domain.Interfaces.Repositories.IUserRepository userRepo)
     {
         _cvService = cvService;
         _logger = logger;
         _cloudinaryService = cloudinaryService;
         _i18nService = i18nService;
+        _userPremiumService = userPremiumService;
+        _userRepo = userRepo;
     }
 
     /// <summary>
@@ -326,6 +332,21 @@ public class CVsController : ControllerBase
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
+
+            bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (!hasPremium)
+            {
+                if (user != null && user.AiCvGenerationCount >= 2)
+                {
+                    return BadRequest(ApiResponse.CreateError("Bạn đã sử dụng hết lượt tạo CV miễn phí. Vui lòng nâng cấp Premium để tiếp tục.", "PremiumRequired"));
+                }
+                if (user != null)
+                {
+                    user.AiCvGenerationCount += 1;
+                    await _userRepo.UpdateAsync(user);
+                }
+            }
 
             var jobId = Guid.NewGuid().ToString();
 
