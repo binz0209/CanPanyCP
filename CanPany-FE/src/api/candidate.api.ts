@@ -229,10 +229,6 @@ export const candidateApi = {
         await apiClient.put('/userprofiles/me', data);
     },
 
-    // Sync profile from LinkedIn (paste-data approach)
-    syncLinkedInProfile: async (linkedInData: string): Promise<void> => {
-        await apiClient.post('/userprofiles/sync/linkedin', { linkedInData });
-    },
 
     // Upload candidate avatar
     uploadAvatar: async (file: File): Promise<AvatarUploadResult> => {

@@ -10,7 +10,7 @@ public interface IUserProfileService
     Task<UserProfile?> GetByUserIdAsync(string userId);
     Task<UserProfile> CreateAsync(UserProfile profile);
     Task<bool> UpdateAsync(string userId, UserProfile profile);
-    Task<bool> SyncFromLinkedInAsync(string userId, string linkedInData);
+
     Task<bool> SyncFromGitHubAsync(string userId, string gitHubData);
     Task<bool> LinkGitHubAsync(string userId, string gitHubUsername, string gitHubUrl);
 }

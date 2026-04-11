@@ -9,7 +9,7 @@ using CanPany.Application.Common.Constants;
 namespace CanPany.Api.Controllers;
 
 /// <summary>
-/// User Profiles controller - UC-CAN-01, UC-CAN-02, UC-CAN-03, UC-CAN-04
+/// User Profiles controller - UC-CAN-01, UC-CAN-02, UC-CAN-04
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -169,7 +169,7 @@ public class UserProfilesController : ControllerBase
             if (!string.IsNullOrWhiteSpace(request.Experience)) profile.Experience = request.Experience;
             if (!string.IsNullOrWhiteSpace(request.Education)) profile.Education = request.Education;
             if (!string.IsNullOrWhiteSpace(request.Portfolio)) profile.Portfolio = request.Portfolio;
-            if (!string.IsNullOrWhiteSpace(request.LinkedInUrl)) profile.LinkedInUrl = request.LinkedInUrl;
+
             if (!string.IsNullOrWhiteSpace(request.GitHubUrl)) profile.GitHubUrl = request.GitHubUrl;
             if (!string.IsNullOrWhiteSpace(request.Title)) profile.Title = request.Title;
             if (!string.IsNullOrWhiteSpace(request.Location)) profile.Location = request.Location;
@@ -213,34 +213,6 @@ public class UserProfilesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// UC-CAN-03: Sync Data from LinkedIn
-    /// </summary>
-    [HttpPost("sync/linkedin")]
-    public async Task<IActionResult> SyncLinkedIn([FromBody] SyncLinkedInRequest request)
-    {
-        try
-        {
-            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var succeeded = await _profileService.SyncFromLinkedInAsync(userId, request.LinkedInData);
-            if (!succeeded)
-            {
-                var errorMsg = _i18nService.GetErrorMessage(I18nKeys.Error.Profile.SyncLinkedInFailed);
-                return BadRequest(ApiResponse.CreateError(errorMsg, "SyncLinkedInFailed"));
-            }
-
-            var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.LinkedInSynced);
-            return Ok(ApiResponse.CreateSuccess(successMsg));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error syncing LinkedIn data");
-            return StatusCode(500, ApiResponse.CreateError("Failed to sync LinkedIn data", "SyncLinkedInFailed"));
-        }
-    }
 
     /// <summary>
     /// UC-CAN-04: Sync Data from GitHub
@@ -281,7 +253,7 @@ public record UpdateProfileRequest(
     string? Experience = null,
     string? Education = null,
     string? Portfolio = null,
-    string? LinkedInUrl = null,
+
     string? GitHubUrl = null,
     string? Title = null,
     string? Location = null,
@@ -290,7 +262,7 @@ public record UpdateProfileRequest(
     List<string>? Certifications = null
 );
 
-public record SyncLinkedInRequest(string LinkedInData);
+
 public record SyncGitHubRequest(string GitHubData);
 
 

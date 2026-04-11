@@ -429,9 +429,6 @@
       "cancel": "Cancel",
       "edit": "Edit",
       "uploadAvatar": "Upload avatar",
-      "sync": "Sync",
-      "syncing": "Syncing...",
-      "syncLinkedin": "Sync LinkedIn",
       "viewProgress": "View progress"
     },
     "avatar": {
@@ -447,13 +444,7 @@
     "social": {
       "title": "Social links"
     },
-    "linkedin": {
-      "modal": {
-        "title": "Sync LinkedIn",
-        "subtitle": "Paste your LinkedIn data to sync your profile",
-        "placeholder": "Paste LinkedIn data here (JSON or profile URL)"
-      }
-    },
+
     "github": {
       "linked": "GitHub connected",
       "analyzeRepos": "Select repos & extract skills",
@@ -492,8 +483,7 @@
       "githubLinked": "GitHub connected successfully! (@{{username}})",
       "githubLinkFailed": "GitHub connection failed: {{error}}",
       "unknownError": "Unknown error",
-      "linkedinSynced": "LinkedIn profile synced!",
-      "linkedinSyncFailed": "Failed to sync LinkedIn profile",
+
       "repoAnalysisStarted": "Analyzing repositories and extracting skills...",
       "repoAnalysisFailed": "Could not start analysis. Please try again.",
       "recommendationSyncStarted": "Started syncing skills for recommendations.",
