@@ -16,15 +16,16 @@ import { cn } from '../../../utils';
 import { adminNavigationItems } from '../../../lib/adminNavigation';
 
 const navIcons: Record<string, ReactNode> = {
-    dashboard: <LayoutDashboard className="h-5 w-5" />,
-    users: <Users className="h-5 w-5" />,
+    dashboard:    <LayoutDashboard className="h-5 w-5" />,
+    users:        <Users className="h-5 w-5" />,
     verification: <Building2 className="h-5 w-5" />,
-    jobs: <Briefcase className="h-5 w-5" />,
-    catalog: <Tags className="h-5 w-5" />,
-    payments: <CreditCard className="h-5 w-5" />,
-    auditLogs: <ScrollText className="h-5 w-5" />,
-    reports: <Flag className="h-5 w-5" />,
-    broadcast: <Radio className="h-5 w-5" />,
+    companies:    <Building2 className="h-5 w-5" />,
+    jobs:         <Briefcase className="h-5 w-5" />,
+    catalog:      <Tags className="h-5 w-5" />,
+    payments:     <CreditCard className="h-5 w-5" />,
+    auditLogs:    <ScrollText className="h-5 w-5" />,
+    reports:      <Flag className="h-5 w-5" />,
+    broadcast:    <Radio className="h-5 w-5" />,
 };
 
 interface AdminSidebarProps {

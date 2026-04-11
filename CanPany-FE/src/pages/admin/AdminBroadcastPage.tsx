@@ -9,7 +9,6 @@ export function AdminBroadcastPage() {
     const { t } = useTranslation('admin');
 
     const title = t('placeholders.broadcast.title');
-    const desc = t('placeholders.broadcast.description');
 
     const [broadcastTitle, setBroadcastTitle] = useState('');
     const [message, setMessage] = useState('');
@@ -35,7 +34,6 @@ export function AdminBroadcastPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                <p className="mt-1 text-sm text-gray-600">{desc}</p>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">

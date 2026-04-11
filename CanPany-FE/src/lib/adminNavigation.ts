@@ -9,6 +9,7 @@ export const adminPaths = {
     dashboard: '/admin/dashboard',
     users: '/admin/users',
     verification: '/admin/verification',
+    companies: '/admin/companies',
     jobs: '/admin/jobs',
     catalog: '/admin/catalog',
     payments: '/admin/payments',
@@ -24,13 +25,14 @@ export type AdminNavItem = {
 };
 
 export const adminNavigationItems: AdminNavItem[] = [
-    { id: 'dashboard', labelKey: 'sidebar.dashboard', path: adminPaths.dashboard },
-    { id: 'users', labelKey: 'sidebar.users', path: adminPaths.users },
+    { id: 'dashboard',    labelKey: 'sidebar.dashboard',    path: adminPaths.dashboard },
+    { id: 'users',        labelKey: 'sidebar.users',        path: adminPaths.users },
     { id: 'verification', labelKey: 'sidebar.verification', path: adminPaths.verification },
-    { id: 'jobs', labelKey: 'sidebar.jobs', path: adminPaths.jobs },
-    { id: 'catalog', labelKey: 'sidebar.catalog', path: adminPaths.catalog },
-    { id: 'payments', labelKey: 'sidebar.payments', path: adminPaths.payments },
-    { id: 'auditLogs', labelKey: 'sidebar.auditLogs', path: adminPaths.auditLogs },
-    { id: 'reports', labelKey: 'sidebar.reports', path: adminPaths.reports },
-    { id: 'broadcast', labelKey: 'sidebar.broadcast', path: adminPaths.broadcast },
+    { id: 'companies',   labelKey: 'sidebar.companies',   path: adminPaths.companies },
+    { id: 'jobs',         labelKey: 'sidebar.jobs',         path: adminPaths.jobs },
+    { id: 'catalog',      labelKey: 'sidebar.catalog',      path: adminPaths.catalog },
+    { id: 'payments',     labelKey: 'sidebar.payments',     path: adminPaths.payments },
+    { id: 'auditLogs',    labelKey: 'sidebar.auditLogs',    path: adminPaths.auditLogs },
+    { id: 'reports',      labelKey: 'sidebar.reports',      path: adminPaths.reports },
+    { id: 'broadcast',    labelKey: 'sidebar.broadcast',    path: adminPaths.broadcast },
 ];

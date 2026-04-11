@@ -10,6 +10,7 @@
     "dashboard": "Tổng quan",
     "users": "Người dùng",
     "verification": "Xác minh công ty",
+    "companies": "Danh sách công ty",
     "jobs": "Kiểm duyệt tin tuyển",
     "catalog": "Danh mục & kỹ năng",
     "payments": "Thanh toán",
@@ -219,6 +220,37 @@
       "button": "Reject",
       "success": "Đã từ chối report.",
       "error": "Không thể từ chối report."
+    },
+    "tabs": {
+      "pending": "Chưa xử lý",
+      "resolved": "Đã xử lý"
+    },
+    "table": {
+      "reporter": "Người báo cáo",
+      "reported": "Bị báo cáo",
+      "reason": "Lý do",
+      "status": "Trạng thái",
+      "date": "Ngày báo cáo",
+      "action": "Thao tác",
+      "empty": "Chưa có báo cáo nào",
+      "search": "Tìm theo lý do, email, ID..."
+    },
+    "modal": {
+      "title": "Chi tiết báo cáo",
+      "close": "Đóng",
+      "reporter": "Người báo cáo",
+      "reportedUser": "Người bị báo cáo",
+      "reason": "Lý do",
+      "description": "Mô tả",
+      "evidence": "Bằng chứng",
+      "resolutionNote": "Ghi chú xử lý",
+      "resolveTab": "Xử lý",
+      "rejectTab": "Từ chối",
+      "resolvePlaceholder": "Nhập ghi chú xử lý (bắt buộc)...",
+      "rejectPlaceholder": "Nhập lý do từ chối (bắt buộc)...",
+      "banUser": "Đồng thời khóa tài khoản bị báo cáo",
+      "resolve": "Xử lý",
+      "reject": "Từ chối"
     }
   }
   ,
@@ -236,14 +268,47 @@
       "loadButton": "Tải audit logs"
     },
     "table": {
-      "created": "Created",
-      "action": "Action",
-      "entity": "Entity",
-      "endpoint": "Endpoint",
-      "status": "Status",
-      "error": "Error",
+      "time": "Thời gian",
+      "userId": "User ID",
+      "username": "Username",
+      "action": "Thao tác",
       "loading": "Đang tải...",
       "empty": "Chưa có dữ liệu"
+    },
+    "entities": {
+      "User": "Người dùng",
+      "Job": "Tin tuyển dụng",
+      "Category": "Danh mục",
+      "Skill": "Kỹ năng",
+      "PremiumPackage": "Gói Premium",
+      "Company": "Công ty",
+      "Report": "Báo cáo",
+      "Payment": "Thanh toán",
+      "Banner": "Banner",
+      "Settings": "Cài đặt"
+    },
+    "actions": {
+      "readEntity": "Xem chi tiết {{entity}}",
+      "createEntity": "Tạo mới {{entity}}",
+      "updateEntity": "Cập nhật {{entity}}",
+      "deleteEntity": "Xóa {{entity}}",
+      "login": "Đăng nhập",
+      "register": "Đăng ký",
+      "read": "Xem chi tiết",
+      "create": "Tạo mới",
+      "update": "Cập nhật",
+      "delete": "Xóa",
+      "resolveReport": "Xử lý báo cáo",
+      "rejectReport": "Từ chối báo cáo",
+      "banUser": "Khóa người dùng",
+      "unbanUser": "Mở khóa người dùng",
+      "deleteUser": "Xóa người dùng",
+      "approveVerification": "Phê duyệt công ty",
+      "rejectVerification": "Từ chối công ty",
+      "hideJob": "Ẩn tin tuyển dụng",
+      "deleteJob": "Xóa tin tuyển dụng",
+      "approvePayment": "Phê duyệt thanh toán",
+      "rejectPayment": "Từ chối thanh toán"
     }
   }
   ,

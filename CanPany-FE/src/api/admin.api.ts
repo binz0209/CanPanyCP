@@ -134,6 +134,17 @@ export const adminApi = {
     },
 
     // ===== UC-47: Catalog CRUD =====
+    getCategories: async (): Promise<any[]> => {
+        const response = await apiClient.get<ApiResponse<any[]>>('/admin/categories');
+        return response.data.data ?? [];
+    },
+
+    getSkills: async (categoryId?: string): Promise<any[]> => {
+        const qs = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}` : '';
+        const response = await apiClient.get<ApiResponse<any[]>>(`/admin/skills${qs}`);
+        return response.data.data ?? [];
+    },
+
     createCategory: async (name: string): Promise<void> => {
         await apiClient.post(`/admin/categories`, { name });
     },
@@ -294,5 +305,71 @@ export const adminApi = {
 
     rejectReport: async (id: string, payload: { rejectionReason: string }): Promise<void> => {
         await apiClient.post(`/admin/reports/${id}/reject`, payload);
+    },
+
+    // ===== Jobs list (admin view) =====
+    getJobs: async (status?: string): Promise<any[]> => {
+        const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+        const response = await apiClient.get<ApiResponse<any[]>>(`/admin/jobs${qs}`);
+        return response.data.data ?? [];
+    },
+
+    getJobById: async (id: string): Promise<any> => {
+        const response = await apiClient.get<ApiResponse<any>>(`/admin/jobs/${id}`);
+        return response.data.data;
+    },
+
+    // ===== Companies list (admin view) =====
+    getCompanies: async (status?: string): Promise<any[]> => {
+        const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+        const response = await apiClient.get<ApiResponse<any[]>>(`/admin/companies${qs}`);
+        return response.data.data ?? [];
+    },
+
+    getCompanyById: async (id: string): Promise<any> => {
+        const response = await apiClient.get<ApiResponse<any>>(`/admin/companies/${id}`);
+        return response.data.data;
+    },
+
+    // ===== Banners list =====
+    getBanners: async (): Promise<any[]> => {
+        const response = await apiClient.get<ApiResponse<any[]>>('/admin/banners');
+        return response.data.data ?? [];
+    },
+
+    // ===== Premium Packages full CRUD =====
+    getPremiumPackages: async (type?: string): Promise<any[]> => {
+        const qs = type ? `?type=${encodeURIComponent(type)}` : '';
+        const response = await apiClient.get<ApiResponse<any[]>>(`/admin/premium-packages${qs}`);
+        return response.data.data ?? [];
+    },
+
+    createPremiumPackage: async (payload: {
+        name: string;
+        description?: string;
+        price: number;
+        durationDays: number;
+        isActive?: boolean;
+    }): Promise<void> => {
+        await apiClient.post('/admin/premium-packages', payload);
+    },
+
+    updatePremiumPackage: async (id: string, payload: {
+        name?: string;
+        description?: string;
+        price?: number;
+        durationDays?: number;
+        isActive?: boolean;
+    }): Promise<void> => {
+        await apiClient.put(`/admin/premium-packages/${id}`, payload);
+    },
+
+    deletePremiumPackage: async (id: string): Promise<void> => {
+        await apiClient.delete(`/admin/premium-packages/${id}`);
+    },
+
+    // ===== User delete =====
+    deleteUser: async (id: string): Promise<void> => {
+        await apiClient.delete(`/admin/users/${id}`);
     },
 };

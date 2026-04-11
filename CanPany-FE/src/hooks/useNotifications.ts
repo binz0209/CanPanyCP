@@ -10,7 +10,7 @@ interface UseNotificationsOptions {
 
 export function useNotifications(options?: UseNotificationsOptions) {
   const queryClient = useQueryClient();
-  const { enabled = true, refetchInterval = 10000 } = options || {};
+  const { enabled = true, refetchInterval = 60000 } = options || {};
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery({

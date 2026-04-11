@@ -424,6 +424,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 
+// UseRouting is required before any middleware that calls context.GetEndpoint()
+app.UseRouting();
+
 // Rate Limiting Middleware
 app.UseRateLimiter();
 

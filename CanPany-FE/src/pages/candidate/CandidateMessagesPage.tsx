@@ -70,14 +70,27 @@ export function CandidateMessagesPage() {
     });
 
     // ── Join / leave conversation group ────────────────────────────────────────
+    const { joinConversation, leaveConversation, markAsRead, isConnected } = signalR;
+
     useEffect(() => {
-        if (!conversationId || !signalR.isConnected) return;
-        signalR.joinConversation(conversationId);
-        signalR.markAsRead(conversationId);
+        if (!conversationId || !isConnected) return;
+        joinConversation(conversationId);
+        markAsRead(conversationId);
+
+        // Optimistically clear the unread count in conversations list
+        queryClient.setQueryData<Conversation[]>(
+            conversationKeys.list(),
+            (current = []) => current.map(c => 
+                c.id === conversationId ? { ...c, unreadCount: 0 } : c
+            )
+        );
+        // Invalidate global unread count to immediately hide sidebar dot
+        queryClient.invalidateQueries({ queryKey: conversationKeys.unreadCount() });
+
         return () => {
-            signalR.leaveConversation(conversationId);
+            leaveConversation(conversationId);
         };
-    }, [conversationId, signalR.isConnected]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [conversationId, isConnected, queryClient, joinConversation, markAsRead, leaveConversation]);
 
     // ── Conversations list ─────────────────────────────────────────────────────
     const conversationsQuery = useQuery({

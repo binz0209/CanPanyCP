@@ -4,6 +4,7 @@ using CanPany.Application.DTOs;
 using CanPany.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CanPany.Application.Common.Attributes;
 
 namespace CanPany.Api.Controllers;
 
@@ -72,6 +73,7 @@ public class AdminReportsController : ControllerBase
     /// Resolve report (Admin only)
     /// </summary>
     [HttpPost("{id}/resolve")]
+    [AuditLog("Report", "auditLogs.actions.resolveReport")]
     public async Task<IActionResult> ResolveReport(string id, [FromBody] ResolveReportRequest request)
     {
         try
@@ -97,6 +99,7 @@ public class AdminReportsController : ControllerBase
     /// Reject report (Admin only)
     /// </summary>
     [HttpPost("{id}/reject")]
+    [AuditLog("Report", "auditLogs.actions.rejectReport")]
     public async Task<IActionResult> RejectReport(string id, [FromBody] RejectReportRequest request)
     {
         try

@@ -18,6 +18,7 @@ public class AuditEvent
 {
     public string EventType { get; set; } = string.Empty; // "HTTP_REQUEST", "SERVICE_CALL", "JOB_EXECUTION"
     public string Action { get; set; } = string.Empty; // "GET", "POST", "CreateProfile", "SyncJob"
+    public string? EntityType { get; set; }
     public string? UserId { get; set; }
     public string? CorrelationId { get; set; }
     public string? ResourcePath { get; set; }

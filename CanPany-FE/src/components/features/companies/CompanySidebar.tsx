@@ -6,6 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui';
 import { cn } from '../../../utils';
 import { companyNavigationItems } from '../../../lib/companyNavigation';
+import { useNotifications } from '../../../hooks/useNotifications';
+import { useQuery } from '@tanstack/react-query';
+import { conversationKeys } from '../../../lib/queryKeys';
+import { conversationsApi } from '../../../api/conversations.api';
 
 interface NavItem {
     labelKey: string;
@@ -47,6 +51,20 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
     const [expandedItems, setExpandedItems] = useState<Set<string>>(
         new Set(['sidebar.companyProfile', 'sidebar.jobManagement'])
     );
+
+    const { unreadCount: unreadNotifications } = useNotifications({ enabled: true, refetchInterval: 60000 });
+    
+    const { data: unreadMessages = 0 } = useQuery({
+        queryKey: conversationKeys.unreadCount(),
+        queryFn: () => conversationsApi.getUnreadCount(),
+        refetchInterval: 60000,
+    });
+
+    const getBadge = (labelKey: string) => {
+        if (labelKey === 'sidebar.notifications' && unreadNotifications > 0) return unreadNotifications;
+        if (labelKey === 'sidebar.messages' && unreadMessages > 0) return unreadMessages;
+        return null;
+    };
 
     const isActive = (path?: string) => {
         if (!path) return false;
@@ -105,6 +123,11 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                             {item.icon}
                                         </div>
                                         <span className="flex-1 text-left">{item.label}</span>
+                                        {getBadge(item.labelKey) !== null && (
+                                            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                                                {getBadge(item.labelKey)! > 99 ? '99+' : getBadge(item.labelKey)}
+                                            </span>
+                                        )}
                                     </Button>
                                 </Link>
                             ) : (
@@ -120,6 +143,11 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
                                         {item.icon}
                                     </div>
                                     <span className="flex-1 text-left">{item.label}</span>
+                                    {getBadge(item.labelKey) !== null && (
+                                        <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                                            {getBadge(item.labelKey)! > 99 ? '99+' : getBadge(item.labelKey)}
+                                        </span>
+                                    )}
                                     <ChevronDown
                                         className={cn(
                                             'h-4 w-4 transition-transform duration-200',
