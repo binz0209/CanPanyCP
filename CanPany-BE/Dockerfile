@@ -26,6 +26,7 @@ WORKDIR /app
 
 EXPOSE 10000
 ENV ASPNETCORE_URLS=http://+:10000
+ENV DOTNET_hostBuilder__reloadConfigOnChange=false
 
 COPY --from=publish /app/publish .
 
