@@ -1,5 +1,5 @@
 import { Bell, Search, Bot, LogOut, Settings, User, Menu, X, Sun, Moon, ChevronDown, Briefcase, BellOff, CheckCheck, Check } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button';
@@ -113,11 +113,13 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const notifRef = useRef<HTMLDivElement>(null);
 
   const { notifications, unreadCount, markAsRead, markAllAsRead, isMarkingAllAsRead } = useNotifications({
     enabled: true,
   });
+  const isCandidateNotificationsActive = location.pathname === '/candidate/notifications';
 
   const timeAgo = (date: string | Date): string => {
     const diff = (Date.now() - new Date(date).getTime()) / 1000;
@@ -180,7 +182,8 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
           <Button
             variant="outline"
             size="sm"
-            className="hidden sm:flex gap-2 bg-transparent border-gray-300 hover:bg-[#00b14f] hover:text-white"
+            className="hidden sm:flex gap-2 bg-transparent border-gray-200 text-gray-400 opacity-60 cursor-not-allowed"
+            disabled
           >
             <Bot className="h-4 w-4" />
             <span>{t('nav.aiAdvisor')}</span>
@@ -199,7 +202,10 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
             <Button
               variant="ghost"
               size="icon"
-              className="relative"
+              className={cn(
+                'relative',
+                isCandidateNotificationsActive && 'bg-[#00b14f]/10 text-[#00b14f] hover:bg-[#00b14f]/10 hover:text-[#00b14f]'
+              )}
               onClick={() => setIsNotifOpen((prev) => !prev)}
             >
               <Bell className="h-5 w-5" />
@@ -254,12 +260,28 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                   {t('nav.dashboard')}
                 </Link>
                 <Link
-                  to="/candidate/settings"
+                  to="/candidate/profile"
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
                   onClick={() => setIsProfileOpen(false)}
                 >
                   <Settings className="h-4 w-4" />
-                  {t('nav.settings')}
+                  {t('sidebar.profile')}
+                </Link>
+                <Link
+                  to="/candidate/cv/list"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
+                  onClick={() => setIsProfileOpen(false)}
+                >
+                  <Briefcase className="h-4 w-4" />
+                  {t('sidebar.cvList')}
+                </Link>
+                <Link
+                  to="/candidate/premium"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
+                  onClick={() => setIsProfileOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  {t('sidebar.premium')}
                 </Link>
                 <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                 <button

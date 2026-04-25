@@ -1,11 +1,36 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { CandidateNavbar, CandidateSidebar } from '../features/candidates';
 import { useCandidatePrefetch } from '../../hooks/candidate/useCandidatePrefetch';
+import { useAuthStore } from '../../stores/auth.store';
+import { isAppRole } from '@/lib/userRole';
 
 export function CandidateLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
   useCandidatePrefetch();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-[#00b14f]" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/auth/login" replace state={{ from: location }} />;
+  }
+
+  if (!isAppRole(user.role, 'Candidate')) {
+    const fallback = isAppRole(user.role, 'Company')
+      ? '/company/dashboard'
+      : isAppRole(user.role, 'Admin')
+        ? '/admin/dashboard'
+        : '/';
+    return <Navigate to={fallback} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
