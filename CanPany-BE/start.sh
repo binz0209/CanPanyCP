@@ -1,10 +1,10 @@
 #!/bin/bash
 echo "=== Starting CanPany API ==="
-dotnet /app/api/CanPany.Api.dll &
+(cd /app/api && dotnet CanPany.Api.dll) &
 API_PID=$!
 
 echo "=== Starting CanPany Worker ==="
-dotnet /app/worker/CanPany.Worker.dll &
+(cd /app/worker && dotnet CanPany.Worker.dll) &
 WORKER_PID=$!
 
 echo "Both services running — API: $API_PID | Worker: $WORKER_PID"
