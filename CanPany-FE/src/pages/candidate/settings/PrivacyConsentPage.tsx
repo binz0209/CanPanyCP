@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, ShieldCheck, ShieldOff, Loader2, Info, Clock, Globe, Brain, Github, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';

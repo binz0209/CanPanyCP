@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
     Search, CheckCircle, XCircle, Eye, ChevronLeft, ChevronRight,
@@ -20,7 +19,6 @@ const statusColor: Record<string, string> = {
 };
 
 export function AdminCompaniesPage() {
-    const { t } = useTranslation('admin');
     const qc = useQueryClient();
 
     const [search, setSearch] = useState('');

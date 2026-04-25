@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, MessageSquare, UserRound } from 'lucide-react';
@@ -249,11 +249,6 @@ export function CompanyApplicationDetailPage() {
 
     const notesToRender = sessionNotes.length > 0 ? sessionNotes : persistedNotes;
 
-    // Build the messaging URL using the application's candidateId as a conversation
-    // routing key.  The full conversationId comes from the server; for now we
-    // navigate to the messages page with an identifier the company can use.
-    // Replace with a real conversationId once the BE exposes a conversations endpoint.
-    const messagingPath = companyPaths.messageThread(application.candidateId);
 
     return (
         <div className="space-y-6">

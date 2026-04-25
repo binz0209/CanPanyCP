@@ -33,6 +33,7 @@ function ReportDetailModal({
     onResolve: (note: string, ban: boolean) => void;
     onReject: (reason: string) => void;
 }) {
+    const { t } = useTranslation('admin');
     const [resolveNote, setResolveNote] = useState('');
     const [banUser, setBanUser] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
@@ -186,12 +187,11 @@ function ReportDetailModal({
 function ReportTable({
     reports,
     onView,
-    t
 }: {
     reports: AdminReportDetails[];
     onView: (r: AdminReportDetails) => void;
-    t: any;
 }) {
+    const { t } = useTranslation('admin');
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
 
@@ -366,7 +366,7 @@ export function AdminReportsPage() {
                             <h2 className="font-semibold text-gray-900">{t('reports.tabs.pending')}</h2>
                             <span className="ml-auto text-xs text-gray-400">{pending.length} reports</span>
                         </div>
-                        <ReportTable reports={pending} onView={setSelected} t={t} />
+                        <ReportTable reports={pending} onView={setSelected} />
                     </Card>
 
                     {/* ── Resolved ── */}
@@ -376,7 +376,7 @@ export function AdminReportsPage() {
                             <h2 className="font-semibold text-gray-900">{t('reports.tabs.resolved')}</h2>
                             <span className="ml-auto text-xs text-gray-400">{resolved.length} reports</span>
                         </div>
-                        <ReportTable reports={resolved} onView={setSelected} t={t} />
+                        <ReportTable reports={resolved} onView={setSelected} />
                     </Card>
                 </div>
             )}
@@ -405,14 +405,12 @@ function ReportDetailModalWrapper({
     onResolve: (note: string, ban: boolean) => void;
     onReject: (reason: string) => void;
 }) {
-    const { t } = useTranslation('admin');
     return (
         <ReportDetailModal 
             report={report} 
             onClose={onClose} 
             onResolve={onResolve} 
             onReject={onReject} 
-            t={t} 
         />
     )
 }

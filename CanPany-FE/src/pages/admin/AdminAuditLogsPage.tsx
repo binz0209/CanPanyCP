@@ -2,17 +2,10 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Download, ChevronLeft, ChevronRight, Loader2, ScrollText } from 'lucide-react';
-import { Button, Badge, Card } from '../../components/ui';
+import { Button, Card } from '../../components/ui';
 import { adminApi } from '../../api';
 import type { AdminAuditLog } from '../../api/admin.api';
 
-const methodColor: Record<string, string> = {
-    GET:    'bg-blue-50 text-blue-700',
-    POST:   'bg-green-50 text-green-700',
-    PUT:    'bg-amber-50 text-amber-700',
-    PATCH:  'bg-amber-50 text-amber-700',
-    DELETE: 'bg-red-50 text-red-700',
-};
 
 function getHumanActionLabel(l: AdminAuditLog, t: any) {
     // New AOP Strategy sends I18n keys directly
@@ -65,7 +58,7 @@ export function AdminAuditLogsPage() {
     const [page, setPage] = useState(1);
     const PAGE_SIZE = 20;
 
-    const { data: logs = [], isLoading, isFetching, refetch } = useQuery<AdminAuditLog[]>({
+    const { data: logs = [], isLoading, isFetching } = useQuery<AdminAuditLog[]>({
         queryKey: ['admin-audit-logs', committed],
         queryFn: () => adminApi.getAuditLogs({
             userId: committed.userId || undefined,

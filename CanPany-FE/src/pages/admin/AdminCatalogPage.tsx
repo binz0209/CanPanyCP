@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
     Tags, Wrench, Image, Package, Plus, Pencil, Trash2, Check, X,
