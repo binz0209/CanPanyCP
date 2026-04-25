@@ -33,7 +33,9 @@ public class RedisJobProgressTracker : IJobProgressTracker
 
     private string GetProgressKey(string jobId) => $"{_progressKeyPrefix}{jobId}";
     private string GetUserJobsKey(string userId) => $"canpany:user:jobs:{userId}";
+    private static string GetCancelKey(string jobId) => $"canpany:job:cancel:{jobId}";
     private static readonly TimeSpan UserJobsExpiry = TimeSpan.FromDays(30);
+    private static readonly TimeSpan CancelKeyExpiry = TimeSpan.FromHours(1);
 
     public async Task InitializeAsync(
         string jobId,
@@ -287,6 +289,78 @@ public class RedisJobProgressTracker : IJobProgressTracker
         catch (Exception ex)
         {
             _logger.LogError(ex, "[PROGRESS_SAVE_FAILED] JobId: {JobId}", progress.JobId);
+        }
+    }
+
+    // ─── Cancellation ────────────────────────────────────────────────────────
+
+    public async Task RequestCancelAsync(string jobId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var key = GetCancelKey(jobId);
+            await _db.StringSetAsync(key, "1", CancelKeyExpiry);
+            _logger.LogInformation("[JOB_CANCEL_REQUESTED] JobId: {JobId}", jobId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CANCEL_REQUEST_FAILED] JobId: {JobId}", jobId);
+        }
+    }
+
+    public async Task<bool> IsCancelledAsync(string jobId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var key = GetCancelKey(jobId);
+            return await _db.KeyExistsAsync(key);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CANCEL_CHECK_FAILED] JobId: {JobId}", jobId);
+            return false;
+        }
+    }
+
+    public async Task MarkAsCancelledAsync(string jobId, CancellationToken cancellationToken = default)
+    {
+        var progress = await GetProgressAsync(jobId, cancellationToken) ?? new JobProgress { JobId = jobId };
+
+        progress.Status = JobStatus.Cancelled;
+        progress.CompletedAt = DateTime.UtcNow;
+        progress.UpdatedAt = DateTime.UtcNow;
+        progress.ErrorMessage = "Job was cancelled by user";
+
+        if (progress.StartedAt.HasValue)
+            progress.DurationMs = (long)(progress.CompletedAt.Value - progress.StartedAt.Value).TotalMilliseconds;
+
+        await SaveProgressAsync(progress, cancellationToken);
+
+        // Clean up cancel flag
+        try { await _db.KeyDeleteAsync(GetCancelKey(jobId)); } catch { }
+
+        _logger.LogInformation("[JOB_CANCELLED] JobId: {JobId}", jobId);
+    }
+
+    public async Task DeleteJobAsync(string jobId, string userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Remove progress hash
+            await _db.KeyDeleteAsync(GetProgressKey(jobId));
+
+            // Remove from user sorted set
+            if (!string.IsNullOrEmpty(userId))
+                await _db.SortedSetRemoveAsync(GetUserJobsKey(userId), jobId);
+
+            // Clean up cancel flag if exists
+            await _db.KeyDeleteAsync(GetCancelKey(jobId));
+
+            _logger.LogInformation("[JOB_DELETED] JobId: {JobId} | UserId: {UserId}", jobId, userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[JOB_DELETE_FAILED] JobId: {JobId}", jobId);
         }
     }
 }

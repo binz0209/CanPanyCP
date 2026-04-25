@@ -8,13 +8,13 @@ import { queryClient } from '@/lib/queryClient';
 import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout, AdminLayout } from '@/components/layout';
 import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AuthCallbackPage } from '@/pages/auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AccountSettingsPage, AuthCallbackPage } from '@/pages/auth';
 import { 
   CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, 
   ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage, 
   PremiumPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, 
   RecommendedJobsPage, CandidateMessagesPage, CVEditorPage, GitHubAnalysisPage,
-  PrivacyConsentPage, ContractsPage
+  ContractsPage
 } from '@/pages/candidate';
 import {
   AdminDashboardPage,
@@ -158,7 +158,7 @@ function App() {
             <Route path="/candidate/messages/:conversationId" element={<CandidateMessagesPage />} />
             <Route path="/candidate/ai/skills" element={<GitHubAnalysisPage />} />
             <Route path="/candidate/cv/editor/:id" element={<CVEditorPage />} />
-            <Route path="/candidate/settings/privacy" element={<PrivacyConsentPage />} />
+            <Route path="/candidate/settings/account" element={<AccountSettingsPage />} />
             <Route path="/candidate/contracts" element={<ContractsPage />} />
           </Route>
 
@@ -181,6 +181,8 @@ function App() {
             {/* Wallet & Premium */}
             <Route path={companyPaths.wallet} element={<LazyRoute><CompanyWalletPage /></LazyRoute>} />
             <Route path={companyPaths.premium} element={<LazyRoute><CompanyPremiumPage /></LazyRoute>} />
+            {/* Settings */}
+            <Route path={companyPaths.settingsAccount} element={<LazyRoute><AccountSettingsPage /></LazyRoute>} />
           </Route>
 
           {/* Admin — RR7: bọc path="/admin" + segment con tương đối (layout không path + path tuyệt đối trên con dễ không khớp → 404 *) */}

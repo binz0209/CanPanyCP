@@ -300,4 +300,16 @@ export const candidateApi = {
         const response = await apiClient.get<JobProgressRecord>(`/background-jobs/my-jobs/${jobId}`);
         return response.data;
     },
+
+    // Cancel a pending/running job
+    cancelJob: async (jobId: string): Promise<{ message: string }> => {
+        const response = await apiClient.post<{ message: string }>(`/background-jobs/my-jobs/${jobId}/cancel`);
+        return response.data;
+    },
+
+    // Delete a background job from history
+    deleteJob: async (jobId: string): Promise<{ message: string }> => {
+        const response = await apiClient.delete<{ message: string }>(`/background-jobs/my-jobs/${jobId}`);
+        return response.data;
+    },
 };

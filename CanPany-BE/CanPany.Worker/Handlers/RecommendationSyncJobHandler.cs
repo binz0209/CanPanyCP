@@ -59,6 +59,7 @@ public class RecommendationSyncJobHandler : BaseJobHandler
             }
 
             await ReportProgressAsync(job.JobId, 40, "backgroundJobs.steps.extractingSkills");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             var allSkills = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -102,19 +103,17 @@ public class RecommendationSyncJobHandler : BaseJobHandler
             }
 
             var textParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(profile.Title)) textParts.Add(profile.Title);
-            if (!string.IsNullOrWhiteSpace(profile.Bio)) textParts.Add(profile.Bio);
-            if (!string.IsNullOrWhiteSpace(profile.Experience)) textParts.Add(profile.Experience);
-            if (!string.IsNullOrWhiteSpace(profile.Education)) textParts.Add(profile.Education);
-            if (allSkills.Any()) textParts.Add(string.Join(" ", allSkills));
+            if (!string.IsNullOrWhiteSpace(profile.Title)) textParts.Add($"Role: {profile.Title}");
+            if (allSkills.Any()) textParts.Add($"Skills: {string.Join(", ", allSkills)}");
 
-            var profileText = string.Join(" ", textParts);
+            var profileText = string.Join(" | ", textParts);
             if (string.IsNullOrWhiteSpace(profileText))
             {
                 return JobResult.FailureResult("No profile text/skills available for sync", "NO_PROFILE_DATA");
             }
 
             await ReportProgressAsync(job.JobId, 70, "backgroundJobs.steps.generatingEmbeddings");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             var embedding = await _geminiService.GenerateEmbeddingAsync(profileText);
 

@@ -49,7 +49,7 @@ public class CVGenerationJobHandler : BaseJobHandler
 
             using var scope = _scopeFactory.CreateScope();
             var userRepository        = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-            var userProfileService    = scope.ServiceProvider.GetRequiredService<IUserProfileService>();
+            var userProfileRepository = scope.ServiceProvider.GetRequiredService<IUserProfileRepository>();
             var skillRepository       = scope.ServiceProvider.GetRequiredService<ISkillRepository>();
             var cvRepository          = scope.ServiceProvider.GetRequiredService<ICVRepository>();
             var jobRepository         = scope.ServiceProvider.GetRequiredService<IJobRepository>();
@@ -60,10 +60,11 @@ public class CVGenerationJobHandler : BaseJobHandler
             var user = await userRepository.GetByIdAsync(payload.UserId);
             if (user == null) return JobResult.FailureResult("User not found", "USER_NOT_FOUND");
 
-            var profile = await userProfileService.GetByUserIdAsync(payload.UserId);
+            var profile = await userProfileRepository.GetByUserIdAsync(payload.UserId);
 
             // ── Step 2: Resolve skill names ───────────────────────────────────
             await ReportProgressAsync(job.JobId, 25, "backgroundJobs.steps.processingSkills", null, cancellationToken);
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             var skillNames = new List<string>();
             if (profile?.SkillIds != null && profile.SkillIds.Any())
@@ -81,6 +82,7 @@ public class CVGenerationJobHandler : BaseJobHandler
 
             // ── Step 3: Build context ─────────────────────────────────────────
             await ReportProgressAsync(job.JobId, 40, "backgroundJobs.steps.generatingCvAi", null, cancellationToken);
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             var ctx = new CVGenerationContext
             {
@@ -136,6 +138,7 @@ public class CVGenerationJobHandler : BaseJobHandler
             }
 
             // ── Step 4: Generate structured JSON via Gemini ───────────────────
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
             var cvData = await _geminiService.GenerateCVDataAsync(ctx, cancellationToken);
 
             await ReportProgressAsync(job.JobId, 80, "backgroundJobs.steps.savingCv", null, cancellationToken);

@@ -83,6 +83,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
             }
 
             await ReportProgressAsync(job.JobId, 40, "backgroundJobs.steps.analyzingLangs", new Dictionary<string, object> { ["repos"] = contributionSummary.TotalRepositories });
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             // Step 2: Prepare data summary
             var languagePercentages = contributionSummary.GetLanguagePercentages();
@@ -98,6 +99,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
             );
 
             await ReportProgressAsync(job.JobId, 60, "backgroundJobs.steps.preparingData");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             // Step 3: Analyze skills with Gemini (if requested)
             SkillAnalysisDto? skillAnalysisDto = null;
@@ -121,6 +123,7 @@ public class GitHubAnalysisJobHandler : BaseJobHandler
             }
 
             await ReportProgressAsync(job.JobId, 80, "backgroundJobs.steps.savingRag");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             // Step 4: Save to RAG Storage (GitHubAnalysisResult)
             var analysisResult = new GitHubAnalysisResult

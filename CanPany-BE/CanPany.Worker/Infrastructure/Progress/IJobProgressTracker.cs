@@ -82,4 +82,24 @@ public interface IJobProgressTracker
     /// Delete job progress (cleanup)
     /// </summary>
     Task DeleteProgressAsync(string jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Request job cancellation via Redis flag
+    /// </summary>
+    Task RequestCancelAsync(string jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Check if cancellation was requested for a job
+    /// </summary>
+    Task<bool> IsCancelledAsync(string jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Mark job as cancelled in progress tracker
+    /// </summary>
+    Task MarkAsCancelledAsync(string jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete a job from user's job list + progress (complete removal)
+    /// </summary>
+    Task DeleteJobAsync(string jobId, string userId, CancellationToken cancellationToken = default);
 }

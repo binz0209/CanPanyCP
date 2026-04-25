@@ -119,4 +119,18 @@ public abstract class BaseJobHandler : IJobHandler
             await ProgressTracker.UpdateStepsAsync(jobId, completedSteps, totalSteps, currentStep, cancellationToken);
         }
     }
+
+    /// <summary>
+    /// Throw OperationCanceledException if user requested job cancellation via Redis
+    /// </summary>
+    protected async Task ThrowIfCancelledAsync(string jobId, CancellationToken cancellationToken = default)
+    {
+        if (ProgressTracker != null && await ProgressTracker.IsCancelledAsync(jobId, cancellationToken))
+        {
+            Logger.LogInformation("[JOB_CANCEL_DETECTED] JobId: {JobId} — stopping execution", jobId);
+            throw new OperationCanceledException($"Job {jobId} was cancelled by user");
+        }
+        // Also respect host-level shutdown token
+        cancellationToken.ThrowIfCancellationRequested();
+    }
 }

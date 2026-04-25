@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Wallet as WalletIcon,
   FileSignature,
-  Shield,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useNotifications } from '../../../hooks/useNotifications';
@@ -110,7 +109,6 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       items: [
         { id: 'settings.account', labelKey: 'sidebar.settingsAccount', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
         { id: 'settings.notifications', labelKey: 'sidebar.settingsNotifications', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
-        { id: 'settings.privacy', labelKey: 'sidebar.settingsPrivacy', path: '/candidate/settings/privacy', icon: <Shield className="h-4 w-4" /> },
       ],
     },
   ];
