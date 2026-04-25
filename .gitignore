@@ -83,3 +83,10 @@ CanPany-BE/.env
 CanPany-BE/CanPany.Api/wwwroot/cvs/*
 
 node_modules/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
