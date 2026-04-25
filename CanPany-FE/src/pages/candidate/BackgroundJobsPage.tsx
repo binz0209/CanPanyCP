@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import {
     Activity,
     CheckCircle2,
@@ -11,6 +12,8 @@ import {
     ChevronDown,
     ChevronUp,
     AlertCircle,
+    Trash2,
+    StopCircle,
 } from 'lucide-react';
 import { candidateApi } from '../../api';
 import type { JobProgressRecord, JobStatus } from '../../api/candidate.api';
@@ -72,6 +75,31 @@ function DetailPanel({ job }: DetailPanelProps) {
     const extractedSkills: string[] = job.result?.['primarySkills'] || job.result?.['PrimarySkills'] || [];
 
     const { t } = useTranslation('candidate');
+    const queryClient = useQueryClient();
+
+    const cancelMutation = useMutation({
+        mutationFn: () => candidateApi.cancelJob(job.jobId),
+        onSuccess: () => {
+            toast.success(t('backgroundJobs.actions.cancelSuccess', 'Cancellation requested'));
+            queryClient.invalidateQueries({ queryKey: ['my-jobs'] });
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to cancel job');
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: () => candidateApi.deleteJob(job.jobId),
+        onSuccess: () => {
+            toast.success(t('backgroundJobs.actions.deleteSuccess', 'Job deleted successfully'));
+            queryClient.invalidateQueries({ queryKey: ['my-jobs'] });
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to delete job');
+        }
+    });
+
+    const isRunning = job.status === 'Running' || job.status === 'Pending' || job.status === 'Retrying';
 
     return (
         <div className="border-t border-gray-100 bg-gray-50 px-5 pb-5 pt-4 space-y-4 text-sm">
@@ -142,6 +170,29 @@ function DetailPanel({ job }: DetailPanelProps) {
                 <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.ended')}</span> {formatDateTime(job.completedAt)}</div>
                 <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.duration')}</span> {formatDuration(job.durationMs)}</div>
                 <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.updated')}</span> {formatDateTime(job.updatedAt)}</div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+                {isRunning ? (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); cancelMutation.mutate(); }}
+                        disabled={cancelMutation.isPending}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
+                    >
+                        {cancelMutation.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <StopCircle className="h-3 w-3" />}
+                        {t('backgroundJobs.actions.cancel', 'Cancel Job')}
+                    </button>
+                ) : (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(); }}
+                        disabled={deleteMutation.isPending}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                    >
+                        {deleteMutation.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                        {t('backgroundJobs.actions.delete', 'Delete Job')}
+                    </button>
+                )}
             </div>
         </div>
     );

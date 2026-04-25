@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Menu, X, User, LogOut, Briefcase, Settings, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Bell, Menu, X, User, LogOut, Briefcase, Settings, ChevronDown, Sun, Moon, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
@@ -122,16 +122,24 @@ export function Navbar() {
                                                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
-                                                <User className="h-4 w-4" />
+                                                <LayoutDashboard className="h-4 w-4" />
                                                 {t('nav.candidateDashboard')}
                                             </Link>
                                             <Link
-                                                to="/candidate/profile"
+                                                to={user.role === 'Company' ? '/company/profile' : '/candidate/profile'}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
+                                                onClick={() => setIsProfileOpen(false)}
+                                            >
+                                                <User className="h-4 w-4" />
+                                                {t('userMenu.profile')}
+                                            </Link>
+                                            <Link
+                                                to={user.role === 'Company' ? '/company/settings/account' : '/candidate/settings/account'}
                                                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-700"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <Settings className="h-4 w-4" />
-                                                {t('userMenu.profile')}
+                                                {t('userMenu.accountSettings', 'Cài đặt tài khoản')}
                                             </Link>
                                             <Link
                                                 to="/candidate/cv/list"

@@ -95,24 +95,38 @@ public class GeminiService : IGeminiService
 
             var response = await _httpClient.PostAsync(url, clonedContent, cancellationToken);
 
-            if (response.StatusCode != HttpStatusCode.TooManyRequests)
+            // Retry on 429 (rate limit) and 503 (transient overload)
+            if (response.StatusCode != HttpStatusCode.TooManyRequests &&
+                response.StatusCode != HttpStatusCode.ServiceUnavailable)
                 return response;
-
-            // Parse Retry-After header (seconds) or use exponential backoff
-            double retryAfterSeconds = Math.Pow(2, attempt) * BaseRetryDelaySeconds;
-            if (response.Headers.RetryAfter?.Delta != null)
-            {
-                retryAfterSeconds = response.Headers.RetryAfter.Delta.Value.TotalSeconds;
-            }
-
-            _logger.LogWarning(
-                "[GEMINI_429] Rate limited. Attempt {Attempt}/{MaxRetries}. Waiting {Seconds}s before retry",
-                attempt + 1, MaxRetries, retryAfterSeconds);
 
             if (attempt == MaxRetries)
             {
-                throw new GeminiRateLimitException((int)retryAfterSeconds);
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    double finalWait = response.Headers.RetryAfter?.Delta?.TotalSeconds
+                        ?? Math.Pow(2, attempt) * BaseRetryDelaySeconds;
+                    throw new GeminiRateLimitException((int)finalWait);
+                }
+                // 503 exhausted retries — let it propagate as HttpRequestException
+                return response;
             }
+
+            // Parse Retry-After header (seconds) or use exponential backoff
+            double retryAfterSeconds;
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                response.Headers.RetryAfter?.Delta != null)
+            {
+                retryAfterSeconds = response.Headers.RetryAfter.Delta.Value.TotalSeconds;
+            }
+            else
+            {
+                retryAfterSeconds = Math.Pow(2, attempt) * BaseRetryDelaySeconds;
+            }
+
+            _logger.LogWarning(
+                "[GEMINI_RETRY] Status: {Status}. Attempt {Attempt}/{MaxRetries}. Waiting {Seconds}s before retry",
+                response.StatusCode, attempt + 1, MaxRetries, retryAfterSeconds);
 
             await Task.Delay(TimeSpan.FromSeconds(retryAfterSeconds), cancellationToken);
         }

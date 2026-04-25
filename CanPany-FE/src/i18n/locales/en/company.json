@@ -20,7 +20,9 @@
     "notifications": "Notifications",
     "billing": "Billing & Premium",
     "wallet": "Company wallet",
-    "premium": "Upgrade Premium"
+    "premium": "Upgrade Premium",
+    "settings": "Settings",
+    "settingsAccount": "Account"
   },
   "dashboard": {
     "title": "Hiring overview",
@@ -511,7 +513,7 @@
       "saveOver90": "Save over 90% compared to monthly plan"
     },
     "toast": {
-      "activated": "🎉 Premium activated successfully!",
+      "activated": "Premium activated successfully!",
       "purchaseFailed": "Could not purchase premium package. Please try again.",
       "insufficientBalance": "Insufficient balance. Need {{required}}, have {{current}}."
     },

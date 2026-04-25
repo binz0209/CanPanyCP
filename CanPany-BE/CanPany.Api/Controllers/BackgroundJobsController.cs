@@ -453,6 +453,66 @@ public class BackgroundJobsController : ControllerBase
 
         return Ok(progress);
     }
+    /// <summary>
+    /// 🛑 Cancel a running/pending background job
+    /// </summary>
+    [HttpPost("my-jobs/{jobId}/cancel")]
+    [Authorize]
+    public async Task<IActionResult> CancelMyJob(string jobId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User not authenticated" });
+
+        var progress = await _progressTracker.GetProgressAsync(jobId);
+        if (progress == null)
+            return NotFound(new { message = _i18nService.GetErrorMessage(I18nKeys.Error.BackgroundJob.NotFound), jobId });
+
+        // Security: only allow owner to cancel
+        if (progress.UserId != null && progress.UserId != userId)
+            return Forbid();
+
+        if (progress.Status == JobStatus.Completed || progress.Status == JobStatus.Failed || progress.Status == JobStatus.Cancelled)
+            return BadRequest(new { message = "Job is already finished and cannot be cancelled", status = progress.Status.ToString() });
+
+        await _progressTracker.RequestCancelAsync(jobId);
+
+        return Ok(new { message = "Job cancellation requested", jobId });
+    }
+
+    /// <summary>
+    /// 🗑️ Delete a job from the list
+    /// </summary>
+    [HttpDelete("my-jobs/{jobId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteMyJob(string jobId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User not authenticated" });
+
+        var progress = await _progressTracker.GetProgressAsync(jobId);
+        if (progress == null)
+        {
+            // Try to delete anyway from user index just in case it's in list but expired
+            await _progressTracker.DeleteJobAsync(jobId, userId);
+            return Ok(new { message = "Job deleted" });
+        }
+
+        // Security: only allow owner to delete
+        if (progress.UserId != null && progress.UserId != userId)
+            return Forbid();
+
+        if (progress.Status == JobStatus.Running || progress.Status == JobStatus.Retrying || progress.Status == JobStatus.Pending)
+        {
+            // Force request cancel just in case it's running
+            await _progressTracker.RequestCancelAsync(jobId);
+        }
+
+        await _progressTracker.DeleteJobAsync(jobId, userId);
+
+        return Ok(new { message = "Job deleted successfully" });
+    }
 }
 
 #region Request Models

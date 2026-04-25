@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, Building2, ChevronDown, Crown, LayoutDashboard, MessageSquare, Wallet } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Building2, ChevronDown, Crown, LayoutDashboard, MessageSquare, Wallet, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui';
 import { cn } from '../../../utils';
@@ -28,6 +28,7 @@ const navIcons: Record<string, ReactNode> = {
     'sidebar.billing': <Wallet className="h-5 w-5" />,
     'sidebar.wallet': <Wallet className="h-5 w-5" />,
     'sidebar.premium': <Crown className="h-5 w-5" />,
+    'sidebar.settings': <Settings className="h-5 w-5" />,
 };
 
 interface CompanySidebarProps {

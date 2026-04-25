@@ -149,6 +149,15 @@ public class JobProcessorWorker : BackgroundService
             baseHandler.SetProgressTracker(_progressTracker);
         }
 
+        // ── Pre-check: skip job if cancel was already requested
+        if (await _progressTracker.IsCancelledAsync(job.JobId, cancellationToken))
+        {
+            _logger.LogInformation("[JOB_SKIPPED_CANCELLED] JobId: {JobId} was already cancelled before execution", job.JobId);
+            await _progressTracker.MarkAsCancelledAsync(job.JobId, cancellationToken);
+            await _jobQueue.AcknowledgeAsync(job, cancellationToken);
+            return;
+        }
+
         // Mark job as running
         await _progressTracker.MarkAsRunningAsync(job.JobId, cancellationToken);
 
@@ -184,6 +193,13 @@ public class JobProcessorWorker : BackgroundService
             {
                 await HandleJobFailure(job, result.ErrorMessage ?? "Unknown error", cancellationToken);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("[JOB_CANCELLED] JobId: {JobId} | I18nKey: {I18nKey} — cancelled by user",
+                job.JobId, job.I18nKey);
+            await _progressTracker.MarkAsCancelledAsync(job.JobId, cancellationToken);
+            await _jobQueue.AcknowledgeAsync(job, cancellationToken);
         }
         catch (BrokenCircuitException ex)
         {

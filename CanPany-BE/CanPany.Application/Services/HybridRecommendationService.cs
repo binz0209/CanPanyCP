@@ -298,21 +298,21 @@ public class HybridRecommendationService : IHybridRecommendationService
                 // Compute semantic score via cosine similarity of embeddings
                 if (profileEmbedding != null && profileEmbedding.Any())
                 {
-                    // Generate embedding for job if missing
-                    List<double>? jobEmbedding = job.SkillEmbedding;
+                    // Generate embedding for job if missing (Forced refresh once)
+                    List<double>? jobEmbedding = null; // job.SkillEmbedding;
                     
                     if (jobEmbedding == null || !jobEmbedding.Any())
                     {
                         try
                         {
-                            // Build job text from title, description, and skills
+                            // Build job text from title and skills (exclude description for cleaner semantic matching)
                             var jobTextParts = new List<string>();
-                            if (!string.IsNullOrWhiteSpace(job.Title)) jobTextParts.Add(job.Title);
-                            if (!string.IsNullOrWhiteSpace(job.Description)) jobTextParts.Add(job.Description);
-                            if (job.SkillIds != null && job.SkillIds.Any())
-                                jobTextParts.Add(string.Join(" ", job.SkillIds));
+                            if (!string.IsNullOrWhiteSpace(job.Title)) jobTextParts.Add($"Role: {job.Title}");
                             
-                            var jobText = string.Join(" ", jobTextParts);
+                            if (job.SkillIds != null && job.SkillIds.Any())
+                                jobTextParts.Add($"Skills: {string.Join(", ", job.SkillIds)}");
+                            
+                            var jobText = string.Join(" | ", jobTextParts);
                             if (!string.IsNullOrWhiteSpace(jobText))
                             {
                                 jobEmbedding = await _geminiService.GenerateEmbeddingAsync(jobText);
@@ -338,15 +338,15 @@ public class HybridRecommendationService : IHybridRecommendationService
                         // Primary: Profile-job similarity
                         var similarity = CosineSimilarity(profileEmbedding, jobEmbedding);
                         
-                        // Normalize 0.7-1.0 to 0-100 (text embeddings usually sit tightly between 0.7 and 1.0)
-                        semanticScore = similarity <= 0.7 ? 0 : (similarity - 0.7) / 0.3 * 100;
+                        // Normalize 0.5-1.0 to 0-100 (Gemini embeddings can sometimes be around 0.6 for somewhat related concepts)
+                        semanticScore = similarity <= 0.5 ? 0 : (similarity - 0.5) / 0.5 * 100;
                         semanticScore = Math.Min(100, Math.Max(0, semanticScore));
                         
                         // VIP PRO Boost: If user has interacted with similar jobs, boost this job
                         if (aggregatedJobEmbedding != null && aggregatedJobEmbedding.Any())
                         {
                             var interactionSimilarity = CosineSimilarity(aggregatedJobEmbedding, jobEmbedding);
-                            var interactionScore = interactionSimilarity <= 0.7 ? 0 : (interactionSimilarity - 0.7) / 0.3 * 100;
+                            var interactionScore = interactionSimilarity <= 0.5 ? 0 : (interactionSimilarity - 0.5) / 0.5 * 100;
                             // Boost jobs similar to what user has viewed/bookmarked (weight: 15%)
                             contentBoost += interactionScore * 0.15;
                         }
@@ -395,7 +395,7 @@ public class HybridRecommendationService : IHybridRecommendationService
                             if (interactedJob.SkillEmbedding != null && interactedJob.SkillEmbedding.Any())
                             {
                                 var similarity = CosineSimilarity(interactedJob.SkillEmbedding, job.SkillEmbedding);
-                                var intScore = similarity <= 0.7 ? 0 : (similarity - 0.7) / 0.3 * 100;
+                                var intScore = similarity <= 0.5 ? 0 : (similarity - 0.5) / 0.5 * 100;
                                 var interaction = userInteractions.FirstOrDefault(i => i.JobId == interactedJob.Id);
                                 var weight = interaction?.Type switch
                                 {
@@ -542,30 +542,27 @@ public class HybridRecommendationService : IHybridRecommendationService
         var parts = new List<string>();
 
         if (!string.IsNullOrEmpty(profile.Title))
-            parts.Add(profile.Title);
-        if (!string.IsNullOrEmpty(profile.Bio))
-            parts.Add(profile.Bio);
-        if (!string.IsNullOrEmpty(profile.Experience))
-            parts.Add(profile.Experience);
+            parts.Add($"Role: {profile.Title}");
+        
+        // Removed Bio and Experience to prevent aggressive dilution of skill vectors
         
         // Use aggregated skills (CV + GitHub + Profile) instead of just profile skills
         if (aggregatedSkills.Any())
         {
-            parts.Add(string.Join(" ", aggregatedSkills));
+            parts.Add($"Skills: {string.Join(", ", aggregatedSkills)}");
         }
         else if (profile.SkillIds != null && profile.SkillIds.Any())
         {
-            // Fallback to profile skills if no aggregated skills
-            parts.Add(string.Join(" ", profile.SkillIds));
+            parts.Add($"Skills: {string.Join(", ", profile.SkillIds)}");
         }
 
         // Add languages from profile
         if (profile.Languages != null && profile.Languages.Any())
         {
-            parts.Add(string.Join(" ", profile.Languages));
+            parts.Add($"Languages: {string.Join(", ", profile.Languages)}");
         }
 
-        return string.Join(" ", parts);
+        return string.Join(" | ", parts);
     }
 
     /// <summary>

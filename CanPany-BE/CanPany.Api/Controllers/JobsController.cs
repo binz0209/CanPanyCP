@@ -489,6 +489,12 @@ public class JobsController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
+            bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
+            if (!hasPremium)
+            {
+                return BadRequest(ApiResponse.CreateError("Need purchase premium pagkage to use Recommend Job.", "PremiumRequired"));
+            }
+
             var payload = new RecommendationSyncPayload
             {
                 UserId = userId,

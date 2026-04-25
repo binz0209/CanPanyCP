@@ -42,11 +42,14 @@ export function RecommendedJobsPage() {
     const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
 
-    const { data: recommendations = [], isLoading, refetch, isFetching } = useQuery({
+    const { data: recommendations = [], isLoading, refetch, isFetching, error } = useQuery({
         queryKey: ['jobs', 'recommended', limit],
         queryFn: () => jobsApi.getRecommended(limit),
         staleTime: 2 * 60 * 1000,
+        retry: false // do not retry on 400
     });
+
+    const isPremiumRequired = !!error && (error as any)?.response?.data?.errorCode === 'PremiumRequired';
 
     // Sync skills mutation
     const syncMutation = useMutation({
@@ -55,7 +58,17 @@ export function RecommendedJobsPage() {
             setSyncJobId(d.jobId);
             toast.success(t('recommendedJobs.toast.syncStarted'));
         },
-        onError: () => toast.error(t('recommendedJobs.toast.syncError')),
+        onError: (err: any) => {
+            const code = err?.response?.data?.errorCode || err?.response?.data?.ErrorCode;
+            if (code === 'PremiumRequired') {
+                toast(t('recommendedJobs.premium.description', 'Bạn cần nâng cấp gói Premium để mở khoá tính năng Gợi ý Việc làm Phù hợp bằng AI. 🚀'), {
+                    icon: '⭐',
+                    style: { maxWidth: '360px' },
+                });
+            } else {
+                toast.error(t('recommendedJobs.toast.syncError'));
+            }
+        },
     });
 
     // Poll sync job
@@ -130,7 +143,7 @@ export function RecommendedJobsPage() {
                         </button>
                         <button
                             onClick={() => syncMutation.mutate()}
-                            disabled={isSyncing || syncMutation.isPending}
+                            disabled={isSyncing || syncMutation.isPending || isPremiumRequired}
                             className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-60"
                         >
                             <Brain className={`h-4 w-4 ${isSyncing ? 'animate-pulse' : ''}`} />
@@ -169,6 +182,8 @@ export function RecommendedJobsPage() {
             {/* ── Content ── */}
             {isLoading ? (
                 <SkeletonList />
+            ) : isPremiumRequired ? (
+                <PremiumLockState />
             ) : recommendations.length === 0 ? (
                 <EmptyState onSync={() => syncMutation.mutate()} isSyncing={syncMutation.isPending} />
             ) : (
@@ -401,6 +416,32 @@ function EmptyState({ onSync, isSyncing }: { onSync: () => void; isSyncing: bool
                 >
                     <Briefcase className="h-4 w-4" />
                     {t('recommendedJobs.actions.exploreJobs')}
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function PremiumLockState() {
+    const { t } = useTranslation('candidate');
+    return (
+        <div className="rounded-2xl border border-dashed border-emerald-200 bg-white p-12 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                <Sparkles className="h-8 w-8 text-[#00b14f]" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+                {t('recommendedJobs.premium.title', 'Tính năng Premium')}
+            </h2>
+            <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+                {t('recommendedJobs.premium.description', 'Bạn cần nâng cấp gói Premium để mở khoá tính năng Gợi ý Việc làm Phù hợp bằng AI và tạo CV độc quyền. 🚀')}
+            </p>
+            <div className="mt-6 flex justify-center">
+                <Link
+                    to="/candidate/premium"
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00b14f] to-emerald-400 text-white px-6 py-2.5 text-sm font-medium hover:shadow-lg transition-all hover:-translate-y-0.5"
+                >
+                    <Sparkles className="h-4 w-4" />
+                    {t('recommendedJobs.premium.upgradeAction', 'Nâng cấp ngay')}
                 </Link>
             </div>
         </div>

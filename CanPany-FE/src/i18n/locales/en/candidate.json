@@ -226,6 +226,12 @@
       "duration": "Duration:",
       "updated": "Updated:"
     },
+    "actions": {
+      "cancelSuccess": "Cancellation requested",
+      "deleteSuccess": "Job deleted successfully",
+      "cancel": "Cancel Job",
+      "delete": "Delete Job"
+    },
     "row": {
       "processing": "Processing...",
       "completedAt": "Completed at: {{time}}"
@@ -253,8 +259,8 @@
       "processing": "Processing..."
     },
     "toast": {
-      "completed": "✅ GitHub analysis completed!",
-      "started": "🔄 Analyzing GitHub profile...",
+      "completed": "GitHub analysis completed!",
+      "started": "Analyzing GitHub profile...",
       "error": "Cannot start analysis. Please connect your GitHub account first."
     },
     "stats": {
@@ -315,16 +321,21 @@
       "remote": "Remote"
     },
     "toast": {
-      "syncStarted": "🔄 Syncing skills for AI recommendations...",
+      "syncStarted": "Syncing skills for AI recommendations...",
       "syncError": "Cannot start skill syncing.",
-      "syncSuccess": "✅ Sync complete! Recommendations updated.",
+      "syncSuccess": "Sync complete! Recommendations updated.",
       "syncFailed": "Skill synchronization failed.",
       "bookmarkSuccess": "Job saved",
       "bookmarkError": "Could not save job",
-      "cvStarted": "🚀 Generating suitable CV...",
+      "cvStarted": "Generating suitable CV...",
       "cvError": "Cannot generate CV.",
-      "cvSuccess": "✅ CV for \"{{title}}\" completed!",
-      "cvPremiumRequired": "⭐ You have used up your 2 free CV generations. Upgrade to Premium to generate unlimited CVs."
+      "cvSuccess": "CV for \"{{title}}\" completed!",
+      "cvPremiumRequired": "You have used up your 2 free CV generations. Upgrade to Premium to generate unlimited CVs."
+    },
+    "premium": {
+      "title": "Premium Feature",
+      "description": "You need to upgrade to Premium package to unlock AI Recommended Jobs and exclusive CV generation. ",
+      "upgradeAction": "Upgrade Now"
     },
     "tips": {
       "coldStart1": "You haven't interacted much yet. Click",
@@ -486,10 +497,53 @@
     "contact": {
       "title": "Contact information"
     },
+    "settings": {
+      "title": "Candidate settings"
+    },
+    "privacyConsent": {
+      "title": "Privacy & Consent",
+      "subtitle": "Manage your consent to personal data processing per Decree 13/2023/ND-CP on personal data protection. You can toggle any permissions below.",
+      "stats": {
+        "grantedMsg": "{{count}} granted",
+        "notGrantedMsg": "{{count}} not granted"
+      },
+      "legalTitle": "Decree 13/2023/ND-CP — Personal Data Protection",
+      "legalDesc": "You have the right to consent to or refuse personal data processing at any time. Revoking consent may affect some system features.",
+      "required": "Required",
+      "grantedAt": "Granted at: {{date}}",
+      "policyVersion": "Version: v{{version}}",
+      "toast": {
+        "granted": "Consent granted successfully",
+        "grantError": "Error granting consent",
+        "revoked": "Consent revoked successfully",
+        "revokeError": "Error revoking consent"
+      },
+      "types": {
+        "DataProcessing": {
+          "title": "Personal Data Processing",
+          "desc": "Allow the system to process your personal data to provide recruitment services, job recommendations, and profile management."
+        },
+        "AIAnalysis": {
+          "title": "AI Analysis",
+          "desc": "Allow AI to analyze your CV, assess skills, and create personalized career suggestions."
+        },
+        "ExternalSync_GitHub": {
+          "title": "GitHub Sync",
+          "desc": "Allow the system to access and analyze your GitHub data to extract technical skills and update your profile."
+        },
+        "CrossBorderTransfer": {
+          "title": "Cross-Border Data Transfer",
+          "desc": "Allow personal data transfer to overseas servers for AI processing and storage (compliant with Decree 13/2023/ND-CP)."
+        },
+        "Marketing": {
+          "title": "Notifications & Marketing",
+          "desc": "Receive email notifications about new jobs, promotions, and news from CanPany."
+        }
+      }
+    },
     "social": {
       "title": "Social links"
     },
-
     "github": {
       "linked": "GitHub connected",
       "analyzeRepos": "Select repos & extract skills",
@@ -531,6 +585,7 @@
 
       "repoAnalysisStarted": "Analyzing repositories and extracting skills...",
       "repoAnalysisFailed": "Could not start analysis. Please try again.",
+      "premiumRequiredSync": "Please subscribe to Premium package to use AI Recommend feature!",
       "recommendationSyncStarted": "Started syncing skills for recommendations.",
       "recommendationSyncFailed": "Could not start syncing recommended skills.",
       "skillsExtracted": "Skill extraction complete! Profile updated.",
@@ -637,7 +692,7 @@
         "title": "Could not load CV data.",
         "back": "Go back"
       },
-      "target": "✨ CV optimized for: {{job}}",
+      "target": "CV optimized for: {{job}}",
       "sections": {
         "summary": "Professional Summary",
         "experience": "Work Experience",
@@ -674,7 +729,7 @@
     },
     "ai": {
       "toast": {
-        "completed": "🎉 CV generated successfully!",
+        "completed": "CV generated successfully!",
         "started": "Started AI CV generation!",
         "error": "Could not start CV generation. Please try again.",
         "premiumRequired": "You have used up your 2 free CV generations."
@@ -718,7 +773,7 @@
         "title": "Generate a CV now",
         "subtitle": "Gemini analyzes your profile and produces an ATS-friendly CV in seconds.",
         "generating": "Generating CV...",
-        "cta": "✨ Generate CV with AI"
+        "cta": "Generate CV with AI"
       },
       "premium": {
         "description": "Purchase a Premium package to generate unlimited AI CVs.",
@@ -754,7 +809,7 @@
         }
       },
       "tip": {
-        "title": "💡 Tip",
+        "title": "Tip",
         "description": "Best results when your profile has complete experience, education, and skills.",
         "cta": "Update now →"
       }
@@ -846,7 +901,7 @@
       "saveOver90": "Save over 90% compared to monthly plan"
     },
     "toast": {
-      "activated": "🎉 Premium activated successfully!",
+      "activated": "Premium activated successfully!",
       "purchaseFailed": "Could not purchase premium. Please try again.",
       "insufficientBalance": "Insufficient wallet balance. Need {{required}}, currently have {{current}}."
     },
