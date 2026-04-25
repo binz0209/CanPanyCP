@@ -6,6 +6,7 @@ import { Sparkles, Briefcase, RefreshCw, Eye, Bookmark, Send, Info, Brain, FileT
 import { jobsApi } from '../../api/jobs.api';
 import { cvApi } from '../../api/cv.api';
 import { candidateApi } from '../../api/candidate.api';
+import { paymentsApi } from '../../api/payments.api';
 import type { RecommendedJob } from '../../types';
 import toast from 'react-hot-toast';
 
@@ -42,14 +43,19 @@ export function RecommendedJobsPage() {
     const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
 
-    const { data: recommendations = [], isLoading, refetch, isFetching, error } = useQuery({
+    const { data: recommendations = [], isLoading, refetch, isFetching } = useQuery({
         queryKey: ['jobs', 'recommended', limit],
         queryFn: () => jobsApi.getRecommended(limit),
         staleTime: 2 * 60 * 1000,
-        retry: false // do not retry on 400
     });
 
-    const isPremiumRequired = !!error && (error as any)?.response?.data?.errorCode === 'PremiumRequired';
+    const { data: premiumStatus } = useQuery({
+        queryKey: ['premium-status'],
+        queryFn: () => paymentsApi.getPremiumStatus(),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const isPremiumRequired: boolean = premiumStatus ? !premiumStatus.isPremium : false;
 
     // Sync skills mutation
     const syncMutation = useMutation({

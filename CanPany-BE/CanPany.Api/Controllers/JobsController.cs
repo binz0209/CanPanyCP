@@ -170,7 +170,8 @@ public class JobsController : ControllerBase
             bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
             if (!hasPremium)
             {
-                return BadRequest(ApiResponse.CreateError("Need purchase premium pagkage to use Recommend Job.", "PremiumRequired"));
+                // Return empty list for non-premium users (FE handles PremiumLockState UI)
+                return Ok(ApiResponse<object>.CreateSuccess(Array.Empty<object>()));
             }
 
             var recommendations = await _recommendationService.GetRecommendedJobsAsync(userId, limit);
