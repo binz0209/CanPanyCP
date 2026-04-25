@@ -17,7 +17,10 @@
     "reviewApplications": "Review applications",
     "candidateSearch": "Candidate search",
     "messages": "Messages",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "billing": "Billing & Premium",
+    "wallet": "Company wallet",
+    "premium": "Upgrade Premium"
   },
   "dashboard": {
     "title": "Hiring overview",
@@ -406,5 +409,123 @@
     "timeMinutesAgo": "{{count}} minutes ago",
     "timeHoursAgo": "{{count}} hours ago",
     "timeDaysAgo": "{{count}} days ago"
+  },
+  "wallet": {
+    "title": "Company wallet",
+    "subtitle": "Manage your balance and transaction history.",
+    "refresh": "Refresh",
+    "paymentResult": {
+      "success": "Top-up successful! Balance will be updated shortly.",
+      "error": "Payment failed. Please try again.",
+      "cancel": "You have cancelled the payment."
+    },
+    "balanceCard": {
+      "title": "Current balance",
+      "label": "Total balance",
+      "note": "Balance is updated by the payment system."
+    },
+    "transactionsCard": {
+      "title": "Transaction history",
+      "empty": "No transactions yet.",
+      "loadMore": "Load more",
+      "balanceAfter": "Balance after"
+    },
+    "transactionTypes": {
+      "topUp": "Top up",
+      "withdraw": "Withdraw",
+      "hold": "Hold",
+      "release": "Release"
+    },
+    "paymentSection": {
+      "title": "Top-up & payments",
+      "amountLabel": "Top-up amount (VND)",
+      "amountPlaceholder": "Example: 100000",
+      "createButton": "Create top-up request",
+      "createSuccess": "Top-up request created.",
+      "createError": "Could not create top-up request.",
+      "invalidAmount": "Please enter a valid amount.",
+      "historyTitle": "Payment request history",
+      "historyEmpty": "No payment requests yet.",
+      "status": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "failed": "Failed"
+      }
+    }
+  },
+  "premium": {
+    "title": "Business Premium",
+    "subtitle": "Upgrade to unlock advanced recruiting features and boost your company's visibility.",
+    "balance": "Balance",
+    "topUp": "Top up",
+    "active": "Active",
+    "expiredIn": "Expiring soon ({{days}} days)",
+    "expiresAt": "Expires: {{date}} ({{days}} days left)",
+    "activeLabel": "Premium is active",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "perMonthEquiv": "≈ {{amount}}/month",
+    "savings": "Save more",
+    "buyNow": "Buy now",
+    "needTopUp": "Top up to purchase",
+    "noPackages": "No premium packages configured yet.",
+    "noPackagesHint": "Please contact the admin to set up premium packages.",
+    "duration": "Duration",
+    "durationDays": "{{days}} days",
+    "featuresTitle": "Key features",
+    "features": {
+      "viewCandidate": "View candidate profiles",
+      "viewCandidateDesc": "Access full contact information and detailed candidate profiles",
+      "priorityListing": "Priority job listings",
+      "priorityListingDesc": "Your job postings appear higher in search results",
+      "prioritySupport": "Priority support",
+      "prioritySupportDesc": "Get fast support from the CanPany team",
+      "verifiedBadge": "Verified badge",
+      "verifiedBadgeDesc": "Display a 'Verified' badge to build trust with candidates"
+    },
+    "confirm": {
+      "title": "Confirm Premium purchase",
+      "package": "Package",
+      "price": "Price",
+      "duration": "Duration",
+      "currentBalance": "Current balance",
+      "afterPurchase": "After purchase",
+      "deductNote": "The amount will be deducted from your wallet.",
+      "cancel": "Cancel",
+      "confirm": "Confirm purchase",
+      "processing": "Processing..."
+    },
+    "packages": {
+      "companyMonthly": "Company Premium - Monthly",
+      "companyYearly": "Company Premium - Yearly",
+      "companyMonthlyDesc": "Unlimited access to all employer features for 30 days",
+      "companyYearlyDesc": "Unlimited access to all employer features for 365 days"
+    },
+    "featuresDb": {
+      "unlimitedJobs": "Unlimited job postings",
+      "advancedSearch": "Advanced candidate search",
+      "viewCandidateDetails": "View full candidate details",
+      "unlimitedAiAnalysis": "Unlimited AI candidate analysis",
+      "prioritySupport": "Priority support",
+      "prioritySupport247": "24/7 priority support",
+      "saveOver90": "Save over 90% compared to monthly plan"
+    },
+    "toast": {
+      "activated": "🎉 Premium activated successfully!",
+      "purchaseFailed": "Could not purchase premium package. Please try again.",
+      "insufficientBalance": "Insufficient balance. Need {{required}}, have {{current}}."
+    },
+    "comparison": {
+      "title": "Free vs Premium",
+      "feature": "Feature",
+      "free": "Free",
+      "premium": "Premium",
+      "viewCandidate": "View candidate profiles",
+      "priorityListing": "Priority job listings",
+      "prioritySupport": "Priority support",
+      "verifiedBadge": "Verified badge",
+      "verifiedBadgeFree": "Basic",
+      "verifiedBadgePremium": "Enhanced"
+    }
   }
 }

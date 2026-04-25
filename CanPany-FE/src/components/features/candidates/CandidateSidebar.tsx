@@ -102,16 +102,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       icon: <Activity className="h-5 w-5" />,
       path: '/candidate/background-jobs',
     },
-    {
-      id: 'aiCareer',
-      labelKey: 'sidebar.aiCareer',
-      icon: <Wand2 className="h-5 w-5" />,
-      items: [
-        { id: 'ai.chat', labelKey: 'sidebar.aiChat', path: '/candidate/ai/chat', icon: <Wand2 className="h-4 w-4" /> },
-        { id: 'ai.skills', labelKey: 'sidebar.aiSkills', path: '/candidate/ai/skills', icon: <FileText className="h-4 w-4" /> },
-        { id: 'ai.guidance', labelKey: 'sidebar.aiGuidance', path: '/candidate/ai/guidance', icon: <Wand2 className="h-4 w-4" /> },
-      ],
-    },
+
     {
       id: 'settings',
       labelKey: 'sidebar.settings',

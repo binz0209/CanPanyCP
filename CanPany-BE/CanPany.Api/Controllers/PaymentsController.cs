@@ -154,11 +154,11 @@ public class PaymentsController : ControllerBase
     /// Get available premium packages
     /// </summary>
     [HttpGet("premium/packages")]
-    public async Task<IActionResult> GetPremiumPackages()
+    public async Task<IActionResult> GetPremiumPackages([FromQuery] string? userType)
     {
         try
         {
-            var packages = await _subscriptionService.GetAvailablePackagesAsync();
+            var packages = await _subscriptionService.GetAvailablePackagesAsync(userType);
             return Ok(ApiResponse.CreateSuccess(packages));
         }
         catch (Exception ex)

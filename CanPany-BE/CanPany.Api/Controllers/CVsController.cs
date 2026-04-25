@@ -142,18 +142,28 @@ public class CVsController : ControllerBase
             }
 
             // 2. Upload file to Cloudinary
+            // Generate a unique filename to avoid Cloudinary suffix-mangling:
+            // UniqueFilename=true in CloudinaryService appends a random suffix,
+            // causing the stored FileName to mismatch the actual publicId.
+            // Fix: build a unique name ourselves and pass it as the fileName.
+            var uniquePrefix = Guid.NewGuid().ToString("N")[..8]; // e.g. "a1b2c3d4"
+            var originalNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
+            var uniqueFileName = $"{originalNameWithoutExt}_{uniquePrefix}{extension}";
+
             await using var stream = file.OpenReadStream();
-            var resourceType = extension == ".pdf" ? "image" : "raw"; // Upload PDFs as images for inline viewing/transformations
+            // Always use "raw" resource type for CV files (PDF/DOCX).
+            // Using "image" for PDFs causes Cloudinary to restrict access → 401 when downloading.
+            const string resourceType = "raw";
             var (secureUrl, publicId) = await _cloudinaryService.UploadAsync(
                 stream,
-                file.FileName,
+                uniqueFileName,
                 "cvs",
                 resourceType);
 
             var cv = new CV
             {
                 UserId = userId,
-                FileName = file.FileName,
+                FileName = uniqueFileName,
                 FileUrl = secureUrl,
                 CloudinaryPublicId = publicId,
                 FileSize = file.Length,
@@ -454,6 +464,47 @@ public class CVsController : ControllerBase
         }
     }
 
+
+    /// <summary>
+    /// GET /api/cvs/{id}/download-url
+    /// Returns a signed (1-hour) Cloudinary download URL for the CV file,
+    /// bypassing the "Customer is marked as untrusted" restriction on raw public URLs.
+    /// </summary>
+    [HttpGet("{id}/download-url")]
+    public async Task<IActionResult> GetDownloadUrl(string id)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var cv = await _cvService.GetByIdAsync(id);
+            if (cv == null) return NotFound(ApiResponse.CreateError("CV not found", "NotFound"));
+
+            // Only the owner can get a download link
+            if (cv.UserId != userId) return Forbid();
+
+            string url;
+            if (!string.IsNullOrWhiteSpace(cv.CloudinaryPublicId))
+            {
+                url = _cloudinaryService.GetSignedDownloadUrl(cv.CloudinaryPublicId, "raw", expiresInSeconds: 3600);
+                _logger.LogInformation("[CV_DOWNLOAD_URL] Signed URL generated for CV {CVId}", id);
+            }
+            else
+            {
+                // Fallback: no publicId stored – return the stored URL (may fail for restricted accounts)
+                url = cv.FileUrl ?? string.Empty;
+                _logger.LogWarning("[CV_DOWNLOAD_URL] No CloudinaryPublicId for CV {CVId}, falling back to FileUrl", id);
+            }
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { url, fileName = cv.FileName }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CV_DOWNLOAD_URL] Failed for CV {CVId}", id);
+            return StatusCode(500, ApiResponse.CreateError("Failed to generate download URL", "DownloadUrlFailed"));
+        }
+    }
 
     /// <summary>
     /// UC-20: Get all versions of a CV.

@@ -1,6 +1,8 @@
 using CanPany.Domain.Entities;
+using CanPany.Domain.Models;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
+using CanPany.Application.Common.Models;
 using Microsoft.Extensions.Logging;
 
 namespace CanPany.Application.Services;
@@ -94,6 +96,27 @@ public class JobService : IJobService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching jobs");
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<Job>> SearchPagedAsync(JobSearchParameters parameters)
+    {
+        try
+        {
+            var (totalCount, jobs) = await _repo.SearchPagedAsync(parameters);
+            
+            return new PagedResult<Job>
+            {
+                Items = jobs.ToList(),
+                TotalItems = (int)totalCount,
+                Page = parameters.Page,
+                PageSize = parameters.PageSize
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching paginated jobs");
             throw;
         }
     }

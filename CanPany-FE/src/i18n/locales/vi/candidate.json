@@ -323,7 +323,8 @@
       "bookmarkError": "Không thể lưu việc làm",
       "cvStarted": "🚀 Đang tạo CV phù hợp...",
       "cvError": "Không thể tạo CV.",
-      "cvSuccess": "✅ CV cho \"{{title}}\" tạo xong!"
+      "cvSuccess": "✅ CV cho \"{{title}}\" tạo xong!",
+      "cvPremiumRequired": "⭐ Bạn đã dùng hết 2 lượt tạo CV miễn phí. Nâng cấp Premium để tạo không giới hạn."
     },
     "tips": {
       "coldStart1": "Bạn chưa có nhiều tương tác. Nhấn",
@@ -675,7 +676,8 @@
       "toast": {
         "completed": "🎉 CV đã được tạo thành công!",
         "started": "Đã bắt đầu tạo CV bằng AI!",
-        "error": "Không thể bắt đầu quá trình tạo CV. Vui lòng thử lại."
+        "error": "Không thể bắt đầu quá trình tạo CV. Vui lòng thử lại.",
+        "premiumRequired": "Bạn đã dùng hết 2 lượt tạo CV miễn phí."
       },
       "back": "Quản lý CV",
       "title": "AI CV Generator",
@@ -713,10 +715,14 @@
       "empty": "Chưa có thông tin",
       "emptySkills": "Chưa có kỹ năng nào",
       "generate": {
-        "title": "Tạo CV ngay",
-        "subtitle": "Gemini AI sẽ phân tích hồ sơ của bạn và tạo một CV chuyên nghiệp, ATS-friendly chỉ trong vài giây.",
+        "title": "Tạo CV ngay bây giờ",
+        "subtitle": "Gemini phân tích hồ sơ và tạo CV thân thiện với ATS trong vài giây.",
         "generating": "Đang tạo CV...",
-        "cta": "✨ Tạo CV bằng AI"
+        "cta": "✨ Tạo CV với AI"
+      },
+      "premium": {
+        "description": "Mua gói Premium để tạo CV AI không giới hạn.",
+        "cta": "Nâng cấp Premium"
       },
       "progress": {
         "pending": "Đang xử lý...",
@@ -822,6 +828,22 @@
       "cancel": "Hủy",
       "confirm": "Xác nhận mua",
       "processing": "Đang xử lý..."
+    },
+    "packages": {
+      "candidateMonthly": "Candidate Premium - Tháng",
+      "candidateYearly": "Candidate Premium - Năm",
+      "candidateMonthlyDesc": "Truy cập không giới hạn tất cả tính năng dành cho ứng viên trong 30 ngày",
+      "candidateYearlyDesc": "Truy cập không giới hạn trong 365 ngày – tiết kiệm hơn 90% so với gói tháng"
+    },
+    "featuresDb": {
+      "unlimitedAiCv": "Tạo CV bằng AI không giới hạn",
+      "unlimitedCvAnalysis": "Phân tích CV không giới hạn",
+      "unlimitedAiJobs": "Gợi ý việc làm AI không giới hạn",
+      "unlimitedApply": "Ứng tuyển không giới hạn",
+      "detailedMatchScore": "Xem điểm tương thích chi tiết",
+      "prioritySupport": "Hỗ trợ ưu tiên",
+      "prioritySupport247": "Hỗ trợ ưu tiên 24/7",
+      "saveOver90": "Tiết kiệm hơn 90% so với gói tháng"
     },
     "toast": {
       "activated": "🎉 Premium đã được kích hoạt thành công!",

@@ -11,6 +11,7 @@ using CanPany.Worker.Models.Payloads;
 using System.Text.Json;
 
 using CanPany.Application.DTOs.Jobs;
+using CanPany.Domain.Models;
 using System.Text.Json.Serialization;
 
 namespace CanPany.Api.Controllers;
@@ -63,13 +64,29 @@ public class JobsController : ControllerBase
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> SearchJobs([FromQuery] string? keyword, [FromQuery] string? categoryId, [FromQuery] List<string>? skillIds, [FromQuery] decimal? minBudget, [FromQuery] decimal? maxBudget, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> SearchJobs([FromQuery] string? keyword, [FromQuery] string? categoryId, [FromQuery] List<string>? skillIds, [FromQuery] decimal? minBudget, [FromQuery] decimal? maxBudget, [FromQuery] string? level, [FromQuery] string? location, [FromQuery] string? budgetType, [FromQuery] bool? isRemote, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
-            var jobs = (await _jobService.SearchAsync(keyword, categoryId, skillIds, minBudget, maxBudget)).ToList();
+            var searchParams = new JobSearchParameters
+            {
+                Keyword = keyword,
+                CategoryId = categoryId,
+                SkillIds = skillIds,
+                MinBudget = minBudget,
+                MaxBudget = maxBudget,
+                Level = level,
+                Location = location,
+                BudgetType = budgetType,
+                IsRemote = isRemote,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            var pagedResult = await _jobService.SearchPagedAsync(searchParams);
+            var jobs = pagedResult.Items.ToList();
             
-            // If user is authenticated, calculate scores and sort by relevance
+            // If user is authenticated, calculate scores and sort by relevance ONLY ON THE CURRENT PAGE.
             var userId = User.FindFirst("sub")?.Value;
             if (!string.IsNullOrEmpty(userId) && jobs.Any())
             {
@@ -78,42 +95,24 @@ public class JobsController : ControllerBase
                     var scores = await _recommendationService.CalculateScoresForJobsAsync(userId, jobs);
                     
                     // Sort jobs by score (descending), then by createdAt (descending) for same scores
-                    jobs = jobs
+                    pagedResult.Items = jobs
                         .OrderByDescending(j => scores.TryGetValue(j.Id, out var score) ? score : 0)
                         .ThenByDescending(j => j.CreatedAt)
                         .ToList();
                     
                     _logger.LogDebug(
-                        "Sorted {JobCount} jobs by hybrid score for user {UserId}. Score range: {MinScore:F2} - {MaxScore:F2}",
-                        jobs.Count, userId,
+                        "Sorted {JobCount} jobs on current page by hybrid score for user {UserId}. Score range: {MinScore:F2} - {MaxScore:F2}",
+                        pagedResult.Items.Count(), userId,
                         scores.Values.Any() ? scores.Values.Min() : 0,
                         scores.Values.Any() ? scores.Values.Max() : 0);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Failed to calculate scores for search results, returning unsorted");
-                    // Fallback: sort by createdAt
-                    jobs = jobs.OrderByDescending(j => j.CreatedAt).ToList();
                 }
             }
-            else
-            {
-                // For anonymous users, sort by createdAt (newest first)
-                jobs = jobs.OrderByDescending(j => j.CreatedAt).ToList();
-            }
             
-            var totalItems = jobs.Count;
-            var pagedJobs = jobs.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            
-            var result = new PagedResult<Job>
-            {
-                Items = pagedJobs,
-                TotalItems = totalItems,
-                Page = page,
-                PageSize = pageSize
-            };
-            
-            return Ok(ApiResponse<PagedResult<Job>>.CreateSuccess(result));
+            return Ok(ApiResponse<PagedResult<Job>>.CreateSuccess(pagedResult));
         }
         catch (Exception ex)
         {

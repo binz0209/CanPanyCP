@@ -24,10 +24,10 @@ export function Footer() {
                             {tp('footer.brandDesc', { defaultValue: 'Nền tảng kết nối ứng viên và nhà tuyển dụng thông minh, nhanh chóng và hiệu quả.' })}
                         </p>
                         <div className="mt-6 flex gap-3">
-                            <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
+                            <a href="#!" onClick={(e) => e.preventDefault()} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
                                 <Facebook className="h-5 w-5" />
                             </a>
-                            <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
+                            <a href="#!" onClick={(e) => e.preventDefault()} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-[#00b14f] hover:text-white">
                                 <Linkedin className="h-5 w-5" />
                             </a>
                         </div>
@@ -48,13 +48,8 @@ export function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/auth/register" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
+                                <Link to="/candidate/cv/list" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
                                     {tp('footer.createCV', { defaultValue: 'Tạo CV' })}
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/auth/register" className="text-sm text-gray-600 transition-colors hover:text-[#00b14f]">
-                                    {tp('footer.careerGuide', { defaultValue: 'Cẩm nang nghề nghiệp' })}
                                 </Link>
                             </li>
                         </ul>
@@ -92,9 +87,9 @@ export function Footer() {
                             {tp('footer.copyright', { year: new Date().getFullYear(), defaultValue: '© {{year}} CanPany. All rights reserved.' })}
                         </p>
                         <div className="flex gap-6">
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.terms', { defaultValue: 'Điều khoản' })}</a>
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.privacy', { defaultValue: 'Chính sách riêng tư' })}</a>
-                            <a href="#" className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.help', { defaultValue: 'Trợ giúp' })}</a>
+                            <a href="#!" onClick={(e) => e.preventDefault()} className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.terms', { defaultValue: 'Điều khoản' })}</a>
+                            <a href="#!" onClick={(e) => e.preventDefault()} className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.privacy', { defaultValue: 'Chính sách riêng tư' })}</a>
+                            <a href="#!" onClick={(e) => e.preventDefault()} className="text-sm text-gray-500 hover:text-[#00b14f]">{tp('footer.help', { defaultValue: 'Trợ giúp' })}</a>
                         </div>
                     </div>
                 </div>

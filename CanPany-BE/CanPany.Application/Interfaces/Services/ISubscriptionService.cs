@@ -36,7 +36,7 @@ public interface ISubscriptionService
     Task<IEnumerable<UserSubscription>> GetSubscriptionHistoryAsync(string userId);
 
     /// <summary>
-    /// Get available premium packages (filtered by active status)
+    /// Get available premium packages (filtered by active status and optionally by userType)
     /// </summary>
-    Task<IEnumerable<PremiumPackage>> GetAvailablePackagesAsync();
+    Task<IEnumerable<PremiumPackage>> GetAvailablePackagesAsync(string? userType = null);
 }

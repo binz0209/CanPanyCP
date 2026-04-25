@@ -82,7 +82,10 @@
     "emptyTitle": "No suitable jobs found",
     "emptyDesc": "Try adjusting your filters or search keywords.",
     "srFound": "Showing {{count}} jobs",
-    "srNotFound": "No jobs match your filters"
+    "srNotFound": "No jobs match your filters",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageOf": "Page {{page}} / {{totalPages}}"
   },
   "jobDetail": {
     "notFound": "Job not found",
@@ -170,6 +173,19 @@
     "cancelButton": "Cancel",
     "submitting": "Submitting...",
     "submitButton": "Submit application"
+  },
+  "footer": {
+    "brandDesc": "Smart, fast and efficient platform connecting candidates and employers.",
+    "candidatesTitle": "For Candidates",
+    "findJobs": "Find Jobs",
+    "companies": "Companies",
+    "createCV": "Create CV",
+    "careerGuide": "Career Guide",
+    "contactTitle": "Contact",
+    "copyright": "© {{year}} CanPany. All rights reserved.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "help": "Help Center"
   }
 }
 

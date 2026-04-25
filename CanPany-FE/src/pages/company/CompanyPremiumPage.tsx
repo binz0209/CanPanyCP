@@ -4,44 +4,41 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
-  Crown, Check, Sparkles, FileText, Search, Eye,
-  ArrowRight, Wallet, Clock, Shield
+  Crown, Check, Sparkles, Eye,
+  ArrowRight, Wallet, Clock, Shield, Building2
 } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '../../components/ui';
 import { paymentsApi, type PremiumPackage } from '../../api/payments.api';
 import { walletApi } from '../../api/wallet.api';
 import { useAuthStore } from '../../stores/auth.store';
 import { formatCurrency, formatDateTime } from '../../utils';
+import { companyPaths } from '../../lib/companyNavigation';
 
-export function PremiumPage() {
+export function CompanyPremiumPage() {
   const { token } = useAuthStore();
-  const { t } = useTranslation('candidate');
+  const { t } = useTranslation('company');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
 
-  // Fetch premium status
   const statusQuery = useQuery({
     queryKey: ['premium', 'status'],
     enabled: !!token,
     queryFn: () => paymentsApi.getPremiumStatus(),
   });
 
-  // Fetch packages
   const packagesQuery = useQuery({
-    queryKey: ['premium', 'packages', 'Candidate'],
+    queryKey: ['premium', 'packages', 'Company'],
     enabled: !!token,
-    queryFn: () => paymentsApi.getPremiumPackages('Candidate'),
+    queryFn: () => paymentsApi.getPremiumPackages('Company'),
   });
 
-  // Fetch wallet balance
   const balanceQuery = useQuery({
     queryKey: ['wallet', 'balance'],
     enabled: !!token,
     queryFn: () => walletApi.getBalance(),
   });
 
-  // Purchase mutation
   const purchaseMutation = useMutation({
     mutationFn: (packageId: string) => paymentsApi.purchasePremium(packageId),
     onSuccess: () => {
@@ -61,7 +58,6 @@ export function PremiumPage() {
   const packages = packagesQuery.data ?? [];
   const balance = balanceQuery.data?.balance ?? 0;
 
-  // Sort: monthly first, then yearly
   const sortedPackages = useMemo(() => {
     return [...packages].sort((a, b) => a.durationDays - b.durationDays);
   }, [packages]);
@@ -88,17 +84,11 @@ export function PremiumPage() {
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId);
 
-  // Feature list for display
-  const candidateFeatures = [
-    { icon: <FileText className="h-5 w-5" />, title: t('premium.candidateFeatures.aiCv'), desc: t('premium.candidateFeatures.aiCvDesc') },
-    { icon: <Search className="h-5 w-5" />, title: t('premium.candidateFeatures.matchJobs'), desc: t('premium.candidateFeatures.matchJobsDesc') },
-    { icon: <Sparkles className="h-5 w-5" />, title: t('premium.candidateFeatures.unlimitedRec'), desc: t('premium.candidateFeatures.unlimitedRecDesc') },
-  ];
-
   const companyFeatures = [
-    { icon: <Eye className="h-5 w-5" />, title: t('premium.companyFeatures.viewCandidate'), desc: t('premium.companyFeatures.viewCandidateDesc') },
-    { icon: <Search className="h-5 w-5" />, title: t('premium.companyFeatures.searchCandidate'), desc: t('premium.companyFeatures.searchCandidateDesc') },
-    { icon: <Shield className="h-5 w-5" />, title: t('premium.companyFeatures.prioritySupport'), desc: t('premium.companyFeatures.prioritySupportDesc') },
+    { icon: <Eye className="h-5 w-5" />, title: t('premium.features.viewCandidate'), desc: t('premium.features.viewCandidateDesc') },
+    { icon: <Sparkles className="h-5 w-5" />, title: t('premium.features.priorityListing'), desc: t('premium.features.priorityListingDesc') },
+    { icon: <Shield className="h-5 w-5" />, title: t('premium.features.prioritySupport'), desc: t('premium.features.prioritySupportDesc') },
+    { icon: <Building2 className="h-5 w-5" />, title: t('premium.features.verifiedBadge'), desc: t('premium.features.verifiedBadgeDesc') },
   ];
 
   return (
@@ -117,7 +107,7 @@ export function PremiumPage() {
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Wallet className="h-4 w-4" />
           {t('premium.balance')}: <span className="font-semibold text-gray-900">{formatCurrency(balance, 'VND')}</span>
-          <Button variant="outline" size="sm" onClick={() => navigate('/candidate/wallet')}>
+          <Button variant="outline" size="sm" onClick={() => navigate(companyPaths.wallet)}>
             {t('premium.topUp')}
           </Button>
         </div>
@@ -199,13 +189,13 @@ export function PremiumPage() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        {pkg.name.includes('Candidate Premium - Tháng') ? t('premium.packages.candidateMonthly') : 
-                         pkg.name.includes('Candidate Premium - Năm') ? t('premium.packages.candidateYearly') : pkg.name}
+                        {pkg.name.includes('Company Premium - Tháng') ? t('premium.packages.companyMonthly') : 
+                         pkg.name.includes('Company Premium - Năm') ? t('premium.packages.companyYearly') : pkg.name}
                       </CardTitle>
                       {pkg.description && (
                         <p className="text-xs text-gray-500">
-                          {pkg.packageType === 'Monthly' ? t('premium.packages.candidateMonthlyDesc') : 
-                           pkg.packageType === 'Yearly' ? t('premium.packages.candidateYearlyDesc') : pkg.description}
+                          {pkg.packageType === 'Monthly' ? t('premium.packages.companyMonthlyDesc') : 
+                           pkg.packageType === 'Yearly' ? t('premium.packages.companyYearlyDesc') : pkg.description}
                         </p>
                       )}
                     </div>
@@ -213,7 +203,6 @@ export function PremiumPage() {
                 </CardHeader>
 
                 <CardContent className="space-y-4 flex flex-col flex-1 p-6 pt-0">
-                  {/* Price */}
                   <div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-gray-900">
@@ -230,21 +219,18 @@ export function PremiumPage() {
                     )}
                   </div>
 
-                  {/* Duration */}
                   <p className="text-sm text-gray-600">
                     {t('premium.duration')}: <span className="font-medium">{t('premium.durationDays', { days: pkg.durationDays })}</span>
                   </p>
 
-                  {/* Features */}
                   {pkg.features.length > 0 && (
                     <ul className="space-y-2 mb-4">
                       {pkg.features.map((feature, i) => {
                         const featureKeyMap: Record<string, string> = {
-                          'Tạo CV bằng AI không giới hạn': t('premium.featuresDb.unlimitedAiCv'),
-                          'Phân tích CV không giới hạn': t('premium.featuresDb.unlimitedCvAnalysis'),
-                          'Gợi ý việc làm AI không giới hạn': t('premium.featuresDb.unlimitedAiJobs'),
-                          'Ứng tuyển không giới hạn': t('premium.featuresDb.unlimitedApply'),
-                          'Xem điểm tương thích chi tiết': t('premium.featuresDb.detailedMatchScore'),
+                          'Đăng tin tuyển dụng không giới hạn': t('premium.featuresDb.unlimitedJobs'),
+                          'Tìm kiếm ứng viên nâng cao': t('premium.featuresDb.advancedSearch'),
+                          'Xem thông tin chi tiết ứng viên': t('premium.featuresDb.viewCandidateDetails'),
+                          'Phân tích AI không giới hạn': t('premium.featuresDb.unlimitedAiAnalysis'),
                           'Hỗ trợ ưu tiên': t('premium.featuresDb.prioritySupport'),
                           'Hỗ trợ ưu tiên 24/7': t('premium.featuresDb.prioritySupport247'),
                           'Tiết kiệm hơn 90% so với gói tháng': t('premium.featuresDb.saveOver90')
@@ -261,7 +247,6 @@ export function PremiumPage() {
                     </ul>
                   )}
 
-                  {/* Purchase button */}
                   <Button
                     className={`w-full mt-auto ${
                       isPopular
@@ -355,55 +340,29 @@ export function PremiumPage() {
       )}
 
       {/* Feature Showcase */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Candidate Features */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-5 w-5 text-blue-500" />
-              {t('premium.candidateFeatures.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {candidateFeatures.map((feature, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-500">
-                  {feature.icon}
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900">{feature.title}</h4>
-                  <p className="text-xs text-gray-500">{feature.desc}</p>
-                </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Crown className="h-5 w-5 text-amber-500" />
+            {t('premium.featuresTitle')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {companyFeatures.map((feature, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-500">
+                {feature.icon}
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Company Features */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Search className="h-5 w-5 text-purple-500" />
-              {t('premium.companyFeatures.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {companyFeatures.map((feature, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-500">
-                  {feature.icon}
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900">{feature.title}</h4>
-                  <p className="text-xs text-gray-500">{feature.desc}</p>
-                </div>
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900">{feature.title}</h4>
+                <p className="text-xs text-gray-500">{feature.desc}</p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
-      {/* Free vs Premium comparison */}
+      {/* Comparison table */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">{t('premium.comparison.title')}</CardTitle>
@@ -424,29 +383,24 @@ export function PremiumPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 <tr>
-                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.jobRec')}</td>
-                  <td className="px-4 py-3 text-center text-gray-500">{t('premium.comparison.jobRecFree')}</td>
-                  <td className="px-4 py-3 text-center font-medium text-green-600">{t('premium.comparison.jobRecPremium')}</td>
-                </tr>
-                <tr>
-                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.aiCvGen')}</td>
-                  <td className="px-4 py-3 text-center text-red-400">✗</td>
-                  <td className="px-4 py-3 text-center text-green-600">✓</td>
-                </tr>
-                <tr>
-                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.matchScore')}</td>
-                  <td className="px-4 py-3 text-center text-red-400">✗</td>
-                  <td className="px-4 py-3 text-center text-green-600">✓</td>
-                </tr>
-                <tr>
-                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.searchCandidate')}</td>
-                  <td className="px-4 py-3 text-center text-red-400">✗</td>
-                  <td className="px-4 py-3 text-center text-green-600">✓</td>
-                </tr>
-                <tr>
                   <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.viewCandidate')}</td>
                   <td className="px-4 py-3 text-center text-red-400">✗</td>
                   <td className="px-4 py-3 text-center text-green-600">✓</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.priorityListing')}</td>
+                  <td className="px-4 py-3 text-center text-red-400">✗</td>
+                  <td className="px-4 py-3 text-center text-green-600">✓</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.prioritySupport')}</td>
+                  <td className="px-4 py-3 text-center text-red-400">✗</td>
+                  <td className="px-4 py-3 text-center text-green-600">✓</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-gray-700">{t('premium.comparison.verifiedBadge')}</td>
+                  <td className="px-4 py-3 text-center text-gray-500">{t('premium.comparison.verifiedBadgeFree')}</td>
+                  <td className="px-4 py-3 text-center font-medium text-green-600">{t('premium.comparison.verifiedBadgePremium')}</td>
                 </tr>
               </tbody>
             </table>

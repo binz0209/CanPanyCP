@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, AlertCircle, ArrowLeft, Wallet } from 'lucide-react';
 import { Button, Card, CardContent } from '../../components/ui';
@@ -7,22 +7,26 @@ import { Button, Card, CardContent } from '../../components/ui';
 export function PaymentResultPage() {
   const { status } = useParams<{ status: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation('candidate');
   const [countdown, setCountdown] = useState(5);
+
+  // Support returnTo param so company wallet redirects back correctly
+  const returnTo = searchParams.get('returnTo') ?? '/candidate/wallet';
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          navigate('/candidate/wallet', { replace: true });
+          navigate(returnTo, { replace: true });
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [navigate]);
+  }, [navigate, returnTo]);
 
   let icon = <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />;
   let title = t('paymentResult.success.title');
@@ -52,7 +56,7 @@ export function PaymentResultPage() {
           <div className="space-y-3">
             <Button 
               className="w-full bg-[#00b14f] hover:bg-[#00953f] text-white flex items-center justify-center gap-2"
-              onClick={() => navigate('/candidate/wallet', { replace: true })}
+              onClick={() => navigate(returnTo, { replace: true })}
             >
               <Wallet className="h-4 w-4" />
               {t('paymentResult.goToWallet')}

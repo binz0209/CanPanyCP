@@ -242,6 +242,39 @@ export function CVListPage() {
         setDefaultMutation.mutate(cvId);
     };
 
+    // Open/download CV using a signed Cloudinary URL to avoid "untrusted customer" error
+    const openCV = async (cv: CV, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        try {
+            const { url } = await cvApi.getDownloadUrl(cv.id);
+            window.open(url, '_blank');
+        } catch {
+            // fallback to stored URL
+            if (cv.fileUrl) window.open(cv.fileUrl, '_blank');
+            else toast.error('Cannot get download URL');
+        }
+    };
+
+    const downloadCV = async (cv: CV, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        try {
+            const { url, fileName } = await cvApi.getDownloadUrl(cv.id);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.click();
+        } catch {
+            if (cv.fileUrl) {
+                const link = document.createElement('a');
+                link.href = cv.fileUrl;
+                link.download = cv.fileName;
+                link.click();
+            } else {
+                toast.error('Cannot get download URL');
+            }
+        }
+    };
+
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -412,7 +445,9 @@ export function CVListPage() {
                     </Card>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {cvs.map((cv) => (
+                        {[...cvs]
+                            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                            .map((cv) => (
                             <Card
                                 key={cv.id}
                                 className={`group cursor-pointer transition-all hover:shadow-lg ${cv.isDefault ? 'ring-2 ring-[#00b14f] ring-offset-2' : ''
@@ -475,91 +510,78 @@ export function CVListPage() {
                                         </div>
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-gray-100">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex gap-2">
+                                        {/* Row 1: primary actions */}
+                                        <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-[#00b14f] hover:text-[#00a045] justify-start px-2 w-full"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDetailModal(cv);
+                                                }}
+                                            >
+                                                <Eye className="h-4 w-4 mr-1 flex-shrink-0" />
+                                                <span className="truncate">{t('cv.list.card.view')}</span>
+                                            </Button>
+                                            {cv.isAIGenerated ? (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="text-[#00b14f] hover:text-[#00a045] px-2"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openDetailModal(cv);
-                                                    }}
+                                                    className="text-indigo-600 hover:bg-indigo-50 justify-start px-2 w-full"
+                                                    onClick={(e) => { e.stopPropagation(); navigate(`/candidate/cv/editor/${cv.id}`); }}
                                                 >
-                                                    <Eye className="h-4 w-4 mr-1" />
-                                                    {t('cv.list.card.view')}
+                                                    <Edit2 className="h-4 w-4 mr-1 flex-shrink-0" />
+                                                    <span className="truncate">{t('cv.list.card.edit')}</span>
                                                 </Button>
-                                                {cv.isAIGenerated ? (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-indigo-600 hover:bg-indigo-50 px-2"
-                                                            onClick={(e) => { e.stopPropagation(); navigate(`/candidate/cv/editor/${cv.id}`); }}
-                                                        >
-                                                            <Edit2 className="h-4 w-4 mr-1" />
-                                                            {t('cv.list.card.edit')}
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-orange-600 hover:bg-orange-50 px-2"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`/candidate/cv/editor/${cv.id}?download=1`);
-                                                            }}
-                                                        >
-                                                            <Download className="h-4 w-4 mr-1" />
-                                                            {t('cv.list.card.downloadPdf')}
-                                                        </Button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleAnalyze(cv.id);
-                                                            }}
-                                                            disabled={analyzeMutation.isPending}
-                                                        >
-                                                            <Sparkles className="h-4 w-4 mr-1" />
-                                                            {t('cv.list.card.analyze')}
-                                                        </Button>
-                                                        {cv.fileUrl && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="text-orange-600 hover:bg-orange-50 px-2"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    window.open(cv.fileUrl, '_blank');
-                                                                }}
-                                                            >
-                                                                <Download className="h-4 w-4 mr-1" />
-                                                                {t('cv.list.card.downloadFile')}
-                                                            </Button>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-                                            {!cv.isDefault && (
+                                            ) : (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="px-2"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleSetDefault(cv.id);
-                                                    }}
-                                                    disabled={setDefaultMutation.isPending}
+                                                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 justify-start px-2 w-full"
+                                                    onClick={(e) => { e.stopPropagation(); handleAnalyze(cv.id); }}
+                                                    disabled={analyzeMutation.isPending}
                                                 >
-                                                    <Star className="h-4 w-4 mr-1" />
-                                                    {t('cv.list.card.setDefault')}
+                                                    <Sparkles className="h-4 w-4 mr-1 flex-shrink-0" />
+                                                    <span className="truncate">{t('cv.list.card.analyze')}</span>
                                                 </Button>
                                             )}
+                                        </div>
+                                        {/* Row 2: secondary actions */}
+                                        <div className="grid grid-cols-2 gap-1.5">
+                                            {cv.isAIGenerated ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-orange-600 hover:bg-orange-50 justify-start px-2 w-full"
+                                                    onClick={(e) => { e.stopPropagation(); navigate(`/candidate/cv/editor/${cv.id}?download=1`); }}
+                                                >
+                                                    <Download className="h-4 w-4 mr-1 flex-shrink-0" />
+                                                    <span className="truncate">{t('cv.list.card.downloadPdf')}</span>
+                                                </Button>
+                                            ) : cv.fileUrl ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-orange-600 hover:bg-orange-50 justify-start px-2 w-full"
+                                                    onClick={(e) => downloadCV(cv, e)}
+                                                >
+                                                    <Download className="h-4 w-4 mr-1 flex-shrink-0" />
+                                                    <span className="truncate">{t('cv.list.card.downloadFile')}</span>
+                                                </Button>
+                                            ) : <div />}
+                                            {!cv.isDefault ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="justify-start px-2 w-full"
+                                                    onClick={(e) => { e.stopPropagation(); handleSetDefault(cv.id); }}
+                                                    disabled={setDefaultMutation.isPending}
+                                                >
+                                                    <Star className="h-4 w-4 mr-1 flex-shrink-0" />
+                                                    <span className="truncate">{t('cv.list.card.setDefault')}</span>
+                                                </Button>
+                                            ) : <div />}
                                         </div>
                                     </div>
                                 </CardContent>
@@ -756,19 +778,14 @@ export function CVListPage() {
                                             <>
                                                 <Button
                                                     variant="outline"
-                                                    onClick={() => window.open(selectedCV.fileUrl, '_blank')}
+                                                    onClick={() => openCV(selectedCV)}
                                                 >
                                                     <Eye className="h-4 w-4 mr-2" />
                                                     {t('cv.list.modal.actions.viewFile')}
                                                 </Button>
                                                 <Button
                                                     variant="outline"
-                                                    onClick={() => {
-                                                        const link = document.createElement('a');
-                                                        link.href = selectedCV.fileUrl;
-                                                        link.download = selectedCV.fileName;
-                                                        link.click();
-                                                    }}
+                                                    onClick={() => downloadCV(selectedCV)}
                                                 >
                                                     <Download className="h-4 w-4 mr-2" />
                                                     {t('cv.list.modal.actions.downloadFile')}

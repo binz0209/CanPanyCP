@@ -494,6 +494,7 @@ function EditableField({ value, onChange, className, placeholder, multiline }: {
     const Tag = multiline ? 'div' : 'span';
     return (
         <Tag
+            key={`EditableField-${value}`}
             contentEditable
             suppressContentEditableWarning
             onBlur={e => onChange(e.currentTarget.textContent ?? '')}

@@ -17,7 +17,10 @@
     "reviewApplications": "Xem hồ sơ ứng tuyển",
     "candidateSearch": "Tìm kiếm ứng viên",
     "messages": "Nhắn tin",
-    "notifications": "Thông báo"
+    "notifications": "Thông báo",
+    "billing": "Thanh toán & Premium",
+    "wallet": "Ví công ty",
+    "premium": "Nâng cấp Premium"
   },
   "dashboard": {
     "title": "Tổng quan tuyển dụng",
@@ -406,5 +409,123 @@
     "timeMinutesAgo": "{{count}} phút trước",
     "timeHoursAgo": "{{count}} giờ trước",
     "timeDaysAgo": "{{count}} ngày trước"
+  },
+  "wallet": {
+    "title": "Ví công ty",
+    "subtitle": "Quản lý số dư và lịch sử giao dịch.",
+    "refresh": "Làm mới",
+    "paymentResult": {
+      "success": "Nạp tiền thành công! Số dư sẽ được cập nhật.",
+      "error": "Thanh toán thất bại. Vui lòng thử lại.",
+      "cancel": "Bạn đã hủy thanh toán."
+    },
+    "balanceCard": {
+      "title": "Số dư hiện tại",
+      "label": "Tổng số dư",
+      "note": "Số dư được cập nhật theo hệ thống thanh toán."
+    },
+    "transactionsCard": {
+      "title": "Lịch sử giao dịch",
+      "empty": "Chưa có giao dịch nào.",
+      "loadMore": "Xem thêm",
+      "balanceAfter": "Số dư sau"
+    },
+    "transactionTypes": {
+      "topUp": "Nạp tiền",
+      "withdraw": "Rút tiền",
+      "hold": "Giữ",
+      "release": "Phát hành"
+    },
+    "paymentSection": {
+      "title": "Nạp tiền & thanh toán",
+      "amountLabel": "Số tiền nạp (VND)",
+      "amountPlaceholder": "Ví dụ: 100000",
+      "createButton": "Tạo yêu cầu nạp tiền",
+      "createSuccess": "Đã tạo yêu cầu nạp tiền.",
+      "createError": "Không thể tạo yêu cầu nạp tiền.",
+      "invalidAmount": "Vui lòng nhập số tiền hợp lệ.",
+      "historyTitle": "Lịch sử yêu cầu thanh toán",
+      "historyEmpty": "Chưa có yêu cầu thanh toán nào.",
+      "status": {
+        "pending": "Đang chờ",
+        "paid": "Thành công",
+        "failed": "Thất bại"
+      }
+    }
+  },
+  "premium": {
+    "title": "Premium Doanh nghiệp",
+    "subtitle": "Nâng cấp để mở khóa tính năng tuyển dụng nâng cao và tăng độ hiển thị trên hệ thống.",
+    "balance": "Số dư",
+    "topUp": "Nạp tiền",
+    "active": "Đang hoạt động",
+    "expiredIn": "Sắp hết hạn ({{days}} ngày)",
+    "expiresAt": "Hết hạn: {{date}} ({{days}} ngày còn lại)",
+    "activeLabel": "Premium đang hoạt động",
+    "perMonth": "/tháng",
+    "perYear": "/năm",
+    "perMonthEquiv": "≈ {{amount}}/tháng",
+    "savings": "Tiết kiệm",
+    "buyNow": "Mua ngay",
+    "needTopUp": "Nạp thêm tiền để mua",
+    "noPackages": "Chưa có gói premium nào được cấu hình.",
+    "noPackagesHint": "Vui lòng liên hệ admin để thiết lập gói premium.",
+    "duration": "Thời hạn",
+    "durationDays": "{{days}} ngày",
+    "featuresTitle": "Tính năng nổi bật",
+    "features": {
+      "viewCandidate": "Xem thông tin ứng viên",
+      "viewCandidateDesc": "Xem đầy đủ thông tin liên hệ và hồ sơ chi tiết của ứng viên",
+      "priorityListing": "Tin tuyển dụng ưu tiên",
+      "priorityListingDesc": "Tin tuyển dụng của bạn được hiển thị ưu tiên hơn trong kết quả tìm kiếm",
+      "prioritySupport": "Hỗ trợ ưu tiên",
+      "prioritySupportDesc": "Được hỗ trợ nhanh chóng từ đội ngũ CanPany",
+      "verifiedBadge": "Huy hiệu xác minh",
+      "verifiedBadgeDesc": "Hiển thị badge 'Đã xác minh' để tăng độ tin cậy với ứng viên"
+    },
+    "confirm": {
+      "title": "Xác nhận mua Premium",
+      "package": "Gói",
+      "price": "Giá",
+      "duration": "Thời hạn",
+      "currentBalance": "Số dư hiện tại",
+      "afterPurchase": "Sau khi mua",
+      "deductNote": "Số tiền sẽ được trừ trực tiếp từ ví của bạn.",
+      "cancel": "Hủy",
+      "confirm": "Xác nhận mua",
+      "processing": "Đang xử lý..."
+    },
+    "packages": {
+      "companyMonthly": "Company Premium - Tháng",
+      "companyYearly": "Company Premium - Năm",
+      "companyMonthlyDesc": "Truy cập không giới hạn tất cả tính năng dành cho nhà tuyển dụng trong 30 ngày",
+      "companyYearlyDesc": "Truy cập không giới hạn trong 365 ngày – tiết kiệm hơn 90% so với gói tháng"
+    },
+    "featuresDb": {
+      "unlimitedJobs": "Đăng tin tuyển dụng không giới hạn",
+      "advancedSearch": "Tìm kiếm ứng viên nâng cao",
+      "viewCandidateDetails": "Xem thông tin chi tiết ứng viên",
+      "unlimitedAiAnalysis": "Phân tích AI không giới hạn",
+      "prioritySupport": "Hỗ trợ ưu tiên",
+      "prioritySupport247": "Hỗ trợ ưu tiên 24/7",
+      "saveOver90": "Tiết kiệm hơn 90% so với gói tháng"
+    },
+    "toast": {
+      "activated": "🎉 Premium đã được kích hoạt thành công!",
+      "purchaseFailed": "Không thể mua gói premium. Vui lòng thử lại.",
+      "insufficientBalance": "Số dư ví không đủ. Cần {{required}}, hiện có {{current}}."
+    },
+    "comparison": {
+      "title": "So sánh Free vs Premium",
+      "feature": "Tính năng",
+      "free": "Free",
+      "premium": "Premium",
+      "viewCandidate": "Xem thông tin ứng viên",
+      "priorityListing": "Tin tuyển dụng ưu tiên",
+      "prioritySupport": "Hỗ trợ ưu tiên",
+      "verifiedBadge": "Huy hiệu xác minh",
+      "verifiedBadgeFree": "Cơ bản",
+      "verifiedBadgePremium": "Nổi bật"
+    }
   }
 }

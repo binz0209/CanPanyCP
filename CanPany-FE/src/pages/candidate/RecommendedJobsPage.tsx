@@ -210,7 +210,18 @@ function RecommendedJobCard({ item, viewed, onView, onBookmark, t }: CardProps) 
             setCvJobId(d.jobId);
             toast.success(t('recommendedJobs.toast.cvStarted'));
         },
-        onError: () => toast.error(t('recommendedJobs.toast.cvError')),
+        onError: (err: any) => {
+            const code = err?.response?.data?.errorCode || err?.response?.data?.ErrorCode;
+            if (code === 'PremiumRequired') {
+                toast(t('recommendedJobs.toast.cvPremiumRequired'), {
+                    icon: '⭐',
+                    duration: 6000,
+                    style: { maxWidth: '360px' },
+                });
+            } else {
+                toast.error(t('recommendedJobs.toast.cvError'));
+            }
+        },
     });
 
     const { data: cvProgress } = useQuery({

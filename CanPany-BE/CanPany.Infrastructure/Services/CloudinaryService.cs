@@ -83,7 +83,7 @@ public class CloudinaryService : ICloudinaryService
                     File = new FileDescription(fileName, fileStream),
                     Folder = folder,
                     UseFilename = true,
-                    UniqueFilename = true,
+                    UniqueFilename = false,
                     Overwrite = false
                 };
                 var imageResult = await _cloudinary.UploadAsync(uploadParams, cancellationToken);
@@ -106,7 +106,7 @@ public class CloudinaryService : ICloudinaryService
                     File = new FileDescription(fileName, fileStream),
                     Folder = folder,
                     UseFilename = true,
-                    UniqueFilename = true,
+                    UniqueFilename = false,
                     Overwrite = false
                 };
                 var rawResult = await _cloudinary.UploadAsync(uploadParams, "raw", cancellationToken);
@@ -134,6 +134,27 @@ public class CloudinaryService : ICloudinaryService
             _logger.LogError(ex, "Error uploading file {FileName} to Cloudinary", fileName);
             throw;
         }
+    }
+
+    public string GetSignedDownloadUrl(string publicId, string resourceType = "raw", int expiresInSeconds = 3600)
+    {
+        if (!_isConfigured || _cloudinary == null)
+            throw new InvalidOperationException(
+                "Cloudinary is not configured. Cannot generate signed download URL.");
+
+        // Cloudinary.DownloadPrivate signature (v1.28.0):
+        // DownloadPrivate(string publicId, bool? attachment, string format, string type, long? expiresAt, string resourceType)
+        var expiresAt = (long)DateTimeOffset.UtcNow.AddSeconds(expiresInSeconds).ToUnixTimeSeconds();
+
+        var signedUrl = _cloudinary.DownloadPrivate(
+            publicId,
+            attachment: false,
+            format: "",
+            type: "upload",
+            expiresAt: expiresAt,
+            resourceType: resourceType);
+
+        return signedUrl;
     }
 
     public async Task<bool> DeleteAsync(string publicId, string resourceType = "raw")

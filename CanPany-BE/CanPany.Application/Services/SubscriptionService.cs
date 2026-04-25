@@ -185,12 +185,20 @@ public class SubscriptionService : ISubscriptionService
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<PremiumPackage>> GetAvailablePackagesAsync()
+    public async Task<IEnumerable<PremiumPackage>> GetAvailablePackagesAsync(string? userType = null)
     {
         try
         {
             var all = await _packageRepo.GetAllAsync();
-            return all.Where(p => p.IsActive);
+            var query = all.Where(p => p.IsActive);
+            
+            if (!string.IsNullOrEmpty(userType))
+            {
+                query = query.Where(p => string.Equals(p.UserType, userType, StringComparison.OrdinalIgnoreCase) 
+                                      || string.Equals(p.UserType, "All", StringComparison.OrdinalIgnoreCase));
+            }
+            
+            return query.ToList();
         }
         catch (Exception ex)
         {

@@ -1,4 +1,5 @@
 using CanPany.Domain.Entities;
+using CanPany.Domain.Models;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Infrastructure.Data;
 using MongoDB.Bson;
@@ -80,6 +81,78 @@ public class JobRepository : IJobRepository
 
         var filter = filters.Any() ? filterBuilder.And(filters) : filterBuilder.Empty;
         return await _collection.Find(filter).ToListAsync();
+    }
+
+    public async Task<(long TotalCount, IEnumerable<Job> Jobs)> SearchPagedAsync(JobSearchParameters parameters)
+    {
+        var filterBuilder = Builders<Job>.Filter;
+        var filters = new List<FilterDefinition<Job>>();
+
+        if (!string.IsNullOrWhiteSpace(parameters.Keyword))
+        {
+            filters.Add(filterBuilder.Or(
+                filterBuilder.Regex(j => j.Title, new MongoDB.Bson.BsonRegularExpression(parameters.Keyword, "i")),
+                filterBuilder.Regex(j => j.Description, new MongoDB.Bson.BsonRegularExpression(parameters.Keyword, "i"))
+            ));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.CategoryId))
+        {
+            if (ObjectId.TryParse(parameters.CategoryId, out _))
+            {
+                filters.Add(filterBuilder.Eq(j => j.CategoryId, parameters.CategoryId));
+            }
+        }
+
+        if (parameters.SkillIds != null && parameters.SkillIds.Any())
+        {
+            var validSkillIds = parameters.SkillIds.Where(id => !string.IsNullOrWhiteSpace(id) && ObjectId.TryParse(id, out _)).ToList();
+            if (validSkillIds.Any())
+            {
+                filters.Add(filterBuilder.AnyIn(j => j.SkillIds, validSkillIds));
+            }
+        }
+
+        if (parameters.MinBudget.HasValue)
+        {
+            filters.Add(filterBuilder.Gte(j => j.BudgetAmount, parameters.MinBudget.Value));
+        }
+
+        if (parameters.MaxBudget.HasValue)
+        {
+            filters.Add(filterBuilder.Lte(j => j.BudgetAmount, parameters.MaxBudget.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Level))
+        {
+            filters.Add(filterBuilder.Eq(j => j.Level, parameters.Level));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Location))
+        {
+            filters.Add(filterBuilder.Regex(j => j.Location, new MongoDB.Bson.BsonRegularExpression(parameters.Location, "i")));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.BudgetType))
+        {
+            filters.Add(filterBuilder.Eq(j => j.BudgetType, parameters.BudgetType));
+        }
+
+        if (parameters.IsRemote.HasValue)
+        {
+            filters.Add(filterBuilder.Eq(j => j.IsRemote, parameters.IsRemote.Value));
+        }
+
+        var filter = filters.Any() ? filterBuilder.And(filters) : filterBuilder.Empty;
+
+        var totalCount = await _collection.CountDocumentsAsync(filter);
+        var jobs = await _collection.Find(filter)
+            .SortByDescending(j => j.CreatedAt)
+            .Skip((parameters.Page - 1) * parameters.PageSize)
+            .Limit(parameters.PageSize)
+            .ToListAsync();
+
+        return (totalCount, jobs);
     }
 
     public async Task<Job> AddAsync(Job job)

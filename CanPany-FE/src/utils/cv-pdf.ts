@@ -177,5 +177,8 @@ export async function downloadCVAsPdf(cv: CVStructuredData, filename?: string): 
         if (document.body.contains(container)) {
             document.body.removeChild(container);
         }
+        
+        // Force clean up any stuck html2pdf overlays
+        document.querySelectorAll('.html2pdf__overlay').forEach(el => el.remove());
     }
 }

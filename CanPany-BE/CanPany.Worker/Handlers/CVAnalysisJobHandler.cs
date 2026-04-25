@@ -21,17 +21,20 @@ public class CVAnalysisJobHandler : BaseJobHandler
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CVAnalysisJobHandler> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ICloudinaryService _cloudinaryService;
 
     public CVAnalysisJobHandler(
         ILogger<CVAnalysisJobHandler> logger,
         IGeminiService geminiService,
         IServiceScopeFactory scopeFactory,
-        IHttpClientFactory httpClientFactory) : base(logger)
+        IHttpClientFactory httpClientFactory,
+        ICloudinaryService cloudinaryService) : base(logger)
     {
         _logger = logger;
         _geminiService = geminiService;
         _scopeFactory = scopeFactory;
         _httpClientFactory = httpClientFactory;
+        _cloudinaryService = cloudinaryService;
     }
 
     public override string[] SupportedI18nKeys => new[]
@@ -79,13 +82,27 @@ public class CVAnalysisJobHandler : BaseJobHandler
                 return JobResult.FailureResult("CV has no file URL", "NO_FILE");
             }
 
-            // Download CV file from Cloudinary URL (not local disk)
+            // Download CV file from Cloudinary using a signed URL to bypass secure-raw-files restriction.
             byte[] fileBytes;
             try
             {
+                string downloadUrl;
+                if (!string.IsNullOrEmpty(cv.CloudinaryPublicId))
+                {
+                    // Generate a signed URL (valid 1 hour) — works regardless of account security settings.
+                    downloadUrl = _cloudinaryService.GetSignedDownloadUrl(cv.CloudinaryPublicId, "raw", expiresInSeconds: 3600);
+                    _logger.LogInformation("[CV_ANALYSIS] Using signed download URL for PublicId: {PublicId}", cv.CloudinaryPublicId);
+                }
+                else
+                {
+                    // Fallback to stored URL (may 401 if account restricts raw access)
+                    downloadUrl = cv.FileUrl!;
+                    _logger.LogWarning("[CV_ANALYSIS] CloudinaryPublicId missing, falling back to FileUrl: {Url}", downloadUrl);
+                }
+
                 var httpClient = _httpClientFactory.CreateClient();
-                fileBytes = await httpClient.GetByteArrayAsync(cv.FileUrl, cancellationToken);
-                _logger.LogInformation("[CV_ANALYSIS] Downloaded CV from URL: {Url}, Size: {Size} bytes", cv.FileUrl, fileBytes.Length);
+                fileBytes = await httpClient.GetByteArrayAsync(downloadUrl, cancellationToken);
+                _logger.LogInformation("[CV_ANALYSIS] Downloaded CV, Size: {Size} bytes", fileBytes.Length);
             }
             catch (Exception ex)
             {

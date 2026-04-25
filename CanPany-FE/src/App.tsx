@@ -75,6 +75,16 @@ const CompanyNotificationsPage = lazy(() =>
     default: module.CompanyNotificationsPage,
   }))
 );
+const CompanyWalletPage = lazy(() =>
+  import('@/pages/company/CompanyWalletPage').then((module) => ({
+    default: module.CompanyWalletPage,
+  }))
+);
+const CompanyPremiumPage = lazy(() =>
+  import('@/pages/company/CompanyPremiumPage').then((module) => ({
+    default: module.CompanyPremiumPage,
+  }))
+);
 
 function RouteLoader() {
   const { t } = useTranslation('common');
@@ -168,6 +178,9 @@ function App() {
             <Route path="/company/messages/:conversationId" element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
             {/* Notifications */}
             <Route path={companyPaths.notifications} element={<LazyRoute><CompanyNotificationsPage /></LazyRoute>} />
+            {/* Wallet & Premium */}
+            <Route path={companyPaths.wallet} element={<LazyRoute><CompanyWalletPage /></LazyRoute>} />
+            <Route path={companyPaths.premium} element={<LazyRoute><CompanyPremiumPage /></LazyRoute>} />
           </Route>
 
           {/* Admin — RR7: bọc path="/admin" + segment con tương đối (layout không path + path tuyệt đối trên con dễ không khớp → 404 *) */}
