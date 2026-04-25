@@ -12,7 +12,7 @@ RUN dotnet restore "CanPany.Api/CanPany.Api.csproj"
 
 COPY . .
 WORKDIR "/src/CanPany.Api"
-RUN dotnet publish "CanPany.Api.csproj" -c Release -o /app/api /p:UseAppHost=false
+RUN dotnet publish "CanPany.Api.csproj" -c Release -o /app/api /p:UseAppHost=false /p:ErrorOnDuplicatePublishOutputFiles=false
 
 # ── Stage 2: Build Worker ─────────────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-worker
