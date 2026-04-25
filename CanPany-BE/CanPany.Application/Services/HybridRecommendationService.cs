@@ -662,19 +662,26 @@ public class HybridRecommendationService : IHybridRecommendationService
             if (profileEmbedding == null || !profileEmbedding.Any())
             {
                 var profileText = BuildProfileText(profile, aggregatedSkills);
-                try
+                if (string.IsNullOrWhiteSpace(profileText))
                 {
-                    profileEmbedding = await _geminiService.GenerateEmbeddingAsync(profileText);
-                    if (profileEmbedding != null && profileEmbedding.Any())
-                    {
-                        profile.Embedding = profileEmbedding;
-                        profile.UpdatedAt = DateTime.UtcNow;
-                        await _profileRepo.UpdateAsync(profile);
-                    }
+                    _logger.LogWarning("[HYBRID] Profile text is empty for user {UserId} — skipping embedding generation", userId);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogWarning(ex, "Failed to generate embedding for user {UserId}", userId);
+                    try
+                    {
+                        profileEmbedding = await _geminiService.GenerateEmbeddingAsync(profileText);
+                        if (profileEmbedding != null && profileEmbedding.Any())
+                        {
+                            profile.Embedding = profileEmbedding;
+                            profile.UpdatedAt = DateTime.UtcNow;
+                            await _profileRepo.UpdateAsync(profile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to generate embedding for user {UserId}", userId);
+                    }
                 }
             }
 

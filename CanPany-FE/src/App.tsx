@@ -7,85 +7,70 @@ import { Toaster } from 'react-hot-toast';
 import { queryClient } from '@/lib/queryClient';
 import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout, AdminLayout } from '@/components/layout';
-import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AccountSettingsPage, AuthCallbackPage } from '@/pages/auth';
-import { 
-  CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, 
-  ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage, 
-  PremiumPage, JobAlertsPage, NotificationCenterPage, BackgroundJobsPage, 
-  RecommendedJobsPage, CandidateMessagesPage, CVEditorPage, GitHubAnalysisPage,
-  ContractsPage
-} from '@/pages/candidate';
-import {
-  AdminDashboardPage,
-  AdminUsersPage,
-  AdminVerificationPage,
-  AdminCompaniesPage,
-  AdminJobsPage,
-  AdminCatalogPage,
-  AdminPaymentsPage,
-  AdminAuditLogsPage,
-  AdminReportsPage,
-  AdminBroadcastPage,
-} from '@/pages/admin';
-import { PaymentResultPage } from '@/pages/payment/PaymentResultPage';
 
-const CompanyDashboardPage = lazy(() =>
-  import('@/pages/company/CompanyDashboardPage').then((module) => ({
-    default: module.CompanyDashboardPage,
-  }))
-);
-const CompanyProfilePage = lazy(() =>
-  import('@/pages/company/CompanyProfilePage').then((module) => ({
-    default: module.CompanyProfilePage,
-  }))
-);
-const CompanyVerificationPage = lazy(() =>
-  import('@/pages/company/CompanyVerificationPage').then((module) => ({
-    default: module.CompanyVerificationPage,
-  }))
-);
-const CompanyJobsPage = lazy(() =>
-  import('@/pages/company/CompanyJobsPage').then((module) => ({
-    default: module.CompanyJobsPage,
-  }))
-);
-const CompanyJobFormPage = lazy(() =>
-  import('@/pages/company/CompanyJobFormPage').then((module) => ({
-    default: module.CompanyJobFormPage,
-  }))
-);
-const CompanyApplicationsPage = lazy(() =>
-  import('@/pages/company/CompanyApplicationsPage').then((module) => ({
-    default: module.CompanyApplicationsPage,
-  }))
-);
-const CompanyApplicationDetailPage = lazy(() =>
-  import('@/pages/company/CompanyApplicationDetailPage').then((module) => ({
-    default: module.CompanyApplicationDetailPage,
-  }))
-);
-const CompanyMessagesPage = lazy(() =>
-  import('@/pages/company/CompanyMessagesPage').then((module) => ({
-    default: module.CompanyMessagesPage,
-  }))
-);
-const CompanyNotificationsPage = lazy(() =>
-  import('@/pages/company/CompanyNotificationsPage').then((module) => ({
-    default: module.CompanyNotificationsPage,
-  }))
-);
-const CompanyWalletPage = lazy(() =>
-  import('@/pages/company/CompanyWalletPage').then((module) => ({
-    default: module.CompanyWalletPage,
-  }))
-);
-const CompanyPremiumPage = lazy(() =>
-  import('@/pages/company/CompanyPremiumPage').then((module) => ({
-    default: module.CompanyPremiumPage,
-  }))
-);
+// ── Public ────────────────────────────────────────────────────────────────────
+const HomePage               = lazy(() => import('@/pages/public/HomePage').then(m => ({ default: m.HomePage })));
+const JobsPage               = lazy(() => import('@/pages/public/JobsPage').then(m => ({ default: m.JobsPage })));
+const JobDetailPage          = lazy(() => import('@/pages/public/JobDetailPage').then(m => ({ default: m.JobDetailPage })));
+const CompaniesPage          = lazy(() => import('@/pages/public/CompaniesPage').then(m => ({ default: m.CompaniesPage })));
+const CompanyDetailPage      = lazy(() => import('@/pages/public/CompanyDetailPage').then(m => ({ default: m.CompanyDetailPage })));
 
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const LoginPage              = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
+const RegisterPage           = lazy(() => import('@/pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const ForgotPasswordPage     = lazy(() => import('@/pages/auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage      = lazy(() => import('@/pages/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const AccountSettingsPage    = lazy(() => import('@/pages/auth/AccountSettingsPage').then(m => ({ default: m.AccountSettingsPage })));
+const AuthCallbackPage       = lazy(() => import('@/pages/auth/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
+
+// ── Candidate ─────────────────────────────────────────────────────────────────
+const CandidateProfilePage   = lazy(() => import('@/pages/candidate/CandidateProfilePage').then(m => ({ default: m.CandidateProfilePage })));
+const CandidateDashboardPage = lazy(() => import('@/pages/candidate/CandidateDashboardPage').then(m => ({ default: m.CandidateDashboardPage })));
+const CVListPage             = lazy(() => import('@/pages/candidate/CVListPage').then(m => ({ default: m.CVListPage })));
+const AICVPage               = lazy(() => import('@/pages/candidate/AICVPage').then(m => ({ default: m.AICVPage })));
+const ApplicationHistoryPage = lazy(() => import('@/pages/candidate/ApplicationHistoryPage').then(m => ({ default: m.ApplicationHistoryPage })));
+const SavedJobsPage          = lazy(() => import('@/pages/candidate/SavedJobsPage').then(m => ({ default: m.SavedJobsPage })));
+const NotificationsPage      = lazy(() => import('@/pages/candidate/settings/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const WalletPage             = lazy(() => import('@/pages/candidate/WalletPage').then(m => ({ default: m.WalletPage })));
+const PremiumPage            = lazy(() => import('@/pages/candidate/PremiumPage').then(m => ({ default: m.PremiumPage })));
+const JobAlertsPage          = lazy(() => import('@/pages/candidate/JobAlertsPage').then(m => ({ default: m.JobAlertsPage })));
+const NotificationCenterPage = lazy(() => import('@/pages/candidate/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })));
+const BackgroundJobsPage     = lazy(() => import('@/pages/candidate/BackgroundJobsPage').then(m => ({ default: m.BackgroundJobsPage })));
+const RecommendedJobsPage    = lazy(() => import('@/pages/candidate/RecommendedJobsPage').then(m => ({ default: m.RecommendedJobsPage })));
+const CandidateMessagesPage  = lazy(() => import('@/pages/candidate/CandidateMessagesPage').then(m => ({ default: m.CandidateMessagesPage })));
+const CVEditorPage           = lazy(() => import('@/pages/candidate/CVEditorPage').then(m => ({ default: m.CVEditorPage })));
+const GitHubAnalysisPage     = lazy(() => import('@/pages/candidate/GitHubAnalysisPage').then(m => ({ default: m.GitHubAnalysisPage })));
+const ContractsPage          = lazy(() => import('@/pages/candidate/ContractsPage').then(m => ({ default: m.ContractsPage })));
+
+// ── Company ───────────────────────────────────────────────────────────────────
+const CompanyDashboardPage          = lazy(() => import('@/pages/company/CompanyDashboardPage').then(m => ({ default: m.CompanyDashboardPage })));
+const CompanyProfilePage            = lazy(() => import('@/pages/company/CompanyProfilePage').then(m => ({ default: m.CompanyProfilePage })));
+const CompanyVerificationPage       = lazy(() => import('@/pages/company/CompanyVerificationPage').then(m => ({ default: m.CompanyVerificationPage })));
+const CompanyJobsPage               = lazy(() => import('@/pages/company/CompanyJobsPage').then(m => ({ default: m.CompanyJobsPage })));
+const CompanyJobFormPage            = lazy(() => import('@/pages/company/CompanyJobFormPage').then(m => ({ default: m.CompanyJobFormPage })));
+const CompanyApplicationsPage       = lazy(() => import('@/pages/company/CompanyApplicationsPage').then(m => ({ default: m.CompanyApplicationsPage })));
+const CompanyApplicationDetailPage  = lazy(() => import('@/pages/company/CompanyApplicationDetailPage').then(m => ({ default: m.CompanyApplicationDetailPage })));
+const CompanyMessagesPage           = lazy(() => import('@/pages/company/CompanyMessagesPage').then(m => ({ default: m.CompanyMessagesPage })));
+const CompanyNotificationsPage      = lazy(() => import('@/pages/company/CompanyNotificationsPage').then(m => ({ default: m.CompanyNotificationsPage })));
+const CompanyWalletPage             = lazy(() => import('@/pages/company/CompanyWalletPage').then(m => ({ default: m.CompanyWalletPage })));
+const CompanyPremiumPage            = lazy(() => import('@/pages/company/CompanyPremiumPage').then(m => ({ default: m.CompanyPremiumPage })));
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+const AdminDashboardPage    = lazy(() => import('@/pages/admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
+const AdminUsersPage        = lazy(() => import('@/pages/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
+const AdminVerificationPage = lazy(() => import('@/pages/admin/AdminVerificationPage').then(m => ({ default: m.AdminVerificationPage })));
+const AdminCompaniesPage    = lazy(() => import('@/pages/admin/AdminCompaniesPage').then(m => ({ default: m.AdminCompaniesPage })));
+const AdminJobsPage         = lazy(() => import('@/pages/admin/AdminJobsPage').then(m => ({ default: m.AdminJobsPage })));
+const AdminCatalogPage      = lazy(() => import('@/pages/admin/AdminCatalogPage').then(m => ({ default: m.AdminCatalogPage })));
+const AdminPaymentsPage     = lazy(() => import('@/pages/admin/AdminPaymentsPage').then(m => ({ default: m.AdminPaymentsPage })));
+const AdminAuditLogsPage    = lazy(() => import('@/pages/admin/AdminAuditLogsPage').then(m => ({ default: m.AdminAuditLogsPage })));
+const AdminReportsPage      = lazy(() => import('@/pages/admin/AdminReportsPage').then(m => ({ default: m.AdminReportsPage })));
+const AdminBroadcastPage    = lazy(() => import('@/pages/admin/AdminBroadcastPage').then(m => ({ default: m.AdminBroadcastPage })));
+
+// ── Payment ───────────────────────────────────────────────────────────────────
+const PaymentResultPage     = lazy(() => import('@/pages/payment/PaymentResultPage').then(m => ({ default: m.PaymentResultPage })));
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function RouteLoader() {
   const { t } = useTranslation('common');
   return (
@@ -131,35 +116,34 @@ function App() {
         <Routes>
           {/* Public Routes with Layout */}
           <Route element={<PublicLayout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/jobs/:id" element={<JobDetailPage />} />
-            <Route path="/companies" element={<CompaniesPage />} />
-            <Route path="/companies/:id" element={<CompanyDetailPage />} />
+            <Route path="/" element={<LazyRoute><HomePage /></LazyRoute>} />
+            <Route path="/jobs" element={<LazyRoute><JobsPage /></LazyRoute>} />
+            <Route path="/jobs/:id" element={<LazyRoute><JobDetailPage /></LazyRoute>} />
+            <Route path="/companies" element={<LazyRoute><CompaniesPage /></LazyRoute>} />
+            <Route path="/companies/:id" element={<LazyRoute><CompanyDetailPage /></LazyRoute>} />
           </Route>
 
           {/* Candidate Routes */}
           <Route element={<CandidateLayout />}>
-            <Route path="/candidate/dashboard" element={<CandidateDashboardPage />} />
-            <Route path="/candidate/profile" element={<CandidateProfilePage />} />
-            <Route path="/candidate/cv/list" element={<CVListPage />} />
-            <Route path="/candidate/cv/ai" element={<AICVPage />} />
-            <Route path="/candidate/applications/history" element={<ApplicationHistoryPage />} />
-            <Route path="/candidate/jobs/bookmarks" element={<SavedJobsPage />} />
-            {/* Some links point here directly (e.g. sidebar). Keep as alias. */}
-            <Route path="/candidate/notifications" element={<NotificationCenterPage />} />
-            <Route path="/candidate/settings/notifications" element={<NotificationsPage />} />
-            <Route path="/candidate/wallet" element={<WalletPage />} />
-            <Route path="/candidate/premium" element={<PremiumPage />} />
-            <Route path="/candidate/job-alerts" element={<JobAlertsPage />} />
-            <Route path="/candidate/background-jobs" element={<BackgroundJobsPage />} />
-            <Route path="/candidate/jobs/recommended" element={<RecommendedJobsPage />} />
-            <Route path="/candidate/messages" element={<CandidateMessagesPage />} />
-            <Route path="/candidate/messages/:conversationId" element={<CandidateMessagesPage />} />
-            <Route path="/candidate/ai/skills" element={<GitHubAnalysisPage />} />
-            <Route path="/candidate/cv/editor/:id" element={<CVEditorPage />} />
-            <Route path="/candidate/settings/account" element={<AccountSettingsPage />} />
-            <Route path="/candidate/contracts" element={<ContractsPage />} />
+            <Route path="/candidate/dashboard" element={<LazyRoute><CandidateDashboardPage /></LazyRoute>} />
+            <Route path="/candidate/profile" element={<LazyRoute><CandidateProfilePage /></LazyRoute>} />
+            <Route path="/candidate/cv/list" element={<LazyRoute><CVListPage /></LazyRoute>} />
+            <Route path="/candidate/cv/ai" element={<LazyRoute><AICVPage /></LazyRoute>} />
+            <Route path="/candidate/applications/history" element={<LazyRoute><ApplicationHistoryPage /></LazyRoute>} />
+            <Route path="/candidate/jobs/bookmarks" element={<LazyRoute><SavedJobsPage /></LazyRoute>} />
+            <Route path="/candidate/notifications" element={<LazyRoute><NotificationCenterPage /></LazyRoute>} />
+            <Route path="/candidate/settings/notifications" element={<LazyRoute><NotificationsPage /></LazyRoute>} />
+            <Route path="/candidate/wallet" element={<LazyRoute><WalletPage /></LazyRoute>} />
+            <Route path="/candidate/premium" element={<LazyRoute><PremiumPage /></LazyRoute>} />
+            <Route path="/candidate/job-alerts" element={<LazyRoute><JobAlertsPage /></LazyRoute>} />
+            <Route path="/candidate/background-jobs" element={<LazyRoute><BackgroundJobsPage /></LazyRoute>} />
+            <Route path="/candidate/jobs/recommended" element={<LazyRoute><RecommendedJobsPage /></LazyRoute>} />
+            <Route path="/candidate/messages" element={<LazyRoute><CandidateMessagesPage /></LazyRoute>} />
+            <Route path="/candidate/messages/:conversationId" element={<LazyRoute><CandidateMessagesPage /></LazyRoute>} />
+            <Route path="/candidate/ai/skills" element={<LazyRoute><GitHubAnalysisPage /></LazyRoute>} />
+            <Route path="/candidate/cv/editor/:id" element={<LazyRoute><CVEditorPage /></LazyRoute>} />
+            <Route path="/candidate/settings/account" element={<LazyRoute><AccountSettingsPage /></LazyRoute>} />
+            <Route path="/candidate/contracts" element={<LazyRoute><ContractsPage /></LazyRoute>} />
           </Route>
 
           {/* Company Routes */}
@@ -173,45 +157,41 @@ function App() {
             <Route path="/company/jobs/:jobId/edit" element={<LazyRoute><CompanyJobFormPage /></LazyRoute>} />
             <Route path={companyPaths.applications} element={<LazyRoute><CompanyApplicationsPage /></LazyRoute>} />
             <Route path="/company/applications/:applicationId" element={<LazyRoute><CompanyApplicationDetailPage /></LazyRoute>} />
-            {/* No conversationId → landing page; with conversationId → chat thread */}
             <Route path={companyPaths.messages} element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
             <Route path="/company/messages/:conversationId" element={<LazyRoute><CompanyMessagesPage /></LazyRoute>} />
-            {/* Notifications */}
             <Route path={companyPaths.notifications} element={<LazyRoute><CompanyNotificationsPage /></LazyRoute>} />
-            {/* Wallet & Premium */}
             <Route path={companyPaths.wallet} element={<LazyRoute><CompanyWalletPage /></LazyRoute>} />
             <Route path={companyPaths.premium} element={<LazyRoute><CompanyPremiumPage /></LazyRoute>} />
-            {/* Settings */}
             <Route path={companyPaths.settingsAccount} element={<LazyRoute><AccountSettingsPage /></LazyRoute>} />
           </Route>
 
-          {/* Admin — RR7: bọc path="/admin" + segment con tương đối (layout không path + path tuyệt đối trên con dễ không khớp → 404 *) */}
+          {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboardPage />} />
-            <Route path="users" element={<AdminUsersPage />} />
-            <Route path="verification" element={<AdminVerificationPage />} />
-            <Route path="companies" element={<AdminCompaniesPage />} />
-            <Route path="jobs" element={<AdminJobsPage />} />
-            <Route path="catalog" element={<AdminCatalogPage />} />
-            <Route path="payments" element={<AdminPaymentsPage />} />
-            <Route path="audit-logs" element={<AdminAuditLogsPage />} />
-            <Route path="reports" element={<AdminReportsPage />} />
-            <Route path="broadcast" element={<AdminBroadcastPage />} />
+            <Route path="dashboard" element={<LazyRoute><AdminDashboardPage /></LazyRoute>} />
+            <Route path="users" element={<LazyRoute><AdminUsersPage /></LazyRoute>} />
+            <Route path="verification" element={<LazyRoute><AdminVerificationPage /></LazyRoute>} />
+            <Route path="companies" element={<LazyRoute><AdminCompaniesPage /></LazyRoute>} />
+            <Route path="jobs" element={<LazyRoute><AdminJobsPage /></LazyRoute>} />
+            <Route path="catalog" element={<LazyRoute><AdminCatalogPage /></LazyRoute>} />
+            <Route path="payments" element={<LazyRoute><AdminPaymentsPage /></LazyRoute>} />
+            <Route path="audit-logs" element={<LazyRoute><AdminAuditLogsPage /></LazyRoute>} />
+            <Route path="reports" element={<LazyRoute><AdminReportsPage /></LazyRoute>} />
+            <Route path="broadcast" element={<LazyRoute><AdminBroadcastPage /></LazyRoute>} />
           </Route>
 
           {/* GitHub OAuth callback — BE redirects to /profile?github_linked=... */}
           <Route path="/profile" element={<ProfileRedirect />} />
 
           {/* Auth Routes (no layout) */}
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/register" element={<RegisterPage />} />
-          <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/auth/login" element={<LazyRoute><LoginPage /></LazyRoute>} />
+          <Route path="/auth/register" element={<LazyRoute><RegisterPage /></LazyRoute>} />
+          <Route path="/auth/forgot-password" element={<LazyRoute><ForgotPasswordPage /></LazyRoute>} />
+          <Route path="/auth/reset-password" element={<LazyRoute><ResetPasswordPage /></LazyRoute>} />
+          <Route path="/auth/callback" element={<LazyRoute><AuthCallbackPage /></LazyRoute>} />
 
           {/* Payment Callback Pages */}
-          <Route path="/payment/:status" element={<PaymentResultPage />} />
+          <Route path="/payment/:status" element={<LazyRoute><PaymentResultPage /></LazyRoute>} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
