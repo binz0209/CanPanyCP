@@ -49,7 +49,7 @@ public class CVGenerationJobHandler : BaseJobHandler
 
             using var scope = _scopeFactory.CreateScope();
             var userRepository        = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-            var userProfileRepository = scope.ServiceProvider.GetRequiredService<IUserProfileRepository>();
+            var userProfileService    = scope.ServiceProvider.GetRequiredService<IUserProfileService>();
             var skillRepository       = scope.ServiceProvider.GetRequiredService<ISkillRepository>();
             var cvRepository          = scope.ServiceProvider.GetRequiredService<ICVRepository>();
             var jobRepository         = scope.ServiceProvider.GetRequiredService<IJobRepository>();
@@ -60,7 +60,7 @@ public class CVGenerationJobHandler : BaseJobHandler
             var user = await userRepository.GetByIdAsync(payload.UserId);
             if (user == null) return JobResult.FailureResult("User not found", "USER_NOT_FOUND");
 
-            var profile = await userProfileRepository.GetByUserIdAsync(payload.UserId);
+            var profile = await userProfileService.GetByUserIdAsync(payload.UserId);
 
             // ── Step 2: Resolve skill names ───────────────────────────────────
             await ReportProgressAsync(job.JobId, 25, "backgroundJobs.steps.processingSkills", null, cancellationToken);
@@ -111,7 +111,21 @@ public class CVGenerationJobHandler : BaseJobHandler
                     {
                         ctx.TargetJobTitle       = targetJob.Title;
                         ctx.TargetJobDescription = targetJob.Description;
-                        ctx.TargetJobSkillIds    = targetJob.SkillIds ?? new List<string>();
+
+                        var targetSkillNames = new List<string>();
+                        if (targetJob.SkillIds != null && targetJob.SkillIds.Any())
+                        {
+                            foreach (var skillId in targetJob.SkillIds)
+                            {
+                                try
+                                {
+                                    var skill = await skillRepository.GetByIdAsync(skillId);
+                                    targetSkillNames.Add(skill?.Name ?? skillId);
+                                }
+                                catch { targetSkillNames.Add(skillId); }
+                            }
+                        }
+                        ctx.TargetJobSkillIds = targetSkillNames;
                         _logger.LogInformation("[CV_GEN] Tailoring CV for Job: {Title}", targetJob.Title);
                     }
                 }

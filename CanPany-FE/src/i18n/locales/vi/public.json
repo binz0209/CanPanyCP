@@ -82,7 +82,10 @@
     "emptyTitle": "Chưa có job phù hợp",
     "emptyDesc": "Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.",
     "srFound": "Đang hiển thị {{count}} việc làm",
-    "srNotFound": "Không tìm thấy việc làm phù hợp"
+    "srNotFound": "Không tìm thấy việc làm phù hợp",
+    "prevPage": "Trước",
+    "nextPage": "Sau",
+    "pageOf": "Trang {{page}} / {{totalPages}}"
   },
   "jobDetail": {
     "notFound": "Không tìm thấy tin tuyển dụng",
@@ -170,6 +173,19 @@
     "cancelButton": "Hủy",
     "submitting": "Đang gửi...",
     "submitButton": "Gửi ứng tuyển"
+  },
+  "footer": {
+    "brandDesc": "Nền tảng kết nối ứng viên và nhà tuyển dụng thông minh, nhanh chóng và hiệu quả.",
+    "candidatesTitle": "Dành cho ứng viên",
+    "findJobs": "Tìm việc làm",
+    "companies": "Công ty",
+    "createCV": "Tạo CV",
+    "careerGuide": "Cẩm nang nghề nghiệp",
+    "contactTitle": "Liên hệ",
+    "copyright": "© {{year}} CanPany. All rights reserved.",
+    "terms": "Điều khoản",
+    "privacy": "Chính sách riêng tư",
+    "help": "Trợ giúp"
   }
 }
 

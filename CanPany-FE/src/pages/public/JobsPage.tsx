@@ -51,13 +51,40 @@ export function JobsPage() {
     return () => clearTimeout(timer);
   }, [location]);
 
-  // Fetch all jobs - backend only supports keyword search
-  const { data: allJobs = [], isLoading } = useQuery<Job[]>({
-    queryKey: ['jobs', debouncedKeyword],
-    queryFn: () => jobsApi.search({
+  const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const [page, setPage] = useState(pageParam);
+
+  // Sync page state when URL params change
+  useEffect(() => {
+    setPage(parseInt(searchParams.get('page') || '1', 10));
+  }, [searchParams]);
+
+  // Handle page change (scroll top, update URL)
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    const params = buildSearchParams();
+    params.page = newPage.toString();
+    setSearchParams(new URLSearchParams(params));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Fetch paginated jobs
+  const { data: searchResponse, isLoading } = useQuery({
+    queryKey: ['jobs', debouncedKeyword, debouncedLocation, selectedLevel, selectedBudgetType, isRemote, page, searchParams.get('categoryId')],
+    queryFn: () => jobsApi.searchWithPagination({
       keyword: debouncedKeyword || undefined,
+      location: debouncedLocation || undefined,
+      level: selectedLevel || undefined,
+      budgetType: selectedBudgetType || undefined,
+      isRemote: isRemote || undefined,
+      categoryId: searchParams.get('categoryId') || undefined,
+      page: page,
+      pageSize: 10
     }),
   });
+  const allJobs = searchResponse?.jobs || [];
+  const totalPages = searchResponse?.totalPages || 0;
+  const totalItems = searchResponse?.total || 0;
 
   // Extract unique company IDs from jobs
   const companyIds = useMemo(() => {
@@ -109,39 +136,8 @@ export function JobsPage() {
     }));
   }, [allJobs, companyMap]);
 
-  // Client-side filtering
-  const jobs = useMemo(() => {
-    return jobsWithCompany.filter(job => {
-      // Filter by location
-      if (debouncedLocation && job.location) {
-        const searchLoc = debouncedLocation.toLowerCase();
-        if (!job.location.toLowerCase().includes(searchLoc)) {
-          return false;
-        }
-      }
-      
-      // Filter by level
-      if (selectedLevel && job.level) {
-        if (job.level !== selectedLevel) {
-          return false;
-        }
-      }
-      
-      // Filter by budget type
-      if (selectedBudgetType && job.budgetType) {
-        if (job.budgetType !== selectedBudgetType) {
-          return false;
-        }
-      }
-      
-      // Filter by remote
-      if (isRemote && !job.isRemote) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [jobsWithCompany, debouncedLocation, selectedLevel, selectedBudgetType, isRemote]);
+  // Server-side filtering directly handles this
+  const jobs = jobsWithCompany;
 
   const isLoadingAny = isLoading || isLoadingCompanies;
 
@@ -174,7 +170,9 @@ export function JobsPage() {
   };
 
   const applyFilters = () => {
+    setPage(1); // Reset page on filter
     const params = buildSearchParams();
+    params.page = '1';
     const urlParams = new URLSearchParams(params);
     setSearchParams(urlParams);
   };
@@ -185,6 +183,7 @@ export function JobsPage() {
     setSelectedLevel('');
     setSelectedBudgetType('');
     setIsRemote(false);
+    setPage(1);
     setSearchParams(new URLSearchParams());
   };
 
@@ -201,7 +200,7 @@ export function JobsPage() {
               {t('jobs.pageTitle')}
             </h1>
             <p className="mt-2 text-white/80">
-              {t('jobs.pageSubtitlePrefix')} <span className="font-semibold">50,000+</span> {t('jobs.pageSubtitleSuffix')}
+              {t('jobs.pageSubtitlePrefix')} <span className="font-semibold">{totalItems !== 0 ? totalItems : "..."}</span> {t('jobs.pageSubtitleSuffix')}
             </p>
           </div>
           <form onSubmit={handleSearch} className="mt-6">
@@ -516,7 +515,7 @@ export function JobsPage() {
                     {t('jobs.loading')}
                   </span>
                 ) : (
-                  <span dangerouslySetInnerHTML={{ __html: t('jobs.resultCount', { count: jobs.length }) }} />
+                  <span dangerouslySetInnerHTML={{ __html: t('jobs.resultCount', { count: totalItems }) }} />
                 )}
               </p>
             </div>
@@ -549,12 +548,35 @@ export function JobsPage() {
                     onBookmark={(_id) => toggle(job)}
                   />
                 ))}
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex items-center justify-center gap-4 border-t border-gray-100 pt-8 dark:border-slate-800">
+                    <Button
+                      variant="outline"
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                    >
+                      {t('jobs.prevPage', 'Trước')}
+                    </Button>
+                    <div className="flex items-center px-4 font-medium text-gray-700 dark:text-slate-300">
+                      {t('jobs.pageOf', { page, totalPages })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                    >
+                      {t('jobs.nextPage', 'Sau')}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Results count for screen readers */}
             <p className="sr-only" aria-live="polite">
-              {jobs.length > 0 ? t('jobs.srFound', { count: jobs.length }) : t('jobs.srNotFound')}
+              {jobs.length > 0 ? t('jobs.srFound', { count: totalItems }) : t('jobs.srNotFound')}
             </p>
           </div>
         </div>

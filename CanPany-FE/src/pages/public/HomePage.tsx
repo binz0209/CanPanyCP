@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Search, Building2, Users, Zap, Shield, TrendingUp, ArrowRight, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Carousel } from '../../components/ui';
+import { useAuthStore } from '../../stores/auth.store';
 
 const jobBanners = [
     {
@@ -32,6 +33,7 @@ const jobBanners = [
 
 export function HomePage() {
     const { t } = useTranslation('public');
+    const { user, isAuthenticated } = useAuthStore();
 
     const features = [
         {
@@ -280,18 +282,22 @@ export function HomePage() {
                         {t('home.ctaSubtitle')}
                     </p>
                     <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                        <Link to="/auth/register">
-                            <Button size="lg" className="bg-white text-[#00b14f] hover:bg-gray-100">
-                                <Users className="h-5 w-5" />
-                                {t('home.ctaFindJob')}
-                            </Button>
-                        </Link>
-                        <Link to="/auth/register">
-                            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                                <Building2 className="h-5 w-5" />
-                                {t('home.ctaPostJob')}
-                            </Button>
-                        </Link>
+                        {(!isAuthenticated || user?.role === 'Candidate') && (
+                            <Link to={isAuthenticated ? "/jobs" : "/auth/register"}>
+                                <Button size="lg" className="bg-white text-[#00b14f] hover:bg-gray-100">
+                                    <Users className="h-5 w-5" />
+                                    {t('home.ctaFindJob')}
+                                </Button>
+                            </Link>
+                        )}
+                        {(!isAuthenticated || user?.role === 'Company') && (
+                            <Link to={isAuthenticated ? "/company/jobs/new" : "/auth/register?role=company"}>
+                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                                    <Building2 className="h-5 w-5" />
+                                    {t('home.ctaPostJob')}
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </section>

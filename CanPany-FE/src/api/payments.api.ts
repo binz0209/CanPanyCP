@@ -116,8 +116,9 @@ export const paymentsApi = {
   },
 
   /** Lấy danh sách gói premium khả dụng */
-  getPremiumPackages: async (): Promise<PremiumPackage[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>('/payments/premium/packages');
+  getPremiumPackages: async (userType?: string): Promise<PremiumPackage[]> => {
+    const url = userType ? `/payments/premium/packages?userType=${userType}` : '/payments/premium/packages';
+    const response = await apiClient.get<ApiResponse<any[]>>(url);
     const list = response.data.data ?? [];
     return list.map(normalizePackage);
   },

@@ -592,13 +592,13 @@ SKILLS: {skillsLine}
 {jdSection}
 
 INSTRUCTIONS:
-1. Professional Summary: 3-4 sentences. Years of experience + specialization + core skills + value statement. 
-{(ctx.HasTargetJob ? $"   CRITICAL: Tailor this summary explicitly to prove fit for the position of '{ctx.TargetJobTitle}'. Mention the position name." : "")}
-2. Experience bullets: STAR format — Action verb + what + how/tools + measurable result.
-{(ctx.HasTargetJob ? "   CRITICAL: Highlight achievements, tools, and responsibilities that directly match the TARGET JOB description." : "")}
+1. Professional Summary: Write a detailed 4-5 sentence summary. State the candidate's core strengths, years of experience, and notable specializations. 
+{(ctx.HasTargetJob ? $"   CRITICAL: This summary MUST explicitly argue why the candidate is the perfect fit for '{ctx.TargetJobTitle}'. Weave the candidate's skills and the job's Required Skills together in a compelling narrative." : "")}
+2. Experience bullets: STAR format — Action verb + what + how/tools + measurable result. Expand each bullet point with high professional detail.
+{(ctx.HasTargetJob ? "   CRITICAL: Focus heavily on mapping the candidate's past projects to the TARGET JOB's description. Use the exact keywords found in the Target Job." : "")}
 3. Skills: ATS-friendly plain list of technical skills. 
-{(ctx.HasTargetJob ? "   CRITICAL: Reorder skills to put those matching the TARGET JOB requirements first." : "")}
-4. Parse the raw experience/education text into structured entries as best as possible.
+{(ctx.HasTargetJob ? "   CRITICAL: Reorder the skills array so the exact ones matching the TARGET JOB appear first." : "")}
+4. Synthesize all provided unstructured data into a highly polished, professional persona. Do not invent fake jobs, but elevate the phrasing.
 
 Return EXACTLY this JSON structure (no extra keys, no markdown):
 {{
@@ -610,7 +610,7 @@ Return EXACTLY this JSON structure (no extra keys, no markdown):
   ""linkedIn"": ""{ctx.LinkedInUrl ?? ""}"",
   ""gitHub"": ""{ctx.GitHubUrl ?? ""}"",
   ""portfolio"": ""{ctx.Portfolio ?? ""}"",
-  ""summary"": ""<generated professional summary>"",
+  ""summary"": ""<a rich, compelling, detailed 4-5 sentence professional summary>"",
   ""experience"": [
     {{
       ""company"": ""Company Name"",

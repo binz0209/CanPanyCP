@@ -11,6 +11,8 @@ export const companyPaths = {
     messages: '/company/messages',
     notifications: '/company/notifications',
     messageThread: (conversationId: string) => `/company/messages/${conversationId}`,
+    wallet: '/company/wallet',
+    premium: '/company/premium',
 } as const;
 
 export interface CompanyNavItem {
@@ -47,5 +49,12 @@ export const companyNavigationItems: CompanyNavItem[] = [
     {
         labelKey: 'sidebar.notifications',
         path: companyPaths.notifications,
+    },
+    {
+        labelKey: 'sidebar.billing',
+        items: [
+            { labelKey: 'sidebar.wallet', path: companyPaths.wallet },
+            { labelKey: 'sidebar.premium', path: companyPaths.premium },
+        ],
     },
 ] as const;

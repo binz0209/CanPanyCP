@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, MessageSquare, Search } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Building2, ChevronDown, Crown, LayoutDashboard, MessageSquare, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui';
 import { cn } from '../../../utils';
@@ -25,6 +25,9 @@ const navIcons: Record<string, ReactNode> = {
     'sidebar.jobManagement': <BriefcaseBusiness className="h-5 w-5" />,
     'sidebar.messages': <MessageSquare className="h-5 w-5" />,
     'sidebar.notifications': <Bell className="h-5 w-5" />,
+    'sidebar.billing': <Wallet className="h-5 w-5" />,
+    'sidebar.wallet': <Wallet className="h-5 w-5" />,
+    'sidebar.premium': <Crown className="h-5 w-5" />,
 };
 
 interface CompanySidebarProps {
@@ -49,7 +52,7 @@ export function CompanySidebar({ isOpen, onClose }: CompanySidebarProps) {
     }));
 
     const [expandedItems, setExpandedItems] = useState<Set<string>>(
-        new Set(['sidebar.companyProfile', 'sidebar.jobManagement'])
+        new Set(['sidebar.companyProfile', 'sidebar.jobManagement', 'sidebar.billing'])
     );
 
     const { unreadCount: unreadNotifications } = useNotifications({ enabled: true, refetchInterval: 60000 });

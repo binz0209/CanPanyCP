@@ -323,7 +323,8 @@
       "bookmarkError": "Could not save job",
       "cvStarted": "🚀 Generating suitable CV...",
       "cvError": "Cannot generate CV.",
-      "cvSuccess": "✅ CV for \"{{title}}\" completed!"
+      "cvSuccess": "✅ CV for \"{{title}}\" completed!",
+      "cvPremiumRequired": "⭐ You have used up your 2 free CV generations. Upgrade to Premium to generate unlimited CVs."
     },
     "tips": {
       "coldStart1": "You haven't interacted much yet. Click",
@@ -675,7 +676,8 @@
       "toast": {
         "completed": "🎉 CV generated successfully!",
         "started": "Started AI CV generation!",
-        "error": "Could not start CV generation. Please try again."
+        "error": "Could not start CV generation. Please try again.",
+        "premiumRequired": "You have used up your 2 free CV generations."
       },
       "back": "Manage CVs",
       "title": "AI CV Generator",
@@ -717,6 +719,10 @@
         "subtitle": "Gemini analyzes your profile and produces an ATS-friendly CV in seconds.",
         "generating": "Generating CV...",
         "cta": "✨ Generate CV with AI"
+      },
+      "premium": {
+        "description": "Purchase a Premium package to generate unlimited AI CVs.",
+        "cta": "Upgrade to Premium"
       },
       "progress": {
         "pending": "Processing...",
@@ -822,6 +828,22 @@
       "cancel": "Cancel",
       "confirm": "Confirm purchase",
       "processing": "Processing..."
+    },
+    "packages": {
+      "candidateMonthly": "Candidate Premium - Monthly",
+      "candidateYearly": "Candidate Premium - Yearly",
+      "candidateMonthlyDesc": "Unlimited access to all candidate features for 30 days",
+      "candidateYearlyDesc": "Unlimited access for 365 days – save over 90% compared to monthly plan"
+    },
+    "featuresDb": {
+      "unlimitedAiCv": "Unlimited AI CV generation",
+      "unlimitedCvAnalysis": "Unlimited CV analysis",
+      "unlimitedAiJobs": "Unlimited AI job recommendations",
+      "unlimitedApply": "Unlimited job applications",
+      "detailedMatchScore": "View detailed compatibility scores",
+      "prioritySupport": "Priority support",
+      "prioritySupport247": "24/7 priority support",
+      "saveOver90": "Save over 90% compared to monthly plan"
     },
     "toast": {
       "activated": "🎉 Premium activated successfully!",

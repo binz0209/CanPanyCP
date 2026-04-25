@@ -2,6 +2,7 @@ using CanPany.Api.Controllers;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
 using CanPany.Domain.Entities;
+using CanPany.Domain.Models;
 using CanPany.Worker.Infrastructure.Progress;
 using CanPany.Worker.Infrastructure.Queue;
 using Microsoft.AspNetCore.Http;
@@ -62,11 +63,12 @@ public class JobsControllerTests
             new Job { Id = "job2", Title = "Junior Developer", CompanyId = "company2" }
         };
         
-        _jobServiceMock.Setup(x => x.SearchAsync(keyword, null, null, null, null))
-            .ReturnsAsync(jobs);
+        var pagedResult = new PagedResult<Job> { Items = jobs, TotalItems = 2, Page = 1, PageSize = 10 };
+        _jobServiceMock.Setup(x => x.SearchPagedAsync(It.IsAny<JobSearchParameters>()))
+            .ReturnsAsync(pagedResult);
 
         // Act
-        var result = await _controller.SearchJobs(keyword, null, null, null, null);
+        var result = await _controller.SearchJobs(keyword, null, null, null, null, null, null, null, null);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -81,17 +83,18 @@ public class JobsControllerTests
         // Arrange
         var keyword = "nonexistent";
         
-        _jobServiceMock.Setup(x => x.SearchAsync(keyword, null, null, null, null))
-            .ReturnsAsync(new List<Job>());
+        var pagedResult = new PagedResult<Job> { Items = new List<Job>(), TotalItems = 0, Page = 1, PageSize = 10 };
+        _jobServiceMock.Setup(x => x.SearchPagedAsync(It.IsAny<JobSearchParameters>()))
+            .ReturnsAsync(pagedResult);
 
         // Act
-        var result = await _controller.SearchJobs(keyword, null, null, null, null);
+        var result = await _controller.SearchJobs(keyword, null, null, null, null, null, null, null, null);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse<IEnumerable<Job>>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<PagedResult<Job>>>(okResult.Value);
         Assert.True(response.Success);
-        Assert.Empty(response.Data ?? Enumerable.Empty<Job>());
+        Assert.Empty(response.Data?.Items ?? Enumerable.Empty<Job>());
     }
 
     [Fact]

@@ -107,6 +107,12 @@ export const cvApi = {
         return response.data.data || [];
     },
 
+    /** GET /api/cvs/{id}/download-url — returns a signed Cloudinary URL to safely open/download raw CV files */
+    getDownloadUrl: async (id: string): Promise<{ url: string; fileName: string }> => {
+        const response = await apiClient.get<ApiResponse<{ url: string; fileName: string }>>(`/cvs/${id}/download-url`);
+        return response.data.data!;
+    },
+
     /** POST /api/cvs/{id}/save-version — snapshot current CV as a new version */
     saveCVVersion: async (id: string, versionNote?: string): Promise<CV> => {
         const response = await apiClient.post<ApiResponse<CV>>(`/cvs/${id}/save-version`, { versionNote });

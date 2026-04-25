@@ -12,5 +12,11 @@ public interface ICloudinaryService
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(string publicId, string resourceType = "raw");
+
+    /// <summary>
+    /// Generates a signed (time-limited) download URL for a Cloudinary resource.
+    /// Required when the account has "Secure raw files" or access-control restrictions.
+    /// </summary>
+    string GetSignedDownloadUrl(string publicId, string resourceType = "raw", int expiresInSeconds = 3600);
 }
 

@@ -69,12 +69,7 @@ export function Navbar() {
                             >
                                 {t('nav.companies')}
                             </Link>
-                            <Link
-                                to="/cv"
-                                className="text-sm font-medium text-gray-700 transition-colors hover:text-[#00b14f] dark:text-gray-300 dark:hover:text-[#00b14f]"
-                            >
-                                {t('nav.cvProfile')}
-                            </Link>
+
                         </div>
                     </div>
 
@@ -200,13 +195,7 @@ export function Navbar() {
                         >
                             {t('nav.companies')}
                         </Link>
-                        <Link
-                            to="/cv"
-                            className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[#00b14f] dark:text-gray-300 dark:hover:bg-gray-800"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            {t('nav.cvProfile')}
-                        </Link>
+
                     </div>
                     {!isAuthenticated && (
                         <div className="border-t border-gray-100 px-4 py-4 dark:border-gray-700">
