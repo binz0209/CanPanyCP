@@ -5,7 +5,7 @@ import {
     Star, ChevronRight, Loader2, AlertCircle, MessageSquare, Send
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { contractsApi, reviewsApi, type Contract, type Review } from '../../api/contracts.api';
+import { contractsApi, reviewsApi, type Contract } from '../../api/contracts.api';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
     Active: { label: 'Đang hiệu lực', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
