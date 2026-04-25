@@ -20,7 +20,9 @@
     "notifications": "Thông báo",
     "billing": "Thanh toán & Premium",
     "wallet": "Ví công ty",
-    "premium": "Nâng cấp Premium"
+    "premium": "Nâng cấp Premium",
+    "settings": "Cài đặt",
+    "settingsAccount": "Tài khoản"
   },
   "dashboard": {
     "title": "Tổng quan tuyển dụng",
@@ -511,7 +513,7 @@
       "saveOver90": "Tiết kiệm hơn 90% so với gói tháng"
     },
     "toast": {
-      "activated": "🎉 Premium đã được kích hoạt thành công!",
+      "activated": "Premium đã được kích hoạt thành công!",
       "purchaseFailed": "Không thể mua gói premium. Vui lòng thử lại.",
       "insufficientBalance": "Số dư ví không đủ. Cần {{required}}, hiện có {{current}}."
     },

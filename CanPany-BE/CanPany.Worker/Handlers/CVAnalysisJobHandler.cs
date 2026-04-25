@@ -111,6 +111,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
             }
 
             await ReportProgressAsync(job.JobId, 30, "backgroundJobs.steps.extractingCvText");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             // Extract text from PDF bytes
             var sb = new StringBuilder();
@@ -143,6 +144,7 @@ public class CVAnalysisJobHandler : BaseJobHandler
             }
 
             await ReportProgressAsync(job.JobId, 60, "backgroundJobs.steps.analyzingCvAi");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             // New comprehensive prompt that extracts profile data for updating user profile
             var prompt = $@"
@@ -261,6 +263,7 @@ IMPORTANT:
             };
 
             await ReportProgressAsync(job.JobId, 80, "backgroundJobs.steps.savingCvResults");
+            await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
             // Update Domain Entity
             analysisDto.CVId = payload.CVId;

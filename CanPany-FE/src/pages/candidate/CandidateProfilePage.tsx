@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Linkedin, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity, Camera } from 'lucide-react';
+import { User, Edit, Save, X, Calendar, MapPin, Phone, Link as LinkIcon, Github, Mail, Briefcase, GraduationCap, ExternalLink, RefreshCw, Activity, Camera } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import { candidateApi, authApi } from '../../api';
 import { useAuthStore } from '../../stores/auth.store';
@@ -95,8 +95,16 @@ export function CandidateProfilePage() {
             setRecommendationSyncJobId(data.jobId);
             toast.success(t('profile.toast.recommendationSyncStarted'));
         },
-        onError: () => {
-            toast.error(t('profile.toast.recommendationSyncFailed'));
+        onError: (err: any) => {
+            const code = err?.response?.data?.errorCode || err?.response?.data?.ErrorCode;
+            if (code === 'PremiumRequired') {
+                toast(t('profile.toast.premiumRequiredSync', 'Vui lòng đăng ký gói Premium để sử dụng tính năng AI Recommend!'), {
+                    icon: '⭐',
+                    style: { maxWidth: '340px' },
+                });
+            } else {
+                toast.error(t('profile.toast.recommendationSyncFailed'));
+            }
         },
     });
 
@@ -426,20 +434,8 @@ export function CandidateProfilePage() {
                                 {t('profile.social.title')}
                             </h3>
                             <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <Linkedin className="h-4 w-4 text-gray-500" />
-                                    {profile?.linkedInUrl ? (
-                                        <div className="flex flex-1 items-center justify-between">
-                                            <a href={profile.linkedInUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-[#00b14f] hover:underline flex items-center gap-1">
-                                                {profile.linkedInUrl}
-                                                <ExternalLink className="h-3 w-3" />
-                                            </a>
-                                        </div>
-                                    ) : (
-                                        <span className="text-sm text-gray-400">{t('profile.labels.notUpdated')}</span>
-                                    )}
-                                </div>
-                                <div className="pt-3 border-t border-gray-200">
+
+                                <div>
                                     <div className="flex items-center gap-3 mb-3">
                                         <Github className="h-4 w-4 text-gray-500" />
                                         {isEditing ? (

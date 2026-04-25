@@ -16,12 +16,14 @@ import {
     ExternalLink,
     RefreshCw,
     Crown,
+    ShieldAlert,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '../../components/ui';
 import { cvApi } from '../../api';
 import { candidateApi } from '../../api/candidate.api';
+import { consentApi } from '../../api/consent.api';
 import apiClient from '../../api/axios.config';
 import { useAuthStore } from '../../stores/auth.store';
 import { useTranslation } from 'react-i18next';
@@ -115,6 +117,22 @@ export function AICVPage({ targetJobId: propTargetJobId }: { targetJobId?: strin
 
     const profile = profileData?.profile;
 
+    // Load Consents
+    const { data: consents = [], isLoading: consentsLoading } = useQuery({
+        queryKey: ['user-consents'],
+        queryFn: consentApi.getConsents,
+    });
+    const hasAIAnalysisConsent = consents.some(c => c.consentType === 'AIAnalysis' && c.isGranted);
+
+    const grantConsentMutation = useMutation({
+        mutationFn: () => consentApi.grantConsent('AIAnalysis', '1.0'),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user-consents'] });
+            toast.success(t('privacyConsent.toast.granted'));
+        },
+        onError: () => toast.error(t('privacyConsent.toast.grantError')),
+    });
+
     // Poll job status
     const { data: jobStatus } = useQuery({
         queryKey: ['job-status-cv-gen', activeJobId],
@@ -179,14 +197,16 @@ export function AICVPage({ targetJobId: propTargetJobId }: { targetJobId?: strin
 
     // Auto-start generation if autoStart parameter is true and we haven't started yet
     useEffect(() => {
-        if (autoStart && targetJobId && !autoStartedRef.current && !isGenerating && !profileLoading) {
+        if (autoStart && targetJobId && !autoStartedRef.current && !isGenerating && !profileLoading && !consentsLoading) {
             autoStartedRef.current = true;
-            // Short delay to allow UI to render first
-            setTimeout(() => {
-                handleGenerate();
-            }, 300);
+            if (hasAIAnalysisConsent) {
+                // Short delay to allow UI to render first
+                setTimeout(() => {
+                    handleGenerate();
+                }, 300);
+            }
         }
-    }, [autoStart, targetJobId, isGenerating, profileLoading]);
+    }, [autoStart, targetJobId, isGenerating, profileLoading, hasAIAnalysisConsent, consentsLoading]);
 
     const handleRetry = () => {
         setActiveJobId(null);
@@ -524,25 +544,51 @@ export function AICVPage({ targetJobId: propTargetJobId }: { targetJobId?: strin
                                     </div>
                                 )}
 
-                                {/* Generate button */}
-                                {!generationDone && (
-                                    <Button
-                                        className="w-full bg-[#00b14f] hover:bg-[#00a045] h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
-                                        onClick={handleGenerate}
-                                        disabled={isGenerating || profileLoading}
-                                    >
-                                        {isGenerating ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                                {t('cv.ai.generate.generating')}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Wand2 className="h-5 w-5 mr-2" />
-                                                {t('cv.ai.generate.cta')}
-                                            </>
-                                        )}
-                                    </Button>
+                                {/* Consent Warning */}
+                                {!consentsLoading && !hasAIAnalysisConsent && !generationDone ? (
+                                    <div className="mb-4 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-xl p-4 space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <ShieldAlert className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                                                    {t('privacyConsent.types.AIAnalysis.title')}
+                                                </p>
+                                                <p className="text-xs text-orange-700 dark:text-orange-200/80 mt-1">
+                                                    {t('privacyConsent.types.AIAnalysis.desc')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                                            onClick={() => grantConsentMutation.mutate()}
+                                            disabled={grantConsentMutation.isPending}
+                                        >
+                                            {grantConsentMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                            {t('privacyConsent.toast.granted').replace(' thành công', '').replace(' successfully', '')} {/* Using as label */}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    /* Generate button */
+                                    !generationDone && (
+                                        <Button
+                                            className="w-full bg-[#00b14f] hover:bg-[#00a045] h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+                                            onClick={handleGenerate}
+                                            disabled={isGenerating || profileLoading}
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                                    {t('cv.ai.generate.generating')}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Wand2 className="h-5 w-5 mr-2" />
+                                                    {t('cv.ai.generate.cta')}
+                                                </>
+                                            )}
+                                        </Button>
+                                    )
                                 )}
                             </CardContent>
                         </Card>

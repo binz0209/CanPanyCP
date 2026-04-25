@@ -139,6 +139,50 @@
       "jobNotFound": "Không tìm thấy công việc tương ứng."
     }
   },
+  "settings": {
+    "title": "Cài đặt ứng viên"
+  },
+  "privacyConsent": {
+    "title": "Quyền riêng tư & Đồng ý",
+    "subtitle": "Quản lý quyền đồng ý xử lý dữ liệu cá nhân của bạn theo quy định của Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân. Bạn có thể bật/tắt bất kỳ quyền nào dưới đây.",
+    "stats": {
+      "grantedMsg": "{{count}} quyền đã cấp",
+      "notGrantedMsg": "{{count}} chưa cấp"
+    },
+    "legalTitle": "Nghị định 13/2023/NĐ-CP — Bảo vệ dữ liệu cá nhân",
+    "legalDesc": "Bạn có quyền đồng ý hoặc từ chối xử lý dữ liệu cá nhân bất kỳ lúc nào. Việc thu hồi đồng ý có thể ảnh hưởng đến một số tính năng của hệ thống.",
+    "required": "Bắt buộc",
+    "grantedAt": "Đã cấp: {{date}}",
+    "policyVersion": "Phiên bản: v{{version}}",
+    "toast": {
+      "granted": "Đã cấp quyền thành công",
+      "grantError": "Lỗi khi cấp quyền",
+      "revoked": "Đã thu hồi quyền thành công",
+      "revokeError": "Lỗi khi thu hồi quyền"
+    },
+    "types": {
+      "DataProcessing": {
+        "title": "Xử lý dữ liệu cá nhân",
+        "desc": "Cho phép hệ thống xử lý dữ liệu cá nhân của bạn để cung cấp dịch vụ tuyển dụng, gợi ý việc làm và quản lý hồ sơ."
+      },
+      "AIAnalysis": {
+        "title": "Phân tích AI",
+        "desc": "Cho phép sử dụng trí tuệ nhân tạo để phân tích CV, đánh giá kỹ năng và tạo gợi ý nghề nghiệp cá nhân hóa."
+      },
+      "ExternalSync_GitHub": {
+        "title": "Đồng bộ GitHub",
+        "desc": "Cho phép hệ thống truy cập và phân tích dữ liệu GitHub của bạn để trích xuất kỹ năng kỹ thuật và cập nhật hồ sơ."
+      },
+      "CrossBorderTransfer": {
+        "title": "Chuyển dữ liệu xuyên biên giới",
+        "desc": "Cho phép chuyển dữ liệu cá nhân sang máy chủ nước ngoài để xử lý AI và lưu trữ (tuân thủ Nghị định 13/2023/NĐ-CP)."
+      },
+      "Marketing": {
+        "title": "Thông báo & tiếp thị",
+        "desc": "Nhận email thông báo việc làm mới, khuyến mãi và tin tức từ CanPany."
+      }
+    }
+  },
   "messages": {
     "title": "Tin nhắn",
     "status": {
@@ -226,6 +270,12 @@
       "duration": "Thời gian:",
       "updated": "Cập nhật:"
     },
+    "actions": {
+      "cancelSuccess": "Đã yêu cầu hủy",
+      "deleteSuccess": "Đã xóa tác vụ",
+      "cancel": "Hủy tiến trình",
+      "delete": "Xóa lệnh"
+    },
     "row": {
       "processing": "Đang xử lý...",
       "completedAt": "Hoàn tất lúc: {{time}}"
@@ -253,8 +303,8 @@
       "processing": "Đang xử lý..."
     },
     "toast": {
-      "completed": "✅ Phân tích GitHub hoàn thành!",
-      "started": "🔄 Đang phân tích GitHub profile...",
+      "completed": "Phân tích GitHub hoàn thành!",
+      "started": "Đang phân tích GitHub profile...",
       "error": "Không thể bắt đầu phân tích. Hãy kết nối GitHub trước."
     },
     "stats": {
@@ -315,16 +365,21 @@
       "remote": "Remote"
     },
     "toast": {
-      "syncStarted": "🔄 Đang đồng bộ kỹ năng cho AI gợi ý...",
+      "syncStarted": "Đang đồng bộ kỹ năng cho AI gợi ý...",
       "syncError": "Không thể bắt đầu đồng bộ kỹ năng.",
-      "syncSuccess": "✅ Đồng bộ xong! Gợi ý đã được cập nhật.",
+      "syncSuccess": "Đồng bộ xong! Gợi ý đã được cập nhật.",
       "syncFailed": "Đồng bộ kỹ năng thất bại.",
       "bookmarkSuccess": "Đã lưu việc làm",
       "bookmarkError": "Không thể lưu việc làm",
-      "cvStarted": "🚀 Đang tạo CV phù hợp...",
+      "cvStarted": "Đang tạo CV phù hợp...",
       "cvError": "Không thể tạo CV.",
-      "cvSuccess": "✅ CV cho \"{{title}}\" tạo xong!",
-      "cvPremiumRequired": "⭐ Bạn đã dùng hết 2 lượt tạo CV miễn phí. Nâng cấp Premium để tạo không giới hạn."
+      "cvSuccess": "CV cho \"{{title}}\" tạo xong!",
+      "cvPremiumRequired": "Bạn đã dùng hết 2 lượt tạo CV miễn phí. Nâng cấp Premium để tạo không giới hạn."
+    },
+    "premium": {
+      "title": "Tính năng Premium",
+      "description": "Bạn cần nâng cấp gói Premium để mở khoá tính năng Gợi ý Việc làm Phù hợp bằng AI và tạo CV độc quyền. ",
+      "upgradeAction": "Nâng cấp ngay"
     },
     "tips": {
       "coldStart1": "Bạn chưa có nhiều tương tác. Nhấn",
@@ -531,6 +586,7 @@
 
       "repoAnalysisStarted": "Đang phân tích repositories và trích xuất skills...",
       "repoAnalysisFailed": "Không thể bắt đầu phân tích. Vui lòng thử lại.",
+      "premiumRequiredSync": "Vui lòng đăng ký gói Premium để sử dụng tính năng AI Recommend!",
       "recommendationSyncStarted": "Đã bắt đầu đồng bộ kỹ năng cho gợi ý việc làm.",
       "recommendationSyncFailed": "Không thể bắt đầu đồng bộ kỹ năng gợi ý việc làm.",
       "skillsExtracted": "Trích xuất skills hoàn thành! Hồ sơ đã được cập nhật.",
@@ -637,7 +693,7 @@
         "title": "Không thể tải dữ liệu CV.",
         "back": "Quay lại"
       },
-      "target": "✨ CV được tối ưu cho: {{job}}",
+      "target": "CV được tối ưu cho: {{job}}",
       "sections": {
         "summary": "Tóm tắt chuyên môn",
         "experience": "Kinh nghiệm làm việc",
@@ -674,7 +730,7 @@
     },
     "ai": {
       "toast": {
-        "completed": "🎉 CV đã được tạo thành công!",
+        "completed": "CV đã được tạo thành công!",
         "started": "Đã bắt đầu tạo CV bằng AI!",
         "error": "Không thể bắt đầu quá trình tạo CV. Vui lòng thử lại.",
         "premiumRequired": "Bạn đã dùng hết 2 lượt tạo CV miễn phí."
@@ -718,7 +774,7 @@
         "title": "Tạo CV ngay bây giờ",
         "subtitle": "Gemini phân tích hồ sơ và tạo CV thân thiện với ATS trong vài giây.",
         "generating": "Đang tạo CV...",
-        "cta": "✨ Tạo CV với AI"
+        "cta": "Tạo CV với AI"
       },
       "premium": {
         "description": "Mua gói Premium để tạo CV AI không giới hạn.",
@@ -754,7 +810,7 @@
         }
       },
       "tip": {
-        "title": "💡 Mẹo",
+        "title": "Mẹo",
         "description": "Kết quả CV tốt nhất khi hồ sơ của bạn có đầy đủ kinh nghiệm, học vấn và kỹ năng.",
         "cta": "Cập nhật ngay →"
       }
@@ -846,7 +902,7 @@
       "saveOver90": "Tiết kiệm hơn 90% so với gói tháng"
     },
     "toast": {
-      "activated": "🎉 Premium đã được kích hoạt thành công!",
+      "activated": "Premium đã được kích hoạt thành công!",
       "purchaseFailed": "Không thể mua gói premium. Vui lòng thử lại.",
       "insufficientBalance": "Số dư ví không đủ. Cần {{required}}, hiện có {{current}}."
     },

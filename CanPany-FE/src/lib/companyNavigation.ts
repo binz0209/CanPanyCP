@@ -13,6 +13,7 @@ export const companyPaths = {
     messageThread: (conversationId: string) => `/company/messages/${conversationId}`,
     wallet: '/company/wallet',
     premium: '/company/premium',
+    settingsAccount: '/company/settings/account',
 } as const;
 
 export interface CompanyNavItem {
@@ -55,6 +56,12 @@ export const companyNavigationItems: CompanyNavItem[] = [
         items: [
             { labelKey: 'sidebar.wallet', path: companyPaths.wallet },
             { labelKey: 'sidebar.premium', path: companyPaths.premium },
+        ],
+    },
+    {
+        labelKey: 'sidebar.settings',
+        items: [
+            { labelKey: 'sidebar.settingsAccount', path: companyPaths.settingsAccount },
         ],
     },
 ] as const;
