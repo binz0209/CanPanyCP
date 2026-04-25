@@ -70,4 +70,10 @@ export const authApi = {
         const response = await apiClient.get<ApiResponse<{ oauthUrl: string }>>('/auth/github/link');
         return response.data.data!;
     },
+
+    // Step 1 of Google OAuth — returns the URL to redirect the browser to
+    getGoogleLinkUrl: async (role?: string): Promise<{ oauthUrl: string }> => {
+        const response = await apiClient.get<ApiResponse<{ oauthUrl: string }>>(`/auth/google/link${role ? `?role=${role}` : ''}`);
+        return response.data.data!;
+    },
 };
