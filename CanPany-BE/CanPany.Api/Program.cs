@@ -382,8 +382,7 @@ builder.Services.AddCors(options =>
                       return false;
                   }
 
-                  return (uri.Host == "localhost" || uri.Host == "127.0.0.1")
-                      && uri.Scheme is "http" or "https";
+                  return true; // Allow all origins for production since this is a public API
               })
               .AllowAnyMethod()
               .AllowAnyHeader()
@@ -493,8 +492,6 @@ else
 Log.Information("🌍 Environment: {Environment}", app.Environment.EnvironmentName);
 Log.Information("═══════════════════════════════════════════════════════════");
 
-app.Run();
-
 // Configure recurring jobs for job alerts
 using (var scope = app.Services.CreateScope())
 {
@@ -540,3 +537,5 @@ using (var scope = app.Services.CreateScope())
             TimeZone = TimeZoneInfo.Local
         });
 }
+
+app.Run();
