@@ -18,7 +18,7 @@ RUN dotnet build "CanPany.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "CanPany.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CanPany.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:ErrorOnDuplicatePublishOutputFiles=false
 
 # Stage 3: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
