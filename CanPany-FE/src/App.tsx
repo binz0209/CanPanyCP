@@ -8,7 +8,7 @@ import { queryClient } from '@/lib/queryClient';
 import { companyPaths } from '@/lib/companyNavigation';
 import { PublicLayout, CandidateLayout, CompanyLayout, AdminLayout } from '@/components/layout';
 import { HomePage, JobsPage, JobDetailPage, CompaniesPage, CompanyDetailPage } from '@/pages/public';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AuthCallbackPage } from '@/pages/auth';
 import { 
   CandidateProfilePage, CandidateDashboardPage, CVListPage, AICVPage, 
   ApplicationHistoryPage, SavedJobsPage, NotificationsPage, WalletPage, 
@@ -206,6 +206,7 @@ function App() {
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           {/* Payment Callback Pages */}
           <Route path="/payment/:status" element={<PaymentResultPage />} />

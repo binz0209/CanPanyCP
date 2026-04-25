@@ -3,11 +3,13 @@ using CanPany.Application.Interfaces.Services;
 using CanPany.Application.Common.Models;
 using CanPany.Application.Common.Constants;
 using CanPany.Domain.Exceptions;
+using CanPany.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Headers;
 using CanPany.Application.Common.Attributes;
+using CanPany.Domain.Entities;
 
 namespace CanPany.Api.Controllers;
 
@@ -383,7 +385,171 @@ public class AuthController : ControllerBase
             return Redirect($"{frontendUrl}?github_linked=false&error=server_error");
         }
     }
+
+    /// <summary>
+    /// Step 1: Generate Google OAuth URL for SSO 
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("google/link")]
+    public IActionResult GetGoogleLinkUrl([FromQuery] string? role = null)
+    {
+        try
+        {
+            var clientId = _configuration["OAuth:Google:ClientId"];
+            if (string.IsNullOrEmpty(clientId))
+                return StatusCode(500, ApiResponse.CreateError("Google OAuth chưa được cấu hình", "NotConfigured"));
+
+            // Generate state token
+            var state = Guid.NewGuid().ToString("N");
+            // Store role in cache if user is trying to register with a specific role via Google SSO
+            _cache.Set($"google_oauth_{state}", role ?? "Candidate", TimeSpan.FromMinutes(10));
+
+            var callbackUrl = Uri.EscapeDataString(_configuration["OAuth:Google:RedirectUri"] ?? "");
+            var scope = Uri.EscapeDataString("openid email profile");
+            var oauthUrl = $"https://accounts.google.com/o/oauth2/v2/auth?client_id={clientId}&redirect_uri={callbackUrl}&response_type=code&scope={scope}&state={state}&access_type=offline";
+
+            _logger.LogInformation("[GOOGLE_LINK] Generated OAuth URL for role {Role}", role ?? "Candidate");
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { oauthUrl }, "Google OAuth URL generated"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GOOGLE_LINK] Error generating OAuth URL");
+            return StatusCode(500, ApiResponse.CreateError("Không thể tạo OAuth URL", "OAuthFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Step 2: Google callback for SSO
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("google/callback")]
+    public async Task<IActionResult> GoogleCallback(
+        [FromQuery] string? code,
+        [FromQuery] string? state,
+        [FromQuery] string? error)
+    {
+        var frontendUrl = _configuration["OAuth:Google:FrontendCallbackUrl"] ?? "http://localhost:5173/auth/callback";
+
+        // User denied access
+        if (!string.IsNullOrEmpty(error))
+        {
+            _logger.LogWarning("[GOOGLE_CALLBACK] User denied access: {Error}", error);
+            return Redirect($"{frontendUrl}?google_sso=false&error={Uri.EscapeDataString(error)}");
+        }
+
+        if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
+            return Redirect($"{frontendUrl}?google_sso=false&error=missing_params");
+
+        // Verify state token
+        if (!_cache.TryGetValue($"google_oauth_{state}", out string? requestedRole))
+        {
+            _logger.LogWarning("[GOOGLE_CALLBACK] Invalid or expired state token");
+            return Redirect($"{frontendUrl}?google_sso=false&error=invalid_state");
+        }
+        _cache.Remove($"google_oauth_{state}");
+
+        try
+        {
+            var clientId = _configuration["OAuth:Google:ClientId"];
+            var clientSecret = _configuration["OAuth:Google:ClientSecret"];
+            var redirectUri = _configuration["OAuth:Google:RedirectUri"];
+
+            // Exchange code for access token
+            var tokenHttp = _httpClientFactory.CreateClient();
+            var tokenResp = await tokenHttp.PostAsJsonAsync("https://oauth2.googleapis.com/token", new
+            {
+                client_id = clientId,
+                client_secret = clientSecret,
+                code,
+                grant_type = "authorization_code",
+                redirect_uri = redirectUri
+            });
+
+            if (!tokenResp.IsSuccessStatusCode)
+            {
+                _logger.LogError("[GOOGLE_CALLBACK] Token exchange failed: {Status}", tokenResp.StatusCode);
+                return Redirect($"{frontendUrl}?google_sso=false&error=token_exchange_failed");
+            }
+
+            var tokenData = await tokenResp.Content.ReadFromJsonAsync<GoogleTokenResponse>();
+            if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken))
+            {
+                _logger.LogError("[GOOGLE_CALLBACK] Empty access token");
+                return Redirect($"{frontendUrl}?google_sso=false&error=empty_token");
+            }
+
+            // Get Google User info
+            var userHttp = _httpClientFactory.CreateClient();
+            userHttp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenData.AccessToken);
+
+            var userResp = await userHttp.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+            if (!userResp.IsSuccessStatusCode)
+            {
+                _logger.LogError("[GOOGLE_CALLBACK] Failed to fetch Google user: {Status}", userResp.StatusCode);
+                return Redirect($"{frontendUrl}?google_sso=false&error=user_fetch_failed");
+            }
+
+            var googleUser = await userResp.Content.ReadFromJsonAsync<GoogleUserResponse>();
+            if (googleUser == null || string.IsNullOrEmpty(googleUser.Email))
+            {
+                _logger.LogError("[GOOGLE_CALLBACK] Failed to parse Google user or Email empty");
+                return Redirect($"{frontendUrl}?google_sso=false&error=user_parse_failed");
+            }
+
+            // SSO Login / Registration Logic
+            var existingUser = await _userService.GetByEmailAsync(googleUser.Email);
+            User user;
+
+            if (existingUser != null)
+            {
+                user = existingUser;
+            }
+            else
+            {
+                // Register new user with random password
+                var randomPassword = Guid.NewGuid().ToString("N") + "Aa1@";
+                user = await _userService.RegisterAsync(
+                    googleUser.Name ?? googleUser.Email, 
+                    googleUser.Email, 
+                    randomPassword, 
+                    requestedRole ?? "Candidate");
+
+                // Update avatar if provided
+                if (!string.IsNullOrEmpty(googleUser.Picture))
+                {
+                    user.AvatarUrl = googleUser.Picture;
+                    await _userService.UpdateAsync(user.Id, user);
+                }
+            }
+
+            // Generate JWT Token
+            var token = await _authService.GenerateTokenAsync(user);
+
+            _logger.LogInformation("[GOOGLE_CALLBACK] SSO successful for user {Email}", user.Email);
+
+            return Redirect($"{frontendUrl}?google_sso=true&token={token}&email={Uri.EscapeDataString(user.Email)}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GOOGLE_CALLBACK] Unexpected error during Google SSO");
+            return Redirect($"{frontendUrl}?google_sso=false&error=server_error");
+        }
+    }
 }
+
+// DTO nội bộ cho Google OAuth token response
+file record GoogleTokenResponse(
+    [property: System.Text.Json.Serialization.JsonPropertyName("access_token")] string? AccessToken,
+    [property: System.Text.Json.Serialization.JsonPropertyName("token_type")] string? TokenType,
+    [property: System.Text.Json.Serialization.JsonPropertyName("expires_in")] int? ExpiresIn);
+
+// DTO nội bộ cho Google user info
+file record GoogleUserResponse(
+    [property: System.Text.Json.Serialization.JsonPropertyName("id")] string? Id,
+    [property: System.Text.Json.Serialization.JsonPropertyName("email")] string? Email,
+    [property: System.Text.Json.Serialization.JsonPropertyName("name")] string? Name,
+    [property: System.Text.Json.Serialization.JsonPropertyName("picture")] string? Picture);
 
 // DTO nội bộ cho GitHub OAuth token response
 file record GitHubTokenResponse(
