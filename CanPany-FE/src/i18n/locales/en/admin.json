@@ -20,7 +20,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "System-wide statistics (UC-43)",
+    "subtitle": "System-wide statistics and activity overview",
     "refresh": "Refresh",
     "cards": {
       "users": "Users",
@@ -38,7 +38,7 @@
   },
   "users": {
     "title": "User moderation",
-    "subtitle": "List, ban and unban accounts (UC-44)",
+    "subtitle": "Manage members, control access and ban/unban accounts",
     "filterRole": "Role",
     "allRoles": "All roles",
     "searchPlaceholder": "Search by name or email…",
@@ -64,15 +64,18 @@
   },
   "verification": {
     "title": "Company verification",
-    "subtitle": "Approve or reject verification requests (UC-45)",
-    "sourceNote": "List shows companies with verification status “Pending”.",
+    "subtitle": "Review and approve identity verification requests for companies",
+    "sourceNote": "List shows companies with verification status \u201cPending\u201d.",
     "apiEmptyNote": "The dedicated admin verification-requests endpoint currently returns an empty list; data is loaded via the company directory.",
     "company": "Company",
     "status": "Verification status",
+    "documents": "Documents",
+    "viewDocs": "View docs",
+    "noDocs": "No documents",
     "approve": "Approve",
     "reject": "Reject",
     "rejectReason": "Rejection reason",
-    "rejectReasonPlaceholder": "Enter a reason…",
+    "rejectReasonPlaceholder": "Enter a reason\u2026",
     "confirmReject": "Confirm reject",
     "cancel": "Cancel",
     "empty": "No companies pending verification.",
@@ -85,19 +88,19 @@
   "placeholders": {
     "jobs": {
       "title": "Job moderation",
-      "description": "UC-46 will be implemented here (hide / delete violating jobs)."
+      "description": "Review, hide or delete job postings that violate platform rules."
     },
     "catalog": {
       "title": "Categories & skills",
-      "description": "UC-47: system-wide category and skill catalog CRUD."
+      "description": "Create, update and delete job categories and system skill keywords."
     },
     "payments": {
       "title": "Payment administration",
-      "description": "Payment list with approve / reject (UC-ADM)."
+      "description": "Manage and approve user upgrade payment transactions over platform."
     },
     "auditLogs": {
       "title": "Audit logs",
-      "description": "UC-48: view and filter audit logs."
+      "description": "View and filter detailed system and admin activity audit logs."
     },
     "reports": {
       "title": "User reports",
@@ -105,7 +108,7 @@
     },
     "broadcast": {
       "title": "Broadcast notifications",
-      "description": "Send broadcast notifications to user groups (UC-ADM-26)."
+      "description": "Compose and broadcast automated messages to specific user groups."
     }
   },
   "jobs": {
