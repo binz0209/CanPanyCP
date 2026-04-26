@@ -218,12 +218,12 @@ public class CompaniesController : ControllerBase
             if (company == null)
                 return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.NotFound), "NotFound"));
 
-            if (!string.IsNullOrWhiteSpace(request.Name)) company.Name = request.Name;
-            if (!string.IsNullOrWhiteSpace(request.Description)) company.Description = request.Description;
-            if (!string.IsNullOrWhiteSpace(request.LogoUrl)) company.LogoUrl = request.LogoUrl;
-            if (!string.IsNullOrWhiteSpace(request.Website)) company.Website = request.Website;
-            if (!string.IsNullOrWhiteSpace(request.Phone)) company.Phone = request.Phone;
-            if (!string.IsNullOrWhiteSpace(request.Address)) company.Address = request.Address;
+            if (request.Name != null) company.Name = request.Name == "" ? company.Name : request.Name;
+            if (request.Description != null) company.Description = request.Description == "" ? null : request.Description;
+            if (request.LogoUrl != null) company.LogoUrl = request.LogoUrl == "" ? null : request.LogoUrl;
+            if (request.Website != null) company.Website = request.Website == "" ? null : request.Website;
+            if (request.Phone != null) company.Phone = request.Phone == "" ? null : request.Phone;
+            if (request.Address != null) company.Address = request.Address == "" ? null : request.Address;
 
             await _companyService.UpdateAsync(company.Id, company);
             return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Profile.Updated)));
@@ -394,6 +394,122 @@ public class CompaniesController : ControllerBase
         {
             _logger.LogError(ex, "Error getting company statistics");
             return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetStatisticsFailed"));
+        }
+    }
+
+    /// <summary>
+    /// Upload verification documents to Cloudinary (images, PDF, DOCX, etc.)
+    /// Returns the list of uploaded secure URLs to be submitted in the verification request.
+    /// </summary>
+    [HttpPost("verification/upload-document")]
+    [Authorize(Roles = "Company,Admin")]
+    public async Task<IActionResult> UploadVerificationDocument([FromForm] List<IFormFile> files)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            if (files == null || files.Count == 0)
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.FileRequired), "FileRequired"));
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt" };
+            const long maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+
+            var uploadedUrls = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (file.Length == 0) continue;
+
+                if (file.Length > maxFileSizeBytes)
+                    return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.FileTooLarge), "FileTooLarge"));
+
+                var extension = Path.GetExtension(file.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Profile.Avatar.InvalidFileType), "InvalidFileType"));
+
+                var isImage = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" }.Contains(extension);
+                var resourceType = isImage ? "image" : "raw";
+
+                await using var stream = file.OpenReadStream();
+                var (secureUrl, _) = await _cloudinaryService.UploadAsync(
+                    stream,
+                    file.FileName,
+                    "company-verification-docs",
+                    resourceType);
+
+                uploadedUrls.Add(secureUrl);
+            }
+
+            return Ok(ApiResponse<object>.CreateSuccess(new { Urls = uploadedUrls }, _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.AvatarUpdated)));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading verification document");
+            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.VerificationFailed), "UploadVerificationDocFailed"));
+        }
+    }
+
+    /// <summary>
+    /// GET /api/companies/verification/download-document?url=...
+    /// Returns a signed (1-hour) Cloudinary download URL for a verification document file,
+    /// bypassing the "Customer is marked as untrusted" restriction on raw public URLs.
+    /// </summary>
+    [HttpGet("verification/download-document")]
+    // [Authorize(Roles = "Admin")] // Both Company and Admin might need to view this
+    public IActionResult GetVerificationDocumentDownloadUrl([FromQuery] string url)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return BadRequest(ApiResponse.CreateError("Document URL is required", "UrlRequired"));
+
+            // Example parsed URL: https://res.cloudinary.com/cloud_name/raw/upload/v12345/company-verification-docs/file.pdf
+            // We need the string AFTER the upload/v{version}/ part, which is "company-verification-docs/file.pdf"
+            string publicId;
+            var uploadSegment = "/upload/";
+            var uploadIndex = url.IndexOf(uploadSegment, StringComparison.OrdinalIgnoreCase);
+
+            if (uploadIndex > 0)
+            {
+                var afterUpload = url.Substring(uploadIndex + uploadSegment.Length);
+                // afterUpload is something like "v123456789/folder/file.ext"
+                // find the first slash after the version
+                var slashIndex = afterUpload.IndexOf('/');
+                if (slashIndex > 0)
+                {
+                    publicId = afterUpload.Substring(slashIndex + 1); // "folder/file.ext"
+                }
+                else
+                {
+                    publicId = afterUpload;
+                }
+            }
+            else
+            {
+                // Fallback, if it doesn't match standard format, return as is (might fail if account restricted)
+                return Ok(ApiResponse<object>.CreateSuccess(new { url, fileName = Path.GetFileName(url) }));
+            }
+
+            // Remove query parameters if any
+            var queryIndex = publicId.IndexOf('?');
+            if (queryIndex > 0)
+            {
+                publicId = publicId.Substring(0, queryIndex);
+            }
+            
+            // Un-escape potential %20 encoded chars inside publicId
+            publicId = Uri.UnescapeDataString(publicId);
+
+            string signedUrl = _cloudinaryService.GetSignedDownloadUrl(publicId, "raw", expiresInSeconds: 3600);
+            return Ok(ApiResponse<object>.CreateSuccess(new { url = signedUrl, fileName = Path.GetFileName(publicId) }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[VERIFICATION_DOCUMENT_DOWNLOAD_URL] Failed for URL {Url}", url);
+            return StatusCode(500, ApiResponse.CreateError("Failed to generate download URL", "DownloadUrlFailed"));
         }
     }
 

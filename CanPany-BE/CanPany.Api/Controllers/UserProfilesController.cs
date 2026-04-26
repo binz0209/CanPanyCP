@@ -161,18 +161,18 @@ public class UserProfilesController : ControllerBase
             }
 
             // Update profile fields
-            if (!string.IsNullOrWhiteSpace(request.Bio)) profile.Bio = request.Bio;
-            if (!string.IsNullOrWhiteSpace(request.Phone)) profile.Phone = request.Phone;
-            if (!string.IsNullOrWhiteSpace(request.Address)) profile.Address = request.Address;
+            if (request.Bio != null) profile.Bio = request.Bio == "" ? null : request.Bio;
+            if (request.Phone != null) profile.Phone = request.Phone == "" ? null : request.Phone;
+            if (request.Address != null) profile.Address = request.Address == "" ? null : request.Address;
             if (request.DateOfBirth.HasValue) profile.DateOfBirth = request.DateOfBirth;
             if (request.SkillIds != null) profile.SkillIds = request.SkillIds;
-            if (!string.IsNullOrWhiteSpace(request.Experience)) profile.Experience = request.Experience;
-            if (!string.IsNullOrWhiteSpace(request.Education)) profile.Education = request.Education;
-            if (!string.IsNullOrWhiteSpace(request.Portfolio)) profile.Portfolio = request.Portfolio;
+            if (request.Experience != null) profile.Experience = request.Experience == "" ? null : request.Experience;
+            if (request.Education != null) profile.Education = request.Education == "" ? null : request.Education;
+            if (request.Portfolio != null) profile.Portfolio = request.Portfolio == "" ? null : request.Portfolio;
 
-            if (!string.IsNullOrWhiteSpace(request.GitHubUrl)) profile.GitHubUrl = request.GitHubUrl;
-            if (!string.IsNullOrWhiteSpace(request.Title)) profile.Title = request.Title;
-            if (!string.IsNullOrWhiteSpace(request.Location)) profile.Location = request.Location;
+            if (request.GitHubUrl != null) profile.GitHubUrl = request.GitHubUrl == "" ? null : request.GitHubUrl;
+            if (request.Title != null) profile.Title = request.Title == "" ? null : request.Title;
+            if (request.Location != null) profile.Location = request.Location == "" ? null : request.Location;
             if (request.HourlyRate.HasValue) profile.HourlyRate = request.HourlyRate;
             if (request.Languages != null) profile.Languages = request.Languages;
             if (request.Certifications != null) profile.Certifications = request.Certifications;
