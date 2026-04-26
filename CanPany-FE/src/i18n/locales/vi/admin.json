@@ -20,7 +20,7 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển",
-    "subtitle": "Thống kê tổng quan hệ thống (UC-43)",
+    "subtitle": "Thống kê tổng quan hoạt động trên toàn hệ thống",
     "refresh": "Làm mới",
     "cards": {
       "users": "Người dùng",
@@ -38,7 +38,7 @@
   },
   "users": {
     "title": "Quản lý người dùng",
-    "subtitle": "Xem danh sách, khóa / mở khóa tài khoản (UC-44)",
+    "subtitle": "Quản lý thành viên, kiểm soát khóa/mở khóa tài khoản",
     "filterRole": "Vai trò",
     "allRoles": "Tất cả",
     "searchPlaceholder": "Tìm theo tên hoặc email…",
@@ -64,11 +64,14 @@
   },
   "verification": {
     "title": "Xác minh doanh nghiệp",
-    "subtitle": "Phê duyệt hoặc từ chối yêu cầu xác minh (UC-45)",
+    "subtitle": "Phê duyệt hoặc từ chối cung cấp huy hiệu xác minh cho công ty",
     "sourceNote": "Danh sách lấy từ công ty có trạng thái xác minh \"Chờ xử lý\".",
     "apiEmptyNote": "Endpoint admin danh sách yêu cầu riêng hiện trả về rỗng; hiển thị dữ liệu qua danh sách công ty.",
     "company": "Công ty",
     "status": "Trạng thái xác minh",
+    "documents": "Tài liệu",
+    "viewDocs": "Xem tài liệu",
+    "noDocs": "Không có tài liệu",
     "approve": "Phê duyệt",
     "reject": "Từ chối",
     "rejectReason": "Lý do từ chối",
@@ -85,19 +88,19 @@
   "placeholders": {
     "jobs": {
       "title": "Kiểm duyệt tin tuyển dụng",
-      "description": "UC-46 sẽ được triển khai ở đây (ẩn / xóa tin vi phạm)."
+      "description": "Kiểm tra, ẩn hoặc xóa các tin tuyển dụng vi phạm chính sách nền tảng."
     },
     "catalog": {
       "title": "Danh mục & kỹ năng",
-      "description": "UC-47: CRUD danh mục và kỹ năng hệ thống."
+      "description": "Thêm, sửa, xóa danh mục nghề nghiệp và từ khóa kỹ năng của hệ thống."
     },
     "payments": {
       "title": "Thanh toán quản trị",
-      "description": "Danh sách thanh toán, phê duyệt / từ chối (UC-ADM)."
+      "description": "Danh sách giao dịch thanh toán nâng cấp tài khoản, phê duyệt/từ chối."
     },
     "auditLogs": {
       "title": "Nhật ký kiểm tra",
-      "description": "UC-48: Xem và lọc audit log."
+      "description": "Lưu vết hoạt động của quản trị viên và các thao tác trên hệ thống."
     },
     "reports": {
       "title": "Báo cáo người dùng",
@@ -105,7 +108,7 @@
     },
     "broadcast": {
       "title": "Thông báo hàng loạt",
-      "description": "Gửi thông báo broadcast tới nhóm người dùng (UC-ADM-26)."
+      "description": "Soạn và gửi thông báo hàng loạt tới các nhóm đối tượng người dùng cụ thể."
     }
   },
   "jobs": {

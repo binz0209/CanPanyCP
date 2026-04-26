@@ -53,6 +53,22 @@ export const companiesApi = {
         await apiClient.post('/companies/verification', payload);
     },
 
+    uploadVerificationDocuments: async (files: File[]): Promise<string[]> => {
+        const formData = new FormData();
+        files.forEach((file) => formData.append('files', file));
+        const response = await apiClient.post<ApiResponse<{ urls: string[] }>>('/companies/verification/upload-document', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data.data?.urls ?? [];
+    },
+
+    getVerificationDocumentDownloadUrl: async (url: string): Promise<{ url: string; fileName: string }> => {
+        const response = await apiClient.get<ApiResponse<{ url: string; fileName: string }>>('/companies/verification/download-document', {
+            params: { url },
+        });
+        return response.data.data!;
+    },
+
     getVerificationStatus: async (companyId: string): Promise<CompanyVerificationInfo> => {
         const response = await apiClient.get<ApiResponse<CompanyVerificationInfo>>(`/companies/${companyId}/verification`);
         return response.data.data!;
