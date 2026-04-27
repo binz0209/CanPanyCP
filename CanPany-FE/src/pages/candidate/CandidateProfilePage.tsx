@@ -471,6 +471,7 @@ export function CandidateProfilePage() {
                                                     <Github className="h-4 w-4 mr-2" />
                                                     {t('profile.github.analyzeRepos')}
                                                 </Button>
+                                                {syncJobId && (
                                                 <Link 
                                                     to="/candidate/background-jobs" 
                                                     className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors mt-2"
@@ -478,6 +479,7 @@ export function CandidateProfilePage() {
                                                     <Activity className="h-4 w-4" />
                                                     {t('profile.actions.viewProgress')}
                                                 </Link>
+                                                )}
                                                 {syncJobId && jobStatus && (
                                                     <div className="mt-2 space-y-1">
                                                         <div className="flex items-center justify-between text-xs text-gray-600">
@@ -569,6 +571,7 @@ export function CandidateProfilePage() {
                                         {t('profile.skills.syncRecommendations')}
                                     </Button>
 
+                                    {recommendationSyncJobId && (
                                     <Link
                                         to="/candidate/background-jobs"
                                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -576,6 +579,7 @@ export function CandidateProfilePage() {
                                         <Activity className="h-4 w-4" />
                                         {t('profile.actions.viewProgress')}
                                     </Link>
+                                    )}
                                 </div>
 
                                 {recommendationSyncJobId && (

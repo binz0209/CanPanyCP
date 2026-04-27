@@ -106,10 +106,7 @@ export function CandidateSidebar({ isOpen, onClose }: CandidateSidebarProps) {
       id: 'settings',
       labelKey: 'sidebar.settings',
       icon: <Settings className="h-5 w-5" />,
-      items: [
-        { id: 'settings.account', labelKey: 'sidebar.settingsAccount', path: '/candidate/settings/account', icon: <UserIcon className="h-4 w-4" /> },
-        { id: 'settings.notifications', labelKey: 'sidebar.settingsNotifications', path: '/candidate/settings/notifications', icon: <FileText className="h-4 w-4" /> },
-      ],
+      path: '/candidate/settings/account',
     },
   ];
 
