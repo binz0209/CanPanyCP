@@ -203,7 +203,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                 notifications={notifications}
                 unreadCount={unreadCount}
                 onMarkAsRead={markAsRead}
-                onMarkAllAsRead={markAllAsRead}
+                onMarkAllAsRead={() => markAllAsRead()}
                 isMarkingAllAsRead={isMarkingAllAsRead}
                 onClose={() => setIsNotifOpen(false)}
                 t={t as (key: string, opts?: { count?: number }) => string}
