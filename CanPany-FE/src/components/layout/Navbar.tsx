@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Menu, X, User, LogOut, Briefcase, Settings, ChevronDown, Sun, Moon, LayoutDashboard, BellOff, CheckCheck, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,6 @@ export function Navbar() {
     const { user, isAuthenticated, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const navigate = useNavigate();
-    const location = useLocation();
 
     const profileRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
@@ -159,7 +158,7 @@ export function Navbar() {
                                                 </div>
                                                 {unreadCount > 0 && (
                                                     <button
-                                                        onClick={markAllAsRead}
+                                                        onClick={() => markAllAsRead()}
                                                         disabled={isMarkingAllAsRead}
                                                         className="text-xs text-[#00b14f] hover:underline flex items-center gap-1"
                                                     >
