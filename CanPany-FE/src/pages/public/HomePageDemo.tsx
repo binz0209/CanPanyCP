@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, ArrowRight, Briefcase, Building2, Heart, Clock } from 'lucide-react';
 import { Button, Badge, Carousel } from '../../components/ui';
@@ -309,11 +309,14 @@ const CategoryCard = ({ cat, index }: { cat: typeof categories[0]; index: number
     const [ref, isInView] = useInViewButton(0.1);
     const [isHovered, setIsHovered] = useState(false);
 
+    const navigate = useNavigate();
+
     return (
         <button
             ref={ref}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            onClick={() => navigate(`/jobs?keyword=${encodeURIComponent(cat.name)}`)}
             className="group text-left rounded-lg border border-border bg-background p-5 transition-all hover:border-[#00b14f] hover:shadow-md"
             style={{
                 opacity: isInView ? 1 : 0,
