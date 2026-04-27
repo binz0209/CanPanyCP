@@ -1,4 +1,4 @@
-import { Bell, Search, Bot, LogOut, Settings, User, Menu, X, Sun, Moon, ChevronDown, Briefcase, BellOff, CheckCheck, Check } from 'lucide-react';
+import { Bell, LogOut, Settings, User, Menu, X, Sun, Moon, ChevronDown, Briefcase, BellOff, CheckCheck, Check } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -164,30 +164,12 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
           </Link>
         </div>
 
-        {/* Center: Search */}
-        <div className="hidden md:flex flex-1 max-w-sm mx-8">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={t('nav.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 focus:border-[#00b14f] dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
-            />
-          </div>
-        </div>
+
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
-          <Button
-            variant="outline"
-            size="sm"
-            className="hidden sm:flex gap-2 bg-transparent border-gray-200 text-gray-400 opacity-60 cursor-not-allowed"
-            disabled
-          >
-            <Bot className="h-4 w-4" />
-            <span>{t('nav.aiAdvisor')}</span>
-          </Button>
+
 
           <button
             onClick={toggleTheme}
