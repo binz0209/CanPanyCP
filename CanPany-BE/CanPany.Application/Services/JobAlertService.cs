@@ -15,6 +15,8 @@ public class JobAlertService : IJobAlertService
     private readonly IJobAlertMatchRepository _matchRepo;
     private readonly IJobRepository _jobRepo;
     private readonly ICompanyRepository _companyRepo;
+    private readonly ISkillRepository _skillRepo;
+    private readonly ICategoryRepository _categoryRepo;
     private readonly ILogger<JobAlertService> _logger;
 
     public JobAlertService(
@@ -22,12 +24,16 @@ public class JobAlertService : IJobAlertService
         IJobAlertMatchRepository matchRepo,
         IJobRepository jobRepo,
         ICompanyRepository companyRepo,
+        ISkillRepository skillRepo,
+        ICategoryRepository categoryRepo,
         ILogger<JobAlertService> logger)
     {
         _alertRepo = alertRepo;
         _matchRepo = matchRepo;
         _jobRepo = jobRepo;
         _companyRepo = companyRepo;
+        _skillRepo = skillRepo;
+        _categoryRepo = categoryRepo;
         _logger = logger;
     }
 
@@ -213,27 +219,88 @@ public class JobAlertService : IJobAlertService
         // Check if already matched
         if (await _matchRepo.MatchExistsAsync(alert.Id, job.Id))
         {
+            _logger.LogInformation("ℹ Match already exists for Alert {AlertId} and Job {JobId}. Skipping.", alert.Id, job.Id);
             return false;
         }
 
         // Filter by skills
         if (alert.SkillIds?.Any() == true)
         {
-            if (job.SkillIds == null || !job.SkillIds.Any()) // ? Changed from RequiredSkills
+            if (job.SkillIds == null || !job.SkillIds.Any()) 
+            {
+                _logger.LogInformation("∅ Skill mismatch: Job {JobId} has no skills", job.Id);
                 return false;
+            }
 
-            var hasMatchingSkill = alert.SkillIds.Any(skillId => 
-                job.SkillIds.Contains(skillId)); // ? Changed from RequiredSkills
+            _logger.LogInformation("🔍 Comparing Alert Skill IDs [{AlertSkills}] with Job Skill Strings [{JobSkills}]", 
+                string.Join(", ", alert.SkillIds), string.Join(", ", job.SkillIds));
+
+            // Smart matching: Try ID match first, then Name match
+            bool hasMatchingSkill = false;
+            foreach (var skillId in alert.SkillIds)
+            {
+                // Direct ID match
+                if (job.SkillIds.Contains(skillId))
+                {
+                    hasMatchingSkill = true;
+                    break;
+                }
+
+                // Name-based match (Resolve ID to Name)
+                var skill = await _skillRepo.GetByIdAsync(skillId);
+                if (skill != null && job.SkillIds.Any(js => js.Equals(skill.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogInformation("🎯 Smart Match: Job skill '{JobSkill}' matches Alert skill '{SkillName}' (Resolved from ID {SkillId})", 
+                        skill.Name, skill.Name, skillId);
+                    hasMatchingSkill = true;
+                    break;
+                }
+            }
             
             if (!hasMatchingSkill)
+            {
+                _logger.LogInformation("∅ Skill mismatch: Job {JobId} skills do not match alert {AlertId}", job.Id, alert.Id);
                 return false;
+            }
         }
 
         // Filter by category
         if (alert.CategoryIds?.Any() == true)
         {
-            if (string.IsNullOrEmpty(job.CategoryId) || !alert.CategoryIds.Contains(job.CategoryId)) // ? Fixed
+            _logger.LogInformation("🔍 Checking Categories for Job {JobId} (Current: '{JobCat}')", job.Id, job.CategoryId ?? "null");
+
+            bool hasMatchingCategory = false;
+            foreach (var categoryId in alert.CategoryIds)
+            {
+                // Direct ID match
+                if (job.CategoryId == categoryId)
+                {
+                    hasMatchingCategory = true;
+                    break;
+                }
+
+                // Name-based match (Resolve ID to Name)
+                var category = await _categoryRepo.GetByIdAsync(categoryId);
+                if (category != null)
+                {
+                    _logger.LogInformation("🔍 Checking if Job Category '{JobCat}' matches Alert Category Name '{CatName}'", 
+                        job.CategoryId ?? "null", category.Name);
+                        
+                    if (job.CategoryId?.Equals(category.Name, StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        _logger.LogInformation("🎯 Smart Match: Job category '{JobCat}' matches Alert category '{CatName}'", 
+                            job.CategoryId, category.Name);
+                        hasMatchingCategory = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasMatchingCategory)
+            {
+                _logger.LogInformation("∅ Category mismatch: Job {JobId} category '{Cat}' not in alert categories", job.Id, job.CategoryId ?? "null");
                 return false;
+            }
         }
 
         // Filter by location
@@ -241,28 +308,52 @@ public class JobAlertService : IJobAlertService
         {
             if (string.IsNullOrEmpty(job.Location) || 
                 !job.Location.Contains(alert.Location, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("∅ Location mismatch: Job {JobId} location '{Loc}' vs alert '{AlertLoc}'", job.Id, job.Location, alert.Location);
                 return false;
+            }
         }
 
         // Filter by job type (using EngagementType from Job entity)
         if (!string.IsNullOrEmpty(alert.JobType))
         {
-            if (job.EngagementType != alert.JobType) // ? Changed from Type
+            bool isTypeMatch = job.EngagementType == alert.JobType;
+            
+            // Lenient mapping: FullTime == DirectHire, Freelance == FreelanceProject
+            if (!isTypeMatch)
+            {
+                if (alert.JobType == "FullTime" && job.EngagementType == "DirectHire") isTypeMatch = true;
+                if (alert.JobType == "Freelance" && job.EngagementType == "FreelanceProject") isTypeMatch = true;
+            }
+
+            if (!isTypeMatch)
+            {
+                _logger.LogInformation("∅ JobType mismatch: Job {JobId} type '{Type}' vs alert '{AlertType}'", job.Id, job.EngagementType, alert.JobType);
                 return false;
+            }
         }
 
         // Filter by budget
-        if (alert.MinBudget.HasValue && (job.BudgetAmount ?? 0) < alert.MinBudget.Value) // ? Changed from Budget
+        if (alert.MinBudget.HasValue && (job.BudgetAmount ?? 0) < alert.MinBudget.Value)
+        {
+            _logger.LogInformation("∅ Budget mismatch: Job {JobId} amount {Amt} < min {Min}", job.Id, job.BudgetAmount, alert.MinBudget);
             return false;
+        }
 
-        if (alert.MaxBudget.HasValue && (job.BudgetAmount ?? 0) > alert.MaxBudget.Value) // ? Changed from Budget
+        if (alert.MaxBudget.HasValue && (job.BudgetAmount ?? 0) > alert.MaxBudget.Value)
+        {
+            _logger.LogInformation("∅ Budget mismatch: Job {JobId} amount {Amt} > max {Max}", job.Id, job.BudgetAmount, alert.MaxBudget);
             return false;
+        }
 
         // Filter by experience level (using Level from Job entity)
         if (!string.IsNullOrEmpty(alert.ExperienceLevel))
         {
-            if (job.Level != alert.ExperienceLevel) // ? Changed from ExperienceLevel
+            if (job.Level != alert.ExperienceLevel)
+            {
+                _logger.LogInformation("∅ Level mismatch: Job {JobId} level '{Level}' vs alert '{AlertLevel}'", job.Id, job.Level, alert.ExperienceLevel);
                 return false;
+            }
         }
 
         return true;

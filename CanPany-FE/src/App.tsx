@@ -16,6 +16,7 @@ import {
   RecommendedJobsPage, CandidateMessagesPage, CVEditorPage, GitHubAnalysisPage,
   ContractsPage
 } from '@/pages/candidate';
+import { useNotificationsSignalR } from '@/hooks/useNotificationsSignalR';
 import {
   AdminDashboardPage,
   AdminUsersPage,
@@ -124,11 +125,11 @@ function ProfileRedirect() {
   return <Navigate to={`/candidate/profile${search}`} replace />;
 }
 
-function App() {
+function AppContent() {
+  useNotificationsSignalR();
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
+    <BrowserRouter>
+      <Routes>
           {/* Public Routes with Layout */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
@@ -215,8 +216,7 @@ function App() {
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
+      </Routes>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -228,6 +228,14 @@ function App() {
           },
         }}
       />
+    </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
     </QueryClientProvider>
   );
 }

@@ -1,5 +1,6 @@
 using CanPany.Application.Services;
 using CanPany.Domain.Interfaces.Repositories;
+using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -10,12 +11,13 @@ namespace CanPany.Tests.ServiceTests;
 public class NotificationServiceTests
 {
     private readonly Mock<INotificationRepository> _repositoryMock = new();
+    private readonly Mock<IRealTimeNotificationService> _realTimeServiceMock = new();
     private readonly Mock<ILogger<NotificationService>> _loggerMock = new();
     private readonly NotificationService _service;
 
     public NotificationServiceTests()
     {
-        _service = new NotificationService(_repositoryMock.Object, _loggerMock.Object);
+        _service = new NotificationService(_repositoryMock.Object, _realTimeServiceMock.Object, _loggerMock.Object);
     }
 
     [Fact]
