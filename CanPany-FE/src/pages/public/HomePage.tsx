@@ -69,14 +69,7 @@ export function HomePage() {
         { name: t('home.categories.hr'), count: 980, icon: '👥', color: 'bg-cyan-50 text-cyan-600' },
     ];
 
-    const topCompanies = [
-        { name: 'FPT Software', logo: '🏢' },
-        { name: 'VNG Corporation', logo: '🎮' },
-        { name: 'Viettel', logo: '📱' },
-        { name: 'Vingroup', logo: '🏗️' },
-        { name: 'VNPAY', logo: '💳' },
-        { name: 'Momo', logo: '💜' },
-    ];
+
 
     return (
         <div>
@@ -182,22 +175,7 @@ export function HomePage() {
                 </div>
             </section>
 
-            {/* Top Companies */}
-            <section className="border-b border-gray-100 bg-gray-50 py-8">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-center gap-3 text-sm text-gray-500">
-                        <span>{t('home.trustedBy')}</span>
-                        <div className="flex gap-6">
-                            {topCompanies.map((company) => (
-                                <div key={company.name} className="flex items-center gap-2">
-                                    <span className="text-2xl">{company.logo}</span>
-                                    <span className="hidden font-medium text-gray-700 sm:inline">{company.name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </section>
+
 
             {/* Job Categories */}
             <section className="bg-white py-16">
@@ -219,7 +197,7 @@ export function HomePage() {
                         {categories.map((cat) => (
                             <Link
                                 key={cat.name}
-                                to={`/jobs?category=${encodeURIComponent(cat.name)}`}
+                                to={`/jobs?keyword=${encodeURIComponent(cat.name)}`}
                                 className="group flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-5 transition-all hover:border-[#00b14f]/30 hover:shadow-lg"
                             >
                                 <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${cat.color}`}>
