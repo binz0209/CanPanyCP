@@ -349,6 +349,7 @@
   },
   "notificationCenter": {
     "title": "Notifications",
+    "newNotification": "New Notification",
     "unreadCount": "unread notifications",
     "markAllRead": "Mark all as read",
     "filters": {
