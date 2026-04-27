@@ -3,6 +3,8 @@ using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Application.DTOs;
 using Microsoft.Extensions.Logging;
+// using Microsoft.AspNetCore.SignalR; // Moved to Infrastructure
+// using CanPany.Api.Hubs; // Removed dependency on Api from Application
 
 namespace CanPany.Application.Services;
 
@@ -12,13 +14,16 @@ namespace CanPany.Application.Services;
 public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _repo;
+    private readonly IRealTimeNotificationService _realTimeNotificationService;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         INotificationRepository repo,
+        IRealTimeNotificationService realTimeNotificationService,
         ILogger<NotificationService> logger)
     {
         _repo = repo;
+        _realTimeNotificationService = realTimeNotificationService;
         _logger = logger;
     }
 
@@ -113,7 +118,27 @@ public class NotificationService : INotificationService
 
             notification.CreatedAt = DateTime.UtcNow;
             notification.IsRead = false;
-            return await _repo.AddAsync(notification);
+            var created = await _repo.AddAsync(notification);
+
+            // Broadcast real-time notification
+            try
+            {
+                await _realTimeNotificationService.SendNotificationAsync(notification.UserId, new
+                {
+                    Id = created.Id,
+                    Type = created.Type,
+                    Title = created.Title,
+                    Content = created.Message,
+                    Timestamp = created.CreatedAt,
+                    IsRead = created.IsRead
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to broadcast notification to user {UserId} via SignalR", notification.UserId);
+            }
+
+            return created;
         }
         catch (Exception ex)
         {

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { JobAlertResponse, JobAlertCreateDto, JobAlertUpdateDto } from '../../../api/jobAlerts.api';
 import { Button } from '../../ui/Button';
+import { useQuery } from '@tanstack/react-query';
+import { catalogApi } from '../../../api/catalog.api';
 
 interface JobAlertFormProps {
     isOpen: boolean;
@@ -31,6 +33,8 @@ const emptyForm = {
     minBudget: '' as string | number,
     maxBudget: '' as string | number,
     experienceLevel: '',
+    skillIds: [] as string[],
+    categoryIds: [] as string[],
     frequency: 'Daily' as 'Immediate' | 'Daily' | 'Weekly',
     emailEnabled: true,
     inAppEnabled: true,
@@ -38,6 +42,18 @@ const emptyForm = {
 
 export function JobAlertForm({ isOpen, onClose, onSubmit, initialData, isSubmitting }: JobAlertFormProps) {
     const [form, setForm] = useState(emptyForm);
+
+    const { data: skills = [] } = useQuery({
+        queryKey: ['catalog', 'skills'],
+        queryFn: catalogApi.getSkills,
+        enabled: isOpen,
+    });
+
+    const { data: categories = [] } = useQuery({
+        queryKey: ['catalog', 'categories'],
+        queryFn: catalogApi.getCategories,
+        enabled: isOpen,
+    });
 
     useEffect(() => {
         if (initialData) {
@@ -48,6 +64,8 @@ export function JobAlertForm({ isOpen, onClose, onSubmit, initialData, isSubmitt
                 minBudget: initialData.minBudget ?? '',
                 maxBudget: initialData.maxBudget ?? '',
                 experienceLevel: initialData.experienceLevel ?? '',
+                skillIds: initialData.skillIds ?? [],
+                categoryIds: initialData.categoryIds ?? [],
                 frequency: (initialData.frequency as any) ?? 'Daily',
                 emailEnabled: initialData.emailEnabled,
                 inAppEnabled: initialData.inAppEnabled,
@@ -60,12 +78,14 @@ export function JobAlertForm({ isOpen, onClose, onSubmit, initialData, isSubmitt
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const dto: JobAlertCreateDto = {
-            title: form.title || undefined as any,
+            title: form.title || (undefined as any),
             location: form.location || undefined,
             jobType: (form.jobType || undefined) as any,
             minBudget: form.minBudget !== '' ? Number(form.minBudget) : undefined,
             maxBudget: form.maxBudget !== '' ? Number(form.maxBudget) : undefined,
             experienceLevel: form.experienceLevel || undefined,
+            skillIds: form.skillIds.length > 0 ? form.skillIds : undefined,
+            categoryIds: form.categoryIds.length > 0 ? form.categoryIds : undefined,
             frequency: form.frequency,
             emailEnabled: form.emailEnabled,
             inAppEnabled: form.inAppEnabled,
@@ -173,6 +193,94 @@ export function JobAlertForm({ isOpen, onClose, onSubmit, initialData, isSubmitt
                                 className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
                             />
                         </div>
+                    </div>
+
+                    {/* Category Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục nghề nghiệp</label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {form.categoryIds.map((id) => {
+                                const cat = categories.find((c) => c.id === id);
+                                return (
+                                    <span
+                                        key={id}
+                                        className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+                                    >
+                                        {cat?.name || id}
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm((p) => ({ ...p, categoryIds: p.categoryIds.filter((cid) => cid !== id) }))}
+                                            className="hover:text-blue-900"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                        <select
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                if (id && !form.categoryIds.includes(id)) {
+                                    setForm((p) => ({ ...p, categoryIds: [...p.categoryIds, id] }));
+                                }
+                                e.target.value = '';
+                            }}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
+                        >
+                            <option value="">Thêm danh mục...</option>
+                            {categories
+                                .filter((c) => !form.categoryIds.includes(c.id))
+                                .map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
+
+                    {/* Skill Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Kỹ năng</label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {form.skillIds.map((id) => {
+                                const skill = skills.find((s) => s.id === id);
+                                return (
+                                    <span
+                                        key={id}
+                                        className="inline-flex items-center gap-1 rounded-full bg-[#00b14f]/10 px-2.5 py-1 text-xs font-medium text-[#00b14f]"
+                                    >
+                                        {skill?.name || id}
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm((p) => ({ ...p, skillIds: p.skillIds.filter((sid) => sid !== id) }))}
+                                            className="hover:text-[#009940]"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                        <select
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                if (id && !form.skillIds.includes(id)) {
+                                    setForm((p) => ({ ...p, skillIds: [...p.skillIds, id] }));
+                                }
+                                e.target.value = '';
+                            }}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
+                        >
+                            <option value="">Thêm kỹ năng...</option>
+                            {skills
+                                .filter((s) => !form.skillIds.includes(s.id))
+                                .map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                        </select>
                     </div>
 
                     {/* Frequency */}

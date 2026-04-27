@@ -13,6 +13,8 @@ public class JobAlertServiceTests
     private readonly Mock<IJobAlertMatchRepository> _matchRepoMock = new();
     private readonly Mock<IJobRepository> _jobRepoMock = new();
     private readonly Mock<ICompanyRepository> _companyRepoMock = new();
+    private readonly Mock<ISkillRepository> _skillRepoMock = new();
+    private readonly Mock<ICategoryRepository> _categoryRepoMock = new();
     private readonly Mock<ILogger<JobAlertService>> _loggerMock = new();
     private readonly JobAlertService _service;
 
@@ -23,6 +25,8 @@ public class JobAlertServiceTests
             _matchRepoMock.Object,
             _jobRepoMock.Object,
             _companyRepoMock.Object,
+            _skillRepoMock.Object,
+            _categoryRepoMock.Object,
             _loggerMock.Object);
     }
 
