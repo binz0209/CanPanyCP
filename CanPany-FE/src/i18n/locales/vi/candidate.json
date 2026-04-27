@@ -393,6 +393,7 @@
   },
   "notificationCenter": {
     "title": "Thông báo",
+    "newNotification": "Thông báo mới",
     "unreadCount": "thông báo chưa đọc",
     "markAllRead": "Đánh dấu tất cả đã đọc",
     "filters": {
