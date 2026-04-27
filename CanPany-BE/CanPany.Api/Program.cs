@@ -315,6 +315,7 @@ builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 builder.Services.AddScoped<IAIChatService, AIChatService>();
 builder.Services.AddScoped<ICandidateSearchService, CandidateSearchService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IRealTimeNotificationService, CanPany.Api.Services.RealTimeNotificationService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
@@ -456,6 +457,7 @@ app.MapControllers();
 
 // Map SignalR hub for real-time messaging
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Log server information before running
 Log.Information("═══════════════════════════════════════════════════════════");

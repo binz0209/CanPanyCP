@@ -71,11 +71,18 @@ public class JobAlertProcessor
 
             foreach (var alert in alertsList)
             {
+                _logger.LogInformation("🔍 Checking alert '{AlertTitle}' ({AlertId}) for user {UserId}", alert.Title, alert.Id, alert.UserId);
+                
                 var matches = await _jobAlertService.FindMatchingJobsAsync(alert, new[] { job });
                 
                 if (matches.Any())
                 {
+                    _logger.LogInformation("🎯 Alert '{AlertTitle}' matched job {JobId}!", alert.Title, jobId);
                     await ProcessMatchAsync(alert, job);
+                }
+                else
+                {
+                    _logger.LogInformation("∅ Alert '{AlertTitle}' did not match job {JobId}", alert.Title, jobId);
                 }
             }
 
@@ -264,8 +271,9 @@ public class JobAlertProcessor
                 {
                     UserId = alert.UserId,
                     Type = "JobMatch",
-                    Title = _i18nService.GetDisplayMessage("Display.Notification.JobMatch.Title"),
-                    Message = _i18nService.GetDisplayMessage("Display.Notification.JobMatch.Message", alert.Title ?? "", job.Title),
+                    Title = _i18nService.GetDisplayMessage("Display.Notification.JobMatch.Title") ?? "New Job Match!",
+                    Message = _i18nService.GetDisplayMessage("Display.Notification.JobMatch.Message", alert.Title ?? "", job.Title) 
+                              ?? $"Job '{job.Title}' matches your alert '{alert.Title}'",
                     Payload = System.Text.Json.JsonSerializer.Serialize(new { jobId = job.Id, alertId = alert.Id }),
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -275,9 +283,14 @@ public class JobAlertProcessor
                 match.NotificationSent = true;
 
                 _logger.LogInformation(
-                    "Sent in-app notification for job match. User: {UserId}, Job: {JobId}", 
+                    "✓ Sent in-app notification for job match. User: {UserId}, Job: {JobId}, Title: {Title}", 
                     alert.UserId, 
-                    job.Id);
+                    job.Id,
+                    notification.Title);
+            }
+            else
+            {
+                _logger.LogInformation("ℹ In-app notification skipped (disabled in alert settings). User: {UserId}, Alert: {AlertId}", alert.UserId, alert.Id);
             }
 
             // Send email notification if enabled
