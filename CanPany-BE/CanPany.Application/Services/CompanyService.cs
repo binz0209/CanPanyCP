@@ -13,15 +13,18 @@ public class CompanyService : ICompanyService
     private readonly ICompanyRepository _repo;
     private readonly ILogger<CompanyService> _logger;
     private readonly ICloudinaryService _cloudinaryService;
+    private readonly ICascadeDeleteService _cascadeDeleteService;
 
     public CompanyService(
         ICompanyRepository repo,
         ILogger<CompanyService> logger,
-        ICloudinaryService cloudinaryService)
+        ICloudinaryService cloudinaryService,
+        ICascadeDeleteService cascadeDeleteService)
     {
         _repo = repo;
         _logger = logger;
         _cloudinaryService = cloudinaryService;
+        _cascadeDeleteService = cascadeDeleteService;
     }
 
     public async Task<Company?> GetByIdAsync(string id)
@@ -115,12 +118,21 @@ public class CompanyService : ICompanyService
                 throw new ArgumentException("Company ID cannot be null or empty", nameof(id));
 
             var company = await _repo.GetByIdAsync(id);
-            if (company != null && !string.IsNullOrWhiteSpace(company.CloudinaryPublicId))
+            if (company == null)
+                return false;
+
+            // 1. Cascade delete all related data (jobs, applications, reviews, etc.)
+            await _cascadeDeleteService.CascadeDeleteCompanyDataAsync(id);
+
+            // 2. Delete company logo from Cloudinary
+            if (!string.IsNullOrWhiteSpace(company.CloudinaryPublicId))
             {
                 await _cloudinaryService.DeleteAsync(company.CloudinaryPublicId, "image");
             }
 
+            // 3. Delete company document
             await _repo.DeleteAsync(id);
+            _logger.LogInformation("Company {CompanyId} and all related data deleted successfully", id);
             return true;
         }
         catch (Exception ex)

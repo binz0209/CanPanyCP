@@ -18,6 +18,7 @@ public class UserServiceTests
     private readonly Mock<ICompanyService> _companyServiceMock = new();
     private readonly Mock<IBackgroundEmailService> _backgroundEmailServiceMock = new();
     private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
+    private readonly Mock<ICascadeDeleteService> _cascadeDeleteServiceMock = new();
     private readonly Mock<ILogger<UserService>> _loggerMock = new();
     private readonly UserService _userService;
 
@@ -31,6 +32,7 @@ public class UserServiceTests
             _companyServiceMock.Object,
             _backgroundEmailServiceMock.Object,
             _cloudinaryServiceMock.Object,
+            _cascadeDeleteServiceMock.Object,
             _loggerMock.Object);
     }
 

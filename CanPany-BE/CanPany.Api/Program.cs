@@ -331,6 +331,7 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddServiceWithInterceptor<IEmailService, EmailService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<ICascadeDeleteService, CanPany.Infrastructure.Services.CascadeDeleteService>();
 
 // Register Reset Code Store as Singleton (to persist codes across requests)
 builder.Services.AddSingleton<IResetCodeStore, InMemoryResetCodeStore>();
