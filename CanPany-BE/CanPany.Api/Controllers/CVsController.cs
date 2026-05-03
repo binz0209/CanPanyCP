@@ -350,17 +350,14 @@ public class CVsController : ControllerBase
                 return Unauthorized();
 
             bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
-            var user = await _userRepo.GetByIdAsync(userId);
             if (!hasPremium)
             {
-                if (user != null && user.AiCvGenerationCount >= 2)
+                // Atomic increment: prevents race condition where 2 concurrent requests
+                // both read count=1 and both pass the check.
+                var newCount = await _userRepo.IncrementAiCvGenerationCountAsync(userId);
+                if (newCount > 2)
                 {
                     return BadRequest(ApiResponse.CreateError("You have used up all your free CV creation attempts. Please upgrade to Premium to continue.", "PremiumRequired"));
-                }
-                if (user != null)
-                {
-                    user.AiCvGenerationCount += 1;
-                    await _userRepo.UpdateAsync(user);
                 }
             }
 

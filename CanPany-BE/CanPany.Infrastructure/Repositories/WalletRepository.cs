@@ -79,6 +79,36 @@ public class WalletRepository : IWalletRepository
             throw;
         }
     }
+
+    public async Task<Wallet?> AtomicChangeBalanceAsync(string userId, long delta)
+    {
+        try
+        {
+            var filter = Builders<Wallet>.Filter.Eq(w => w.UserId, userId);
+
+            // For deductions, add a guard to prevent negative balance
+            if (delta < 0)
+            {
+                filter &= Builders<Wallet>.Filter.Gte(w => w.Balance, -delta);
+            }
+
+            var update = Builders<Wallet>.Update
+                .Inc(w => w.Balance, delta)
+                .Set(w => w.UpdatedAt, DateTime.UtcNow);
+
+            var options = new FindOneAndUpdateOptions<Wallet>
+            {
+                ReturnDocument = ReturnDocument.After
+            };
+
+            return await _collection.FindOneAndUpdateAsync(filter, update, options);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error atomically changing balance for user {UserId} by {Delta}", userId, delta);
+            throw;
+        }
+    }
 }
 
 

@@ -21,6 +21,7 @@ public class JobsControllerTests
     private readonly Mock<IJobMatchingService> _jobMatchingServiceMock = new();
     private readonly Mock<IHybridRecommendationService> _recommendationServiceMock = new();
     private readonly Mock<IInteractionTrackingService> _interactionServiceMock = new();
+    private readonly Mock<ICompanyService> _companyServiceMock = new();
     private readonly Mock<IJobProducer> _jobProducerMock = new();
     private readonly Mock<IJobProgressTracker> _progressTrackerMock = new();
     private readonly Mock<II18nService> _i18nServiceMock = new();
@@ -36,6 +37,7 @@ public class JobsControllerTests
             _jobMatchingServiceMock.Object,
             _recommendationServiceMock.Object,
             _interactionServiceMock.Object,
+            _companyServiceMock.Object,
             _jobProducerMock.Object,
             _progressTrackerMock.Object,
             _i18nServiceMock.Object,
