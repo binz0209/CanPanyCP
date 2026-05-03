@@ -73,26 +73,13 @@ export function RegisterPage() {
                 role: data.role,
             });
             setAuth(response.user, response.accessToken);
-            toast.success(t('register.success'));
-
-            // Ask browser to save credentials (SPA doesn't trigger this automatically)
-            if (window.PasswordCredential) {
-                try {
-                    const cred = new window.PasswordCredential({
-                        id: data.email,
-                        password: data.password,
-                    });
-                    await navigator.credentials.store(cred);
-                } catch {
-                    // Silently ignore if credential storage fails
-                }
-            }
 
             const redirectPath = data.role === 'Candidate'
                 ? '/candidate/dashboard'
                 : '/company/dashboard';
 
-            navigate(redirectPath, { replace: true });
+            // Use full page navigation so the browser detects registration and offers to save password
+            window.location.href = redirectPath;
         } catch (error: any) {
             toast.error(error.response?.data?.message || t('register.failed'));
         } finally {

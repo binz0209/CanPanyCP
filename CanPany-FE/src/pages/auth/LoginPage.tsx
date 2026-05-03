@@ -67,20 +67,6 @@ export function LoginPage() {
             const response = await authApi.login(data);
             localStorage.removeItem('loginError'); // Clear any previous error
             setAuth(response.user, response.accessToken);
-            toast.success(t('login.success'));
-
-            // Ask browser to save credentials (SPA doesn't trigger this automatically)
-            if (window.PasswordCredential) {
-                try {
-                    const cred = new window.PasswordCredential({
-                        id: data.email,
-                        password: data.password,
-                    });
-                    await navigator.credentials.store(cred);
-                } catch {
-                    // Silently ignore if credential storage fails
-                }
-            }
 
             const redirectPath = response.user.role === 'Candidate'
                 ? '/candidate/dashboard'
@@ -91,11 +77,11 @@ export function LoginPage() {
                         : from;
 
             setIsLoading(false);
-            navigate(redirectPath, { replace: true });
+            // Use full page navigation so the browser detects login and offers to save password
+            window.location.href = redirectPath;
         } catch (error: any) {
             setIsLoading(false);
-            localStorage.setItem('loginError', error.response?.data?.message || t('login.failed'));
-            // Toast will be shown on next mount due to page refresh
+            toast.error(error.response?.data?.message || t('login.failed'));
         }
     };
 
