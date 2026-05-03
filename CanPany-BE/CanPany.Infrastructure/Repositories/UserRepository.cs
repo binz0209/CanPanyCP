@@ -119,5 +119,26 @@ public class UserRepository : IUserRepository
             throw;
         }
     }
+
+    public async Task<int> IncrementAiCvGenerationCountAsync(string userId)
+    {
+        try
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+            var update = Builders<User>.Update.Inc(u => u.AiCvGenerationCount, 1);
+            var options = new FindOneAndUpdateOptions<User>
+            {
+                ReturnDocument = ReturnDocument.After
+            };
+
+            var updatedUser = await _collection.FindOneAndUpdateAsync(filter, update, options);
+            return updatedUser?.AiCvGenerationCount ?? -1;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error incrementing AiCvGenerationCount for user {UserId}", userId);
+            throw;
+        }
+    }
 }
 

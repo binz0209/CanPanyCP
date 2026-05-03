@@ -131,11 +131,13 @@ public class HybridRecommendationService : IHybridRecommendationService
             }
 
             var aggregatedSkills = allSkills.ToList();
+            var profileCount = profile.SkillIds?.Count ?? 0;
+            var gitHubCount = aggregatedSkills.Count - profileCount; // approximate: total minus profile-sourced
             _logger.LogInformation(
-                "User {UserId} aggregated skills: Profile={ProfileCount}, CV={CvCount}, GitHub={GitHubCount}, Total={TotalCount}",
+                "User {UserId} aggregated skills: Profile={ProfileCount}, CV+GitHub={CvGitHubCount}, Total={TotalCount}",
                 userId,
-                profile.SkillIds?.Count ?? 0,
-                aggregatedSkills.Count - (profile.SkillIds?.Count ?? 0),
+                profileCount,
+                gitHubCount,
                 aggregatedSkills.Count);
 
             // 2. Get all open jobs

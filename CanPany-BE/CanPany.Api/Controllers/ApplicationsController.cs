@@ -20,19 +20,51 @@ public class ApplicationsController : ControllerBase
 {
     private readonly IApplicationService _applicationService;
     private readonly IJobService _jobService;
+    private readonly ICompanyService _companyService;
     private readonly II18nService _i18nService;
     private readonly ILogger<ApplicationsController> _logger;
+
+    // Valid status transitions: from -> allowed to
+    private static readonly Dictionary<string, HashSet<string>> ValidTransitions = new()
+    {
+        ["Pending"]     = new() { "Shortlisted", "Accepted", "Rejected", "Withdrawn" },
+        ["Shortlisted"] = new() { "Accepted", "Rejected", "Withdrawn" },
+        ["Accepted"]    = new(),  // terminal
+        ["Rejected"]    = new(),  // terminal
+        ["Withdrawn"]   = new(),  // terminal
+    };
 
     public ApplicationsController(
         IApplicationService applicationService,
         IJobService jobService,
+        ICompanyService companyService,
         II18nService i18nService,
         ILogger<ApplicationsController> logger)
     {
         _applicationService = applicationService;
         _jobService = jobService;
+        _companyService = companyService;
         _i18nService = i18nService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Check if a status transition is valid.
+    /// </summary>
+    private static bool IsValidTransition(string currentStatus, string newStatus)
+    {
+        return ValidTransitions.TryGetValue(currentStatus, out var allowed) && allowed.Contains(newStatus);
+    }
+
+    /// <summary>
+    /// Check if the current Company user owns the job that the application belongs to.
+    /// </summary>
+    private async Task<bool> IsCompanyOwnerOfApplicationAsync(string userId, DomainApplication application)
+    {
+        var company = await _companyService.GetByUserIdAsync(userId);
+        if (company == null) return false;
+        var job = await _jobService.GetByIdAsync(application.JobId);
+        return job != null && job.CompanyId == company.Id;
     }
 
     /// <summary>
@@ -124,13 +156,25 @@ public class ApplicationsController : ControllerBase
     {
         try
         {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
                 return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
+            // Ownership check: only the candidate who applied can withdraw
+            if (application.CandidateId != userId)
+                return Forbid();
+
+            // State machine check
+            if (!IsValidTransition(application.Status, "Withdrawn"))
+                return BadRequest(ApiResponse.CreateError($"Cannot withdraw an application with status '{application.Status}'.", "InvalidStatusTransition"));
+
             application.Status = "Withdrawn";
             await _applicationService.UpdateAsync(id, application);
-            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
+            return Ok(ApiResponse.CreateSuccess("Application withdrawn successfully."));
         }
         catch (Exception ex)
         {
@@ -189,13 +233,26 @@ public class ApplicationsController : ControllerBase
     {
         try
         {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
                 return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
+            // Ownership check: company must own the job
+            var userRole = User.FindFirst("role")?.Value;
+            if (userRole != "Admin" && !await IsCompanyOwnerOfApplicationAsync(userId, application))
+                return Forbid();
+
+            // State machine check
+            if (!IsValidTransition(application.Status, "Accepted"))
+                return BadRequest(ApiResponse.CreateError($"Cannot accept an application with status '{application.Status}'.", "InvalidStatusTransition"));
+
             application.Status = "Accepted";
             await _applicationService.UpdateAsync(id, application);
-            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
+            return Ok(ApiResponse.CreateSuccess("Application accepted successfully."));
         }
         catch (Exception ex)
         {
@@ -213,14 +270,27 @@ public class ApplicationsController : ControllerBase
     {
         try
         {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
             var application = await _applicationService.GetByIdAsync(id);
             if (application == null)
                 return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.NotFound), "NotFound"));
 
+            // Ownership check: company must own the job
+            var userRole = User.FindFirst("role")?.Value;
+            if (userRole != "Admin" && !await IsCompanyOwnerOfApplicationAsync(userId, application))
+                return Forbid();
+
+            // State machine check
+            if (!IsValidTransition(application.Status, "Rejected"))
+                return BadRequest(ApiResponse.CreateError($"Cannot reject an application with status '{application.Status}'.", "InvalidStatusTransition"));
+
             application.Status = "Rejected";
             application.RejectedReason = request.Reason;
             await _applicationService.UpdateAsync(id, application);
-            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
+            return Ok(ApiResponse.CreateSuccess("Application rejected successfully."));
         }
         catch (Exception ex)
         {
@@ -257,7 +327,7 @@ public class ApplicationsController : ControllerBase
             if (!updated)
                 return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.UpdateFailed), "AddNoteFailed"));
 
-            return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Application.Retrieved)));
+            return Ok(ApiResponse.CreateSuccess("Note added successfully."));
         }
         catch (Exception ex)
         {

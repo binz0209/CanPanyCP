@@ -263,7 +263,7 @@ public class CompaniesController : ControllerBase
                 Phone = request.Phone,
                 Address = request.Address,
                 IsVerified = false,
-                VerificationStatus = "Pending"
+                VerificationStatus = "Unverified"
             };
 
             var createdCompany = await _companyService.CreateAsync(company);
@@ -664,7 +664,8 @@ public class CompaniesController : ControllerBase
     }
 
     /// <summary>
-    /// Add a private note to a company profile (Admin only)
+    /// Add a private note to a company profile (Admin only).
+    /// Stores notes in the AdminNotes field, NOT in the public Description.
     /// </summary>
     [HttpPost("{id}/note")]
     [Authorize(Roles = "Admin")]
@@ -676,10 +677,8 @@ public class CompaniesController : ControllerBase
             if (company == null)
                 return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.NotFound), "NotFound"));
 
-            // Simple implementation: just append to description for now 
-            // In a real app, you'd have a separate Notes collection
-            var notePrefix = $"\n\n[Admin Note - {DateTime.UtcNow:yyyy-MM-dd}]: ";
-            company.Description = (company.Description ?? "") + notePrefix + request.Note;
+            var notePrefix = $"\n[Admin - {DateTime.UtcNow:yyyy-MM-dd HH:mm}]: ";
+            company.AdminNotes = (company.AdminNotes ?? "") + notePrefix + request.Note;
             
             await _companyService.UpdateAsync(id, company);
             return Ok(ApiResponse.CreateSuccess(_i18nService.GetDisplayMessage(I18nKeys.Success.Profile.Updated)));
@@ -691,38 +690,6 @@ public class CompaniesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Trigger AI analysis for a company profile (Admin or Company Owner)
-    /// </summary>
-    [HttpPost("{id}/analyze")]
-    [Authorize]
-    public async Task<IActionResult> AnalyzeCompany(string id)
-    {
-        try
-        {
-            var userId = User.FindFirst("sub")?.Value;
-            var userRole = User.FindFirst("role")?.Value;
-            
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var company = await _companyService.GetByIdAsync(id);
-            if (company == null)
-                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Company.NotFound), "NotFound"));
-
-            if (userRole != "Admin" && company.UserId != userId)
-                return Forbid();
-
-            // Note: Actual AI analysis would be done via a background job similar to GitHub sync.
-            // For now, returning accepted status.
-            return Accepted(ApiResponse.CreateSuccess(new { JobId = Guid.NewGuid().ToString() }, _i18nService.GetDisplayMessage(I18nKeys.Success.Profile.Updated)));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error analyzing company {CompanyId}", id);
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "AnalyzeCompanyFailed"));
-        }
-    }
 
     /// <summary>
     /// Get recommended companies for the current user

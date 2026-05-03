@@ -40,7 +40,7 @@ public class Company : AggregateRoot
     public bool IsVerified { get; set; } = false;
 
     [BsonElement("verificationStatus")]
-    public string VerificationStatus { get; set; } = "Pending"; // Pending, Approved, Rejected
+    public string VerificationStatus { get; set; } = "Unverified"; // Unverified, Pending, Approved, Rejected
 
     [BsonElement("verificationDocuments")]
     public List<string> VerificationDocuments { get; set; } = new(); // URLs to documents
@@ -50,6 +50,12 @@ public class Company : AggregateRoot
 
     [BsonElement("verifiedAt")]
     public DateTime? VerifiedAt { get; set; }
+
+    /// <summary>
+    /// Private admin-only notes. Not visible to company users.
+    /// </summary>
+    [BsonElement("adminNotes")]
+    public string? AdminNotes { get; set; }
 
     [BsonElement("createdAt")]
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;

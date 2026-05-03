@@ -16,5 +16,12 @@ public interface IUserRepository
     Task DeleteAsync(string id);
     Task<bool> ExistsAsync(string id);
     Task<bool> EmailExistsAsync(string email);
+
+    /// <summary>
+    /// Atomically increment AiCvGenerationCount and return the NEW count.
+    /// Uses MongoDB $inc to avoid race conditions.
+    /// Returns -1 if user not found.
+    /// </summary>
+    Task<int> IncrementAiCvGenerationCountAsync(string userId);
 }
 

@@ -136,13 +136,20 @@ public class ApplicationService : IApplicationService
                             job.Title, 
                             application.Status);
 
-                        // 2. Send In-App Notification
+                        // 2. Send In-App Notification (use i18n-compatible structure)
+                        var statusKey = application.Status == "Accepted" ? "accepted" : "rejected";
                         var notification = new Notification
                         {
                             UserId = application.CandidateId,
                             Type = "ApplicationUpdate",
-                            Title = "Application Status Update",
-                            Message = $"Your application for {job.Title} has been {application.Status}.",
+                            Title = $"notifications.application.{statusKey}.title",
+                            Message = $"notifications.application.{statusKey}.message",
+                            Payload = System.Text.Json.JsonSerializer.Serialize(new 
+                            { 
+                                JobTitle = job.Title, 
+                                Status = application.Status,
+                                ApplicationId = id
+                            }),
                             CreatedAt = DateTime.UtcNow,
                             IsRead = false
                         };
