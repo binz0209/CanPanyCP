@@ -18,6 +18,7 @@ public class UserService : IUserService
     private readonly ICompanyService _companyService;
     private readonly IBackgroundEmailService _backgroundEmailService;
     private readonly ICloudinaryService _cloudinaryService;
+    private readonly ICascadeDeleteService _cascadeDeleteService;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -28,6 +29,7 @@ public class UserService : IUserService
         ICompanyService companyService,
         IBackgroundEmailService backgroundEmailService,
         ICloudinaryService cloudinaryService,
+        ICascadeDeleteService cascadeDeleteService,
         ILogger<UserService> logger)
     {
         _repo = repo;
@@ -37,6 +39,7 @@ public class UserService : IUserService
         _companyService = companyService;
         _backgroundEmailService = backgroundEmailService;
         _cloudinaryService = cloudinaryService;
+        _cascadeDeleteService = cascadeDeleteService;
         _logger = logger;
     }
 
@@ -271,12 +274,31 @@ public class UserService : IUserService
                 throw new ArgumentException("User ID cannot be null or empty", nameof(id));
 
             var user = await _repo.GetByIdAsync(id);
-            if (user != null && !string.IsNullOrWhiteSpace(user.CloudinaryPublicId))
+            if (user == null)
+                return false;
+
+            // 1. If user is a Company, cascade delete the company and its data
+            if (user.Role == "Company")
+            {
+                var company = await _companyService.GetByUserIdAsync(id);
+                if (company != null)
+                {
+                    await _companyService.DeleteAsync(company.Id);
+                }
+            }
+
+            // 2. Cascade delete all user-related data
+            await _cascadeDeleteService.CascadeDeleteUserDataAsync(id);
+
+            // 3. Delete avatar from Cloudinary
+            if (!string.IsNullOrWhiteSpace(user.CloudinaryPublicId))
             {
                 await _cloudinaryService.DeleteAsync(user.CloudinaryPublicId, "image");
             }
 
+            // 4. Delete user document
             await _repo.DeleteAsync(id);
+            _logger.LogInformation("User {UserId} and all related data deleted successfully", id);
             return true;
         }
         catch (Exception ex)

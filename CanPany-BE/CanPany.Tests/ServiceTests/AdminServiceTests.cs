@@ -15,6 +15,7 @@ public class AdminServiceTests
     private readonly Mock<IPaymentRepository> _paymentRepositoryMock = new();
     private readonly Mock<INotificationRepository> _notificationRepositoryMock = new();
     private readonly Mock<IAuditLogRepository> _auditLogRepositoryMock = new();
+    private readonly Mock<ICascadeDeleteService> _cascadeDeleteServiceMock = new();
     private readonly Mock<ILogger<AdminService>> _loggerMock = new();
     private readonly AdminService _service;
 
@@ -27,7 +28,8 @@ public class AdminServiceTests
             _paymentRepositoryMock.Object,
             _notificationRepositoryMock.Object,
             _auditLogRepositoryMock.Object,
-            _loggerMock.Object);
+            _loggerMock.Object,
+            _cascadeDeleteServiceMock.Object);
     }
 
     [Fact]

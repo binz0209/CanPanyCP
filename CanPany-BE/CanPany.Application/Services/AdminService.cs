@@ -16,7 +16,8 @@ public class AdminService : IAdminService
     private readonly IPaymentRepository _paymentRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly IAuditLogRepository _auditLogRepo;
-    private readonly IEmailService? _emailService;  // Add this
+    private readonly IEmailService? _emailService;
+    private readonly ICascadeDeleteService _cascadeDeleteService;
     private readonly ILogger<AdminService> _logger;
 
     public AdminService(
@@ -27,7 +28,8 @@ public class AdminService : IAdminService
         INotificationRepository notificationRepo,
         IAuditLogRepository auditLogRepo,
         ILogger<AdminService> logger,
-        IEmailService? emailService = null)  // Add this parameter as optional
+        ICascadeDeleteService cascadeDeleteService,
+        IEmailService? emailService = null)
     {
         _userRepo = userRepo;
         _companyRepo = companyRepo;
@@ -36,7 +38,8 @@ public class AdminService : IAdminService
         _notificationRepo = notificationRepo;
         _auditLogRepo = auditLogRepo;
         _logger = logger;
-        _emailService = emailService;  // Add this
+        _cascadeDeleteService = cascadeDeleteService;
+        _emailService = emailService;
     }
 
     public async Task<bool> BanUserAsync(string userId)
@@ -343,16 +346,31 @@ public class AdminService : IAdminService
         }
     }
 
-    /// <summary>DELETE /admin/users/{id}</summary>
+    /// <summary>DELETE /admin/users/{id} — cascade deletes all related data</summary>
     public async Task<bool> DeleteUserAsync(string userId)
     {
         try
         {
-            var exists = await _userRepo.ExistsAsync(userId);
-            if (!exists) return false;
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null) return false;
 
+            // 1. If user is Company, cascade delete company + its jobs/applications
+            if (user.Role == "Company")
+            {
+                var company = await _companyRepo.GetByUserIdAsync(userId);
+                if (company != null)
+                {
+                    await _cascadeDeleteService.CascadeDeleteCompanyDataAsync(company.Id);
+                    await _companyRepo.DeleteAsync(company.Id);
+                }
+            }
+
+            // 2. Cascade delete all user-level data
+            await _cascadeDeleteService.CascadeDeleteUserDataAsync(userId);
+
+            // 3. Delete user document
             await _userRepo.DeleteAsync(userId);
-            _logger.LogInformation("Admin permanently deleted user {UserId}", userId);
+            _logger.LogInformation("Admin permanently deleted user {UserId} and all related data", userId);
             return true;
         }
         catch (Exception ex)
