@@ -75,6 +75,19 @@ export function RegisterPage() {
             setAuth(response.user, response.accessToken);
             toast.success(t('register.success'));
 
+            // Ask browser to save credentials (SPA doesn't trigger this automatically)
+            if (window.PasswordCredential) {
+                try {
+                    const cred = new window.PasswordCredential({
+                        id: data.email,
+                        password: data.password,
+                    });
+                    await navigator.credentials.store(cred);
+                } catch {
+                    // Silently ignore if credential storage fails
+                }
+            }
+
             const redirectPath = data.role === 'Candidate'
                 ? '/candidate/dashboard'
                 : '/company/dashboard';
