@@ -38,6 +38,45 @@ const benefitsKey = [
     'register.benefit3',
     'register.benefit4',
 ];
+/**
+ * Trigger browser's "Save password?" prompt by submitting a real hidden form.
+ */
+function triggerBrowserPasswordSave(email: string, password: string, redirectPath: string) {
+    const iframe = document.createElement('iframe');
+    iframe.name = 'password-save-frame';
+    iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;opacity:0;pointer-events:none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = redirectPath;
+    form.target = 'password-save-frame';
+    form.style.cssText = 'position:absolute;width:0;height:0;opacity:0';
+
+    const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.name = 'email';
+    emailInput.autocomplete = 'username';
+    emailInput.value = email;
+
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.name = 'password';
+    passwordInput.autocomplete = 'new-password';
+    passwordInput.value = password;
+
+    form.appendChild(emailInput);
+    form.appendChild(passwordInput);
+    document.body.appendChild(form);
+
+    form.submit();
+
+    setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+        window.location.href = redirectPath;
+    }, 100);
+}
 
 export function RegisterPage() {
     const { t } = useTranslation('auth');
@@ -78,8 +117,8 @@ export function RegisterPage() {
                 ? '/candidate/dashboard'
                 : '/company/dashboard';
 
-            // Use full page navigation so the browser detects registration and offers to save password
-            window.location.href = redirectPath;
+            // Submit a real hidden form so the browser detects registration and offers to save password
+            triggerBrowserPasswordSave(data.email, data.password, redirectPath);
         } catch (error: any) {
             toast.error(error.response?.data?.message || t('register.failed'));
         } finally {
