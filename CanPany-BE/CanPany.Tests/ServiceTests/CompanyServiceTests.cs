@@ -13,11 +13,12 @@ public class CompanyServiceTests
     private readonly Mock<ICompanyRepository> _repoMock = new();
     private readonly Mock<ILogger<CompanyService>> _loggerMock = new();
     private readonly Mock<ICloudinaryService> _cloudinaryServiceMock = new();
+    private readonly Mock<ICascadeDeleteService> _cascadeDeleteServiceMock = new();
     private readonly CompanyService _service;
 
     public CompanyServiceTests()
     {
-        _service = new CompanyService(_repoMock.Object, _loggerMock.Object, _cloudinaryServiceMock.Object);
+        _service = new CompanyService(_repoMock.Object, _loggerMock.Object, _cloudinaryServiceMock.Object, _cascadeDeleteServiceMock.Object);
     }
 
     [Fact]
