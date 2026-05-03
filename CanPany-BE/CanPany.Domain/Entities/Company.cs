@@ -7,6 +7,7 @@ namespace CanPany.Domain.Entities;
 /// <summary>
 /// Company entity - Aggregate Root
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Company : AggregateRoot
 {
     [BsonId, BsonRepresentation(BsonType.ObjectId)]
