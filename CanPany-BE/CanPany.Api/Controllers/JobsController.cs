@@ -28,6 +28,7 @@ public class JobsController : ControllerBase
     private readonly IJobMatchingService _jobMatchingService;
     private readonly IHybridRecommendationService _recommendationService;
     private readonly IInteractionTrackingService _interactionService;
+    private readonly ICompanyService _companyService;
     private readonly IJobProducer _jobProducer;
     private readonly IJobProgressTracker _progressTracker;
     private readonly II18nService _i18nService;
@@ -40,6 +41,7 @@ public class JobsController : ControllerBase
         IJobMatchingService jobMatchingService,
         IHybridRecommendationService recommendationService,
         IInteractionTrackingService interactionService,
+        ICompanyService companyService,
         IJobProducer jobProducer,
         IJobProgressTracker progressTracker,
         II18nService i18nService,
@@ -51,6 +53,7 @@ public class JobsController : ControllerBase
         _jobMatchingService = jobMatchingService;
         _recommendationService = recommendationService;
         _interactionService = interactionService;
+        _companyService = companyService;
         _jobProducer = jobProducer;
         _progressTracker = progressTracker;
         _i18nService = i18nService;
@@ -313,13 +316,20 @@ public class JobsController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
+            // Ownership check: verify CompanyId belongs to the current user
+            var company = await _companyService.GetByUserIdAsync(userId);
+            if (company == null || company.Id != request.CompanyId)
+                return Forbid();
+
             bool hasPremium = await _userPremiumService.CheckUserPremiumAsync(userId);
             if (!hasPremium)
             {
                 var currentJobs = await _jobService.GetByCompanyIdAsync(request.CompanyId);
-                if (currentJobs.Count() >= 5)
+                // Only count Open jobs toward the free limit
+                var activeJobCount = currentJobs.Count(j => j.Status == "Open");
+                if (activeJobCount >= 5)
                 {
-                    return BadRequest(ApiResponse.CreateError("You have used up your free job postings (maximum 5). Please upgrade to Premium to continue.", "PremiumRequired"));
+                    return BadRequest(ApiResponse.CreateError("You have reached the maximum of 5 active job postings. Please close existing jobs or upgrade to Premium to continue.", "PremiumRequired"));
                 }
             }
 
@@ -341,11 +351,9 @@ public class JobsController : ControllerBase
             };
 
             var created = await _jobService.CreateAsync(job);
-            
-            // ? ADD THIS: Trigger immediate job alert matching
-            _jobMatchingService.TriggerJobAlertMatching(created.Id);
-            
-            _logger.LogInformation("Job created successfully: {JobId}. Job alert matching triggered.", created.Id);
+            // Note: JobService.CreateAsync already triggers TriggerJobAlertMatching
+
+            _logger.LogInformation("Job created successfully: {JobId}.", created.Id);
             
             var successMsg = _i18nService.GetDisplayMessage(I18nKeys.Success.Job.Create);
             return Ok(ApiResponse<Job>.CreateSuccess(created, successMsg));

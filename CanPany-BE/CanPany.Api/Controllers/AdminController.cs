@@ -749,47 +749,6 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// UC-47: Get all premium packages
-    /// GET /admin/premium-packages
-    /// </summary>
-    [HttpGet("premium-packages")]
-    public async Task<IActionResult> GetPremiumPackages()
-    {
-        try
-        {
-            var packages = await _premiumPackageService.GetAllAsync();
-            return Ok(ApiResponse<IEnumerable<PremiumPackage>>.CreateSuccess(packages));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting premium packages");
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPackagesFailed"));
-        }
-    }
-
-    /// <summary>
-    /// UC-47: Get single premium package detail
-    /// GET /admin/premium-packages/{id}
-    /// </summary>
-    [HttpGet("premium-packages/{id}")]
-    public async Task<IActionResult> GetPremiumPackageById(string id)
-    {
-        try
-        {
-            var package = await _premiumPackageService.GetByIdAsync(id);
-            if (package == null)
-                return NotFound(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Package.NotFound), "NotFound"));
-
-            return Ok(ApiResponse<PremiumPackage>.CreateSuccess(package));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting package: {PackageId}", id);
-            return StatusCode(500, ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.InternalServerError), "GetPackageFailed"));
-        }
-    }
-
-    /// <summary>
     /// UC-47: Create premium package
     /// POST /admin/premium-packages
     /// </summary>

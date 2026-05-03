@@ -81,31 +81,33 @@ public class WalletService : IWalletService
     {
         try
         {
+            // Ensure wallet exists first
             var wallet = await EnsureAsync(userId);
 
-            // Business rule: không cho âm
-            if (delta < 0 && wallet.Balance + delta < 0)
-                return (false, new[] { "Insufficient balance" }, wallet);
+            // Use atomic operation to prevent race conditions
+            var updatedWallet = await _repo.AtomicChangeBalanceAsync(userId, delta);
 
-            var oldBalance = wallet.Balance;
-            wallet.Balance += delta;
-            wallet.MarkAsUpdated();
-            await _repo.UpdateAsync(wallet);
+            if (updatedWallet == null)
+            {
+                // For negative delta, this means insufficient balance
+                // For positive delta, this means wallet not found (shouldn't happen after EnsureAsync)
+                return (false, new[] { "Insufficient balance" }, wallet);
+            }
 
             // Record transaction
             var transaction = new WalletTransaction
             {
-                WalletId = wallet.Id,
+                WalletId = updatedWallet.Id,
                 UserId = userId,
                 Type = delta > 0 ? "TopUp" : "Withdraw",
                 Amount = Math.Abs(delta),
-                BalanceAfter = wallet.Balance,
+                BalanceAfter = updatedWallet.Balance,
                 Note = note,
                 CreatedAt = DateTime.UtcNow
             };
             await _transactionRepo.AddAsync(transaction);
 
-            return (true, Array.Empty<string>(), wallet);
+            return (true, Array.Empty<string>(), updatedWallet);
         }
         catch (Exception ex)
         {

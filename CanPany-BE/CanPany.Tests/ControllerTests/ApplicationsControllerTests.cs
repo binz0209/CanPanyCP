@@ -17,6 +17,7 @@ public class ApplicationsControllerTests
 {
     private readonly Mock<IApplicationService> _applicationServiceMock = new();
     private readonly Mock<IJobService> _jobServiceMock = new();
+    private readonly Mock<ICompanyService> _companyServiceMock = new();
     private readonly Mock<II18nService> _i18nServiceMock = new();
     private readonly Mock<ILogger<ApplicationsController>> _loggerMock = new();
     private readonly ApplicationsController _controller;
@@ -26,6 +27,7 @@ public class ApplicationsControllerTests
         _controller = new ApplicationsController(
             _applicationServiceMock.Object,
             _jobServiceMock.Object,
+            _companyServiceMock.Object,
             _i18nServiceMock.Object,
             _loggerMock.Object);
         
@@ -37,6 +39,28 @@ public class ApplicationsControllerTests
         {
             HttpContext = new DefaultHttpContext { User = principal }
         };
+    }
+
+    /// <summary>
+    /// Helper to set up controller context with Company role for accept/reject tests.
+    /// </summary>
+    private void SetupCompanyUser(string userId = "user123", string companyId = "company123")
+    {
+        var claims = new List<Claim>
+        {
+            new Claim("sub", userId),
+            new Claim("role", "Company")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var principal = new ClaimsPrincipal(identity);
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        // Mock company ownership
+        _companyServiceMock.Setup(x => x.GetByUserIdAsync(userId))
+            .ReturnsAsync(new Company { Id = companyId, UserId = userId, Name = "Test Company" });
     }
 
     [Fact]
@@ -208,7 +232,10 @@ public class ApplicationsControllerTests
             CandidateId = "candidate1",
             Status = "Pending"
         };
-        
+
+        SetupCompanyUser();
+        _jobServiceMock.Setup(x => x.GetByIdAsync("job123"))
+            .ReturnsAsync(new Job { Id = "job123", CompanyId = "company123", Title = "Test Job" });
         _applicationServiceMock.Setup(x => x.GetByIdAsync(applicationId))
             .ReturnsAsync(application);
         _applicationServiceMock.Setup(x => x.UpdateAsync(applicationId, It.IsAny<DomainApplication>()))
@@ -228,6 +255,7 @@ public class ApplicationsControllerTests
     {
         // Arrange
         var applicationId = "nonexistent";
+        SetupCompanyUser();
         
         _applicationServiceMock.Setup(x => x.GetByIdAsync(applicationId))
             .ReturnsAsync((DomainApplication?)null);
@@ -254,7 +282,10 @@ public class ApplicationsControllerTests
             Status = "Pending"
         };
         var request = new RejectApplicationRequest("Not qualified");
-        
+
+        SetupCompanyUser();
+        _jobServiceMock.Setup(x => x.GetByIdAsync("job123"))
+            .ReturnsAsync(new Job { Id = "job123", CompanyId = "company123", Title = "Test Job" });
         _applicationServiceMock.Setup(x => x.GetByIdAsync(applicationId))
             .ReturnsAsync(application);
         _applicationServiceMock.Setup(x => x.UpdateAsync(applicationId, It.IsAny<DomainApplication>()))
@@ -310,7 +341,10 @@ public class ApplicationsControllerTests
             Status = "Pending"
         };
         var request = new RejectApplicationRequest("Not qualified");
-        
+
+        SetupCompanyUser();
+        _jobServiceMock.Setup(x => x.GetByIdAsync("job123"))
+            .ReturnsAsync(new Job { Id = "job123", CompanyId = "company123", Title = "Test Job" });
         _applicationServiceMock.Setup(x => x.GetByIdAsync(applicationId))
             .ReturnsAsync(application);
         _applicationServiceMock.Setup(x => x.UpdateAsync(applicationId, It.IsAny<DomainApplication>()))

@@ -92,17 +92,15 @@ public class SubscriptionService : ISubscriptionService
             if (existingSub != null)
                 return (false, new[] { "Bạn đã có gói premium đang hoạt động. Vui lòng đợi hết hạn trước khi mua gói mới." }, existingSub);
 
-            // 3. Check wallet balance
-            var balance = await _walletService.GetBalanceAsync(userId);
-            if (balance < package.Price)
-                return (false, new[] { $"Số dư ví không đủ. Cần {package.Price:N0} VND, hiện có {balance:N0} VND." }, null);
-
-            // 4. Deduct from wallet
+            // 3. Atomically deduct from wallet.
+            // This is the critical section: the wallet's AtomicChangeBalanceAsync uses MongoDB's
+            // FindOneAndUpdate with $inc and a balance guard, so two concurrent purchases
+            // cannot both succeed — the second will fail the balance check.
             var (deductSucceeded, deductErrors, _) = await _walletService.ChangeBalanceAsync(
                 userId, -package.Price, $"Mua gói Premium: {package.Name}");
 
             if (!deductSucceeded)
-                return (false, deductErrors, null);
+                return (false, new[] { $"Số dư ví không đủ. Cần {package.Price:N0} VND." }, null);
 
             // 5. Create Payment record
             var payment = new Payment
