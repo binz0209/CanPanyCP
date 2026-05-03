@@ -124,6 +124,7 @@ export function LoginPage() {
                             placeholder={t('login.emailPlaceholder')}
                             icon={<Mail className="h-5 w-5" />}
                             error={errors.email?.message}
+                            autoComplete="username"
                             {...register('email')}
                         />
 
@@ -134,6 +135,7 @@ export function LoginPage() {
                             placeholder={t('login.passwordPlaceholder')}
                                 icon={<Lock className="h-5 w-5" />}
                                 error={errors.password?.message}
+                                autoComplete="current-password"
                                 {...register('password')}
                             />
                             <button

@@ -206,6 +206,7 @@ export function RegisterPage() {
                             placeholder={t('register.fullNamePlaceholder' as any, { defaultValue: 'Nguyen Van A' })}
                             icon={<User className="h-5 w-5" />}
                             error={errors.fullName?.message}
+                            autoComplete="name"
                             {...register('fullName')}
                         />
 
@@ -215,6 +216,7 @@ export function RegisterPage() {
                             placeholder="you@example.com"
                             icon={<Mail className="h-5 w-5" />}
                             error={errors.email?.message}
+                            autoComplete="email"
                             {...register('email')}
                         />
 
@@ -225,6 +227,7 @@ export function RegisterPage() {
                                 placeholder="••••••••"
                                 icon={<Lock className="h-5 w-5" />}
                                 error={errors.password?.message}
+                                autoComplete="new-password"
                                 {...register('password')}
                             />
                             <button
@@ -242,6 +245,7 @@ export function RegisterPage() {
                                 placeholder="••••••••"
                             icon={<Lock className="h-5 w-5" />}
                             error={errors.confirmPassword?.message}
+                            autoComplete="new-password"
                             {...register('confirmPassword')}
                         />
 
