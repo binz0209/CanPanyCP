@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,7 +23,7 @@ export function LoginPage() {
     const loginSchema = createLoginSchema(t as unknown as (key: string) => string);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+
     const location = useLocation();
     const setAuth = useAuthStore((state) => state.setAuth);
 
