@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,13 +38,52 @@ const benefitsKey = [
     'register.benefit3',
     'register.benefit4',
 ];
+/**
+ * Trigger browser's "Save password?" prompt by submitting a real hidden form.
+ */
+function triggerBrowserPasswordSave(email: string, password: string, redirectPath: string) {
+    const iframe = document.createElement('iframe');
+    iframe.name = 'password-save-frame';
+    iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;opacity:0;pointer-events:none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = redirectPath;
+    form.target = 'password-save-frame';
+    form.style.cssText = 'position:absolute;width:0;height:0;opacity:0';
+
+    const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.name = 'email';
+    emailInput.autocomplete = 'username';
+    emailInput.value = email;
+
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.name = 'password';
+    passwordInput.autocomplete = 'new-password';
+    passwordInput.value = password;
+
+    form.appendChild(emailInput);
+    form.appendChild(passwordInput);
+    document.body.appendChild(form);
+
+    form.submit();
+
+    setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+        window.location.href = redirectPath;
+    }, 100);
+}
 
 export function RegisterPage() {
     const { t } = useTranslation('auth');
     const registerSchema = createRegisterSchema(t as unknown as (key: string) => string);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+
     const setAuth = useAuthStore((state) => state.setAuth);
 
     const {
@@ -73,13 +112,13 @@ export function RegisterPage() {
                 role: data.role,
             });
             setAuth(response.user, response.accessToken);
-            toast.success(t('register.success'));
 
             const redirectPath = data.role === 'Candidate'
                 ? '/candidate/dashboard'
                 : '/company/dashboard';
 
-            navigate(redirectPath, { replace: true });
+            // Submit a real hidden form so the browser detects registration and offers to save password
+            triggerBrowserPasswordSave(data.email, data.password, redirectPath);
         } catch (error: any) {
             toast.error(error.response?.data?.message || t('register.failed'));
         } finally {
@@ -206,6 +245,7 @@ export function RegisterPage() {
                             placeholder={t('register.fullNamePlaceholder' as any, { defaultValue: 'Nguyen Van A' })}
                             icon={<User className="h-5 w-5" />}
                             error={errors.fullName?.message}
+                            autoComplete="name"
                             {...register('fullName')}
                         />
 
@@ -215,6 +255,7 @@ export function RegisterPage() {
                             placeholder="you@example.com"
                             icon={<Mail className="h-5 w-5" />}
                             error={errors.email?.message}
+                            autoComplete="email"
                             {...register('email')}
                         />
 
@@ -225,6 +266,7 @@ export function RegisterPage() {
                                 placeholder="••••••••"
                                 icon={<Lock className="h-5 w-5" />}
                                 error={errors.password?.message}
+                                autoComplete="new-password"
                                 {...register('password')}
                             />
                             <button
@@ -242,6 +284,7 @@ export function RegisterPage() {
                                 placeholder="••••••••"
                             icon={<Lock className="h-5 w-5" />}
                             error={errors.confirmPassword?.message}
+                            autoComplete="new-password"
                             {...register('confirmPassword')}
                         />
 

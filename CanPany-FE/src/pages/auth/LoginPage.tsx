@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,12 +18,59 @@ const createLoginSchema = (t: (key: string) => string) =>
 
 type LoginForm = z.infer<ReturnType<typeof createLoginSchema>>;
 
+/**
+ * Trigger browser's "Save password?" prompt by submitting a real hidden form.
+ * SPAs using preventDefault() + AJAX don't trigger native form submission,
+ * so the browser never detects the login. This workaround creates a real
+ * form submission into a hidden iframe to trick the browser into detecting it.
+ */
+function triggerBrowserPasswordSave(email: string, password: string, redirectPath: string) {
+    // Create hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.name = 'password-save-frame';
+    iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;opacity:0;pointer-events:none';
+    document.body.appendChild(iframe);
+
+    // Create a real form targeting the iframe
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = redirectPath;
+    form.target = 'password-save-frame';
+    form.style.cssText = 'position:absolute;width:0;height:0;opacity:0';
+
+    const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.name = 'email';
+    emailInput.autocomplete = 'username';
+    emailInput.value = email;
+
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.name = 'password';
+    passwordInput.autocomplete = 'current-password';
+    passwordInput.value = password;
+
+    form.appendChild(emailInput);
+    form.appendChild(passwordInput);
+    document.body.appendChild(form);
+
+    // Submit the form - this triggers browser password detection
+    form.submit();
+
+    // Navigate after a short delay to let browser process the form
+    setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+        window.location.href = redirectPath;
+    }, 100);
+}
+
 export function LoginPage() {
     const { t } = useTranslation('auth');
     const loginSchema = createLoginSchema(t as unknown as (key: string) => string);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+
     const location = useLocation();
     const setAuth = useAuthStore((state) => state.setAuth);
 
@@ -65,9 +112,8 @@ export function LoginPage() {
         setIsLoading(true);
         try {
             const response = await authApi.login(data);
-            localStorage.removeItem('loginError'); // Clear any previous error
+            localStorage.removeItem('loginError');
             setAuth(response.user, response.accessToken);
-            toast.success(t('login.success'));
 
             const redirectPath = response.user.role === 'Candidate'
                 ? '/candidate/dashboard'
@@ -78,11 +124,11 @@ export function LoginPage() {
                         : from;
 
             setIsLoading(false);
-            navigate(redirectPath, { replace: true });
+            // Submit a real hidden form so the browser detects login and offers to save password
+            triggerBrowserPasswordSave(data.email, data.password, redirectPath);
         } catch (error: any) {
             setIsLoading(false);
-            localStorage.setItem('loginError', error.response?.data?.message || t('login.failed'));
-            // Toast will be shown on next mount due to page refresh
+            toast.error(error.response?.data?.message || t('login.failed'));
         }
     };
 
@@ -124,6 +170,7 @@ export function LoginPage() {
                             placeholder={t('login.emailPlaceholder')}
                             icon={<Mail className="h-5 w-5" />}
                             error={errors.email?.message}
+                            autoComplete="username"
                             {...register('email')}
                         />
 
@@ -134,6 +181,7 @@ export function LoginPage() {
                             placeholder={t('login.passwordPlaceholder')}
                                 icon={<Lock className="h-5 w-5" />}
                                 error={errors.password?.message}
+                                autoComplete="current-password"
                                 {...register('password')}
                             />
                             <button
