@@ -13,6 +13,8 @@ public class ReportServiceTests
 {
     private readonly Mock<IReportRepository> _reportRepoMock = new();
     private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<ICompanyRepository> _companyRepoMock = new();
+    private readonly Mock<IJobRepository> _jobRepoMock = new();
     private readonly Mock<INotificationService> _notificationServiceMock = new();
     private readonly Mock<IAdminService> _adminServiceMock = new();
     private readonly Mock<ILogger<ReportService>> _loggerMock = new();
@@ -23,6 +25,8 @@ public class ReportServiceTests
         _service = new ReportService(
             _reportRepoMock.Object,
             _userRepoMock.Object,
+            _companyRepoMock.Object,
+            _jobRepoMock.Object,
             _notificationServiceMock.Object,
             _adminServiceMock.Object,
             _loggerMock.Object);
