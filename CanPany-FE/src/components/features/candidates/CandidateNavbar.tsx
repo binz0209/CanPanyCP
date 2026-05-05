@@ -23,6 +23,7 @@ function NotificationPanel({
   isMarkingAllAsRead,
   onClose,
   t,
+  translateNotificationText,
   timeAgo,
 }: {
   notifications: NotificationItem[];
@@ -32,6 +33,7 @@ function NotificationPanel({
   isMarkingAllAsRead: boolean;
   onClose: () => void;
   t: (key: string, opts?: { count?: number }) => string;
+  translateNotificationText: (rawText: string) => string;
   timeAgo: (date: string | Date) => string;
 }) {
   return (
@@ -74,9 +76,9 @@ function NotificationPanel({
             >
               <div className="mt-0.5 flex-1 min-w-0">
                 <p className={cn('text-xs', !n.isRead ? 'font-semibold text-gray-900' : 'text-gray-700')}>
-                  {n.title}
+                  {translateNotificationText(n.title)}
                 </p>
-                <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{n.content}</p>
+                <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{translateNotificationText(n.content)}</p>
                 <p className="mt-1 text-xs text-gray-400">{timeAgo(n.timestamp)}</p>
               </div>
               {!n.isRead && (
@@ -107,7 +109,7 @@ function NotificationPanel({
 }
 
 export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProps) {
-  const { t } = useTranslation('candidate');
+  const { t, i18n } = useTranslation('candidate');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { user, logout } = useAuthStore();
@@ -127,6 +129,17 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
     if (diff < 3600) return t('notificationsPanel.timeAgoMinutes', { count: Math.floor(diff / 60) });
     if (diff < 86400) return t('notificationsPanel.timeAgoHours', { count: Math.floor(diff / 3600) });
     return t('notificationsPanel.timeAgoDays', { count: Math.floor(diff / 86400) });
+  };
+
+  const translateNotificationText = (rawText: string) => {
+    const key = (rawText ?? '').trim();
+    if (!key) return '';
+    if (!key.includes('.')) return key;
+
+    if (i18n.exists(key, { ns: 'candidate' })) return t(key, { ns: 'candidate' });
+    if (i18n.exists(key, { ns: 'company' })) return t(key, { ns: 'company' });
+    if (i18n.exists(key, { ns: 'common' })) return t(key, { ns: 'common' });
+    return key;
   };
 
   useEffect(() => {
@@ -207,6 +220,7 @@ export function CandidateNavbar({ onMenuClick, isMenuOpen }: CandidateNavbarProp
                 isMarkingAllAsRead={isMarkingAllAsRead}
                 onClose={() => setIsNotifOpen(false)}
                 t={t as (key: string, opts?: { count?: number }) => string}
+                translateNotificationText={translateNotificationText}
                 timeAgo={timeAgo}
               />
             )}

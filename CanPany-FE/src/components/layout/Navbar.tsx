@@ -10,7 +10,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 
 export function Navbar() {
     const { t } = useTranslation('common');
-    const { t: tC } = useTranslation('candidate');
+    const { t: tC, i18n: i18nC } = useTranslation('candidate');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -77,6 +77,17 @@ export function Navbar() {
         if (diff < 3600) return tC('notificationsPanel.timeAgoMinutes', { count: Math.floor(diff / 60) });
         if (diff < 86400) return tC('notificationsPanel.timeAgoHours', { count: Math.floor(diff / 3600) });
         return tC('notificationsPanel.timeAgoDays', { count: Math.floor(diff / 86400) });
+    };
+
+    const translateNotificationText = (rawText: string) => {
+        const key = (rawText ?? '').trim();
+        if (!key) return '';
+        if (!key.includes('.')) return key;
+
+        if (i18nC.exists(key, { ns: 'candidate' })) return tC(key, { ns: 'candidate' });
+        if (i18nC.exists(key, { ns: 'company' })) return tC(key, { ns: 'company' });
+        if (i18nC.exists(key, { ns: 'common' })) return tC(key, { ns: 'common' });
+        return key;
     };
 
     return (
@@ -182,9 +193,9 @@ export function Navbar() {
                                                         >
                                                             <div className="mt-0.5 flex-1 min-w-0">
                                                                 <p className={`text-xs ${!n.isRead ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-                                                                    {n.title}
+                                                                    {translateNotificationText(n.title)}
                                                                 </p>
-                                                                <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{n.content}</p>
+                                                                <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{translateNotificationText(n.content)}</p>
                                                                 <p className="mt-1 text-xs text-gray-400">{timeAgo(n.timestamp)}</p>
                                                             </div>
                                                             {!n.isRead && (
