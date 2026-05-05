@@ -4,6 +4,7 @@ using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Worker.Models;
 using CanPany.Worker.Models.Payloads;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -18,15 +19,21 @@ public class CVGenerationJobHandler : BaseJobHandler
 {
     private readonly IGeminiService _geminiService;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IEncryptionService _encryptionService;
+    private readonly string _encryptionKey;
     private readonly ILogger<CVGenerationJobHandler> _logger;
 
     public CVGenerationJobHandler(
         ILogger<CVGenerationJobHandler> logger,
         IGeminiService geminiService,
+        IEncryptionService encryptionService,
+        IConfiguration configuration,
         IServiceScopeFactory scopeFactory) : base(logger)
     {
         _logger = logger;
         _geminiService = geminiService;
+        _encryptionService = encryptionService;
+        _encryptionKey = configuration["Encryption:Key"] ?? throw new InvalidOperationException("Encryption key not configured");
         _scopeFactory = scopeFactory;
     }
 
@@ -61,6 +68,22 @@ public class CVGenerationJobHandler : BaseJobHandler
             if (user == null) return JobResult.FailureResult("User not found", "USER_NOT_FOUND");
 
             var profile = await userProfileRepository.GetByUserIdAsync(payload.UserId);
+
+            // Decrypt PII fields (Phone, Address are stored encrypted in DB)
+            if (profile != null)
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(profile.Phone))
+                        profile.Phone = _encryptionService.Decrypt(profile.Phone, _encryptionKey);
+                    if (!string.IsNullOrWhiteSpace(profile.Address))
+                        profile.Address = _encryptionService.Decrypt(profile.Address, _encryptionKey);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[CV_GEN] Failed to decrypt PII for user {UserId} (may be unencrypted legacy data)", payload.UserId);
+                }
+            }
 
             // ── Step 2: Resolve skill names ───────────────────────────────────
             await ReportProgressAsync(job.JobId, 25, "backgroundJobs.steps.processingSkills", null, cancellationToken);

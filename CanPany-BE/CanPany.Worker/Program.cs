@@ -5,6 +5,7 @@ using CanPany.Domain.Interfaces.Repositories;
 using CanPany.Infrastructure.Data;
 using CanPany.Infrastructure.Interceptors;
 using CanPany.Infrastructure.Repositories;
+using CanPany.Infrastructure.Security.Encryption;
 using CanPany.Infrastructure.Services;
 using CanPany.Worker.Handlers;
 using CanPany.Worker.Handlers.Samples;
@@ -93,6 +94,9 @@ public class Program
         builder.Services.AddSingleton<IPerformanceMonitor, WorkerPerformanceMonitor>();
         builder.Services.AddSingleton<IExceptionCapture, WorkerExceptionCapture>();
         builder.Services.AddSingleton<IHostedServiceInterceptor, HostedServiceInterceptor>();
+
+        // Encryption Service (needed for decrypting PII in Worker handlers)
+        builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
 
         // External Services (GitHub, Gemini, Cloudinary)
         builder.Services.AddHttpClient(); // generic IHttpClientFactory for downloading files
