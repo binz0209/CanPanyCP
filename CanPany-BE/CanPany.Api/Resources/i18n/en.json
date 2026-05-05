@@ -104,7 +104,8 @@
     "Application": {
       "NotFound": "Application not found.",
       "NoteRequired": "Note is required.",
-      "UpdateFailed": "Failed to update application."
+      "UpdateFailed": "Failed to update application.",
+      "AlreadyApplied": "You have already applied for this job."
     },
     "Conversation": {
       "NotFound": "Conversation not found.",

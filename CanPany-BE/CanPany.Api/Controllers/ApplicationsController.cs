@@ -82,7 +82,7 @@ public class ApplicationsController : ControllerBase
             // Check if already applied
             var hasApplied = await _applicationService.HasAppliedAsync(request.JobId, userId);
             if (hasApplied)
-                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Common.BadRequest), "AlreadyApplied"));
+                return BadRequest(ApiResponse.CreateError(_i18nService.GetErrorMessage(I18nKeys.Error.Application.AlreadyApplied), "AlreadyApplied"));
 
             var application = new DomainApplication
             {

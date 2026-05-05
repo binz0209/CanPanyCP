@@ -61,7 +61,7 @@ function timeAgo(date: string | Date, t: any): string {
 }
 
 export function NotificationCenterPage() {
-    const { t } = useTranslation('candidate');
+    const { t, i18n } = useTranslation('candidate');
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [typeFilter, setTypeFilter] = useState<string>('');
@@ -96,6 +96,18 @@ export function NotificationCenterPage() {
         }
         const path = getNavigationPath(notification);
         if (path) navigate(path);
+    };
+
+    const translateNotificationText = (rawText: string) => {
+        const key = (rawText ?? '').trim();
+        if (!key) return '';
+        if (!key.includes('.')) return key;
+
+        if (i18n.exists(key, { ns: 'candidate' })) return t(key, { ns: 'candidate' });
+        if (i18n.exists(key, { ns: 'company' })) return t(key, { ns: 'company' });
+        if (i18n.exists(key, { ns: 'common' })) return t(key, { ns: 'common' });
+
+        return key;
     };
 
     const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -221,7 +233,7 @@ export function NotificationCenterPage() {
                                                 : 'font-medium text-gray-700'
                                         )}
                                     >
-                                        {t(notification.title, { defaultValue: notification.title })}
+                                        {translateNotificationText(notification.title)}
                                     </p>
                                     <div className="flex shrink-0 items-center gap-2">
                                         <span className="whitespace-nowrap text-xs text-gray-400">
@@ -233,7 +245,7 @@ export function NotificationCenterPage() {
                                     </div>
                                 </div>
                                 <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                                    {t(notification.content, { defaultValue: notification.content })}
+                                    {translateNotificationText(notification.content)}
                                 </p>
                             </div>
                         </div>
