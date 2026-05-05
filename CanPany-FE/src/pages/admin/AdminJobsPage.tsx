@@ -210,10 +210,22 @@ export function AdminJobsPage() {
             {/* Detail Modal */}
             {detailJob && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Job Detail</h2>
-                        <div className="space-y-2 text-sm">
-                            {Object.entries(detailJob).map(([k, v]) => (
+                        <div className="max-h-[65vh] overflow-y-auto overflow-x-hidden pr-1 space-y-2 text-sm">
+                            {Object.entries(detailJob)
+                                .filter(([k]) =>
+                                    ![
+                                        'skillIds',
+                                        'skillEmbedding',
+                                        'locationId',
+                                        'experienceLevelId',
+                                        'updatedAt',
+                                        'domainEvents',
+                                        'images',
+                                    ].includes(k)
+                                )
+                                .map(([k, v]) => (
                                 <div key={k} className="flex gap-2">
                                     <span className="w-36 shrink-0 font-medium text-gray-500 capitalize">{k}:</span>
                                     <span className="break-all text-gray-800">{String(v)}</span>

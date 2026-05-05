@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft, Sparkles, Globe, ExternalLink } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MapPin, Clock, DollarSign, Bookmark, Building2, ArrowLeft, Sparkles, Globe, ExternalLink, Flag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Button, Badge, Card } from '../../components/ui';
 import { ApplyModal } from '../../components/features/jobs';
-import { jobsApi, companiesApi } from '../../api';
+import { jobsApi, companiesApi, reportsApi } from '../../api';
 import { formatRelativeTime, formatCurrency, formatDate } from '../../utils';
 import { cn } from '../../utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -19,6 +19,9 @@ export function JobDetailPage() {
     const queryClient = useQueryClient();
     const { isAuthenticated, user } = useAuthStore();
     const [showApplyModal, setShowApplyModal] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportReason, setReportReason] = useState('');
+    const [reportDescription, setReportDescription] = useState('');
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['job', id],
@@ -33,6 +36,22 @@ export function JobDetailPage() {
     });
 
     const { isBookmarked, toggle, isToggling } = useBookmarks();
+    const createReportMutation = useMutation({
+        mutationFn: () => reportsApi.createReport({
+            reportedJobId: id,
+            reason: reportReason.trim(),
+            description: reportDescription.trim(),
+        }),
+        onSuccess: () => {
+            toast.success(t('jobDetail.report.success'));
+            setShowReportModal(false);
+            setReportReason('');
+            setReportDescription('');
+        },
+        onError: () => {
+            toast.error(t('jobDetail.report.error'));
+        },
+    });
 
     if (isLoading) {
         return (
@@ -131,6 +150,14 @@ export function JobDetailPage() {
                                 onClick={() => isAuthenticated ? setShowApplyModal(true) : navigate('/auth/login')}
                             >
                                 {t('jobDetail.applyNow')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                onClick={() => isAuthenticated ? setShowReportModal(true) : navigate('/auth/login')}
+                            >
+                                <Flag className="h-4 w-4 mr-2" />
+                                {t('jobDetail.report.button')}
                             </Button>
                         </div>
                     </div>
@@ -277,6 +304,50 @@ export function JobDetailPage() {
                 toast.success(t('jobDetail.applySuccess'), { duration: 2000, position: 'top-right' });
             }}
         />
+
+        {showReportModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t('jobDetail.report.title')}</h3>
+                    <div className="mt-4 space-y-3">
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                {t('jobDetail.report.reason')}
+                            </label>
+                            <input
+                                value={reportReason}
+                                onChange={(e) => setReportReason(e.target.value)}
+                                placeholder={t('jobDetail.report.reasonPlaceholder')}
+                                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800"
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                {t('jobDetail.report.description')}
+                            </label>
+                            <textarea
+                                value={reportDescription}
+                                onChange={(e) => setReportDescription(e.target.value)}
+                                rows={4}
+                                placeholder={t('jobDetail.report.descriptionPlaceholder')}
+                                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800"
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-5 flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowReportModal(false)}>
+                            {t('applyModal.cancelButton')}
+                        </Button>
+                        <Button
+                            disabled={!reportReason.trim() || !reportDescription.trim() || createReportMutation.isPending}
+                            onClick={() => createReportMutation.mutate()}
+                        >
+                            {createReportMutation.isPending ? t('jobDetail.report.submitting') : t('jobDetail.report.submit')}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
         </>
     );
 }

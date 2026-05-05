@@ -419,6 +419,18 @@
     "timeHoursAgo": "{{count}} giờ trước",
     "timeDaysAgo": "{{count}} ngày trước"
   },
+  "notifications": {
+    "application": {
+      "accepted": {
+        "title": "Đơn ứng tuyển đã được chấp nhận",
+        "message": "Bạn đã chấp nhận đơn ứng tuyển này."
+      },
+      "rejected": {
+        "title": "Đơn ứng tuyển đã bị từ chối",
+        "message": "Bạn đã từ chối đơn ứng tuyển này."
+      }
+    }
+  },
   "wallet": {
     "title": "Ví công ty",
     "subtitle": "Quản lý số dư và lịch sử giao dịch.",

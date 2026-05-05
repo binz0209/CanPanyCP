@@ -220,7 +220,7 @@
       "generateAiCv": "Tạo CV bằng AI",
       "tailorAiCv": "Tạo CV phù hợp với JD",
       "syncSkillsRec": "Đồng bộ kỹ năng gợi ý việc làm",
-      "syncSkillsGit": "Đồng bộ kỹ năng từ {{count}} repo(s)",
+      "syncSkillsGit": "Đồng bộ kỹ năng từ repo",
       "fallback": "Tiến trình xử lý nền"
     },
     "steps": {
@@ -421,6 +421,18 @@
       "emptyTitle": "Không có thông báo nào",
       "emptyFiltered": "Không tìm thấy thông báo phù hợp với bộ lọc.",
       "emptyAll": "Bạn chưa có thông báo nào."
+    }
+  },
+  "notifications": {
+    "application": {
+      "accepted": {
+        "title": "Đơn ứng tuyển đã được chấp nhận",
+        "message": "Nhà tuyển dụng đã chấp nhận đơn ứng tuyển của bạn."
+      },
+      "rejected": {
+        "title": "Đơn ứng tuyển đã bị từ chối",
+        "message": "Nhà tuyển dụng đã từ chối đơn ứng tuyển của bạn."
+      }
     }
   },
   "jobAlerts": {

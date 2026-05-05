@@ -280,8 +280,26 @@ builder.Services.AddAuthentication(options =>
             }
             return Task.CompletedTask;
         },
-        OnTokenValidated = context =>
+        OnTokenValidated = async context =>
         {
+            var userId = context.Principal?.FindFirst("sub")?.Value;
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                var user = await userRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    context.Fail("User not found.");
+                    return;
+                }
+
+                if (user.IsLocked && user.LockedUntil.HasValue && user.LockedUntil > DateTime.UtcNow)
+                {
+                    context.Fail("User account is locked.");
+                    return;
+                }
+            }
+
             var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
             if (context.SecurityToken is System.IdentityModel.Tokens.Jwt.JwtSecurityToken jwtToken)
             {
@@ -291,7 +309,6 @@ builder.Services.AddAuthentication(options =>
                     context.Fail("Token has been revoked.");
                 }
             }
-            return Task.CompletedTask;
         }
     };
 });

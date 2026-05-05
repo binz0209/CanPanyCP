@@ -35,7 +35,6 @@ function ReportDetailModal({
 }) {
     const { t } = useTranslation('admin');
     const [resolveNote, setResolveNote] = useState('');
-    const [banUser, setBanUser] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [tab, setTab] = useState<'resolve' | 'reject'>('resolve');
 
@@ -132,15 +131,11 @@ function ReportDetailModal({
                                         placeholder={t('reports.modal.resolvePlaceholder')}
                                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-green-400 resize-none"
                                     />
-                                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                                        <input type="checkbox" checked={banUser} onChange={(e) => setBanUser(e.target.checked)} />
-                                        {t('reports.modal.banUser')}
-                                    </label>
                                     <div className="flex justify-end">
                                         <Button
                                             className="bg-green-600 hover:bg-green-700 text-white"
                                             disabled={!resolveNote.trim()}
-                                            onClick={() => onResolve(resolveNote.trim(), banUser)}
+                                            onClick={() => onResolve(resolveNote.trim(), false)}
                                         >
                                             <CheckCircle className="h-4 w-4 mr-1" /> {t('reports.modal.resolve')}
                                         </Button>

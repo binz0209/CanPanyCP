@@ -12,3 +12,4 @@ export { adminApi } from './admin.api';
 export { consentApi } from './consent.api';
 export { contractsApi, reviewsApi } from './contracts.api';
 export { conversationsApi } from './conversations.api';
+export { reportsApi } from './reports.api';

@@ -74,12 +74,23 @@ function CategoriesTab() {
         onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-categories'] }); },
         onError: () => toast.error('Failed to delete'),
     });
+    const deleteAllMut = useMutation({
+        mutationFn: async () => {
+            if (!categories.length) return;
+            await Promise.all(categories.map((c: any) => adminApi.deleteCategory(c.id)));
+        },
+        onSuccess: () => {
+            toast.success('Deleted all categories');
+            qc.invalidateQueries({ queryKey: ['admin-categories'] });
+        },
+        onError: () => toast.error('Failed to delete all categories'),
+    });
 
     const filtered = categories.filter((c: any) => (c.name ?? '').toLowerCase().includes(search.toLowerCase()));
 
     return (
         <div className="space-y-4">
-            {/* Create */}
+            {/* Create + Delete all */}
             <div className="flex gap-2">
                 <input value={createName} onChange={(e) => setCreateName(e.target.value)} placeholder="New category name…"
                     className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
@@ -88,6 +99,14 @@ function CategoriesTab() {
                 <Button className="bg-slate-900 hover:bg-slate-800 text-white" disabled={!createName.trim() || createMut.isPending}
                     onClick={() => createMut.mutate()}>
                     <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+                <Button
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    disabled={!categories.length || deleteAllMut.isPending}
+                    onClick={() => deleteAllMut.mutate()}
+                >
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete all
                 </Button>
             </div>
             {/* Search */}
@@ -159,6 +178,17 @@ function SkillsTab() {
         onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-skills'] }); },
         onError: () => toast.error('Failed to delete'),
     });
+    const deleteAllMut = useMutation({
+        mutationFn: async () => {
+            if (!skills.length) return;
+            await Promise.all(skills.map((s: any) => adminApi.deleteSkill(s.id)));
+        },
+        onSuccess: () => {
+            toast.success('Deleted all skills');
+            qc.invalidateQueries({ queryKey: ['admin-skills'] });
+        },
+        onError: () => toast.error('Failed to delete all skills'),
+    });
 
     const filtered = skills.filter((s: any) => (s.name ?? '').toLowerCase().includes(search.toLowerCase()));
 
@@ -172,6 +202,14 @@ function SkillsTab() {
                 <Button className="bg-slate-900 hover:bg-slate-800 text-white" disabled={!createName.trim() || createMut.isPending}
                     onClick={() => createMut.mutate()}>
                     <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+                <Button
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    disabled={!skills.length || deleteAllMut.isPending}
+                    onClick={() => deleteAllMut.mutate()}
+                >
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete all
                 </Button>
             </div>
             <div className="relative">
@@ -240,12 +278,31 @@ function BannersTab() {
         onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-banners'] }); },
         onError: () => toast.error('Failed to delete'),
     });
+    const deleteAllMut = useMutation({
+        mutationFn: async () => {
+            if (!banners.length) return;
+            await Promise.all(banners.map((b: any) => adminApi.deleteBanner(b.id)));
+        },
+        onSuccess: () => {
+            toast.success('Deleted all banners');
+            qc.invalidateQueries({ queryKey: ['admin-banners'] });
+        },
+        onError: () => toast.error('Failed to delete all banners'),
+    });
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
                 <Button className="bg-slate-900 hover:bg-slate-800 text-white" onClick={() => setShowCreate(s => !s)}>
                     <Plus className="h-4 w-4 mr-1" /> New Banner
+                </Button>
+                <Button
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    disabled={!banners.length || deleteAllMut.isPending}
+                    onClick={() => deleteAllMut.mutate()}
+                >
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete all
                 </Button>
             </div>
             {showCreate && (
@@ -349,6 +406,17 @@ function PackagesTab() {
         onSuccess: () => { toast.success('Deleted'); qc.invalidateQueries({ queryKey: ['admin-packages'] }); },
         onError: () => toast.error('Failed to delete'),
     });
+    const deleteAllMut = useMutation({
+        mutationFn: async () => {
+            if (!packages.length) return;
+            await Promise.all(packages.map((pkg: any) => adminApi.deletePremiumPackage(pkg.id)));
+        },
+        onSuccess: () => {
+            toast.success('Deleted all packages');
+            qc.invalidateQueries({ queryKey: ['admin-packages'] });
+        },
+        onError: () => toast.error('Failed to delete all packages'),
+    });
 
     const formatPrice = (price: number) => {
         // BE stores in minor units (×100)
@@ -358,9 +426,17 @@ function PackagesTab() {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
                 <Button className="bg-slate-900 hover:bg-slate-800 text-white" onClick={() => setShowCreate(s => !s)}>
                     <Plus className="h-4 w-4 mr-1" /> New Package
+                </Button>
+                <Button
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    disabled={!packages.length || deleteAllMut.isPending}
+                    onClick={() => deleteAllMut.mutate()}
+                >
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete all
                 </Button>
             </div>
             {showCreate && (

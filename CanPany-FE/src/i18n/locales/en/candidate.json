@@ -176,7 +176,7 @@
       "generateAiCv": "AI CV Generation",
       "tailorAiCv": "Tailor AI CV for Job",
       "syncSkillsRec": "Sync Skills for Recommendations",
-      "syncSkillsGit": "Sync Skills from {{count}} repo(s)",
+      "syncSkillsGit": "Sync skills from repository",
       "fallback": "Background Job"
     },
     "steps": {
@@ -377,6 +377,18 @@
       "emptyTitle": "No notifications",
       "emptyFiltered": "No notifications match your filters.",
       "emptyAll": "You don't have any notifications yet."
+    }
+  },
+  "notifications": {
+    "application": {
+      "accepted": {
+        "title": "Application accepted",
+        "message": "The employer has accepted your application."
+      },
+      "rejected": {
+        "title": "Application rejected",
+        "message": "The employer has rejected your application."
+      }
     }
   },
   "jobAlerts": {

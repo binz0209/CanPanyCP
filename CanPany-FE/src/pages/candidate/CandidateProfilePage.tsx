@@ -255,47 +255,48 @@ export function CandidateProfilePage() {
                 {/* Header Card */}
                 <Card className="mb-6 bg-white border border-gray-100 rounded-xl shadow-lg">
                     <div className="p-6 md:p-8">
-                        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-                            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-                                {user.avatarUrl ? (
-                                    <img
-                                        src={user.avatarUrl}
-                                        alt={user.fullName}
-                                        className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-[#00b14f]"
-                                    />
-                                ) : (
-                                    <div className="w-24 h-24 md:w-32 md:h-32 bg-[#00b14f] rounded-full flex items-center justify-center border-4 border-[#00b14f]/20">
-                                        <User className="h-12 w-12 md:h-16 md:w-16 text-white" />
-                                    </div>
-                                )}
-
-                                {isEditing && (
-                                    <div className="w-full sm:w-auto">
-                                        <input
-                                            ref={avatarInputRef}
-                                            type="file"
-                                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                                            onChange={handleAvatarFileChange}
-                                            className="hidden"
+                        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_auto]">
+                            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-start">
+                                <div className="shrink-0">
+                                    {user.avatarUrl ? (
+                                        <img
+                                            src={user.avatarUrl}
+                                            alt={user.fullName}
+                                            className="h-24 w-24 rounded-full border-4 border-[#00b14f] md:h-32 md:w-32"
                                         />
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => avatarInputRef.current?.click()}
-                                            disabled={uploadAvatarMutation.isPending}
-                                            isLoading={uploadAvatarMutation.isPending}
-                                            className="mt-3 border-gray-300 text-gray-700"
-                                        >
-                                            <Camera className="h-4 w-4 mr-2" />
-                                            {t('profile.actions.uploadAvatar')}
-                                        </Button>
-                                        <p className="mt-2 text-xs text-gray-500">
-                                            {t('profile.avatar.hint')}
-                                        </p>
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#00b14f]/20 bg-[#00b14f] md:h-32 md:w-32">
+                                            <User className="h-12 w-12 text-white md:h-16 md:w-16" />
+                                        </div>
+                                    )}
+                                    {isEditing && (
+                                        <div className="mt-3 w-full sm:w-auto">
+                                            <input
+                                                ref={avatarInputRef}
+                                                type="file"
+                                                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                                onChange={handleAvatarFileChange}
+                                                className="hidden"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => avatarInputRef.current?.click()}
+                                                disabled={uploadAvatarMutation.isPending}
+                                                isLoading={uploadAvatarMutation.isPending}
+                                                className="border-gray-300 text-gray-700"
+                                            >
+                                                <Camera className="h-4 w-4 mr-2" />
+                                                {t('profile.actions.uploadAvatar')}
+                                            </Button>
+                                            <p className="mt-2 text-xs text-gray-500">
+                                                {t('profile.avatar.hint')}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
 
-                                <div className="flex-1">
+                                <div className="min-w-0 flex-1">
                                     {isEditing ? (
                                         <div className="space-y-3">
                                             <div className="text-lg font-bold">{user.fullName}</div>
@@ -318,7 +319,7 @@ export function CandidateProfilePage() {
                                         </>
                                     )}
 
-                                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                    <div className="mt-3 text-sm text-gray-600">
                                         <div className="flex items-center gap-2">
                                             <MapPin className="size-4 text-[#00b14f]" />
                                             {isEditing ? (
@@ -326,7 +327,7 @@ export function CandidateProfilePage() {
                                                     type="text"
                                                     value={formData.address || ''}
                                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('address', e.target.value)}
-                                                    className="h-8 w-48 border border-gray-300 rounded px-2 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20"
+                                                    className="h-8 w-full min-w-[180px] border border-gray-300 rounded px-2 focus:border-[#00b14f] focus:outline-none focus:ring-2 focus:ring-[#00b14f]/20 sm:w-64"
                                                     placeholder={t('profile.form.addressPlaceholder')}
                                                 />
                                             ) : (
@@ -337,7 +338,7 @@ export function CandidateProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="mt-2 flex w-full flex-col items-center gap-2 lg:mt-4 lg:w-auto">
                                 {isEditing ? (
                                     <>
                                         <Button onClick={handleSave} disabled={updateMutation.isPending} className="bg-[#00b14f] hover:bg-[#00a047] text-white">
@@ -479,23 +480,6 @@ export function CandidateProfilePage() {
                                                     <Activity className="h-4 w-4" />
                                                     {t('profile.actions.viewProgress')}
                                                 </Link>
-                                                )}
-                                                {syncJobId && jobStatus && (
-                                                    <div className="mt-2 space-y-1">
-                                                        <div className="flex items-center justify-between text-xs text-gray-600">
-                                                            <span className="flex items-center gap-1">
-                                                                <RefreshCw className="h-3 w-3 animate-spin" />
-                                                                {jobStatus.currentStep || t('profile.github.analyzing')}
-                                                            </span>
-                                                            <span>{jobStatus.percentComplete}%</span>
-                                                        </div>
-                                                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                                            <div
-                                                                className="bg-gray-800 h-1.5 rounded-full transition-all duration-500"
-                                                                style={{ width: `${jobStatus.percentComplete}%` }}
-                                                            />
-                                                        </div>
-                                                    </div>
                                                 )}
                                             </div>
                                         ) : (

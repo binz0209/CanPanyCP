@@ -5,12 +5,11 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input } from '../../components/ui';
 import { walletApi, type WalletTransaction } from '../../api/wallet.api';
-import { paymentsApi, type PaymentItem, type SePayCheckoutResult } from '../../api/payments.api';
+import { paymentsApi, type SePayCheckoutResult } from '../../api/payments.api';
 import { useAuthStore } from '../../stores/auth.store';
 import { formatCurrency, formatDateTime } from '../../utils';
 
 type WalletType = 'TopUp' | 'Withdraw' | 'Hold' | 'Release' | string;
-type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | string;
 
 // Preset amount options (VND)
 const PRESET_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000];
@@ -62,12 +61,6 @@ export function WalletPage() {
     placeholderData: (prev) => prev,
   });
 
-  const paymentsQuery = useQuery({
-    queryKey: ['payments', 'list'],
-    enabled: !!token,
-    queryFn: () => paymentsApi.getPayments(),
-  });
-
   // SePay checkout mutation
   const sePayMutation = useMutation({
     mutationFn: (amount: number) =>
@@ -84,7 +77,6 @@ export function WalletPage() {
   const balance = balanceQuery.data?.balance ?? 0;
   const currency = balanceQuery.data?.wallet?.currency ?? 'VND';
   const transactions = transactionsQuery.data ?? [];
-  const payments = paymentsQuery.data ?? [];
 
   const typeBadgeVariant = (type: WalletType) => {
     switch (type) {
@@ -96,14 +88,6 @@ export function WalletPage() {
     }
   };
 
-  const statusBadgeVariant = (status: PaymentStatus) => {
-    switch (status) {
-      case 'Paid': return 'success';
-      case 'Failed': return 'destructive';
-      default: return 'warning';
-    }
-  };
-
   const getTypeLabel = (type: WalletType) => {
     const typeMap: Record<string, string> = {
       TopUp: t('wallet.transactionTypes.topUp'),
@@ -112,14 +96,6 @@ export function WalletPage() {
       Release: t('wallet.transactionTypes.release'),
     };
     return typeMap[type] ?? type;
-  };
-
-  const getPaymentStatusLabel = (status: PaymentStatus) => {
-    const statusMap: Record<string, string> = {
-      Paid: t('wallet.paymentSection.status.paid'),
-      Failed: t('wallet.paymentSection.status.failed'),
-    };
-    return statusMap[status] ?? t('wallet.paymentSection.status.pending');
   };
 
   const displayedTransactions = useMemo(() => transactions, [transactions]);
@@ -160,7 +136,6 @@ export function WalletPage() {
           size="sm"
           onClick={() => {
             transactionsQuery.refetch();
-            paymentsQuery.refetch();
             balanceQuery.refetch();
           }}
           disabled={!token || transactionsQuery.isPending}
@@ -251,44 +226,6 @@ export function WalletPage() {
           <p className="text-xs text-gray-400">
             {t('wallet.balanceCard.note')}
           </p>
-        </CardContent>
-      </Card>
-
-      {/* Payment history */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base text-gray-800">{t('wallet.paymentSection.historyTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {paymentsQuery.isLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00b14f]/30 border-t-[#00b14f]" />
-            </div>
-          ) : payments.length === 0 ? (
-            <p className="text-sm text-gray-500">{t('wallet.paymentSection.historyEmpty')}</p>
-          ) : (
-            <div className="divide-y divide-gray-200 rounded-xl border border-gray-100">
-              {payments.slice(0, 8).map((payment: PaymentItem) => (
-                <div
-                  key={payment.id}
-                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={statusBadgeVariant(payment.status)}>
-                        {getPaymentStatusLabel(payment.status)}
-                      </Badge>
-                      <span className="text-sm font-medium text-gray-800">{payment.purpose}</span>
-                    </div>
-                    <div className="mt-1 text-xs text-gray-500">{formatDateTime(payment.createdAt)}</div>
-                  </div>
-                  <div className="text-right text-sm font-semibold text-gray-900">
-                    {formatCurrency(payment.amount ?? 0, payment.currency || 'VND')}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
