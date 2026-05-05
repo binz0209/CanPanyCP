@@ -20,6 +20,7 @@ public class HybridRecommendationServiceTests
     private readonly Mock<ICVRepository> _cvRepoMock = new();
     private readonly Mock<IGitHubAnalysisRepository> _githubAnalysisRepoMock = new();
     private readonly Mock<IRecommendationLogRepository> _recLogRepoMock = new();
+    private readonly Mock<ISkillRepository> _skillRepoMock = new();
     private readonly Mock<ILogger<HybridRecommendationService>> _loggerMock = new();
     private readonly HybridRecommendationService _service;
 
@@ -45,6 +46,10 @@ public class HybridRecommendationServiceTests
             .Setup(x => x.GetLatestByUserIdAsync(It.IsAny<string>()))
             .ReturnsAsync((GitHubAnalysisResult?)null);
 
+        _skillRepoMock
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Enumerable.Empty<Skill>());
+
         _service = new HybridRecommendationService(
             _jobRepoMock.Object,
             _profileRepoMock.Object,
@@ -55,6 +60,7 @@ public class HybridRecommendationServiceTests
             _cvRepoMock.Object,
             _githubAnalysisRepoMock.Object,
             _recLogRepoMock.Object,
+            _skillRepoMock.Object,
             _loggerMock.Object);
     }
 

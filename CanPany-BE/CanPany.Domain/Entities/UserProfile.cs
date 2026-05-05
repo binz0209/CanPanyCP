@@ -1,6 +1,7 @@
 using CanPany.Shared.Common.Base;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace CanPany.Domain.Entities;
 
@@ -74,6 +75,7 @@ public class UserProfile : AggregateRoot
     public new DateTime? UpdatedAt { get; set; }
 
     [BsonElement("embedding")]
+    [JsonIgnore]
     public List<double>? Embedding { get; set; }
 }
 

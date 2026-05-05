@@ -27,6 +27,7 @@ public class HybridRecommendationService : IHybridRecommendationService
     private readonly ICVRepository _cvRepo;
     private readonly IGitHubAnalysisRepository _githubAnalysisRepo;
     private readonly IRecommendationLogRepository _recLogRepo;
+    private readonly ISkillRepository _skillRepo;
     private readonly ILogger<HybridRecommendationService> _logger;
 
     public HybridRecommendationService(
@@ -39,6 +40,7 @@ public class HybridRecommendationService : IHybridRecommendationService
         ICVRepository cvRepo,
         IGitHubAnalysisRepository githubAnalysisRepo,
         IRecommendationLogRepository recLogRepo,
+        ISkillRepository skillRepo,
         ILogger<HybridRecommendationService> logger)
     {
         _jobRepo = jobRepo;
@@ -50,6 +52,7 @@ public class HybridRecommendationService : IHybridRecommendationService
         _cvRepo = cvRepo;
         _githubAnalysisRepo = githubAnalysisRepo;
         _recLogRepo = recLogRepo;
+        _skillRepo = skillRepo;
         _logger = logger;
     }
 
@@ -68,20 +71,24 @@ public class HybridRecommendationService : IHybridRecommendationService
                 return Enumerable.Empty<(Job, double)>();
             }
 
-            // 1.1. Aggregate skills from CV and GitHub analysis
-            var allSkills = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // 1.1. Build skill name lookup (ObjectId → Name) for matching
+            var allSkillEntities = (await _skillRepo.GetAllAsync()).ToList();
+            var skillIdToName = allSkillEntities.ToDictionary(s => s.Id, s => s.Name, StringComparer.OrdinalIgnoreCase);
+
+            // Aggregate all user skills as NAMES (not IDs) for proper matching
+            var allSkillNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             
-            // Add profile skills
+            // Add profile skills (resolve ObjectIds → names)
             if (profile.SkillIds != null && profile.SkillIds.Any())
             {
-                foreach (var skill in profile.SkillIds)
+                foreach (var skillId in profile.SkillIds)
                 {
-                    if (!string.IsNullOrWhiteSpace(skill))
-                        allSkills.Add(skill);
+                    if (!string.IsNullOrWhiteSpace(skillId) && skillIdToName.TryGetValue(skillId, out var name))
+                        allSkillNames.Add(name);
                 }
             }
 
-            // Add CV extracted skills
+            // Add CV extracted skills (already names)
             try
             {
                 var cvs = await _cvRepo.GetByUserIdAsync(userId);
@@ -92,7 +99,7 @@ public class HybridRecommendationService : IHybridRecommendationService
                         foreach (var skill in cv.ExtractedSkills)
                         {
                             if (!string.IsNullOrWhiteSpace(skill))
-                                allSkills.Add(skill);
+                                allSkillNames.Add(skill);
                         }
                     }
                 }
@@ -102,7 +109,7 @@ public class HybridRecommendationService : IHybridRecommendationService
                 _logger.LogWarning(ex, "Failed to load CV skills for user {UserId}", userId);
             }
 
-            // Add GitHub analysis skills
+            // Add GitHub analysis skills (already names)
             try
             {
                 var githubAnalysis = await _githubAnalysisRepo.GetLatestByUserIdAsync(userId);
@@ -111,7 +118,7 @@ public class HybridRecommendationService : IHybridRecommendationService
                     foreach (var skill in githubAnalysis.PrimarySkills)
                     {
                         if (!string.IsNullOrWhiteSpace(skill))
-                            allSkills.Add(skill);
+                            allSkillNames.Add(skill);
                     }
                     
                     // Also add languages as skills
@@ -120,7 +127,7 @@ public class HybridRecommendationService : IHybridRecommendationService
                         foreach (var lang in githubAnalysis.LanguagePercentages.Keys)
                         {
                             if (!string.IsNullOrWhiteSpace(lang))
-                                allSkills.Add(lang);
+                                allSkillNames.Add(lang);
                         }
                     }
                 }
@@ -130,15 +137,13 @@ public class HybridRecommendationService : IHybridRecommendationService
                 _logger.LogWarning(ex, "Failed to load GitHub analysis skills for user {UserId}", userId);
             }
 
-            var aggregatedSkills = allSkills.ToList();
-            var profileCount = profile.SkillIds?.Count ?? 0;
-            var gitHubCount = aggregatedSkills.Count - profileCount; // approximate: total minus profile-sourced
+            var aggregatedSkills = allSkillNames.ToList();
             _logger.LogInformation(
-                "User {UserId} aggregated skills: Profile={ProfileCount}, CV+GitHub={CvGitHubCount}, Total={TotalCount}",
+                "User {UserId} aggregated skill NAMES: {TotalCount} (Profile={ProfileResolved}, CV+GitHub={OtherCount})",
                 userId,
-                profileCount,
-                gitHubCount,
-                aggregatedSkills.Count);
+                aggregatedSkills.Count,
+                profile.SkillIds?.Count(id => skillIdToName.ContainsKey(id)) ?? 0,
+                aggregatedSkills.Count - (profile.SkillIds?.Count(id => skillIdToName.ContainsKey(id)) ?? 0));
 
             // 2. Get all open jobs
             var openJobs = (await _jobRepo.GetByStatusAsync("Open")).ToList();
@@ -298,11 +303,15 @@ public class HybridRecommendationService : IHybridRecommendationService
                         contentBoost += 10.0;
                     }
                     
-                    // Skills overlap boost
+                    // Skills overlap boost (resolve job skill IDs to names first)
                     if (job.SkillIds != null && job.SkillIds.Any())
                     {
-                        var matchingSkills = job.SkillIds.Intersect(aggregatedSkills, StringComparer.OrdinalIgnoreCase).Count();
-                        var totalJobSkills = job.SkillIds.Count;
+                        var jobSkillNames = job.SkillIds
+                            .Where(id => skillIdToName.ContainsKey(id))
+                            .Select(id => skillIdToName[id])
+                            .ToList();
+                        var matchingSkills = jobSkillNames.Intersect(aggregatedSkills, StringComparer.OrdinalIgnoreCase).Count();
+                        var totalJobSkills = jobSkillNames.Count;
                         if (totalJobSkills > 0)
                         {
                             var skillMatchRatio = (double)matchingSkills / totalJobSkills;
@@ -344,15 +353,19 @@ public class HybridRecommendationService : IHybridRecommendationService
                     }
                 }
                 
-                // Fallback: Enhanced skill matching using aggregated skills
+                // Fallback: Enhanced skill matching using aggregated skills (names vs names)
                 if (semanticScore == 0 && aggregatedSkills.Any() && job.SkillIds != null && job.SkillIds.Any())
                 {
-                    var matchingSkills = aggregatedSkills.Intersect(job.SkillIds, StringComparer.OrdinalIgnoreCase).Count();
-                    var totalSkills = Math.Max(aggregatedSkills.Count, job.SkillIds.Count);
+                    var jobSkillNames = job.SkillIds
+                        .Where(id => skillIdToName.ContainsKey(id))
+                        .Select(id => skillIdToName[id])
+                        .ToList();
+                    var matchingSkills = aggregatedSkills.Intersect(jobSkillNames, StringComparer.OrdinalIgnoreCase).Count();
+                    var totalSkills = Math.Max(aggregatedSkills.Count, jobSkillNames.Count);
                     if (totalSkills > 0)
                     {
                         var skillMatchRatio = (double)matchingSkills / totalSkills;
-                        semanticScore = skillMatchRatio * 60; // Max 60 for basic missing semantic embeddings
+                        semanticScore = skillMatchRatio * 80; // Max 80 for skill name matching
                     }
                 }
 
@@ -547,13 +560,16 @@ public class HybridRecommendationService : IHybridRecommendationService
                 return result;
             }
 
-            // Aggregate skills from CV and GitHub
+            // Aggregate skills from CV and GitHub — resolve IDs to names
+            var allSkillEntities = (await _skillRepo.GetAllAsync()).ToList();
+            var skillIdToName = allSkillEntities.ToDictionary(s => s.Id, s => s.Name, StringComparer.OrdinalIgnoreCase);
+
             var allSkills = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (profile.SkillIds != null && profile.SkillIds.Any())
             {
-                foreach (var skill in profile.SkillIds)
-                    if (!string.IsNullOrWhiteSpace(skill))
-                        allSkills.Add(skill);
+                foreach (var skillId in profile.SkillIds)
+                    if (!string.IsNullOrWhiteSpace(skillId) && skillIdToName.TryGetValue(skillId, out var name))
+                        allSkills.Add(name);
             }
 
             try
@@ -591,33 +607,8 @@ public class HybridRecommendationService : IHybridRecommendationService
 
             var aggregatedSkills = allSkills.ToList();
 
-            // Get profile embedding
+            // Use cached embedding only — no Gemini call in request path
             List<double>? profileEmbedding = profile.Embedding;
-            if (profileEmbedding == null || !profileEmbedding.Any())
-            {
-                var profileText = BuildProfileText(profile, aggregatedSkills);
-                if (string.IsNullOrWhiteSpace(profileText))
-                {
-                    _logger.LogWarning("[HYBRID] Profile text is empty for user {UserId} — skipping embedding generation", userId);
-                }
-                else
-                {
-                    try
-                    {
-                        profileEmbedding = await _geminiService.GenerateEmbeddingAsync(profileText);
-                        if (profileEmbedding != null && profileEmbedding.Any())
-                        {
-                            profile.Embedding = profileEmbedding;
-                            profile.UpdatedAt = DateTime.UtcNow;
-                            await _profileRepo.UpdateAsync(profile);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to generate embedding for user {UserId}", userId);
-                    }
-                }
-            }
 
             // Get CF scores
             var jobIds = jobList.Select(j => j.Id).ToList();
@@ -641,14 +632,18 @@ public class HybridRecommendationService : IHybridRecommendationService
                     }
                 }
 
-                // Fallback: Basic skill matching
+                // Fallback: skill matching (resolved names)
                 if (semanticScore == 0 && aggregatedSkills.Any() && job.SkillIds != null && job.SkillIds.Any())
                 {
-                    var matchingSkills = aggregatedSkills.Intersect(job.SkillIds, StringComparer.OrdinalIgnoreCase).Count();
-                    var totalSkills = Math.Max(aggregatedSkills.Count, job.SkillIds.Count);
+                    var jobSkillNames = job.SkillIds
+                        .Where(id => skillIdToName.ContainsKey(id))
+                        .Select(id => skillIdToName[id])
+                        .ToList();
+                    var matchingSkills = aggregatedSkills.Intersect(jobSkillNames, StringComparer.OrdinalIgnoreCase).Count();
+                    var totalSkills = Math.Max(aggregatedSkills.Count, jobSkillNames.Count);
                     if (totalSkills > 0)
                     {
-                        semanticScore = (double)matchingSkills / totalSkills * 50;
+                        semanticScore = (double)matchingSkills / totalSkills * 80;
                     }
                 }
 

@@ -1,6 +1,7 @@
 using CanPany.Shared.Common.Base;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace CanPany.Domain.Entities;
 
@@ -30,6 +31,7 @@ public class Job : AggregateRoot
     public List<string> SkillIds { get; set; } = new();
 
     [BsonElement("skillEmbedding")]
+    [JsonIgnore]
     public List<double>? SkillEmbedding { get; set; }
 
     [BsonElement("budgetType")]
