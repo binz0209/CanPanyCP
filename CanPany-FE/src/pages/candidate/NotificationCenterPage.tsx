@@ -103,9 +103,9 @@ export function NotificationCenterPage() {
         if (!key) return '';
         if (!key.includes('.')) return key;
 
-        if (i18n.exists(key, { ns: 'candidate' })) return t(key, { ns: 'candidate' });
-        if (i18n.exists(key, { ns: 'company' })) return t(key, { ns: 'company' });
-        if (i18n.exists(key, { ns: 'common' })) return t(key, { ns: 'common' });
+        if (i18n.exists(key, { ns: 'candidate' })) return String((i18n as any).t(key, { ns: 'candidate' }));
+        if (i18n.exists(key, { ns: 'company' })) return String((i18n as any).t(key, { ns: 'company' }));
+        if (i18n.exists(key, { ns: 'common' })) return String((i18n as any).t(key, { ns: 'common' }));
 
         return key;
     };
