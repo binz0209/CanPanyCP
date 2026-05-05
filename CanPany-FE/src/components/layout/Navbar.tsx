@@ -84,9 +84,9 @@ export function Navbar() {
         if (!key) return '';
         if (!key.includes('.')) return key;
 
-        if (i18nC.exists(key, { ns: 'candidate' })) return tC(key, { ns: 'candidate' });
-        if (i18nC.exists(key, { ns: 'company' })) return tC(key, { ns: 'company' });
-        if (i18nC.exists(key, { ns: 'common' })) return tC(key, { ns: 'common' });
+        if (i18nC.exists(key, { ns: 'candidate' })) return String((i18nC as any).t(key, { ns: 'candidate' }));
+        if (i18nC.exists(key, { ns: 'company' })) return String((i18nC as any).t(key, { ns: 'company' }));
+        if (i18nC.exists(key, { ns: 'common' })) return String((i18nC as any).t(key, { ns: 'common' }));
         return key;
     };
 
