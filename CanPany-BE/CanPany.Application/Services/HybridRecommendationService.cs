@@ -155,52 +155,16 @@ public class HybridRecommendationService : IHybridRecommendationService
                 return Enumerable.Empty<(Job, double)>();
 
             // 4. Compute semantic scores using embeddings
+            // NOTE: Không gọi Gemini inline ở đây — request path phải trả về ngay.
+            // Embedding được tạo bởi background sync job hoặc lần đầu tiên qua lazy regen.
+            // Nếu không có embedding → fallback sang skill matching (step 415).
             List<double>? profileEmbedding = profile.Embedding;
 
             if (profileEmbedding == null || !profileEmbedding.Any())
             {
-                var profileText = BuildProfileText(profile, aggregatedSkills);
-                try
-                {
-                    profileEmbedding = await _geminiService.GenerateEmbeddingAsync(profileText);
-                    
-                    if (profileEmbedding != null && profileEmbedding.Any())
-                    {
-                        // Cache the newly generated embedding
-                        profile.Embedding = profileEmbedding;
-                        profile.UpdatedAt = DateTime.UtcNow;
-                        await _profileRepo.UpdateAsync(profile);
-                        _logger.LogInformation("Generated and cached new embedding for user {UserId} with {SkillCount} aggregated skills", userId, aggregatedSkills.Count);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to generate embedding for user {UserId}, using CF only", userId);
-                }
-            }
-            else
-            {
-                // Re-generate embedding if skills have changed significantly
-                var currentSkillCount = profile.SkillIds?.Count ?? 0;
-                if (aggregatedSkills.Count > currentSkillCount * 1.5) // 50% more skills from CV/GitHub
-                {
-                    _logger.LogInformation("Re-generating embedding for user {UserId} due to new skills from CV/GitHub", userId);
-                    var profileText = BuildProfileText(profile, aggregatedSkills);
-                    try
-                    {
-                        profileEmbedding = await _geminiService.GenerateEmbeddingAsync(profileText);
-                        if (profileEmbedding != null && profileEmbedding.Any())
-                        {
-                            profile.Embedding = profileEmbedding;
-                            profile.UpdatedAt = DateTime.UtcNow;
-                            await _profileRepo.UpdateAsync(profile);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to re-generate embedding for user {UserId}", userId);
-                    }
-                }
+                _logger.LogInformation(
+                    "[RECOMMEND] User {UserId} has no cached embedding — will use skill-matching fallback.",
+                    userId);
             }
 
             // 5. Get user's interaction history to boost similar jobs
@@ -238,27 +202,26 @@ public class HybridRecommendationService : IHybridRecommendationService
                 .Take(10)
                 .ToHashSet();
             
-            // Build aggregated embedding from interacted jobs for better matching
+            // Build aggregated embedding từ cached SkillEmbedding của interacted jobs (không gọi Gemini)
             List<double>? aggregatedJobEmbedding = null;
             if (interactedJobs.Any())
             {
-                try
+                // Dùng average của các cached SkillEmbedding thay vì gọi Gemini
+                var embeddingsFromInteracted = interactedJobs
+                    .Where(j => j.SkillEmbedding != null && j.SkillEmbedding.Any())
+                    .Select(j => j.SkillEmbedding!)
+                    .Take(5)
+                    .ToList();
+
+                if (embeddingsFromInteracted.Any() && embeddingsFromInteracted[0].Count > 0)
                 {
-                    var jobTexts = interactedJobs
-                        .Where(j => !string.IsNullOrWhiteSpace(j.Title) || !string.IsNullOrWhiteSpace(j.Description))
-                        .Select(j => $"{j.Title} {j.Description}")
-                        .Where(t => !string.IsNullOrWhiteSpace(t))
-                        .Take(5); // Use top 5 most recent interactions
-                    
-                    if (jobTexts.Any())
-                    {
-                        var aggregatedText = string.Join(" ", jobTexts);
-                        aggregatedJobEmbedding = await _geminiService.GenerateEmbeddingAsync(aggregatedText);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to generate aggregated embedding from user interactions");
+                    var dim = embeddingsFromInteracted[0].Count;
+                    var avg = new List<double>(new double[dim]);
+                    foreach (var emb in embeddingsFromInteracted)
+                        for (int i = 0; i < dim && i < emb.Count; i++)
+                            avg[i] += emb[i] / embeddingsFromInteracted.Count;
+                    aggregatedJobEmbedding = avg;
+                    _logger.LogDebug("[RECOMMEND] Aggregated embedding from {Count} cached interacted job embeddings", embeddingsFromInteracted.Count);
                 }
             }
 
@@ -300,39 +263,8 @@ public class HybridRecommendationService : IHybridRecommendationService
                 // Compute semantic score via cosine similarity of embeddings
                 if (profileEmbedding != null && profileEmbedding.Any())
                 {
-                    // Generate embedding for job if missing (Forced refresh once)
-                    List<double>? jobEmbedding = null; // job.SkillEmbedding;
-                    
-                    if (jobEmbedding == null || !jobEmbedding.Any())
-                    {
-                        try
-                        {
-                            // Build job text from title and skills (exclude description for cleaner semantic matching)
-                            var jobTextParts = new List<string>();
-                            if (!string.IsNullOrWhiteSpace(job.Title)) jobTextParts.Add($"Role: {job.Title}");
-                            
-                            if (job.SkillIds != null && job.SkillIds.Any())
-                                jobTextParts.Add($"Skills: {string.Join(", ", job.SkillIds)}");
-                            
-                            var jobText = string.Join(" | ", jobTextParts);
-                            if (!string.IsNullOrWhiteSpace(jobText))
-                            {
-                                jobEmbedding = await _geminiService.GenerateEmbeddingAsync(jobText);
-                                
-                                // Cache the embedding
-                                if (jobEmbedding != null && jobEmbedding.Any())
-                                {
-                                    job.SkillEmbedding = jobEmbedding;
-                                    await _jobRepo.UpdateAsync(job);
-                                    _logger.LogDebug("Generated and cached embedding for job {JobId}", job.Id);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to generate embedding for job {JobId}", job.Id);
-                        }
-                    }
+                    // Chỉ dùng cached SkillEmbedding — không generate on-the-fly để tránh timeout
+                    List<double>? jobEmbedding = job.SkillEmbedding;
                     
                     // Calculate semantic score if we have both embeddings
                     if (jobEmbedding != null && jobEmbedding.Any())
