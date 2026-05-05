@@ -74,17 +74,21 @@ public class HybridRecommendationService : IHybridRecommendationService
             // 1.1. Build skill name lookup (ObjectId → Name) for matching
             var allSkillEntities = (await _skillRepo.GetAllAsync()).ToList();
             var skillIdToName = allSkillEntities.ToDictionary(s => s.Id, s => s.Name, StringComparer.OrdinalIgnoreCase);
+            var knownSkillNames = new HashSet<string>(allSkillEntities.Select(s => s.Name), StringComparer.OrdinalIgnoreCase);
 
             // Aggregate all user skills as NAMES (not IDs) for proper matching
             var allSkillNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             
-            // Add profile skills (resolve ObjectIds → names)
+            // Add profile skills (resolve ObjectIds → names, or keep if already a name)
             if (profile.SkillIds != null && profile.SkillIds.Any())
             {
                 foreach (var skillId in profile.SkillIds)
                 {
-                    if (!string.IsNullOrWhiteSpace(skillId) && skillIdToName.TryGetValue(skillId, out var name))
+                    if (string.IsNullOrWhiteSpace(skillId)) continue;
+                    if (skillIdToName.TryGetValue(skillId, out var name))
                         allSkillNames.Add(name);
+                    else
+                        allSkillNames.Add(skillId); // already a name (from CV extraction)
                 }
             }
 
@@ -307,8 +311,8 @@ public class HybridRecommendationService : IHybridRecommendationService
                     if (job.SkillIds != null && job.SkillIds.Any())
                     {
                         var jobSkillNames = job.SkillIds
-                            .Where(id => skillIdToName.ContainsKey(id))
-                            .Select(id => skillIdToName[id])
+                            .Where(id => !string.IsNullOrWhiteSpace(id))
+                            .Select(id => skillIdToName.TryGetValue(id, out var n) ? n : id)
                             .ToList();
                         var matchingSkills = jobSkillNames.Intersect(aggregatedSkills, StringComparer.OrdinalIgnoreCase).Count();
                         var totalJobSkills = jobSkillNames.Count;
@@ -357,8 +361,8 @@ public class HybridRecommendationService : IHybridRecommendationService
                 if (semanticScore == 0 && aggregatedSkills.Any() && job.SkillIds != null && job.SkillIds.Any())
                 {
                     var jobSkillNames = job.SkillIds
-                        .Where(id => skillIdToName.ContainsKey(id))
-                        .Select(id => skillIdToName[id])
+                        .Where(id => !string.IsNullOrWhiteSpace(id))
+                        .Select(id => skillIdToName.TryGetValue(id, out var n) ? n : id)
                         .ToList();
                     var matchingSkills = aggregatedSkills.Intersect(jobSkillNames, StringComparer.OrdinalIgnoreCase).Count();
                     var totalSkills = Math.Max(aggregatedSkills.Count, jobSkillNames.Count);
@@ -568,8 +572,13 @@ public class HybridRecommendationService : IHybridRecommendationService
             if (profile.SkillIds != null && profile.SkillIds.Any())
             {
                 foreach (var skillId in profile.SkillIds)
-                    if (!string.IsNullOrWhiteSpace(skillId) && skillIdToName.TryGetValue(skillId, out var name))
+                {
+                    if (string.IsNullOrWhiteSpace(skillId)) continue;
+                    if (skillIdToName.TryGetValue(skillId, out var name))
                         allSkills.Add(name);
+                    else
+                        allSkills.Add(skillId); // already a name
+                }
             }
 
             try
@@ -636,8 +645,8 @@ public class HybridRecommendationService : IHybridRecommendationService
                 if (semanticScore == 0 && aggregatedSkills.Any() && job.SkillIds != null && job.SkillIds.Any())
                 {
                     var jobSkillNames = job.SkillIds
-                        .Where(id => skillIdToName.ContainsKey(id))
-                        .Select(id => skillIdToName[id])
+                        .Where(id => !string.IsNullOrWhiteSpace(id))
+                        .Select(id => skillIdToName.TryGetValue(id, out var n) ? n : id)
                         .ToList();
                     var matchingSkills = aggregatedSkills.Intersect(jobSkillNames, StringComparer.OrdinalIgnoreCase).Count();
                     var totalSkills = Math.Max(aggregatedSkills.Count, jobSkillNames.Count);
