@@ -88,6 +88,7 @@ public static class I18nKeys
             public const string NotFound = "Error.Application.NotFound";
             public const string NoteRequired = "Error.Application.NoteRequired";
             public const string UpdateFailed = "Error.Application.UpdateFailed";
+            public const string AlreadyApplied = "Error.Application.AlreadyApplied";
         }
 
         public static class Conversation

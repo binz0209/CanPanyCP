@@ -104,7 +104,8 @@
     "Application": {
       "NotFound": "Không tìm thấy đơn ứng tuyển.",
       "NoteRequired": "Ghi chú là bắt buộc.",
-      "UpdateFailed": "Cập nhật đơn ứng tuyển thất bại."
+      "UpdateFailed": "Cập nhật đơn ứng tuyển thất bại.",
+      "AlreadyApplied": "Bạn đã ứng tuyển công việc này rồi."
     },
     "Conversation": {
       "NotFound": "Không tìm thấy cuộc hội thoại.",
