@@ -15,4 +15,10 @@ public record RecommendationSyncPayload
     /// Number of recommendations to warm up.
     /// </summary>
     public int Limit { get; init; } = 20;
+
+    /// <summary>
+    /// When true, regenerate embedding even if one already exists.
+    /// Default is false — skip Gemini call if embedding is already present.
+    /// </summary>
+    public bool ForceRegenerate { get; init; } = false;
 }

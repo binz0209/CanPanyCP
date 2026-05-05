@@ -476,8 +476,10 @@ public class BackgroundJobsController : ControllerBase
             return BadRequest(new { message = "Job is already finished and cannot be cancelled", status = progress.Status.ToString() });
 
         await _progressTracker.RequestCancelAsync(jobId);
+        // Immediately mark as Cancelled so frontend sees instant status change
+        await _progressTracker.MarkAsCancelledAsync(jobId);
 
-        return Ok(new { message = "Job cancellation requested", jobId });
+        return Ok(new { message = "Job cancellation requested", jobId, status = "Cancelled" });
     }
 
     /// <summary>

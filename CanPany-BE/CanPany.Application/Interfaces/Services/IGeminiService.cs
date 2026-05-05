@@ -7,8 +7,17 @@ namespace CanPany.Application.Interfaces.Services;
 
 public interface IGeminiService
 {
-    Task<List<double>> GenerateEmbeddingAsync(string text);
-    Task<string> GenerateChatResponseAsync(string systemPrompt, string userMessage);
+    Task<List<double>> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Batch embedding — sends multiple texts in a single API call to reduce rate-limit pressure.
+    /// Falls back to sequential single calls if batch endpoint is unavailable.
+    /// </summary>
+    Task<List<List<double>>> GenerateBatchEmbeddingsAsync(
+        List<string> texts,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GenerateChatResponseAsync(string systemPrompt, string userMessage, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Analyze GitHub data and extract skills using AI

@@ -36,7 +36,7 @@ public class AIChatServiceTests
         _conversationRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Conversation>()))
             .ReturnsAsync(new Conversation { Id = "conv1" });
             
-        _geminiServiceMock.Setup(x => x.GenerateChatResponseAsync(It.IsAny<string>(), message))
+        _geminiServiceMock.Setup(x => x.GenerateChatResponseAsync(It.IsAny<string>(), message, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aiResponse);
 
         // Act

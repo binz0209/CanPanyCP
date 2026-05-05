@@ -116,7 +116,7 @@ public class HybridRecommendationServiceTests
         _applicationRepoMock.Setup(x => x.GetByCandidateIdAsync("user1")).ReturnsAsync(applications);
 
         _interactionServiceMock.Setup(x => x.GetUserInteractionCountAsync("user1")).ReturnsAsync(0);
-        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>()))
+        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<double> { 0.1, 0.2, 0.3 });
 
         _cfServiceMock.Setup(x => x.GetCfScoresForJobsAsync("user1", It.IsAny<IEnumerable<string>>()))
@@ -148,7 +148,7 @@ public class HybridRecommendationServiceTests
 
         _interactionServiceMock.Setup(x => x.GetUserInteractionCountAsync("user1")).ReturnsAsync(3); // < 10
 
-        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>()))
+        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<double> { 0.9, 0.1, 0.1 }); // Same as job → high similarity
 
         _cfServiceMock.Setup(x => x.GetCfScoresForJobsAsync("user1", It.IsAny<IEnumerable<string>>()))

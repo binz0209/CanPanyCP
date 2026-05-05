@@ -102,9 +102,10 @@ public class RecommendationSyncJobHandler : BaseJobHandler
                 }
             }
 
+            // ── Build profile text (kept for logging/debug purposes) ──
             var textParts = new List<string>();
             if (!string.IsNullOrWhiteSpace(profile.Title)) textParts.Add($"Role: {profile.Title}");
-            if (allSkills.Any()) textParts.Add($"Skills: {string.Join(", ", allSkills)}");
+            if (allSkills.Any()) textParts.Add($"Skills: {string.Join(", ", allSkills.OrderBy(s => s))}");
 
             var profileText = string.Join(" | ", textParts);
             if (string.IsNullOrWhiteSpace(profileText))
@@ -115,11 +116,35 @@ public class RecommendationSyncJobHandler : BaseJobHandler
             await ReportProgressAsync(job.JobId, 70, "backgroundJobs.steps.generatingEmbeddings");
             await ThrowIfCancelledAsync(job.JobId, cancellationToken);
 
-            var embedding = await _geminiService.GenerateEmbeddingAsync(profileText);
+            // ── Aggregate skills vào profile.SkillIds (không cần Gemini) ──
+            // Embedding sẽ được tạo lazily bởi HybridRecommendationService khi user cần recommend.
+            // Đây là cách tối ưu nhất để không tốn Gemini free-tier quota cho repeat syncs.
+            var newSkills = allSkills
+                .Where(s => profile.SkillIds == null || !profile.SkillIds.Contains(s, StringComparer.OrdinalIgnoreCase))
+                .ToList();
 
-            profile.Embedding = embedding;
-            profile.UpdatedAt = DateTime.UtcNow;
-            await _profileRepository.UpdateAsync(profile);
+            var skillsUpdated = newSkills.Count > 0;
+            if (skillsUpdated)
+            {
+                profile.SkillIds ??= new List<string>();
+                profile.SkillIds.AddRange(newSkills);
+                // Clear embedding để HybridRecommendationService tái tạo lần tới khi user request
+                profile.Embedding = null;
+                profile.UpdatedAt = DateTime.UtcNow;
+                await _profileRepository.UpdateAsync(profile);
+
+                Logger.LogInformation(
+                    "[RECOMMEND_SYNC_UPDATED] JobId: {JobId} | Added {NewCount} new skills. Total: {Total}. Embedding cleared for lazy regen.",
+                    job.JobId, newSkills.Count, profile.SkillIds.Count);
+            }
+            else
+            {
+                Logger.LogInformation(
+                    "[RECOMMEND_SYNC_NO_CHANGE] JobId: {JobId} | No new skills found. Profile unchanged.",
+                    job.JobId);
+            }
+
+            var embeddingSize = profile.Embedding?.Count ?? 0;
 
             await ReportProgressAsync(job.JobId, 100, "backgroundJobs.steps.successSyncRec");
 
@@ -127,9 +152,11 @@ public class RecommendationSyncJobHandler : BaseJobHandler
             {
                 ["UserId"] = payload.UserId,
                 ["SkillCount"] = allSkills.Count,
-                ["EmbeddingSize"] = embedding.Count,
+                ["EmbeddingSize"] = embeddingSize,
                 ["CvCount"] = cvs.Count,
-                ["HasGitHubAnalysis"] = githubAnalysis != null
+                ["HasGitHubAnalysis"] = githubAnalysis != null,
+                ["SkillsUpdated"] = skillsUpdated,
+                ["NewSkillsAdded"] = newSkills.Count
             });
         }
         catch (GeminiRateLimitException ex)

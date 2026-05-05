@@ -87,7 +87,7 @@ public class CandidateSearchServiceTests
         var embedding = new List<double> { 0.1, 0.2, 0.3 };
 
         _jobRepoMock.Setup(x => x.GetByIdAsync("job1")).ReturnsAsync(job);
-        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>())).ReturnsAsync(embedding);
+        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(embedding);
         _profileRepoMock.Setup(x => x.SearchByVectorAsync(embedding, 20, 0.5)).ReturnsAsync(profiles);
 
         // Act
@@ -192,7 +192,7 @@ public class CandidateSearchServiceTests
         };
         var user = new User { Id = "u1", FullName = "Test User", Email = "test@test.com" };
 
-        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>())).ReturnsAsync(embedding);
+        _geminiServiceMock.Setup(x => x.GenerateEmbeddingAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(embedding);
         _profileRepoMock.Setup(x => x.SearchByVectorAsync(embedding, It.IsAny<int>(), 0.5))
             .ReturnsAsync(new List<(UserProfile, double)> { (profile, 0.9) });
         _userRepoMock.Setup(x => x.GetByIdAsync("u1")).ReturnsAsync(user);

@@ -8,6 +8,7 @@ using CanPany.Domain.DTOs.Analysis;
 using CanPany.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace CanPany.Infrastructure.Services;
 
@@ -55,9 +56,13 @@ public class GeminiService : IGeminiService
         ("models/embedding-001", "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent")
     };
 
-    // Rate limit config
-    private const int MaxRetries = 3;
-    private const int BaseRetryDelaySeconds = 10;
+    // Rate limit config — tuned for Gemini free tier (~5 RPM)
+    private const int MaxRetries = 5;
+    private const int BaseRetryDelaySeconds = 15;
+
+    // Global rate limiter — serialize all Gemini API calls to avoid self-DDoS
+    private static readonly SemaphoreSlim _rateLimiter = new(1, 1);
+    private static readonly Random _jitterRandom = new();
 
     public GeminiService(
         HttpClient httpClient,
@@ -77,7 +82,8 @@ public class GeminiService : IGeminiService
     }
 
     /// <summary>
-    /// Send HTTP POST with 429 retry + exponential backoff.
+    /// Send HTTP POST with 429 retry + exponential backoff + jitter.
+    /// Uses global SemaphoreSlim to serialize calls and prevent self-DDoS.
     /// Reads Retry-After header when available.
     /// </summary>
     private async Task<HttpResponseMessage> SendWithRetryAsync(
@@ -85,15 +91,23 @@ public class GeminiService : IGeminiService
         StringContent content,
         CancellationToken cancellationToken = default)
     {
+        // Read body once for cloning in retries
+        var bodyString = await content.ReadAsStringAsync(cancellationToken);
+
         for (int attempt = 0; attempt <= MaxRetries; attempt++)
         {
-            // Clone content for retry (StringContent can only be read once)
-            var clonedContent = new StringContent(
-                await content.ReadAsStringAsync(cancellationToken),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await _httpClient.PostAsync(url, clonedContent, cancellationToken);
+            // Acquire global rate limiter — only 1 Gemini call at a time
+            await _rateLimiter.WaitAsync(cancellationToken);
+            HttpResponseMessage response;
+            try
+            {
+                var clonedContent = new StringContent(bodyString, Encoding.UTF8, "application/json");
+                response = await _httpClient.PostAsync(url, clonedContent, cancellationToken);
+            }
+            finally
+            {
+                _rateLimiter.Release();
+            }
 
             // Retry on 429 (rate limit) and 503 (transient overload)
             if (response.StatusCode != HttpStatusCode.TooManyRequests &&
@@ -112,7 +126,7 @@ public class GeminiService : IGeminiService
                 return response;
             }
 
-            // Parse Retry-After header (seconds) or use exponential backoff
+            // Parse Retry-After header (seconds) or use exponential backoff + jitter
             double retryAfterSeconds;
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 response.Headers.RetryAfter?.Delta != null)
@@ -121,11 +135,16 @@ public class GeminiService : IGeminiService
             }
             else
             {
+                // Exponential backoff: 15s, 30s, 60s, 120s, 240s + random jitter 0-5s
                 retryAfterSeconds = Math.Pow(2, attempt) * BaseRetryDelaySeconds;
             }
 
+            // Add jitter to prevent thundering herd
+            var jitter = _jitterRandom.NextDouble() * 5.0;
+            retryAfterSeconds += jitter;
+
             _logger.LogWarning(
-                "[GEMINI_RETRY] Status: {Status}. Attempt {Attempt}/{MaxRetries}. Waiting {Seconds}s before retry",
+                "[GEMINI_RETRY] Status: {Status}. Attempt {Attempt}/{MaxRetries}. Waiting {Seconds:F1}s before retry",
                 response.StatusCode, attempt + 1, MaxRetries, retryAfterSeconds);
 
             await Task.Delay(TimeSpan.FromSeconds(retryAfterSeconds), cancellationToken);
@@ -135,7 +154,7 @@ public class GeminiService : IGeminiService
         throw new GeminiRateLimitException(60);
     }
 
-    public async Task<List<double>> GenerateEmbeddingAsync(string text)
+    public async Task<List<double>> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
         {
@@ -159,7 +178,7 @@ public class GeminiService : IGeminiService
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await SendWithRetryAsync($"{url}?key={_apiKey}", content);
+                var response = await SendWithRetryAsync($"{url}?key={_apiKey}", content, cancellationToken);
 
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -211,7 +230,121 @@ public class GeminiService : IGeminiService
         }
     }
 
-    public async Task<string> GenerateChatResponseAsync(string systemPrompt, string userMessage)
+    /// <summary>
+    /// Batch embedding using Gemini batchEmbedContents API.
+    /// Sends multiple texts in a single HTTP request to reduce rate-limit pressure.
+    /// Falls back to sequential single calls if batch endpoint fails.
+    /// </summary>
+    public async Task<List<List<double>>> GenerateBatchEmbeddingsAsync(
+        List<string> texts,
+        CancellationToken cancellationToken = default)
+    {
+        if (texts == null || texts.Count == 0)
+            return new List<List<double>>();
+
+        // Single text — delegate to existing method
+        if (texts.Count == 1)
+        {
+            var single = await GenerateEmbeddingAsync(texts[0]);
+            return new List<List<double>> { single };
+        }
+
+        if (string.IsNullOrWhiteSpace(_apiKey))
+        {
+            _logger.LogWarning("[GEMINI_BATCH_EMBED] API Key missing. Returning mock embeddings.");
+            return texts.Select(_ => GenerateMockEmbedding()).ToList();
+        }
+
+        try
+        {
+            // Try batch endpoint for each embedding candidate model
+            for (int i = 0; i < EmbeddingCandidates.Length; i++)
+            {
+                var (model, singleUrl) = EmbeddingCandidates[i];
+                // batchEmbedContents URL: replace :embedContent with :batchEmbedContents
+                var batchUrl = singleUrl.Replace(":embedContent", ":batchEmbedContents");
+
+                var requests = texts.Select(text => new
+                {
+                    model,
+                    content = new { parts = new[] { new { text } } },
+                    outputDimensionality = EmbeddingDimensions
+                }).ToArray();
+
+                var requestBody = new { requests };
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation(
+                    "[GEMINI_BATCH_EMBED] Sending batch of {Count} texts using {Model}",
+                    texts.Count, model);
+
+                var response = await SendWithRetryAsync($"{batchUrl}?key={_apiKey}", content, cancellationToken);
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(
+                        "[GEMINI_BATCH_EMBED_404] Batch endpoint not found for model {Model}. Trying next.",
+                        model);
+                    continue;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogWarning(
+                        "[GEMINI_BATCH_EMBED_ERROR] Status: {Status} | Body: {Body}. Falling back to sequential.",
+                        response.StatusCode, errorBody);
+                    break; // Fall back to sequential
+                }
+
+                var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+                using var doc = JsonDocument.Parse(responseString);
+
+                var embeddings = doc.RootElement.GetProperty("embeddings");
+                var results = new List<List<double>>();
+
+                foreach (var embedding in embeddings.EnumerateArray())
+                {
+                    var values = embedding.GetProperty("values");
+                    var vec = new List<double>();
+                    foreach (var v in values.EnumerateArray())
+                        vec.Add(v.GetDouble());
+                    results.Add(vec);
+                }
+
+                _logger.LogInformation(
+                    "[GEMINI_BATCH_EMBED_SUCCESS] Got {Count} embeddings in single request",
+                    results.Count);
+
+                return results;
+            }
+        }
+        catch (GeminiRateLimitException)
+        {
+            throw; // Propagate for Worker retry
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "[GEMINI_BATCH_EMBED_FALLBACK] Batch failed, falling back to sequential calls");
+        }
+
+        // Fallback: sequential calls with small delay between each
+        _logger.LogInformation("[GEMINI_BATCH_EMBED_SEQ] Processing {Count} texts sequentially", texts.Count);
+        var sequentialResults = new List<List<double>>();
+        for (int i = 0; i < texts.Count; i++)
+        {
+            sequentialResults.Add(await GenerateEmbeddingAsync(texts[i]));
+
+            // Small delay between sequential calls to respect rate limits
+            if (i < texts.Count - 1)
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+        }
+        return sequentialResults;
+    }
+
+    public async Task<string> GenerateChatResponseAsync(string systemPrompt, string userMessage, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(_apiKey))
         {
@@ -239,7 +372,7 @@ public class GeminiService : IGeminiService
             _logger.LogDebug("[GEMINI_REQUEST] URL: {Url}", _chatModelUrl);
 
             // Use retry-aware send
-            var response = await SendWithRetryAsync($"{_chatModelUrl}?key={_apiKey}", content);
+            var response = await SendWithRetryAsync($"{_chatModelUrl}?key={_apiKey}", content, cancellationToken);
 
             var responseString = await response.Content.ReadAsStringAsync();
 

@@ -4,6 +4,7 @@ using CanPany.Worker.Infrastructure.Registry;
 using CanPany.Worker.Infrastructure.Progress;
 using CanPany.Worker.Models;
 using CanPany.Worker.Handlers;
+using CanPany.Infrastructure.Services;
 using Polly;
 using Polly.CircuitBreaker;
 using System.Collections.Concurrent;
@@ -161,6 +162,40 @@ public class JobProcessorWorker : BackgroundService
         // Mark job as running
         await _progressTracker.MarkAsRunningAsync(job.JobId, cancellationToken);
 
+        // ── Create a linked CancellationToken that polls Redis cancel flag ──
+        // This allows cancellation to propagate into Task.Delay during Gemini retry backoff,
+        // so the user doesn't have to wait for the full retry cycle to complete.
+        using var jobCancelCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var jobToken = jobCancelCts.Token;
+
+        // Background task that polls Redis cancel flag every 2 seconds
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!jobCancelCts.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2), jobCancelCts.Token);
+                    if (await _progressTracker.IsCancelledAsync(job.JobId, CancellationToken.None))
+                    {
+                        _logger.LogInformation(
+                            "[JOB_CANCEL_POLL] Cancel detected for JobId: {JobId} — triggering cancellation",
+                            job.JobId);
+                        jobCancelCts.Cancel();
+                        break;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when job completes or host shuts down
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[JOB_CANCEL_POLL_ERROR] JobId: {JobId}", job.JobId);
+            }
+        }, cancellationToken);
+
         try
         {
             // Execute with interceptor wrapper (audit, performance, exception tracking)
@@ -170,9 +205,10 @@ public class JobProcessorWorker : BackgroundService
                 operation: async () =>
                 {
                     // Execute with resilience pipeline (retry + circuit breaker)
+                    // Pass the linked jobToken so cancel propagates into handler + Gemini retry
                     return await _resiliencePipeline.ExecuteAsync(
                         async ct => await handler.ExecuteAsync(job, ct),
-                        cancellationToken
+                        jobToken
                     );
                 }
             );
@@ -198,8 +234,8 @@ public class JobProcessorWorker : BackgroundService
         {
             _logger.LogInformation("[JOB_CANCELLED] JobId: {JobId} | I18nKey: {I18nKey} — cancelled by user",
                 job.JobId, job.I18nKey);
-            await _progressTracker.MarkAsCancelledAsync(job.JobId, cancellationToken);
-            await _jobQueue.AcknowledgeAsync(job, cancellationToken);
+            await _progressTracker.MarkAsCancelledAsync(job.JobId, CancellationToken.None);
+            await _jobQueue.AcknowledgeAsync(job, CancellationToken.None);
         }
         catch (BrokenCircuitException ex)
         {
@@ -212,6 +248,23 @@ public class JobProcessorWorker : BackgroundService
             await _progressTracker.MarkAsRetryingAsync(job.JobId, cancellationToken);
             // Circuit breaker open - requeue with delay
             await _jobQueue.RequeueAsync(job, TimeSpan.FromSeconds(60), cancellationToken);
+        }
+        catch (GeminiRateLimitException rateLimitEx)
+        {
+            // GeminiService already exhausted its internal retries (5 attempts with 15s→240s backoff).
+            // Requeue with the Retry-After delay so the job is picked up after the rate limit window resets.
+            var requeueDelay = TimeSpan.FromSeconds(Math.Max(rateLimitEx.RetryAfterSeconds, 60));
+
+            _logger.LogWarning(
+                "[JOB_RATE_LIMITED] JobId: {JobId} | I18nKey: {I18nKey} | Requeue after {Delay}s",
+                job.JobId, job.I18nKey, requeueDelay.TotalSeconds);
+
+            await _progressTracker.UpdateProgressAsync(
+                job.JobId, -1,
+                $"Rate limited by Gemini API. Will retry in {requeueDelay.TotalSeconds}s...",
+                cancellationToken: cancellationToken);
+            await _progressTracker.MarkAsRetryingAsync(job.JobId, cancellationToken);
+            await _jobQueue.RequeueAsync(job, requeueDelay, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -264,12 +317,18 @@ public class JobProcessorWorker : BackgroundService
                 MaxRetryAttempts = 2,
                 Delay = TimeSpan.FromSeconds(1),
                 BackoffType = Polly.DelayBackoffType.Exponential,
+                // Do NOT retry GeminiRateLimitException — GeminiService already handles
+                // its own internal retry with longer exponential backoff (15s→240s).
+                // Retrying here would waste rate limit budget.
+                ShouldHandle = new PredicateBuilder()
+                    .Handle<Exception>(ex => ex is not GeminiRateLimitException),
                 OnRetry = args =>
                 {
                     _logger.LogWarning(
-                        "[POLLY_RETRY] Attempt: {Attempt} | Delay: {Delay}ms",
+                        "[POLLY_RETRY] Attempt: {Attempt} | Delay: {Delay}ms | Exception: {Exception}",
                         args.AttemptNumber,
-                        args.RetryDelay.TotalMilliseconds
+                        args.RetryDelay.TotalMilliseconds,
+                        args.Outcome.Exception?.GetType().Name ?? "none"
                     );
                     return ValueTask.CompletedTask;
                 }
