@@ -36,13 +36,19 @@ export function AdminPaymentsPage() {
         queryFn: () => adminApi.getPayments(statusFilter || undefined),
     });
 
-    const filtered = allPayments.filter((p: any) => {
-        if (!search.trim()) return true;
-        const q = search.toLowerCase();
-        return (p.id ?? '').toLowerCase().includes(q) ||
-               (p.userId ?? '').toLowerCase().includes(q) ||
-               (p.packageId ?? '').toLowerCase().includes(q);
-    });
+    const filtered = allPayments
+        .filter((p: any) => {
+            if (!search.trim()) return true;
+            const q = search.toLowerCase();
+            return (p.id ?? '').toLowerCase().includes(q) ||
+                   (p.userId ?? '').toLowerCase().includes(q) ||
+                   (p.packageId ?? '').toLowerCase().includes(q);
+        })
+        .sort((a: any, b: any) => {
+            const aTime = new Date(a.createdAt ?? a.CreatedAt ?? 0).getTime();
+            const bTime = new Date(b.createdAt ?? b.CreatedAt ?? 0).getTime();
+            return bTime - aTime;
+        });
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 

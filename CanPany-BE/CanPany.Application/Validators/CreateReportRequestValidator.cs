@@ -10,8 +10,12 @@ public class CreateReportRequestValidator : AbstractValidator<CreateReportDto>
 {
     public CreateReportRequestValidator()
     {
-        RuleFor(x => x.ReportedUserId)
-            .NotEmpty().WithMessage("Reported user ID is required");
+        RuleFor(x => x)
+            .Must(x =>
+                !string.IsNullOrWhiteSpace(x.ReportedUserId) ||
+                !string.IsNullOrWhiteSpace(x.ReportedCompanyId) ||
+                !string.IsNullOrWhiteSpace(x.ReportedJobId))
+            .WithMessage("At least one report target is required");
 
         RuleFor(x => x.Reason)
             .NotEmpty().WithMessage("Reason is required")

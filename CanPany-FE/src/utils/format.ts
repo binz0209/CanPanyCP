@@ -1,4 +1,4 @@
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import i18n from '../i18n';
 
@@ -8,6 +8,7 @@ function getLocale() {
 
 export function formatDate(date: Date | string, pattern = 'dd/MM/yyyy') {
     const d = typeof date === 'string' ? parseISO(date) : date;
+    if (!isValid(d)) return '—';
     return format(d, pattern, { locale: getLocale() });
 }
 
@@ -17,6 +18,7 @@ export function formatDateTime(date: Date | string) {
 
 export function formatRelativeTime(date: Date | string) {
     const d = typeof date === 'string' ? parseISO(date) : date;
+    if (!isValid(d)) return '—';
     return formatDistanceToNow(d, { addSuffix: true, locale: getLocale() });
 }
 

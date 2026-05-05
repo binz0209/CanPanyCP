@@ -44,8 +44,12 @@ export function useNotificationsSignalR() {
             queryClient.invalidateQueries({ queryKey: notificationKeys.all });
 
             // Show a plain string toast to avoid JSX in .ts file
-            const title = notification.title || t('notificationCenter.newNotification');
-            const content = notification.content || '';
+            const title = notification.title
+                ? t(notification.title, { defaultValue: notification.title })
+                : t('notificationCenter.newNotification');
+            const content = notification.content
+                ? t(notification.content, { defaultValue: notification.content })
+                : '';
             const message = content ? `${title}: ${content}` : title;
             
             toast.success(message, {

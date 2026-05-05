@@ -115,7 +115,19 @@
     "genCv": "Generate CV with AI",
     "companySection": "Company",
     "companyProfile": "View company profile",
-    "companyWebsite": "Website"
+    "companyWebsite": "Website",
+    "report": {
+      "button": "Report",
+      "title": "Report job post",
+      "reason": "Reason",
+      "description": "Description",
+      "reasonPlaceholder": "E.g., misleading content, spam, scam...",
+      "descriptionPlaceholder": "Describe the issue in detail...",
+      "submit": "Submit report",
+      "submitting": "Submitting...",
+      "success": "Job report submitted successfully",
+      "error": "Unable to submit job report"
+    }
   },
   "companies": {
     "title": "Companies",
@@ -139,7 +151,19 @@
     "contactTitle": "Contact",
     "address": "Address",
     "phone": "Phone",
-    "website": "Website"
+    "website": "Website",
+    "report": {
+      "button": "Report company",
+      "title": "Report company",
+      "reason": "Reason",
+      "description": "Description",
+      "reasonPlaceholder": "E.g., inaccurate company information...",
+      "descriptionPlaceholder": "Describe the issue in detail...",
+      "submit": "Submit report",
+      "submitting": "Submitting...",
+      "success": "Company report submitted successfully",
+      "error": "Unable to submit company report"
+    }
   },
   "jobCard": {
     "companyFallback": "Unknown company",

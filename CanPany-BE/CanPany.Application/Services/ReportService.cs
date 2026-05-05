@@ -1,4 +1,4 @@
-﻿using CanPany.Application.DTOs;
+using CanPany.Application.DTOs;
 using CanPany.Application.Interfaces.Services;
 using CanPany.Domain.Entities;
 using CanPany.Domain.Interfaces.Repositories;
@@ -13,6 +13,8 @@ public class ReportService : IReportService
 {
     private readonly IReportRepository _reportRepo;
     private readonly IUserRepository _userRepo;
+    private readonly ICompanyRepository _companyRepo;
+    private readonly IJobRepository _jobRepo;
     private readonly INotificationService _notificationService;
     private readonly IAdminService _adminService;
     private readonly ILogger<ReportService> _logger;
@@ -20,12 +22,16 @@ public class ReportService : IReportService
     public ReportService(
         IReportRepository reportRepo,
         IUserRepository userRepo,
+        ICompanyRepository companyRepo,
+        IJobRepository jobRepo,
         INotificationService notificationService,
         IAdminService adminService,
         ILogger<ReportService> logger)
     {
         _reportRepo = reportRepo;
         _userRepo = userRepo;
+        _companyRepo = companyRepo;
+        _jobRepo = jobRepo;
         _notificationService = notificationService;
         _adminService = adminService;
         _logger = logger;
@@ -35,11 +41,31 @@ public class ReportService : IReportService
     {
         try
         {
-            // Validate reported user exists
-            var reportedUser = await _userRepo.GetByIdAsync(dto.ReportedUserId);
-            if (reportedUser == null)
+            if (!string.IsNullOrWhiteSpace(dto.ReportedUserId) && dto.ReportedUserId == reporterId)
             {
-                throw new ArgumentException("Reported user not found", nameof(dto.ReportedUserId));
+                throw new ArgumentException("You cannot report yourself", nameof(dto.ReportedUserId));
+            }
+
+            // Validate report targets exist
+            if (!string.IsNullOrWhiteSpace(dto.ReportedUserId))
+            {
+                var reportedUser = await _userRepo.GetByIdAsync(dto.ReportedUserId);
+                if (reportedUser == null)
+                    throw new ArgumentException("Reported user not found", nameof(dto.ReportedUserId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.ReportedCompanyId))
+            {
+                var reportedCompany = await _companyRepo.GetByIdAsync(dto.ReportedCompanyId);
+                if (reportedCompany == null)
+                    throw new ArgumentException("Reported company not found", nameof(dto.ReportedCompanyId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.ReportedJobId))
+            {
+                var reportedJob = await _jobRepo.GetByIdAsync(dto.ReportedJobId);
+                if (reportedJob == null)
+                    throw new ArgumentException("Reported job not found", nameof(dto.ReportedJobId));
             }
 
             // Create report entity
@@ -47,6 +73,8 @@ public class ReportService : IReportService
             {
                 ReporterId = reporterId,
                 ReportedUserId = dto.ReportedUserId,
+                ReportedCompanyId = dto.ReportedCompanyId,
+                ReportedJobId = dto.ReportedJobId,
                 Reason = dto.Reason,
                 Description = dto.Description,
                 Evidence = dto.Evidence ?? new List<string>(),
@@ -59,8 +87,9 @@ public class ReportService : IReportService
             // Send notification to all admins
             await SendAdminNotificationAsync(reporterId, dto.Reason);
 
-            _logger.LogInformation("Report created: {ReportId} by {ReporterId} against {ReportedUserId}",
-                created.Id, reporterId, dto.ReportedUserId);
+            _logger.LogInformation(
+                "Report created: {ReportId} by {ReporterId} against User:{ReportedUserId} Company:{ReportedCompanyId} Job:{ReportedJobId}",
+                created.Id, reporterId, dto.ReportedUserId, dto.ReportedCompanyId, dto.ReportedJobId);
 
             return (await MapToReportDetailsDto(created))!;
         }
@@ -170,11 +199,23 @@ public class ReportService : IReportService
             }
 
             // Ban user if violation confirmed
-            if (banUser && !string.IsNullOrEmpty(report.ReportedUserId))
+            if (banUser)
             {
-                var banned = await _adminService.BanUserAsync(report.ReportedUserId);
-                if (banned)
+                if (string.IsNullOrWhiteSpace(report.ReportedUserId))
                 {
+                    _logger.LogWarning(
+                        "Skip ban for report {ReportId}: banUser=true but ReportedUserId is empty (report type may be company/job)",
+                        reportId);
+                }
+                else
+                {
+                    var banned = await _adminService.BanUserAsync(report.ReportedUserId);
+                    if (!banned)
+                    {
+                        _logger.LogWarning("Ban user failed for report {ReportId}, user: {UserId}", reportId, report.ReportedUserId);
+                        return false;
+                    }
+
                     _logger.LogInformation("User banned: {UserId} due to report: {ReportId}",
                         report.ReportedUserId, reportId);
 
@@ -191,7 +232,13 @@ public class ReportService : IReportService
             await _reportRepo.UpdateAsync(report);
 
             // Send notification to reporter
-            await SendReportResolvedNotificationAsync(report.ReporterId, report.ReportedUserId ?? "Unknown", resolutionNote);
+            await SendReportResolvedNotificationToReporterAsync(report.ReporterId, resolutionNote);
+
+            // Send notification to reported user (for user-report flow)
+            if (!string.IsNullOrWhiteSpace(report.ReportedUserId))
+            {
+                await SendReportResolvedNotificationToReportedUserAsync(report.ReportedUserId, resolutionNote);
+            }
 
             _logger.LogInformation("Report resolved: {ReportId} by admin: {AdminId}", reportId, adminId);
             return true;
@@ -255,6 +302,13 @@ public class ReportService : IReportService
                 ReportedUser: reportedUser != null
                     ? new UserBasicInfo(reportedUser.Id, reportedUser.FullName, reportedUser.Email, reportedUser.AvatarUrl)
                     : null,
+                ReportedCompanyId: report.ReportedCompanyId,
+                ReportedJobId: report.ReportedJobId,
+                ReportType: !string.IsNullOrWhiteSpace(report.ReportedJobId)
+                    ? "Job"
+                    : !string.IsNullOrWhiteSpace(report.ReportedCompanyId)
+                        ? "Company"
+                        : "User",
                 Reason: report.Reason,
                 Description: report.Description,
                 Evidence: report.Evidence,
@@ -303,7 +357,7 @@ public class ReportService : IReportService
         }
     }
 
-    private async Task SendReportResolvedNotificationAsync(string reporterId, string reportedUserName, string resolutionNote)
+    private async Task SendReportResolvedNotificationToReporterAsync(string reporterId, string resolutionNote)
     {
         try
         {
@@ -311,7 +365,7 @@ public class ReportService : IReportService
             {
                 UserId = reporterId,
                 Title = "Your Report Has Been Resolved",
-                Message = $"Your report against {reportedUserName} has been reviewed and resolved. {resolutionNote}",
+                Message = $"Your report has been reviewed and resolved by admin. {resolutionNote}",
                 Type = "ReportResolved",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -321,7 +375,29 @@ public class ReportService : IReportService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending report resolved notification");
+            _logger.LogError(ex, "Error sending reporter resolved notification");
+        }
+    }
+
+    private async Task SendReportResolvedNotificationToReportedUserAsync(string targetUserId, string resolutionNote)
+    {
+        try
+        {
+            var notification = new Notification
+            {
+                UserId = targetUserId,
+                Title = "Your account report has been resolved",
+                Message = $"A report related to your account has been reviewed by admin. {resolutionNote}",
+                Type = "ReportResolved",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _notificationService.CreateAsync(notification);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending reported-user resolved notification");
         }
     }
 

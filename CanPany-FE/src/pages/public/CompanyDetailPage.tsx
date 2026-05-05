@@ -1,18 +1,24 @@
-import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Phone, Globe, Building2, CheckCircle, ArrowLeft, Briefcase } from 'lucide-react';
+import { MapPin, Phone, Globe, Building2, CheckCircle, ArrowLeft, Briefcase, Flag } from 'lucide-react';
 import { Button, Badge, Card } from '@/components/ui';
 import { JobCard } from '@/components/features/jobs';
-import { companiesApi, jobsApi } from '@/api';
+import { companiesApi, jobsApi, reportsApi } from '@/api';
 import { companiesKeys } from '@/lib/queryKeys';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
+import toast from 'react-hot-toast';
 
 export function CompanyDetailPage() {
     const { t } = useTranslation('public');
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const { isAuthenticated } = useAuthStore();
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportReason, setReportReason] = useState('');
+    const [reportDescription, setReportDescription] = useState('');
 
     // Track click interaction
     const trackClickMutation = useMutation({
@@ -24,6 +30,21 @@ export function CompanyDetailPage() {
             trackClickMutation.mutate(jobId);
         }
     };
+
+    const createReportMutation = useMutation({
+        mutationFn: () => reportsApi.createReport({
+            reportedCompanyId: id,
+            reason: reportReason.trim(),
+            description: reportDescription.trim(),
+        }),
+        onSuccess: () => {
+            toast.success(t('companyDetail.report.success'));
+            setShowReportModal(false);
+            setReportReason('');
+            setReportDescription('');
+        },
+        onError: () => toast.error(t('companyDetail.report.error')),
+    });
 
     const { data: company, isLoading } = useQuery({
         queryKey: companiesKeys.detail(id!),
@@ -62,6 +83,7 @@ export function CompanyDetailPage() {
     }
 
     return (
+        <>
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <div className="border-b border-gray-200 bg-white">
@@ -123,6 +145,14 @@ export function CompanyDetailPage() {
                                     <Badge variant="success">{t('companyDetail.verifiedBadge')}</Badge>
                                 )}
                                 <Badge variant="outline">{t('companyDetail.jobsCount', { count: jobs.length })}</Badge>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => isAuthenticated ? setShowReportModal(true) : navigate('/auth/login')}
+                                >
+                                    <Flag className="h-4 w-4 mr-1" />
+                                    {t('companyDetail.report.button')}
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -204,5 +234,49 @@ export function CompanyDetailPage() {
                 </div>
             </div>
         </div>
+        {showReportModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                    <h3 className="text-lg font-semibold text-gray-900">{t('companyDetail.report.title')}</h3>
+                    <div className="mt-4 space-y-3">
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">
+                                {t('companyDetail.report.reason')}
+                            </label>
+                            <input
+                                value={reportReason}
+                                onChange={(e) => setReportReason(e.target.value)}
+                                placeholder={t('companyDetail.report.reasonPlaceholder')}
+                                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">
+                                {t('companyDetail.report.description')}
+                            </label>
+                            <textarea
+                                value={reportDescription}
+                                onChange={(e) => setReportDescription(e.target.value)}
+                                rows={4}
+                                placeholder={t('companyDetail.report.descriptionPlaceholder')}
+                                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-5 flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowReportModal(false)}>
+                            {t('applyModal.cancelButton')}
+                        </Button>
+                        <Button
+                            disabled={!reportReason.trim() || !reportDescription.trim() || createReportMutation.isPending}
+                            onClick={() => createReportMutation.mutate()}
+                        >
+                            {createReportMutation.isPending ? t('companyDetail.report.submitting') : t('companyDetail.report.submit')}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 }

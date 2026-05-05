@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -76,12 +76,13 @@ export function GitHubAnalysisPage() {
     });
 
     // Watch for completion
-    if (jobProgress?.status === 'Completed' && analysisJobId) {
+    useEffect(() => {
+        if (jobProgress?.status !== 'Completed' || !analysisJobId) return;
         setAnalysisJobId(null);
         queryClient.invalidateQueries({ queryKey: ['github-analysis-latest'] });
         refetch();
         toast.success(t('githubAnalysis.toast.completed'));
-    }
+    }, [analysisJobId, jobProgress?.status, queryClient, refetch, t]);
 
     // Re-run analysis (syncs skills from all repos)
     const refreshMutation = useMutation({
@@ -164,8 +165,7 @@ export function GitHubAnalysisPage() {
                 {/* Progress bar */}
                 {isRunning && jobProgress && (
                     <div className="mt-4 space-y-1">
-                        <div className="flex justify-between text-xs text-gray-300">
-                            <span>{jobProgress.currentStep ?? t('githubAnalysis.progress.processing')}</span>
+                        <div className="flex justify-end text-xs text-gray-300">
                             <span>{jobProgress.percentComplete}%</span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">

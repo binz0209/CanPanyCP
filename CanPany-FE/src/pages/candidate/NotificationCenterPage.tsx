@@ -221,7 +221,7 @@ export function NotificationCenterPage() {
                                                 : 'font-medium text-gray-700'
                                         )}
                                     >
-                                        {notification.title}
+                                        {t(notification.title, { defaultValue: notification.title })}
                                     </p>
                                     <div className="flex shrink-0 items-center gap-2">
                                         <span className="whitespace-nowrap text-xs text-gray-400">
@@ -233,7 +233,7 @@ export function NotificationCenterPage() {
                                     </div>
                                 </div>
                                 <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                                    {notification.content}
+                                    {t(notification.content, { defaultValue: notification.content })}
                                 </p>
                             </div>
                         </div>

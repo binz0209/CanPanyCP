@@ -419,6 +419,18 @@
     "timeHoursAgo": "{{count}} hours ago",
     "timeDaysAgo": "{{count}} days ago"
   },
+  "notifications": {
+    "application": {
+      "accepted": {
+        "title": "Application accepted",
+        "message": "You accepted this application."
+      },
+      "rejected": {
+        "title": "Application rejected",
+        "message": "You rejected this application."
+      }
+    }
+  },
   "wallet": {
     "title": "Company wallet",
     "subtitle": "Manage your balance and transaction history.",

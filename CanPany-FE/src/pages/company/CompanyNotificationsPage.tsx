@@ -213,14 +213,14 @@ export function CompanyNotificationsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <p className={cn('text-sm truncate', !notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700')}>
-                    {notification.title}
+                    {t(notification.title, { defaultValue: notification.title })}
                   </p>
                   <div className="flex shrink-0 items-center gap-2">
                     <span className="whitespace-nowrap text-xs text-gray-400">{timeAgo(notification.timestamp, t, locale)}</span>
                     {!notification.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-[#00b14f]" />}
                   </div>
                 </div>
-                <p className="mt-1 line-clamp-2 text-sm text-gray-500">{notification.content}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-gray-500">{t(notification.content, { defaultValue: notification.content })}</p>
               </div>
             </div>
           ))}

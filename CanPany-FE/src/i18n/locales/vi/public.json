@@ -115,7 +115,19 @@
     "genCv": "Tạo CV bằng AI",
     "companySection": "Công ty",
     "companyProfile": "Xem hồ sơ công ty",
-    "companyWebsite": "Website"
+    "companyWebsite": "Website",
+    "report": {
+      "button": "Báo cáo",
+      "title": "Báo cáo bài đăng",
+      "reason": "Lý do",
+      "description": "Mô tả chi tiết",
+      "reasonPlaceholder": "Ví dụ: Nội dung sai lệch, spam, lừa đảo...",
+      "descriptionPlaceholder": "Mô tả vấn đề bạn gặp phải...",
+      "submit": "Gửi báo cáo",
+      "submitting": "Đang gửi...",
+      "success": "Gửi báo cáo bài đăng thành công",
+      "error": "Không thể gửi báo cáo bài đăng"
+    }
   },
   "companies": {
     "title": "Danh sách công ty",
@@ -139,7 +151,19 @@
     "contactTitle": "Liên hệ",
     "address": "Địa chỉ",
     "phone": "Điện thoại",
-    "website": "Website"
+    "website": "Website",
+    "report": {
+      "button": "Báo cáo công ty",
+      "title": "Báo cáo công ty",
+      "reason": "Lý do",
+      "description": "Mô tả chi tiết",
+      "reasonPlaceholder": "Ví dụ: Thông tin công ty không chính xác...",
+      "descriptionPlaceholder": "Mô tả chi tiết vấn đề cần báo cáo...",
+      "submit": "Gửi báo cáo",
+      "submitting": "Đang gửi...",
+      "success": "Gửi báo cáo công ty thành công",
+      "error": "Không thể gửi báo cáo công ty"
+    }
   },
   "jobCard": {
     "companyFallback": "Công ty không xác định",

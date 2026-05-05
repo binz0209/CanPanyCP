@@ -1,4 +1,4 @@
-﻿namespace CanPany.Application.DTOs;
+namespace CanPany.Application.DTOs;
 
 /// <summary>
 /// DTO for report details with populated user information
@@ -7,6 +7,9 @@ public record ReportDetailsDto(
     string Id,
     UserBasicInfo Reporter,
     UserBasicInfo? ReportedUser,
+    string? ReportedCompanyId,
+    string? ReportedJobId,
+    string ReportType,
     string Reason,
     string Description,
     List<string>? Evidence,

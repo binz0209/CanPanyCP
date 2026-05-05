@@ -41,6 +41,23 @@ function statusLabel(s: JobStatus, t: any): string {
     return result !== key ? result : s;
 }
 
+function resolveJobTitle(job: JobProgressRecord, t: any): string {
+    const details = job.details ?? {};
+    const selectedRepos = Array.isArray(details.selectedRepos) ? details.selectedRepos : [];
+    const count =
+        typeof details.count === 'number'
+            ? details.count
+            : typeof details.repoCount === 'number'
+              ? details.repoCount
+              : selectedRepos.length;
+
+    return t(job.jobTitle || job.jobType || 'backgroundJobs.titles.fallback', {
+        defaultValue: job.jobTitle || job.jobType || 'Background Job',
+        ...details,
+        count,
+    });
+}
+
 interface StatusBadgeProps { status: JobStatus; }
 function StatusBadge({ status }: StatusBadgeProps) {
     const cfg: Record<JobStatus, { bg: string; text: string; icon: React.ReactNode }> = {
@@ -105,8 +122,7 @@ function DetailPanel({ job }: DetailPanelProps) {
         <div className="border-t border-gray-100 bg-gray-50 px-5 pb-5 pt-4 space-y-4 text-sm">
             {/* Progress */}
             <div>
-                <div className="flex justify-between items-center mb-1 text-xs text-gray-500">
-                    <span>{job.currentStep || t('backgroundJobs.detail.waiting')}</span>
+                <div className="flex justify-end items-center mb-1 text-xs text-gray-500">
                     <span className="font-medium">{job.percentComplete}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -164,35 +180,35 @@ function DetailPanel({ job }: DetailPanelProps) {
                 </div>
             )}
 
-            {/* Timestamps */}
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 border-t border-gray-200 pt-3">
-                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.started')}</span> {formatDateTime(job.startedAt)}</div>
-                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.ended')}</span> {formatDateTime(job.completedAt)}</div>
-                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.duration')}</span> {formatDuration(job.durationMs)}</div>
-                <div><span className="font-medium text-gray-600">{t('backgroundJobs.detail.updated')}</span> {formatDateTime(job.updatedAt)}</div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2">
-                {isRunning ? (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); cancelMutation.mutate(); }}
-                        disabled={cancelMutation.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
-                    >
-                        {cancelMutation.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <StopCircle className="h-3 w-3" />}
-                        {t('backgroundJobs.actions.cancel', 'Cancel Job')}
-                    </button>
-                ) : (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(); }}
-                        disabled={deleteMutation.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
-                    >
-                        {deleteMutation.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                        {t('backgroundJobs.actions.delete', 'Delete Job')}
-                    </button>
-                )}
+            {/* Timestamps + Actions */}
+            <div className="grid grid-cols-3 items-center gap-3 border-t border-gray-200 pt-3 text-xs text-gray-500">
+                <div>
+                    <span className="font-medium text-gray-600">{t('backgroundJobs.detail.started')}</span> {formatDateTime(job.startedAt)}
+                </div>
+                <div className="text-center">
+                    <span className="font-medium text-gray-600">{t('backgroundJobs.detail.updated')}</span> {formatDateTime(job.updatedAt)}
+                </div>
+                <div className="flex justify-end gap-2">
+                    {isRunning ? (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); cancelMutation.mutate(); }}
+                            disabled={cancelMutation.isPending}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
+                        >
+                            {cancelMutation.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <StopCircle className="h-3 w-3" />}
+                            {t('backgroundJobs.actions.cancel', 'Cancel Job')}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(); }}
+                            disabled={deleteMutation.isPending}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                        >
+                            {deleteMutation.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                            {t('backgroundJobs.actions.delete', 'Delete Job')}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -221,7 +237,7 @@ function JobRow({ job }: JobRowProps) {
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="text-sm font-semibold text-gray-900 truncate">
-                                {t(job.jobTitle || job.jobType || 'backgroundJobs.titles.fallback', { defaultValue: job.jobTitle || job.jobType || 'Background Job', ...job.details })}
+                                {resolveJobTitle(job, t)}
                             </span>
                             <StatusBadge status={job.status} />
                         </div>
@@ -236,7 +252,7 @@ function JobRow({ job }: JobRowProps) {
                         )}
                         <p className="text-xs text-gray-400 mt-1">
                             {isActive
-                                ? (job.currentStep ? t(job.currentStep, { defaultValue: job.currentStep, ...job.details }) : t('backgroundJobs.row.processing'))
+                                ? t('backgroundJobs.row.processing')
                                 : t('backgroundJobs.row.completedAt', { time: formatDateTime(job.completedAt) })
                             }
                         </p>
