@@ -161,7 +161,8 @@
     "toastClosed": "Job posting closed",
     "toastReopened": "Job posting reopened",
     "toastStatusFailed": "Unable to update job status",
-    "actionHint": "You can create, edit, and close/reopen job postings directly here."
+    "actionHint": "You can create, edit, and close/reopen job postings directly here.",
+    "paginationInfo": "Showing {{from}}–{{to}} of {{total}} jobs"
   },
   "jobForm": {
     "titleLabel": "Job title",

@@ -137,12 +137,31 @@ export const jobsApi = {
      * @returns Array of jobs posted by the company
      */
     getByCompany: async (companyId: string): Promise<Job[]> => {
-        const response = await apiClient.get<ApiResponse<{ items: Job[]; totalItems: number }>>(`/jobs/company/${companyId}`);
+        const response = await apiClient.get<ApiResponse<{ items: Job[]; totalItems: number }>>(`/jobs/company/${companyId}`, { params: { pageSize: 999 } });
         const data = response.data.data;
         if (!data) return [];
         if (Array.isArray(data)) return data;
         if ('items' in data && Array.isArray((data as any).items)) return (data as any).items;
         return [];
+    },
+
+    /**
+     * Get jobs by company with pagination
+     * GET /api/jobs/company/{companyId}
+     */
+    getByCompanyPaged: async (companyId: string, page = 1, pageSize = 10): Promise<JobListResponse> => {
+        const response = await apiClient.get<ApiResponse<{ items: Job[]; totalItems: number; page: number; pageSize: number }>>(`/jobs/company/${companyId}`, { params: { page, pageSize } });
+        const data = response.data.data;
+        if (!data) return { jobs: [], total: 0, page: 1, pageSize, totalPages: 0 };
+        const items = Array.isArray(data) ? data : ((data as any).items ?? []);
+        const total = (data as any).totalItems ?? items.length;
+        return {
+            jobs: items,
+            total,
+            page: (data as any).page ?? page,
+            pageSize: (data as any).pageSize ?? pageSize,
+            totalPages: Math.ceil(total / pageSize),
+        };
     },
 
     create: async (payload: CreateJobRequest): Promise<Job> => {

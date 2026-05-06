@@ -3,7 +3,7 @@ export const companyKeys = {
     me: () => [...companyKeys.all, 'me'] as const,
     statistics: (companyId: string) => [...companyKeys.all, 'statistics', companyId] as const,
     verification: (companyId: string) => [...companyKeys.all, 'verification', companyId] as const,
-    workspaceJobs: (companyId: string) => [...companyKeys.all, 'workspace', 'jobs', companyId] as const,
+    workspaceJobs: (companyId: string, page?: number) => [...companyKeys.all, 'workspace', 'jobs', companyId, { page: page ?? 1 }] as const,
     workspaceJobDetail: (jobId: string) => [...companyKeys.all, 'workspace', 'job-detail', jobId] as const,
 };
 

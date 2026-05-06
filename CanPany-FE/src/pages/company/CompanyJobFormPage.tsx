@@ -70,7 +70,6 @@ export function CompanyJobFormPage() {
         handleSubmit,
         reset,
         control,
-        watch,
         formState: { errors, isDirty },
     } = useForm<CompanyJobFormValues>({
         resolver: zodResolver(jobFormSchema),
@@ -148,7 +147,7 @@ export function CompanyJobFormPage() {
         onSuccess: async () => {
             await Promise.all([
                 companyId
-                    ? queryClient.invalidateQueries({ queryKey: companyKeys.workspaceJobs(companyId), exact: true })
+                    ? queryClient.invalidateQueries({ queryKey: [...companyKeys.all, 'workspace', 'jobs', companyId] })
                     : Promise.resolve(),
                 isEditMode && jobId
                     ? queryClient.invalidateQueries({ queryKey: companyKeys.workspaceJobDetail(jobId), exact: true })

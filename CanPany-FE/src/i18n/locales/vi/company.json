@@ -161,7 +161,8 @@
     "toastClosed": "Đã đóng tin tuyển dụng",
     "toastReopened": "Đã mở lại tin tuyển dụng",
     "toastStatusFailed": "Không thể cập nhật trạng thái job",
-    "actionHint": "Bạn có thể tạo mới, chỉnh sửa và đóng/mở lại tin tuyển dụng trực tiếp tại đây."
+    "actionHint": "Bạn có thể tạo mới, chỉnh sửa và đóng/mở lại tin tuyển dụng trực tiếp tại đây.",
+    "paginationInfo": "Hiển thị {{from}}–{{to}} / {{total}} job"
   },
   "jobForm": {
     "titleLabel": "Tiêu đề job",

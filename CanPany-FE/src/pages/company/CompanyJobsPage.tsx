@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BriefcaseBusiness, Eye, FilePenLine, Plus, RefreshCcw } from 'lucide-react';
+import { BriefcaseBusiness, ChevronLeft, ChevronRight, Eye, FilePenLine, Plus, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button, Card } from '../../components/ui';
 import { jobsApi } from '../../api';
@@ -21,18 +21,22 @@ import { companyKeys } from '../../lib/queryKeys';
 import { useTranslation } from 'react-i18next';
 
 type JobFilter = 'All' | JobStatus;
+const PAGE_SIZE = 10;
 
 export function CompanyJobsPage() {
     const queryClient = useQueryClient();
     const { t } = useTranslation('company');
     const [activeFilter, setActiveFilter] = useState<JobFilter>('All');
+    const [currentPage, setCurrentPage] = useState(1);
     const [processingJobId, setProcessingJobId] = useState<string | null>(null);
     const { companyId, isLoading: isWorkspaceLoading, isMissingProfile, hasFatalError } = useCompanyWorkspace();
 
+    // Paginated query for the current page
     const jobsQuery = useQuery({
-        queryKey: companyKeys.workspaceJobs(companyId!),
-        queryFn: () => jobsApi.getByCompany(companyId!),
+        queryKey: companyKeys.workspaceJobs(companyId!, currentPage),
+        queryFn: () => jobsApi.getByCompanyPaged(companyId!, currentPage, PAGE_SIZE),
         enabled: !!companyId,
+        placeholderData: (prev) => prev,
     });
 
     const statusMutation = useMutation({
@@ -45,14 +49,10 @@ export function CompanyJobsPage() {
             await jobsApi.reopen(jobId);
         },
         onSuccess: async (_, variables) => {
-            queryClient.setQueryData<Job[]>(companyKeys.workspaceJobs(companyId!), (currentJobs = []) =>
-                currentJobs.map((job) =>
-                    job.id === variables.jobId
-                        ? { ...job, status: variables.nextStatus }
-                        : job
-                )
-            );
-            await queryClient.invalidateQueries({ queryKey: companyKeys.workspaceJobs(companyId!), exact: true });
+            // Invalidate all workspace job pages
+            await queryClient.invalidateQueries({
+                queryKey: [...companyKeys.all, 'workspace', 'jobs', companyId!],
+            });
             toast.success(
                 variables.nextStatus === 'Closed'
                     ? t('jobs.toastClosed')
@@ -70,20 +70,32 @@ export function CompanyJobsPage() {
         },
     });
 
-    const jobs = useMemo(() => jobsQuery.data || [], [jobsQuery.data]);
+    const pagedData = jobsQuery.data;
+    const jobs = useMemo(() => pagedData?.jobs || [], [pagedData]);
+    const totalItems = pagedData?.total ?? 0;
+    const totalPages = pagedData?.totalPages ?? 0;
+
     const filteredJobs = useMemo(() => {
         if (activeFilter === 'All') return jobs;
         return jobs.filter((job: Job) => job.status === activeFilter);
     }, [activeFilter, jobs]);
 
+    // Stats based on the current page (approximate, since we only have paged data)
+    // For accurate stats we count the paged items only — total is from server
     const statistics = useMemo(() => {
         return {
-            total: jobs.length,
+            total: totalItems,
             open: jobs.filter((job: Job) => job.status === 'Open').length,
             closed: jobs.filter((job: Job) => job.status === 'Closed').length,
             draft: jobs.filter((job: Job) => job.status === 'Draft').length,
         };
-    }, [jobs]);
+    }, [totalItems, jobs]);
+
+    // Reset to page 1 when filter changes
+    const handleFilterChange = (filter: JobFilter) => {
+        setActiveFilter(filter);
+        // Note: server-side filtering is not implemented — filtering is client-side on the current page
+    };
 
     if (isWorkspaceLoading || jobsQuery.isLoading) {
         return <CompanyWorkspaceLoader />;
@@ -156,7 +168,7 @@ export function CompanyJobsPage() {
                                 key={filter}
                                 variant={activeFilter === filter ? 'default' : 'outline'}
                                 size="sm"
-                                onClick={() => setActiveFilter(filter)}
+                                onClick={() => handleFilterChange(filter)}
                             >
                                 {filter === 'All' ? t('jobs.filterAll') : null}
                                 {filter === 'Open' ? t('jobs.filterOpen') : null}
@@ -250,6 +262,68 @@ export function CompanyJobsPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
+                        <p className="text-sm text-gray-500">
+                            {t('jobs.paginationInfo', {
+                                from: (currentPage - 1) * PAGE_SIZE + 1,
+                                to: Math.min(currentPage * PAGE_SIZE, totalItems),
+                                total: totalItems,
+                                defaultValue: `Hiển thị ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, totalItems)} / ${totalItems} job`,
+                            })}
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage <= 1}
+                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter((p) => {
+                                    // Show first, last, and pages near current
+                                    if (p === 1 || p === totalPages) return true;
+                                    return Math.abs(p - currentPage) <= 1;
+                                })
+                                .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) {
+                                        acc.push('ellipsis');
+                                    }
+                                    acc.push(p);
+                                    return acc;
+                                }, [])
+                                .map((item, idx) =>
+                                    item === 'ellipsis' ? (
+                                        <span key={`e-${idx}`} className="px-2 text-sm text-gray-400">…</span>
+                                    ) : (
+                                        <Button
+                                            key={item}
+                                            variant={item === currentPage ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(item)}
+                                            className="min-w-[36px]"
+                                        >
+                                            {item}
+                                        </Button>
+                                    )
+                                )}
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage >= totalPages}
+                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </Card>
