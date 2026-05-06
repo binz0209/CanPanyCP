@@ -8,6 +8,7 @@ namespace CanPany.Domain.Interfaces.Repositories;
 public interface ICategoryRepository
 {
     Task<Category?> GetByIdAsync(string id);
+    Task<Category?> GetByNameAsync(string name);
     Task<IEnumerable<Category>> GetAllAsync();
     Task<Category> AddAsync(Category category);
     Task UpdateAsync(Category category);

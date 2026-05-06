@@ -8,6 +8,8 @@ namespace CanPany.Application.Interfaces.Services;
 public interface ICategoryService
 {
     Task<Category?> GetByIdAsync(string id);
+    Task<Category?> GetByNameAsync(string name);
+    Task<Category> GetOrCreateAsync(string name);
     Task<IEnumerable<Category>> GetAllAsync();
     Task<Category> CreateAsync(Category category);
     Task<bool> UpdateAsync(string id, Category category);

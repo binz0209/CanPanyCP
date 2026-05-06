@@ -4,7 +4,7 @@ public record CreateJobRequest(
     string CompanyId,
     string Title,
     string Description,
-    string? CategoryId = null,
+    string CategoryName,
     List<string>? SkillIds = null,
     string BudgetType = "Fixed",
     decimal? BudgetAmount = null,
@@ -17,6 +17,7 @@ public record CreateJobRequest(
 public record UpdateJobRequest(
     string? Title = null,
     string? Description = null,
+    string? CategoryName = null,
     List<string>? SkillIds = null,
     decimal? BudgetAmount = null,
     string? Level = null,

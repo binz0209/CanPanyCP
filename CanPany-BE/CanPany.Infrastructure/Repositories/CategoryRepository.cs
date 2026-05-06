@@ -19,6 +19,14 @@ public class CategoryRepository : ICategoryRepository
         return await _collection.Find(c => c.Id == id).FirstOrDefaultAsync();
     }
 
+    public async Task<Category?> GetByNameAsync(string name)
+    {
+        var normalizedName = name.Trim().ToLowerInvariant();
+        return await _collection
+            .Find(c => c.Name.ToLower() == normalizedName)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<IEnumerable<Category>> GetAllAsync()
     {
         return await _collection.Find(_ => true).ToListAsync();

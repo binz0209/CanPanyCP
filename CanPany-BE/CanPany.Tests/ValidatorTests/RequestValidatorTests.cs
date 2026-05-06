@@ -73,6 +73,7 @@ public class RequestValidatorTests
             CompanyId: "compId",
             Title: "Software Engineer",
             Description: "We are looking for a senior software engineer with 10 years of experience.",
+            CategoryName: "IT",
             SkillIds: new List<string> { "csharp", "dotnet" },
             Deadline: DateTime.UtcNow.AddDays(7)
         );
@@ -87,6 +88,7 @@ public class RequestValidatorTests
             CompanyId: "compId",
             Title: "Software Engineer",
             Description: "Too short",
+            CategoryName: "IT",
             SkillIds: new List<string> { "csharp" }
         );
         var result = _createJobValidator.TestValidate(request);

@@ -34,6 +34,7 @@ public class JobsController : ControllerBase
     private readonly II18nService _i18nService;
     private readonly ILogger<JobsController> _logger;
     private readonly IUserPremiumService _userPremiumService;
+    private readonly ICategoryService _categoryService;
 
     public JobsController(
         IJobService jobService,
@@ -46,7 +47,8 @@ public class JobsController : ControllerBase
         IJobProgressTracker progressTracker,
         II18nService i18nService,
         ILogger<JobsController> logger,
-        IUserPremiumService userPremiumService)
+        IUserPremiumService userPremiumService,
+        ICategoryService categoryService)
     {
         _jobService = jobService;
         _bookmarkService = bookmarkService;
@@ -59,6 +61,7 @@ public class JobsController : ControllerBase
         _i18nService = i18nService;
         _logger = logger;
         _userPremiumService = userPremiumService;
+        _categoryService = categoryService;
     }
 
     /// <summary>
@@ -333,12 +336,16 @@ public class JobsController : ControllerBase
                 }
             }
 
+            // Resolve CategoryId from CategoryName
+            var category = await _categoryService.GetOrCreateAsync(request.CategoryName);
+            string finalCategoryId = category.Id;
+
             var job = new Job
             {
                 CompanyId = request.CompanyId,
                 Title = request.Title,
                 Description = request.Description,
-                CategoryId = request.CategoryId,
+                CategoryId = finalCategoryId,
                 SkillIds = request.SkillIds ?? new List<string>(),
                 BudgetType = request.BudgetType,
                 BudgetAmount = request.BudgetAmount,
@@ -414,6 +421,11 @@ public class JobsController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(request.Title)) job.Title = request.Title;
             if (!string.IsNullOrWhiteSpace(request.Description)) job.Description = request.Description;
+            if (!string.IsNullOrWhiteSpace(request.CategoryName))
+            {
+                var category = await _categoryService.GetOrCreateAsync(request.CategoryName);
+                job.CategoryId = category.Id;
+            }
             if (request.SkillIds != null) job.SkillIds = request.SkillIds;
             if (request.BudgetAmount.HasValue) job.BudgetAmount = request.BudgetAmount;
             if (!string.IsNullOrWhiteSpace(request.Level)) job.Level = request.Level;

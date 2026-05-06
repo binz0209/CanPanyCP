@@ -37,6 +37,47 @@ public class CategoryService : ICategoryService
         }
     }
 
+    public async Task<Category?> GetByNameAsync(string name)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Category name cannot be null or empty", nameof(name));
+
+            return await _repo.GetByNameAsync(name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting category by name: {CategoryName}", name);
+            throw;
+        }
+    }
+
+    public async Task<Category> GetOrCreateAsync(string name)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Category name cannot be null or empty", nameof(name));
+
+            var existing = await _repo.GetByNameAsync(name);
+            if (existing != null)
+                return existing;
+
+            var newCategory = new Category
+            {
+                Name = name.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+            return await _repo.AddAsync(newCategory);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting or creating category: {CategoryName}", name);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<Category>> GetAllAsync()
     {
         try
