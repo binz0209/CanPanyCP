@@ -26,7 +26,7 @@ import { companyKeys } from '../../lib/queryKeys';
 const createJobFormSchema = (t: (key: string) => string) => z.object({
     title: z.string().trim().min(5, t('jobForm.validTitleMin')),
     description: z.string().trim().min(20, t('jobForm.validDescriptionMin')),
-    categoryId: z.string().trim().optional(),
+    categoryName: z.string().trim().optional(),
     skillIdsText: z.string().trim().optional(),
     budgetType: z.enum(['Fixed', 'Hourly']),
     budgetAmount: z
@@ -77,7 +77,7 @@ export function CompanyJobFormPage() {
         defaultValues: {
             title: '',
             description: '',
-            categoryId: '',
+            categoryName: '',
             skillIdsText: '',
             budgetType: 'Fixed',
             budgetAmount: '',
@@ -95,7 +95,7 @@ export function CompanyJobFormPage() {
         reset({
             title: job.title,
             description: job.description,
-            categoryId: job.categoryId || '',
+            categoryName: '',
             skillIdsText: job.skillIds.join(', '),
             budgetType: job.budgetType,
             budgetAmount: job.budgetAmount ? String(job.budgetAmount) : '',
@@ -122,7 +122,7 @@ export function CompanyJobFormPage() {
                     companyId: company.id,
                     title: values.title.trim(),
                     description: values.description.trim(),
-                    categoryId: values.categoryId?.trim() || undefined,
+                    categoryName: values.categoryName?.trim() || undefined,
                     skillIds: normalizedSkillIds,
                     budgetType: values.budgetType,
                     budgetAmount: values.budgetAmount ? Number(values.budgetAmount) : undefined,
@@ -137,6 +137,7 @@ export function CompanyJobFormPage() {
             await jobsApi.update(jobId!, {
                 title: values.title.trim(),
                 description: values.description.trim(),
+                categoryName: values.categoryName?.trim() || undefined,
                 skillIds: normalizedSkillIds,
                 budgetAmount: values.budgetAmount ? Number(values.budgetAmount) : undefined,
                 level: values.level,
@@ -206,7 +207,7 @@ export function CompanyJobFormPage() {
             reset({
                 title: editingJob.title,
                 description: editingJob.description,
-                categoryId: editingJob.categoryId || '',
+                categoryName: '',
                 skillIdsText: editingJob.skillIds.join(', '),
                 budgetType: editingJob.budgetType,
                 budgetAmount: editingJob.budgetAmount ? String(editingJob.budgetAmount) : '',
@@ -221,7 +222,7 @@ export function CompanyJobFormPage() {
         reset({
             title: '',
             description: '',
-            categoryId: '',
+            categoryName: '',
             skillIdsText: '',
             budgetType: 'Fixed',
             budgetAmount: '',
@@ -250,7 +251,6 @@ export function CompanyJobFormPage() {
                             isEditMode={isEditMode}
                             budgetTypeOptions={budgetTypeOptions}
                             levelOptions={levelOptions}
-                            categoryIdValue={watch('categoryId')}
                         />
 
                         <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-4">

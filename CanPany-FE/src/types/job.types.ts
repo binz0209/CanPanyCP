@@ -65,7 +65,7 @@ export interface CreateJobRequest {
     companyId: string;
     title: string;
     description: string;
-    categoryId?: string;
+    categoryName?: string;
     skillIds?: string[];
     budgetType?: BudgetType;
     budgetAmount?: number;
@@ -78,6 +78,7 @@ export interface CreateJobRequest {
 export interface UpdateJobRequest {
     title?: string;
     description?: string;
+    categoryName?: string;
     skillIds?: string[];
     budgetAmount?: number;
     level?: JobLevel;

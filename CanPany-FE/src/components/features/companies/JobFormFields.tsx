@@ -1,13 +1,15 @@
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { BriefcaseBusiness, MapPin, Wallet } from 'lucide-react';
 import { Input } from '../../ui';
 import type { BudgetType, JobLevel } from '../../../types';
+import { catalogApi, type Category } from '../../../api/catalog.api';
 
 export interface CompanyJobFormValues {
     title: string;
     description: string;
-    categoryId?: string;
+    categoryName?: string;
     skillIdsText?: string;
     budgetType: BudgetType;
     budgetAmount?: string;
@@ -23,7 +25,6 @@ interface JobFormFieldsProps {
     isEditMode: boolean;
     budgetTypeOptions: BudgetType[];
     levelOptions: JobLevel[];
-    categoryIdValue?: string;
 }
 
 export function JobFormFields({
@@ -32,9 +33,16 @@ export function JobFormFields({
     isEditMode,
     budgetTypeOptions,
     levelOptions,
-    categoryIdValue,
 }: JobFormFieldsProps) {
     const { t } = useTranslation('company');
+
+    // Fetch categories for the dropdown
+    const { data: categories = [] } = useQuery<Category[]>({
+        queryKey: ['catalog-categories'],
+        queryFn: () => catalogApi.getCategories(),
+        staleTime: 5 * 60 * 1000, // cache 5 minutes
+    });
+
     return (
         <>
             <Input
@@ -58,23 +66,24 @@ export function JobFormFields({
                 )}
             </div>
 
-            {!isEditMode && (
-                <div className="space-y-1.5">
-                    <Input
-                        label={t('jobForm.categoryLabel')}
-                        placeholder={t('jobForm.categoryPlaceholder')}
-                        error={errors.categoryId?.message}
-                        {...register('categoryId')}
-                    />
-                    <p className="text-xs text-gray-500">{t('jobForm.categoryHint')}</p>
-                    {categoryIdValue && categoryIdValue.trim().includes(' ') && (
-                        <p className="text-xs text-amber-600">{t('jobForm.categoryHintLooksLikeTitle')}</p>
-                    )}
-                    {!categoryIdValue && (
-                        <p className="text-xs text-gray-500">{t('jobForm.categoryHintEmpty')}</p>
-                    )}
-                </div>
-            )}
+            <div className="space-y-1.5">
+                <label className="mb-2 block text-sm font-medium text-gray-700">{t('jobForm.categoryLabel')}</label>
+                <select
+                    className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-[#00b14f] focus:ring-2 focus:ring-[#00b14f]/20"
+                    {...register('categoryName')}
+                >
+                    <option value="">{t('jobForm.categoryPlaceholder')}</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                            {cat.name}
+                        </option>
+                    ))}
+                </select>
+                {errors.categoryName?.message && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.categoryName.message}</p>
+                )}
+                <p className="text-xs text-gray-500">{t('jobForm.categoryHint')}</p>
+            </div>
 
             <Input
                 label={t('jobForm.skillsLabel')}

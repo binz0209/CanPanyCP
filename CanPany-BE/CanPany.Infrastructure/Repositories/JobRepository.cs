@@ -51,12 +51,7 @@ public class JobRepository : IJobRepository
 
         if (!string.IsNullOrWhiteSpace(categoryId))
         {
-            // Validate that categoryId is a valid ObjectId before using it
-            if (ObjectId.TryParse(categoryId, out _))
-            {
-                filters.Add(filterBuilder.Eq(j => j.CategoryId, categoryId));
-            }
-            // If categoryId is not a valid ObjectId, skip this filter (don't throw error)
+            filters.Add(filterBuilder.Eq(j => j.CategoryId, categoryId));
         }
 
         if (skillIds != null && skillIds.Any())
@@ -98,10 +93,7 @@ public class JobRepository : IJobRepository
 
         if (!string.IsNullOrWhiteSpace(parameters.CategoryId))
         {
-            if (ObjectId.TryParse(parameters.CategoryId, out _))
-            {
-                filters.Add(filterBuilder.Eq(j => j.CategoryId, parameters.CategoryId));
-            }
+            filters.Add(filterBuilder.Eq(j => j.CategoryId, parameters.CategoryId));
         }
 
         if (parameters.SkillIds != null && parameters.SkillIds.Any())

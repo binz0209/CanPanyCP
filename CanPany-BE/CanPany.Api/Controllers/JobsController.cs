@@ -336,9 +336,13 @@ public class JobsController : ControllerBase
                 }
             }
 
-            // Resolve CategoryId from CategoryName
-            var category = await _categoryService.GetOrCreateAsync(request.CategoryName);
-            string finalCategoryId = category.Id;
+            // Resolve CategoryId from CategoryName (auto-find or create)
+            string? finalCategoryId = null;
+            if (!string.IsNullOrWhiteSpace(request.CategoryName))
+            {
+                var category = await _categoryService.GetOrCreateAsync(request.CategoryName.Trim());
+                finalCategoryId = category.Id;
+            }
 
             var job = new Job
             {
